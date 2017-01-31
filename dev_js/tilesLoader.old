@@ -1,0 +1,69 @@
+var tileLoader = new THREE.TextureLoader();
+var tilesToLoad = [];
+var loadingTile = false;
+var tilesPos = [];
+var tilesOff = [];
+var canvasTilesW = 512;
+var canvasTilesH = 512;
+var nbTileX = 2;
+var nbTileY = 2;
+
+function initTilesLoader(){
+	document.getElementById( "tmpcanvas" ).width = canvasTilesW;
+	document.getElementById( "tmpcanvas" ).height = canvasTilesH;
+}
+
+function loadTile( _url, _tileX, _tileY, _offX, _offY ){
+	tilesToLoad.push( _url );
+	tilesPos.push( [_tileX, _tileY] );
+	tilesOff.push( [_offX, _offY] );
+	launchLoading();
+}
+
+function launchLoading(){
+	// console.log( 'launchLoading' );
+	if( tilesToLoad == 0 ){
+		console.log( 'needsUpdate' );
+		textureCanvas.needsUpdate = true;
+	}else if( !loadingTile ){
+		loadingTile = true;
+		var urlToLoad = encodeURI( tilesToLoad.shift() );
+		// tileLoader.load( 'libs/remoteImg.php?url=' + urlToLoad, 
+		tileLoader.load( 'libs/remoteImg.php?tile=1&z='+this.zoom+'&x='+this.tileX+'&y='+this.tileY+'', 
+			function(t){
+				// console.log( 'launchLoading.Texture loaded' );
+				var tPos = tilesPos.shift();
+				var oT = tilesOff.shift();
+				var kX = canvasTilesW / nbTileX;
+				var kY = canvasTilesH / nbTileY;
+				context.drawImage( t.image, tPos[0] * kX - oT[0] * kX, tPos[1] * kY - oT[1] * kY, kX, kY );
+				// textureCanvas.needsUpdate = true;
+				
+				loadingTile = false;
+				launchLoading();
+			}, 
+			function ( xhr ) {
+				// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+			},
+			function ( xhr ) {
+				console.log( 'launchLoading.An error happened' );
+				loadingTile = false;
+			}
+		);
+	}
+}
+
+
+function offXtileX(lon, zoom) {
+	return ( (lon + 180) / 360 * Math.pow(2, zoom) ) % 1;
+}
+function offYtileY(lat, zoom)  {
+	return ( (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2	* Math.pow(2, zoom)) % 1;
+}
+
+function long2tileX(lon, zoom) {
+	return Math.floor( (lon + 180) / 360 * Math.pow(2, zoom) );
+}
+function lat2tileY(lat, zoom)  {
+	return Math.floor(	(1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2	* Math.pow(2, zoom));
+}
