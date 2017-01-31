@@ -1,0 +1,539 @@
+var OpenEarthViewer = function ( _containerId ) {
+	this.htmlContainer = _containerId;
+	this.sceneWidth = 400;
+	this.sceneHeight = 300;
+	this.scene;
+	this.camera;
+	this.renderer;
+	this.containerOffset = undefined;
+	this.tileLoader = new THREE.TextureLoader();
+	this.earth;
+	this.sky = undefined;
+	// this.atmosphereMeshe = undefined;
+	this.texturesToPreload = [ 'waypoint.png', 'loading.png', 'sky.png', 'building_wall_5.png', 'checker_alpha.png' ];
+	this.texturesToPreload.push( 'roof.png' );
+	this.texturesToPreload.push( 'sun2.png' );
+	this.texturesToPreload.push( 'cloud_3.png' );
+	this.texturesToPreload.push( 'sky_gradient.png' );
+	this.texturesToPreload.push( 'grass.png' );
+	this.texturesToPreload.push( 'vineyard.png' );
+	this.texturesToPreload.push( 'natural_tree.png' );
+	this.texturesToPreload.push( 'plane_contrail_2.png' );
+	this.texturesToPreload.push( 'particleWater.png' );
+	this.texturesToPreload.push( 'testMix.png' );
+	this.texturesToPreload.push( 'god_2.png' );
+	this.texturesToPreload.push( 'particleSnow.png' );
+	this.texturesToPreload.push( 'particleRain2.png' );
+	this.texturesToPreload.push( 'waternormals.png' );
+	this.texturesNames = [ 'waypoint', 'checker', 'sky', 'building_wall', 'checker_alpha' ];
+	this.texturesNames.push( 'roof' );
+	this.texturesNames.push( 'sun' );
+	this.texturesNames.push( 'cloud' );
+	this.texturesNames.push( 'sky_gradient' );
+	this.texturesNames.push( 'grass' );
+	this.texturesNames.push( 'vineyard' );
+	this.texturesNames.push( 'natural_tree' );
+	this.texturesNames.push( 'plane_contrail' );
+	this.texturesNames.push( 'particleWater' );
+	this.texturesNames.push( 'testMix' );
+	this.texturesNames.push( 'god' );
+	this.texturesNames.push( 'particleSnow' );
+	this.texturesNames.push( 'particleRain' );
+	this.texturesNames.push( 'waternormals' );
+	this.textures = {};
+	this.curTextureLoading = -1;
+	this.modelsToLoad = [ 'tree_lod_1.json', 'tree_lod_1.json', 'tree_lod_0.json', 'hydrant_lod_0.json', 'hydrant_lod_1.json', 'hydrant_lod_1.json' ];
+	this.modelsToLoad.push( 'lamp_lod_0.json' );
+	this.modelsToLoad.push( 'lamp_lod_1.json' );
+	this.modelsToLoad.push( 'lamp_lod_2.json' );
+	this.modelsToLoad.push( 'capitelle.json' );
+	this.modelsToLoad.push( 'capitelle.json' );
+	this.modelsToLoad.push( 'capitelle.json' );
+	this.modelsToLoad.push( 'recycling.json' );
+	this.modelsToLoad.push( 'fountain2.json' );
+	this.modelsToLoad.push( 'poubelle2.json' );
+	this.modelsToLoad.push( 'statue.json' );
+	this.modelsToLoad.push( 'plane.json' );
+	this.modelsName = [ 'TREE_lod_2', 'TREE_lod_1', 'TREE_lod_0', 'HYDRANT_lod_0', 'HYDRANT_lod_1', 'HYDRANT_lod_2' ];
+	this.modelsName.push( 'LAMP_lod_0' );
+	this.modelsName.push( 'LAMP_lod_1' );
+	this.modelsName.push( 'LAMP_lod_2' );
+	this.modelsName.push( 'CAPITELLE_lod_0' );
+	this.modelsName.push( 'CAPITELLE_lod_1' );
+	this.modelsName.push( 'CAPITELLE_lod_2' );
+	this.modelsName.push( 'recycling' );
+	this.modelsName.push( 'fountain' );
+	this.modelsName.push( 'poubelle' );
+	this.modelsName.push( 'statue' );
+	this.modelsName.push( 'plane' );
+	this.modelsLib = {};
+	this.curModelLoading = -1;
+	this.modelsLoader = new THREE.ObjectLoader();
+	this.geoDebug = undefined;
+	this.materialWaypoints = {};
+	this.postprocessing = {};
+	this.dofActiv = false;
+	this.materialPOILine;
+	this.ctrlActiv = false;
+	this.bokehPass;
+	this.MUST_RENDER = true;
+	this.MODELS_CFG;
+	this.showRendererInfos = false;
+	this.raycaster = undefined;
+	this.preloadQuery = [];
+	this.camCtrl = new CamCtrlGod();
+	// this.camCtrl = new CamCtrlFps();
+	this.userMat = undefined;
+	this.waypoints = [];
+	
+	this.plugins = [];
+	this.WpStored = [];
+	
+	this.shadowsEnabled = true;
+	this.objToUpdate = [];
+	
+	this.globalTime = 0;
+	
+	this.mouseScreenClick = new THREE.Vector2( 0, 0 );
+	
+	this.socketEnabled = false;
+	// this.socketEnabled = true;
+	
+	this.water = undefined;
+	this.aMeshMirror = undefined;
+	
+	this.tuniform = {
+		iGlobalTime: {
+			type: 'f',
+			value: 0.1
+		}
+	};
+}
+
+OpenEarthViewer.plugins = {};
+
+
+OpenEarthViewer.prototype.init = function() {
+	document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
+	
+	var intElemClientWidth = document.getElementById( this.htmlContainer ).clientWidth;
+	var intElemClientHeight = document.getElementById( "tools" ).clientHeight;
+	this.sceneWidth = Math.min( intElemClientWidth, 13000 );
+	this.sceneHeight = Math.min( intElemClientHeight, 800 );
+	this.scene = new THREE.Scene();
+	this.camera = new THREE.PerspectiveCamera( 90, this.sceneWidth / this.sceneHeight, 0.1, 20000 );
+	this.sky = new Sky();
+	this.earth = new Globe();
+	this.scene.add( this.earth.meshe );
+	this.renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
+	this.raycaster = new THREE.Raycaster();
+	this.renderer.setSize( this.sceneWidth, this.sceneHeight );
+	document.getElementById( this.htmlContainer ).appendChild( this.renderer.domElement );
+	this.containerOffset = new THREE.Vector2( document.getElementById( this.htmlContainer ).offsetLeft, document.getElementById( this.htmlContainer ).offsetTop );
+	this.camera.position.x = 0;
+	this.camera.position.y = 0;
+	this.camera.position.z = 500;
+	this.loadConfig();
+	// DOF
+	var renderPass = new THREE.RenderPass( this.scene, this.camera );
+	this.bokehPass = new THREE.BokehPass( this.scene, this.camera, {
+		focus: 		1.0,
+		aperture:	0.055,
+		//maxblur:	0.02, // OK
+		maxblur:	0.2, // OK
+		width: this.sceneWidth,
+		height: this.sceneHeight
+	} );
+	this.bokehPass.renderToScreen = true;
+	var composer = new THREE.EffectComposer( this.renderer );
+	composer.addPass( renderPass );
+	composer.addPass( this.bokehPass );
+	this.postprocessing.composer = composer;
+	this.postprocessing.bokeh = this.bokehPass;
+	
+	// this.renderer.setClearColor( 0x202040, 1 );
+	this.renderer.setClearColor( 0x101020, 1 );
+	
+	this.tmpCanvas = document.createElement('canvas');
+	
+	
+	this.initPlugins();
+	
+	if( this.shadowsEnabled ){
+		this.initShadow();
+	}
+	
+	if( this.socketEnabled ){
+		this.netCtrl = new NetCtrl();
+		this.netCtrl.init( this );
+	}
+	
+	
+	
+	
+	
+}
+
+
+
+OpenEarthViewer.prototype.initShadow = function() {
+	this.renderer.shadowMap.enabled = true;
+	// this.renderer.shadowMapSoft = true;
+
+	// this.renderer.shadowCameraNear = 3;
+	// this.renderer.shadowCameraFar = this.camera.far;
+	// this.renderer.shadowCameraFov = 50;
+
+	// this.renderer.shadowMapBias = 0.0039;
+	// this.renderer.shadowMapDarkness = 0.5;
+	// this.renderer.shadowMapWidth = 1024;
+	// this.renderer.shadowMapHeight = 1024;
+}
+
+
+OpenEarthViewer.prototype.initPlugins = function() {
+	for (var key in OpenEarthViewer.plugins) {
+		if (!OpenEarthViewer.plugins.hasOwnProperty(key)) continue;
+		OpenEarthViewer.plugins[key].init();
+	}
+}
+
+
+OpenEarthViewer.prototype.switchClouds = function() {
+	if( this.sky.cloudsActiv ){
+		this.sky.clearClouds();
+		setElementActiv( document.getElementById( "btnClouds" ), false );
+	}else{
+		this.sky.makeClouds();
+		setElementActiv( document.getElementById( "btnClouds" ), true );
+	}
+}
+
+OpenEarthViewer.prototype.switchDof = function() {
+	this.dofActiv = !this.dofActiv;
+	if( this.dofActiv ){
+		setElementActiv( document.getElementById( "btnDof" ), true );
+	}else{
+		setElementActiv( document.getElementById( "btnDof" ), false );
+	}
+	this.MUST_RENDER = true;
+}
+
+OpenEarthViewer.prototype.start = function() {
+	
+	initUi();
+	this.fountainPartMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: ( ( this.earth.meter ) * 10 ), map: this.textures['particleWater'] });
+	this.fountainPartMat.alphaTest = 0.4;
+	this.fountainPartMat.transparent = true;
+	
+	this.userMat = new THREE.SpriteMaterial( { map: this.textures['god'], color: 0xffffff, fog: false } );
+	
+	var debugGeo = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 ); 
+	var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+	this.geoDebug = new THREE.Mesh( debugGeo, debugMat );
+	this.scene.add( this.geoDebug );
+	this.materialWaypoints['default'] = new THREE.SpriteMaterial( { map: this.textures['waypoint'], color: 0xffffff, fog: false } );
+	for( var model in this.MODELS_CFG ){
+		if( this.MODELS_CFG[model]["MARKER"] != "none" && this.MODELS_CFG[model]["MARKER"] != 'default' && this.texturesToPreload.indexOf( this.MODELS_CFG[model]["MARKER"] ) < 0 ){
+			this.materialWaypoints['MARKER_' + this.MODELS_CFG[model]["NAME"]] = new THREE.SpriteMaterial( { map: this.textures['MARKER_' + this.MODELS_CFG[model]["NAME"]], color: 0xffffff, fog: false } );
+		}
+	}
+	
+	this.materialPOILine = new THREE.LineBasicMaterial({color: 0xFFFFFF});
+	this.earth.construct();
+	
+	// this.earth.updateCamera();
+	var debugMouse = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 );
+	var debugMouseMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
+	this.sky.construct();
+	this.camCtrl.init( this.camera, this.earth );
+	this.camCtrl.updateCamera();
+	initTouch();
+	render();
+	
+	this.saveWaypoint( 4.231021, 43.795594, 13, "Capitelles" );
+	this.saveWaypoint( 3.854188, 43.958125, 13, "Cevennes" );
+	this.saveWaypoint( 2.383138,48.880945, 13, "Paris" );
+	
+	
+	if( localStorage.getItem("waypoints") == undefined ){
+		localStorage.setItem("waypoints", JSON.stringify( this.WpStored ) );
+	}else{
+		this.WpStored = JSON.parse( localStorage.getItem("waypoints") );
+		for( w = 0; w < this.WpStored.length; w ++ ){
+			this.saveWaypoint( this.WpStored[w]["lon"],this.WpStored[w]["lat"], this.WpStored[w]["zoom"], this.WpStored[w]["name"] );
+			
+		}
+	}
+	
+	
+	
+	
+	
+	/*
+	this.water = new THREE.Water( this.renderer, this.camera, this.scene, {
+			textureWidth: 256,
+			textureHeight: 256,
+			waterNormals: this.textures['waternormals'],
+			alpha: 	1.0,
+			sunDirection: this.sky.lightSun.position.normalize(),
+			sunColor: 0xffffff,
+			waterColor: 0x001e0f,
+			// betaVersion: 0,
+			// side: THREE.DoubleSide
+		});
+	
+
+	
+	this.aMeshMirror = new THREE.Mesh(
+		new THREE.PlaneBufferGeometry(2000, 2000, 10, 10), 
+		this.water.material
+		// new THREE.MeshBasicMaterial({ color: 0xFF0000 })
+	);
+	this.aMeshMirror.add(this.water);
+	this.aMeshMirror.rotation.x = Math.PI * 0.5;
+	this.aMeshMirror.position.y = -10;
+	this.scene.add( this.aMeshMirror );
+	*/
+	
+
+	
+	/*
+	var material = new THREE.ShaderMaterial({
+		uniforms: this.tuniform,
+		vertexShader: document.getElementById('vertex-ocean').textContent,
+		fragmentShader: document.getElementById('fragment-ocean').textContent
+	});
+	var mesh = new THREE.Mesh(
+		new THREE.PlaneBufferGeometry(10, 10, 4), material
+	);
+	this.scene.add( mesh );
+	*/
+}
+
+
+
+
+OpenEarthViewer.prototype.loadConfig = function() {
+	openModal( "Loading resources..." );
+	var ajaxCfg = new AjaxMng( 'cfg_models.json', {'APP':this}, function( res, _params ){
+			debug( 'Config loaded' );
+			_params['APP'].MODELS_CFG = JSON.parse( res );
+			for( var model in _params['APP'].MODELS_CFG ){
+				if( _params['APP'].MODELS_CFG[model]["MARKER"] != "none" && _params['APP'].MODELS_CFG[model]["MARKER"] != 'default' && _params['APP'].texturesToPreload.indexOf( _params['APP'].MODELS_CFG[model]["MARKER"] ) < 0 ){
+					_params['APP'].texturesToPreload.push( _params['APP'].MODELS_CFG[model]["MARKER"] );
+					_params['APP'].texturesNames.push( 'MARKER_' + _params['APP'].MODELS_CFG[model]["NAME"] );
+				}
+				document.getElementById( "models_switch" ).innerHTML += '<input type="checkbox" class="cfg_load_models" data-model="'+_params['APP'].MODELS_CFG[model]["NAME"]+'" id="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" value="1" > <label for="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" title="zoom min : '+_params['APP'].MODELS_CFG[model]["ZOOM_MIN"]+'">'+_params['APP'].MODELS_CFG[model]["NAME"]+'</label> <a href="#" onclick="openConfigModel(\''+_params['APP'].MODELS_CFG[model]["NAME"]+'\');"><img src="img/ico_config.png" alt="config" title="config"></a><br>';
+			}
+			openModal( "Loading textures..." );
+			_params['APP'].loadTextures();
+		});
+}
+
+
+
+OpenEarthViewer.prototype.loadModels = function() {
+	this.curModelLoading ++;
+	var curModel = this.modelsToLoad.shift();
+	// debug( "loading model " + curModel );
+	this.modelsLoader.load( 'models/'+curModel, function ( object ) {
+			object.rotation.x = Math.PI;
+			object.scale.x = 0.005;
+			object.scale.y = 0.005;
+			object.scale.z = 0.005;
+			OEV.modelsLib[OEV.modelsName[OEV.curModelLoading]] = object;
+			if( OEV.modelsToLoad.length > 0 ){
+				OEV.loadModels();
+			}else{
+				debug( "All " + OEV.modelsName.length + ' models loaded' );
+				closeModal();
+				OEV.start();
+			}
+	} );
+}
+
+
+OpenEarthViewer.prototype.loadTextures = function() {
+	var curText = this.texturesToPreload.shift();
+	this.curTextureLoading ++;
+	this.tileLoader.load( "textures/"+curText, 
+			function(t){
+				OEV.textures[OEV.texturesNames[OEV.curTextureLoading]] = t;
+				OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapS = OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapT = THREE.RepeatWrapping;
+				if( OEV.texturesToPreload.length == 0 ){
+					debug( "All " + OEV.texturesNames.length + " textures loaded" );
+					openModal( "Loading models..." );
+					OEV.loadModels();
+				}else{
+					OEV.loadTextures();
+				}
+			}, 
+			function ( xhr ) {
+				// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+			},
+			function ( xhr ) {
+				debug( 'TilesMng. An error happened' );
+			}
+		);
+}
+
+
+OpenEarthViewer.prototype.checkMouseWorldPos = function() {
+	var mX = ( ( mouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
+	var mY = -( ( mouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
+	
+	this.mouseScreenClick.x = mX;
+	this.mouseScreenClick.y = mY;
+	
+	this.raycaster.near = this.camera.near;
+	this.raycaster.far = this.camera.far;
+	this.raycaster.setFromCamera( new THREE.Vector2( mX, mY ), this.camera );
+	var intersects = this.raycaster.intersectObjects( this.earth.meshe.children );
+	var coord = undefined;
+	for ( var i = 0; i < intersects.length; i++ ) {
+		coord = this.earth.coordFromPos( intersects[ i ].point.x, intersects[ i ].point.z );
+	}
+	return coord;
+}
+
+
+OpenEarthViewer.prototype.addObjToUpdate = function( _obj ) {
+	if( this.objToUpdate.indexOf( _obj ) < 0 ){
+		this.objToUpdate.push( _obj );
+	}
+}
+
+OpenEarthViewer.prototype.removeObjToUpdate = function( _obj ) {
+	var index = this.objToUpdate.indexOf( _obj );
+	if( index < 0 ){
+		debug( 'OEV.removeObjToUpdate NOT FOUND !' );
+	}else{
+		this.objToUpdate.splice( index, 1 );
+	}
+}
+
+OpenEarthViewer.prototype.render = function() {
+	
+	
+	if( this.MUST_RENDER ){
+		if( this.tuniform != undefined ){
+			this.tuniform.iGlobalTime.value += 0.1;
+		}
+		if( this.water != undefined ){
+			this.water.material.uniforms.time.value += 1.0 / 60.0;
+			this.water.material.uniforms.sunDirection.value = this.sky.lightSun.position.normalize();
+			this.water.material.uniforms.sunColor.value = this.sky.lightSun.color;
+			this.water.render();
+		}
+		if( this.aMeshMirror != undefined ){
+			this.aMeshMirror.position.x = this.sky.posCenter.x;
+			this.aMeshMirror.position.z = this.sky.posCenter.z;
+		}
+	
+	
+		var d = new Date();
+		this.globalTime = d.getTime();
+		// debug( 'this.globalTime: ' + ( ( this.globalTime - 1456688420000 ) / 10 ) );
+		
+		showUICoords();
+		if( this.dofActiv ){
+			this.postprocessing.composer.render( 0.0 );
+		}else{
+			this.renderer.render( this.scene, this.camera );
+		}
+		this.MUST_RENDER = false;
+	}
+	
+	this.camCtrl.update();
+	
+	if( dragView ){
+		// this.earth.dragCamera();
+	}
+	if( dragSun ){
+		var mX = ( ( mouseX - this.containerOffset.x ) / this.sceneWidth );
+		this.sky.setSunTime( mX );
+	}
+	if( rotateView ){
+		// this.earth.rotateCamera( ( mouseX - lastMouseX ) / 100.0, ( mouseY - lastMouseY ) / 100.0 ); // OK
+	}
+	lastMouseX = mouseX;
+	lastMouseY = mouseY;
+	if( this.showRendererInfos ){
+		var rendererInfos = '';
+		for( var key in this.renderer.info ){
+			for( var prop in this.renderer.info[key] ){
+				rendererInfos += "info " + key + " / " + prop + " / " + this.renderer.info[key][prop] + '<br>';
+			}
+		}
+		debug( rendererInfos, true );
+	}
+	this.earth.update();
+	this.sky.update();
+	
+	for( var u = 0; u < this.objToUpdate.length; u ++ ){
+		this.objToUpdate[u].update();
+	}
+}
+
+OpenEarthViewer.prototype.gotoWaypoint = function( _wp ) {
+	this.camCtrl.setDestination( this.waypoints[_wp].lon, this.waypoints[_wp].lat );
+	this.camCtrl.setZoomDest( this.waypoints[_wp].zoom, 2000 );
+}
+
+OpenEarthViewer.prototype.saveWaypoint = function( _lon, _lat, _zoom, _name, _textureName, _localStore ) {
+	// debug( 'OpenEarthViewer.saveWaypoint DESACTIVE' );
+	// return false;
+	_name = _name || "WP " + this.waypoints.length;
+	_textureName = _textureName || 'default';
+	_localStore = _localStore || false;
+	var wp = new WayPoint( _lon, _lat, _zoom, _name, _textureName );
+	this.waypoints.push( wp );
+	updateWaypointsList( this.waypoints );
+	
+	if( _localStore ){
+		console.log( this.WpStored );
+		this.WpStored.push( { "name" : _name, "lon" : _lon, "lat" : _lat, "zoom" : _zoom } );
+		localStorage.setItem("waypoints", JSON.stringify( this.WpStored ) );
+	}
+	return wp;
+}
+
+
+OpenEarthViewer.prototype.removeWaypoint = function( _wId ) {
+	for( w = 0; w < this.WpStored.length; w ++ ){
+		var storedWP = this.WpStored[w];
+		if( storedWP["lon"] == this.waypoints[_wId].lon && storedWP["lat"] == this.waypoints[_wId].lat && storedWP["zoom"] == this.waypoints[_wId].zoom  ){
+			debug( "found stored WP to remove" );
+			this.WpStored.splice( w, 1 );
+			break;
+		}
+	}
+	localStorage.setItem("waypoints", JSON.stringify( this.WpStored ) );	
+	
+	
+	this.waypoints[_wId].dispose();
+	this.waypoints.splice( _wId, 1 );
+	
+	updateWaypointsList( this.waypoints );
+}
+
+
+
+OpenEarthViewer.prototype.getPolygonCentroid = function( pts ) {
+	var first = pts[0], last = pts[pts.length-1];
+	if (first.lon != last.lon || first.lat != last.lat) pts.push(first);
+	var twicearea=0,
+	lon=0, lat=0,
+	nPts = pts.length,
+	p1, p2, f;
+	for ( var i=0, j=nPts-1 ; i<nPts ; j=i++ ) {
+		p1 = pts[i]; p2 = pts[j];
+		f = p1.lon*p2.lat - p2.lon*p1.lat;
+		twicearea += f;          
+		lon += ( p1.lon + p2.lon ) * f;
+		lat += ( p1.lat + p2.lat ) * f;
+	}
+	f = twicearea * 3;
+	return { lon:lon/f, lat:lat/f };
+}
