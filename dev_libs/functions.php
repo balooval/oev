@@ -30,10 +30,6 @@ function getWeather( $_x, $_y, $_z, $_noCache=false ){
 	$centerLon = ( $endC[0] + $startC[0] ) / 2;
 	$centerLat = ( $endC[1] + $startC[1] ) / 2;
 	
-	// $url = 'http://api.openweathermap.org/data/2.5/weather?lat='.$centerLat.'&lon='.$centerLon.'&units=metric&appid=08d6047ad38c47b1aea2100d8d827e34';
-	// return $url;
-	
-	
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$z.'/'.$x;
 	makDirCache( array( CACHE_BASE_PATH, $dirName, $z, $x ) );
 	
@@ -44,7 +40,7 @@ function getWeather( $_x, $_y, $_z, $_noCache=false ){
 	}
 	
 	if( $NO_CACHE || !is_file( $fullPath.'/'.$fileName.'.json' ) ){
-		$url = 'http://api.openweathermap.org/data/2.5/weather?lat='.$centerLat.'&lon='.$centerLon.'&units=metric&appid=08d6047ad38c47b1aea2100d8d827e34';
+		$url = 'http://api.openweathermap.org/data/2.5/weather?lat='.$centerLat.'&lon='.$centerLon.'&units=metric&appid=%MY_ID%';
 		$datas = file_get_contents( $url );
 		file_put_contents( $fullPath.'/'.$fileName.'.json', $datas );
 	}
@@ -197,7 +193,6 @@ function getEleFileFromCoord( $_lat, $_lon ){
 	if( $_lat > 0 ){
 		$fileName .= 'N'.str_pad( floor( $_lat-0.0001 ), 2, '0', STR_PAD_LEFT );
 	}else{
-		// $fileName .= 'S'.str_pad( floor( abs( $_lat-0.0001 ) ), 2, '0', STR_PAD_LEFT );
 		$fileName .= 'S'.str_pad( ceil( abs( $_lat+0.0001 ) ), 2, '0', STR_PAD_LEFT );
 	}
 	if( $_lon > 0 ){
@@ -231,36 +226,13 @@ function extractElevation( $_lat, $_lon ){
 	if( $data = fread( $fh, 2 * $measPerDeg * $measPerDeg ) ){
 		$hgtfile = basename( $hgtfile, '.hgt' );
 		$colStep = 1 / $measPerDeg;
-		// OK
 		$colDest = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
-		
-		
 		if (substr ($hgtfile, 0, 1) == "S") {
 			$colDest = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
 		}
-		/*
-		echo '$hgtfile: '.$hgtfile.'<br>';
-		echo '$_lat: '.$_lat.'<br>';
-		// echo '$_lon: '.$_lon.'<br>';
-		echo '$starty: '.$starty.'<br>';
-		echo '$colDest: '.$colDest.'<br>';
-		echo '( ( $starty + 1 ) - $_lat ): '.( ( $starty + 1 ) - $_lat ).'<br>';
-		*/
-		// echo '$_lat - ( $starty + 0 ): '.( $_lat - ( $starty -1 ) ).'<br>';
-		// echo 'A $colDest: '.$colDest.'<br>';
-		// $colDest = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
-		// echo 'A $colDest: '.$colDest.'<br>';
-		// $rowDest = ( ( abs($_lon - $startx) ) / $colStep );
-		
-		
-		
-		
 		$rowDest = floor( ( $_lon - $startx ) / $colStep );
 		$offset = $colDest * ( 2 * $measPerDeg );
 		$offset += $rowDest * 2;
-		
-		// echo '$offset: '.$offset.'<br>';
-		
 		for ($j = $rowDest; $j< $measPerDeg; $j++) {
 			$short = substr ($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
@@ -276,32 +248,16 @@ function extractElevation( $_lat, $_lon ){
 
 
 function queryEleDist( $_lat, $_lon ){
-	// $url = 'http://api.geonames.org/srtm3?lat='.$_lat.'&lng='.$_lon.'&username=balooval';
-	$url = 'http://api.geonames.org/astergdem?lat='.$_lat.'&lng='.$_lon.'&username=balooval';
+	$url = 'http://api.geonames.org/astergdem?lat='.$_lat.'&lng='.$_lon.'&username=%USERNAME%';
 	$datas = file_get_contents( $url );
 	return $datas;
 }
 
 function extractElevationInterpolate( $_lat, $_lon ){
-	/*
-	$measPerDeg = 3601; // 1 second data
-	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas_1/'.getEleFileFromCoord( $_lat, $_lon );
-	if( !is_file( $hgtfile ) ){
-		$measPerDeg = 1201; // 3 second data
-		$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
-		// echo '$hgtfile: '.$hgtfile.'<br>';
-		if( !is_file( $hgtfile ) ){
-			return 0;
-			// return queryEleDist( $_lat, $_lon );
-		}
-	}
-	*/
 	$measPerDeg = 1201; // 3 second data
 	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
-	// echo '$hgtfile: '.$hgtfile.'<br>';
 	if( !is_file( $hgtfile ) ){
 		return 0;
-		// return queryEleDist( $_lat, $_lon );
 	}
 
 	
@@ -317,63 +273,23 @@ function extractElevationInterpolate( $_lat, $_lon ){
 	}
 	if( $data = fread( $fh, 2 * $measPerDeg * $measPerDeg ) ){
 		$hgtfile = basename( $hgtfile, '.hgt' );
-		
 		$colStep = 1 / $measPerDeg;
-
-		
-		// OK
-		
 		$colDest = ( ( ( $starty + 1 ) - $_lat ) / $colStep );
 		$colFloor = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
 		$colCeil = ceil( ( ( $starty + 1 ) - $_lat ) / $colStep );
-		/*
-		if (substr ($hgtfile, 0, 1) == "S") {
-			$colDest = ( ( ( $starty - 1 ) - $_lat ) / $colStep );
-			$colFloor = floor( ( ( $starty - 1 ) - $_lat ) / $colStep );
-			$colCeil = ceil( ( ( $starty - 1 ) - $_lat ) / $colStep );
-		}
-		*/
-		
-		/*
-		// OK
-		$rowDest = ( ( $_lon - abs($startx) ) / $colStep );
-		$rowFloor = ( floor( ( $_lon - abs($startx) ) / $colStep ) );
-		$rowCeil = ( ceil( ( $_lon - abs($startx) ) / $colStep ) );
-		*/
-		
 		$rowDest = ( ( abs($_lon - $startx) ) / $colStep );
 		$rowFloor = ( floor( ( abs( $_lon - $startx) ) / $colStep ) );
 		$rowCeil = ( ceil( ( abs($_lon - $startx) ) / $colStep ) );
-		/*
-		echo '<br>';
-		echo '$hgtfile: '.$hgtfile.'<br>';
-		echo '$_lat: '.$_lat.'<br>';
-		echo '$starty: '.$starty.'<br>';
-		echo '( $starty + 1 ): '.( $starty + 1 ).'<br>';
-		echo '( ( $starty + 1 ) - $_lat ): '.( ( $starty + 1 ) - $_lat ).'<br>';
-		echo '$colDest: '.$colDest.'<br>';
-		echo '$colFloor: '.$colFloor.'<br>';
-		echo '$colCeil: '.$colCeil.'<br>';
-		echo '$_lon: '.$_lon.'<br>';
-		echo '$startx: '.$startx.'<br>';
-		echo '( $_lon - $startx ): '.( $_lon - $startx ).'<br>';
-		echo '$rowDest: '.$rowDest.'<br>';
-		echo '$rowFloor: '.$rowFloor.'<br>';
-		echo '$rowCeil: '.$rowCeil.'<br>';
-		*/
 		$eleTopLeft = 0;
 		$eleBottomLeft = 0;
 		$eleTopRight = 0;
 		$eleBottomRight = 0;
-		
 		$offset = $colFloor * ( 2 * ( $measPerDeg - 0 ) );
 		$offset += $rowFloor * 2;
-		// echo '$offset: '.$offset.'<br>';
 		for( $j = $rowFloor; $j< $measPerDeg; $j++) {
 			$short = substr( $data, $offset, 2 );
 			$shorts = reset(unpack("n*", $short));
 			if( $shorts < 30000 ){
-				// echo 'found eleTopLeft<br>';
 				$eleTopLeft = $shorts;
 				break;
 			}else{
@@ -384,12 +300,10 @@ function extractElevationInterpolate( $_lat, $_lon ){
 		
 		$offset = $colFloor * ( 2 * ( $measPerDeg - 0 ) );
 		$offset += $rowCeil * 2;
-		// echo '$offset: '.$offset.'<br>';
 		for( $j = $rowCeil; $j< $measPerDeg; $j++) {
 			$short = substr ($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
 			if( $shorts < 30000 ){
-				// echo 'found eleBottomLeft<br>';
 				$eleBottomLeft = $shorts;
 				break;
 			}else{
@@ -400,12 +314,10 @@ function extractElevationInterpolate( $_lat, $_lon ){
 		
 		$offset = $colCeil * ( 2 * ( $measPerDeg - 0 ) );
 		$offset += $rowFloor * 2;
-		// echo '$offset: '.$offset.'<br>';
 		for( $j = $rowFloor; $j< $measPerDeg; $j++) {
 			$short = substr ($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
 			if( $shorts < 30000 ){
-				// echo 'found eleTopRight<br>';
 				$eleTopRight = $shorts;
 				break;
 			}else{
@@ -416,12 +328,10 @@ function extractElevationInterpolate( $_lat, $_lon ){
 
 		$offset = $colCeil * ( 2 * ( $measPerDeg - 0 ) );
 		$offset += $rowCeil * 2;
-		// echo '$offset: '.$offset.'<br>';
 		for( $j = $rowCeil; $j< $measPerDeg; $j++) {
 			$short = substr ($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
 			if( $shorts < 30000 ){
-				// echo 'found eleBottomRight<br>';
 				$eleBottomRight = $shorts;
 				break;
 			}else{
@@ -429,13 +339,6 @@ function extractElevationInterpolate( $_lat, $_lon ){
 			}
 			$offset += 2;
 		}
-		/*
-		echo 'eleTopLeft : '.$eleTopLeft.'<br>';
-		echo 'eleBottomLeft : '.$eleBottomLeft.'<br>';
-		echo 'eleTopRight : '.$eleTopRight.'<br>';
-		echo 'eleBottomRight : '.$eleBottomRight.'<br>';
-		*/
-		
 		if( $colCeil == $colFloor ){
 			$R1 = $eleTopLeft;
 			$R2 = $eleBottomLeft;
@@ -468,16 +371,10 @@ function parseGpx( $_gpxFilename ){
 		foreach($trk->children() as $trkseg) {
 			if( $trkseg->getName() == 'trkseg' ){
 				foreach($trkseg->children() as $trkpt) {
-					
-					// 2014-07-23T07:44:27Z
 					$gpxTime = $trkpt->time;
-					// echo $gpxTime.'<br>';
 					$jsonTime = explode( 'T', $gpxTime );
-					// echo $jsonTime[1].'<br>';
 					$jsonTime = explode( ':', $jsonTime[1] );
-					// echo $jsonTime[0].' / '.$jsonTime[1].' / '.substr( $jsonTime[2], 0, -1 ).'<br>';
 					$jsonTime = substr( $jsonTime[2], 0, -1 ) + ( $jsonTime[1] * 60 ) + ( $jsonTime[0] * 60 * 60 );
-					// echo $jsonTime.'<br>';
 					$gpxPts[] = array( "time"=>$jsonTime, "lon"=>$trkpt['lon'], "lat"=>$trkpt['lat'], "ele"=>$trkpt[0]->ele );
 				}
 			}
@@ -487,7 +384,7 @@ function parseGpx( $_gpxFilename ){
 }
 
 function logIp(){
-	if( $_SERVER['REMOTE_ADDR'] != '78.221.127.155' ){
+	if( $_SERVER['REMOTE_ADDR'] != '%SRV_IP%' ){
 		$fp = fopen( dirname( __FILE__ ).'/ip_azeipssdkjhkjdsj.log', 'a+');
 		fwrite( $fp, date( 'Y-m-d H:i:s' ).' / '.$_SERVER['REMOTE_ADDR']."\r\n" );
 		fclose($fp);
