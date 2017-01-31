@@ -2,18 +2,11 @@
 require_once( dirname( __FILE__ ).'/init.php' );
 
 
-
-
 if( isset( $_GET['url'] ) ){
 	$url = urldecode( $_GET['url'] );
 	header('Content-type: image/png');
 	readfile($url);
 }
-
-// mapbox key
-// pk.eyJ1IjoiYmFsb292YWwiLCJhIjoiY2lrMmF2d2FrMDJ6eHhia295MWFub3dsMiJ9._K2WzZ0dEZk0CyxvJCUfLQ
-
-
 
 
 $NO_CACHE = false;
@@ -51,7 +44,6 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 		$coord = '('.$south.','.$east.','.$north.','.$west.')';
 		
 		$curServer = $serversOverpass[round( rand( 0, count( $serversOverpass ) - 1 ) )];
-		// $url = $curServer.'/interpreter?data=[out:json];(node'.$coord.'["amenity"~"."];);out;';
 		$url = $curServer.'/interpreter?data=[out:json];(node'.$coord.'["amenity"~"."];node'.$coord.'["tourism"="artwork"]["artwork_type"="statue"];);out;';
 		$datas = file_get_contents( $url );
 		file_put_contents( $fullPath.'/amenity.json', $datas);
@@ -67,8 +59,6 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 		}';
 	}
 }else if( isset( $_GET['overpass_buildings'] ) ){
-	// $OVERPASS_SURFACES = json_decode( file_get_contents( dirname( __FILE__ ).'/../cfg_surfaces.json' ), true );
-	
 	$x = $_GET['tileX'];
 	$y = $_GET['tileY'];
 	$z = $_GET['zoom'];
@@ -86,10 +76,8 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 		$east = $startC[0];
 		$west = $endC[0];
 		$coord = '('.$south.','.$east.','.$north.','.$west.')';
-
 		$curServer = $serversOverpass[round( rand( 0, count( $serversOverpass ) - 1 ) )];
 		$url = $curServer.'/interpreter?data=[out:json];(way'.$coord.'["building"~"."];way'.$coord.'["building:part"~"."]);(._;>;);out;';
-		// $url = $curServer.'/interpreter?data=[out:json];(way'.$coord.'["building"~"."];way'.$coord.'["building:part"~"."];relation'.$coord.'["building"~"."]);(._;>;);out;';
 		$response = @file_get_contents( $url );
 		file_put_contents( $fullPath.'/ways.json', $response );
 	}
@@ -249,7 +237,7 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 		$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$z.'/'.$x;
 		makDirCache( array( CACHE_BASE_PATH, $dirName, $z, $x ) );
 		if( !is_file( $fullPath.'/'.$y.'.png' ) ){
-			$url = 'https://api.mapbox.com/v4/mapbox.satellite/'.$z.'/'.$x.'/'.$y.'.png32?access_token=pk.eyJ1IjoiYmFsb292YWwiLCJhIjoiY2lrMmF2d2FrMDJ6eHhia295MWFub3dsMiJ9._K2WzZ0dEZk0CyxvJCUfLQ';
+			$url = 'https://api.mapbox.com/v4/mapbox.satellite/'.$z.'/'.$x.'/'.$y.'.png32?access_token=%MAPBOX_KEY%';
 			$image = file_get_contents( $url );
 			file_put_contents( $fullPath.'/'.$y.'.png', $image);
 		}
@@ -321,7 +309,6 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 	$lon = round( $_GET['lon'] );
 	$lat = round( $_GET['lat'] );
 	if( is_numeric( $lon ) && is_numeric( $lat ) ){
-		// http://api.geonames.org/srtm3?lat=43.7421&lng=4.1807&username=demo
 		$url = 'http://api.geonames.org/srtm3?lat='.$lat.'&lng='.$lon.'&username=demo';
 		$res = file_get_contents( $url );
 		echo $res;
@@ -335,10 +322,7 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 	for( $i = 0; $i < $nb; $i ++ ){
 		$lon = ( $_GET['lon_'.$i] );
 		$lat = ( $_GET['lat_'.$i] );
-		
-		
 		$dirName = 'cacheElevation';
-		// $dirName = 'cacheElevation1Sec';
 		$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$lon.'/'.$lat;
 		makDirCache( array( CACHE_BASE_PATH, $dirName, $lon, $lat ) );
 		
@@ -396,44 +380,21 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 	drawHgtImg();
 	
 }else if( isset( $_GET['debugEle'] ) ){
-	// extractElevationInterpolate( 37.1919, -90.6587 );
-	// echo extractElevationInterpolate( -22.7187, 133.3617 );
-	/*
-	echo extractElevation( 45.1187, 4.3617 );
-	echo '<br>';
-	echo '<br>';
-	echo extractElevation( 45.7187, 4.3617 );
-	echo '<br>';
-	echo '<br>';
-	echo '<br>';
-	
-	echo extractElevation( -22.1187, 133.3617 );
-	echo '<br>';
-	echo extractElevation( -22.7187, 133.3617 );
-	*/
-	
 	$z = 9;
 	$x = 437;
 	$y = 266;
 	$def = 32;
-	
 	$img = imagecreatetruecolor( $def + 1, $def + 1 );
-	
 	$eleFactor = 0.3;
-	
 	$startC = tileToCoords( $x, $y, $z );
 	$endC = tileToCoords( $x + 1, $y + 1, $z );
-
 	$south = $endC[1];
 	$north = $startC[1];
 	$east = $startC[0];
 	$west = $endC[0];
-	
 	$stepLat = ( $north - $south ) / $def;
 	$stepLon = ( $west - $east ) / $def;
-
 	$tmp = 0;
-	
 	$tmpX = 0;
 	$tmpY = 0;
 	for( $curLon = $east; $curLon <= $west; $curLon += $stepLon ){
@@ -442,21 +403,16 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 			$tmp ++;
 			$elevation = extractElevation( $curLat, $curLon );
 			// $elevation = extractElevationInterpolate( $curLat, $curLon );
-			// echo '$elevation: '.$elevation.'<br>';
-			
 			$pixelEle = round( $elevation * $eleFactor );
 			$color = imagecolorallocate( $img, $pixelEle, $pixelEle, $pixelEle );
 			imagesetpixel($img, $tmpX, $tmpY, $color );
-			
 			$tmpY ++;
 		}
 		$tmpX ++;
 		$tmpY = 0;
 	}
-	
 	header("Content-type: image/png");
 	imagepng($img);
 	imagedestroy($img);
-	
 }
 ?>
