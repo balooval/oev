@@ -97,7 +97,7 @@ CamCtrlGod.prototype.update = function() {
 
 CamCtrlGod.prototype.setDestination = function( _lon, _lat, _duration ) {
 	if( _duration == undefined ){
-		var distance = coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
+		var distance = Oev.Utils.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
 		_duration = Math.min( 5000, distance / 10 );
 		// debug( "_duration undefined, set to " + _duration + ' (' + distance + ')' );
 	}	
@@ -226,8 +226,8 @@ CamCtrlGod.prototype.updateCamera = function() {
 	this.planet.zoomFromAltitudeTest( this.coordCam.z );
 	
 	if( this.planet.projection == "SPHERE" ){
-		var radLon = radians( this.coordLookat.x );
-		var radLat = radians( this.coordLookat.y );
+		var radLon = Oev.Math.radians( this.coordLookat.x );
+		var radLat = Oev.Math.radians( this.coordLookat.y );
 		var matGlob = new THREE.Matrix4();
 		var matZ = new THREE.Matrix4();
 		var matY = new THREE.Matrix4();
@@ -626,7 +626,7 @@ CamCtrlFps.prototype.update = function() {
 
 CamCtrlFps.prototype.setDestination = function( _lon, _lat, _duration ) {
 	if( _duration == undefined ){
-		var distance = coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
+		var distance = Oev.Utils.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
 		_duration = Math.min( 5000, distance / 10 );
 		// debug( "_duration undefined, set to " + _duration + ' (' + distance + ')' );
 	}	
@@ -727,8 +727,8 @@ CamCtrlFps.prototype.updateCamera = function() {
 	this.posLookat = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordLookat.z + 6 );
 	
 	if( this.planet.projection == "SPHERE" ){
-		var radLon = radians( this.coordLookat.x );
-		var radLat = radians( this.coordLookat.y );
+		var radLon = Oev.Math.radians( this.coordLookat.x );
+		var radLat = Oev.Math.radians( this.coordLookat.y );
 		var matGlob = new THREE.Matrix4();
 		var matZ = new THREE.Matrix4();
 		var matY = new THREE.Matrix4();

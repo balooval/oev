@@ -268,8 +268,8 @@ TileBuildings.prototype.filterBBox = function() {
 	// debug( '        ' + this.geoTile.zoom + ' / ' + this.geoTile.tileX + ' / ' + this.geoTile.tileY );
 	var buildingsToDraw= [];
 	
-	var startCoord = tileToCoords( this.tileX, this.tileY, this.zoom );
-	var endCoord = tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
+	var startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
+	var endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
 	
 	var bbox = { 
 		"minLon" : startCoord.x, 
@@ -279,7 +279,7 @@ TileBuildings.prototype.filterBBox = function() {
 	};
 	var b;
 	for( b = 0; b < this.datas.length; b ++ ){
-		var centroid = getPolygonCentroid( this.datas[b]["vertex"] );
+		var centroid = Oev.Utils.getPolygonCentroid( this.datas[b]["vertex"] );
 		this.datas[b]["centroid"] = centroid;
 		if( centroid.lon < bbox["minLon"] || centroid.lon > bbox["maxLon"] || centroid.lat > bbox["maxLat"] || centroid.lat < bbox["minLat"] ){
 			// debug( 'filterBBox OUT ' + this.geoTile.zoom );
@@ -379,7 +379,7 @@ TileBuildings.prototype.construct = function() {
 					tmp.push( [ curBuilding["vertex"][c]['lon'], curBuilding["vertex"][c]['lat'] ] );
 				}
 				drawBuilding = false;
-				if( ptIsInPolygon( tmp, 2.2358933, 48.8925554 ) ){
+				if( Oev.Math.ptIsInPolygon( tmp, 2.2358933, 48.8925554 ) ){
 					drawBuilding = true;
 				}
 			}
@@ -431,24 +431,6 @@ function findCentroid( pts ){
     lat: x / f + off[1],
     lon: y / f + off[0]
     };
-}
-
-TileBuildings.prototype.getPolygonCentroid = function( pts ) {
-	var first = pts[0], last = pts[pts.length-1];
-	if (first[0] != last[0] || first[1] != last[1]) pts.push(first);
-	var twicearea=0,
-	lon=0, lat=0,
-	nPts = pts.length,
-	p1, p2, f;
-	for ( var i=0, j=nPts-1 ; i<nPts ; j=i++ ) {
-		p1 = pts[i]; p2 = pts[j];
-		f = p1[0]*p2[1] - p2[0]*p1[1];
-		twicearea += f;          
-		lon += ( p1[0] + p2[0] ) * f;
-		lat += ( p1[1] + p2[1] ) * f;
-	}
-	f = twicearea * 3;
-	return { lon:lon/f, lat:lat/f };
 }
 
 
