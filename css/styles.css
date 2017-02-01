@@ -1,7 +1,11 @@
+html{
+	height: 100vh;
+}
+
 body{
 	font-family: verdana;
 	font-size: 12px;
-	min-height: 100vh;
+	height: 100vh;
 	display: flex;
 	margin: 0;
 	background-color: #000;
@@ -69,10 +73,8 @@ a{
 #modalWindow{
 	position: relative;
 	width: 50%;
-	/*height: 50%;*/
 	max-height: 80%;
 	overflow: hidden;
-	/*border: 1px solid black;*/
 	background-color: white;
 	margin: 0 auto;
 	top: 25%;
@@ -82,16 +84,8 @@ a{
 }
 
 
-
-#footer{
-	height: 20px;
-	padding: 3px;
-	text-align: center;
-	background-color: #eee;
-	color: #000;
-}
 #header{
-	height: 30px;
+	height: 5%;
 	padding: 10px;
 	font-size: 28px;
 	text-align: center;
@@ -103,8 +97,17 @@ a{
 }
 
 #main{
+	height: 90%;
 	display: flex;
 	flex: 1 1 auto;
+}
+
+#footer{
+	height: 5%;
+	padding: 3px;
+	text-align: center;
+	background-color: #eee;
+	color: #000;
 }
 
 #main_exemples{
@@ -139,9 +142,7 @@ a{
 	border-top: 1px solid #bbb;
 	padding-bottom: 8px;
 	margin: 0;
-	
-	/*box-shadow: 0px 3px 2px 0px rgba( 0, 0, 0, 0.4 );*/
-	box-shadow: 0px 2px 2px 0px rgba( 0, 0, 0, 0.6);
+	box-shadow: 0px 2px 2px 0px rgba( 0, 0, 0, 0.2);
 }
 
 .toolsBox > h3.activ:hover{
@@ -167,7 +168,7 @@ a{
 	padding: 0 5px;
 	overflow: hidden;
 	max-height: 0;
-	transition: max-height 0.4s, margin-top 0.4s;
+	transition: max-height 0.2s, margin-top 0.2s;
 }
 
 .toolsContent.activ{
@@ -214,7 +215,6 @@ a{
 	background-color: #fff;
 	text-align: center;
 	margin: auto 0;
-	
 	position: relative;
 	cursor: move;
 }

@@ -100,9 +100,9 @@ $cfgJS .= '};';
 							<input type="text" name="search_value" id="search_value" placeholder="search place">
 						</form>
 					</div>
-					<div class="toolsBox" id="config_box">
-						<h3 data-content="layers" class="activ"><div class="ico_expend activ" id="expend_layers"></div> Network</h3>
-						<div class="toolsContent activ" id="toolsContent_layers">
+					<div class="toolsBox" id="config_network">
+						<h3 data-content="network" class="activ"><div class="ico_expend activ" id="expend_network"></div> Network</h3>
+						<div class="toolsContent activ" id="toolsContent_network">
 							<div id="ws_status">
 								...
 							</div>
@@ -228,7 +228,7 @@ $cfgJS .= '};';
 		
 			var vertMixShader = document.getElementById('vertWater').innerHTML;
 			var fragMixShader = document.getElementById('fragWater').innerHTML;
-
+			
 			var OEV = new OpenEarthViewer( 'threeContainer' );
 			OEV.init();
 			
@@ -240,7 +240,6 @@ $cfgJS .= '};';
 				requestAnimationFrame( render );
 				OEV.render();
 			}
-			
 		</script>
 		
 	</body>
