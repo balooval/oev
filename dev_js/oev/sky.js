@@ -1,6 +1,6 @@
 Oev.Sky = (function(){
 	'use strict';
-	console.warn('sky.jsloaded and not used');
+	console.warn('Oev.Sky.js loaded but not used');
 	var lightAmbiant = undefined;
 	var lightSun = undefined;
 	var lightSunTarget = undefined;
