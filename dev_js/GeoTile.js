@@ -21,20 +21,12 @@ var GeoTile = function ( _globe, _tileX, _tileY, _zoom ) {
 	this.mesheBorder = undefined;
 	this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"] });
 	
-	this.startCoord = tileToCoords( this.tileX, this.tileY, this.zoom );
-	this.endCoord = tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
-	this.startLargeCoord = tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
-	this.endLargeCoord = tileToCoords( this.tileX + 2, this.tileY + 2, this.zoom );
-	this.startMidCoord = tileToCoords( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
-	this.endMidCoord = tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
-	/*
-	this.startCoord = this.globe.tileToCoords( this.tileX, this.tileY, this.zoom );
-	this.endCoord = this.globe.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
-	this.startLargeCoord = this.globe.tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
-	this.endLargeCoord = this.globe.tileToCoords( this.tileX + 2, this.tileY + 2, this.zoom );
-	this.startMidCoord = this.globe.tileToCoords( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
-	this.endMidCoord = this.globe.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
-	*/
+	this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
+	this.endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
+	this.startLargeCoord = Oev.Utils.tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
+	this.endLargeCoord = Oev.Utils.tileToCoords( this.tileX + 2, this.tileY + 2, this.zoom );
+	this.startMidCoord = Oev.Utils.tileToCoords( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
+	this.endMidCoord = Oev.Utils.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
 	this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
 	
 	this.vertCoords = [];
@@ -528,8 +520,8 @@ GeoTile.prototype.updateDetails = function() {
 }
 
 GeoTile.prototype.checkCameraHover = function( _marge ) {
-	var startLimit = tileToCoords( this.tileX - ( _marge - 1 ), this.tileY - ( _marge - 1 ), this.zoom );
-	var endLimit = tileToCoords( this.tileX + _marge, this.tileY + _marge, this.zoom );
+	var startLimit = Oev.Utils.tileToCoords( this.tileX - ( _marge - 1 ), this.tileY - ( _marge - 1 ), this.zoom );
+	var endLimit = Oev.Utils.tileToCoords( this.tileX + _marge, this.tileY + _marge, this.zoom );
 	if( startLimit.x > this.globe.coordDetails.x ){
 		return false;
 	}
