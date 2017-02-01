@@ -44,6 +44,7 @@ $cfgJS .= '};';
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/Utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/navigation.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/sky.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/math.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/animation.js"></script>
@@ -57,7 +58,6 @@ $cfgJS .= '};';
 		<script type="text/javascript" src="<?php echo $dev;?>js/TileNodes.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Globe.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/DatasMng.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Waypoints.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/DatasProvider.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Earcut.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/utils/lineclip.js"></script>

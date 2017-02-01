@@ -488,7 +488,7 @@ OpenEarthViewer.prototype.saveWaypoint = function( _lon, _lat, _zoom, _name, _te
 	_name = _name || "WP " + this.waypoints.length;
 	_textureName = _textureName || 'default';
 	_localStore = _localStore || false;
-	var wp = new WayPoint( _lon, _lat, _zoom, _name, _textureName );
+	var wp = new Oev.Navigation.WayPoint( _lon, _lat, _zoom, _name, _textureName );
 	this.waypoints.push( wp );
 	updateWaypointsList( this.waypoints );
 	
