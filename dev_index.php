@@ -42,7 +42,7 @@ $cfgJS .= '};';
 		<title>DEV OpenEarthViewer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
-		<script type="text/javascript" src="js/three.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Utils.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/OEV.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/UI.js"></script>
