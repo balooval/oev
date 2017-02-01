@@ -43,7 +43,7 @@ $cfgJS .= '};';
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/oev/Utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/utils.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/navigation.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/sky.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/math.js"></script>

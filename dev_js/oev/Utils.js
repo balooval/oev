@@ -1,6 +1,4 @@
 var Oev = (function(){
-	console.log('Oev');
-	
 	var api = {};
 	
 	return api;
