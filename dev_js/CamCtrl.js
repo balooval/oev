@@ -24,9 +24,9 @@ var CamCtrlGod = function () {
 	this.zoomTweenValueEnd = this.zoomCur;
 	this.zoomTweenTimeStart = -1;
 	
-	this.tweenZoom = new TweenValue( this.zoomCur );
-	this.tweenLon = new TweenValue( this.coordLookat.x );
-	this.tweenLat = new TweenValue( this.coordLookat.y );
+	this.tweenZoom = new Oev.Animation.TweenValue( this.zoomCur );
+	this.tweenLon = new Oev.Animation.TweenValue( this.coordLookat.x );
+	this.tweenLat = new Oev.Animation.TweenValue( this.coordLookat.y );
 	
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
@@ -468,9 +468,9 @@ var CamCtrlFps = function () {
 	this.zoomTweenValueEnd = this.zoomCur;
 	this.zoomTweenTimeStart = -1;
 	
-	this.tweenZoom = new TweenValue( this.zoomCur );
-	this.tweenLon = new TweenValue( this.coordLookat.x );
-	this.tweenLat = new TweenValue( this.coordLookat.y );
+	this.tweenZoom = new Oev.Animation.TweenValue( this.zoomCur );
+	this.tweenLon = new Oev.Animation.TweenValue( this.coordLookat.x );
+	this.tweenLat = new Oev.Animation.TweenValue( this.coordLookat.y );
 	
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
@@ -483,7 +483,7 @@ var CamCtrlFps = function () {
 	
 	this.altitude = 10000;
 	
-	this.tweenAlt = new TweenValue( this.altitude );
+	this.tweenAlt = new Oev.Animation.TweenValue( this.altitude );
 	
 	
 	this.keyMoveX = new THREE.Vector2( 0, 0 );
