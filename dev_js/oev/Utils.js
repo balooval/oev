@@ -1,6 +1,5 @@
 var Oev = (function(){
 	var api = {};
-	
 	return api;
 })();
 

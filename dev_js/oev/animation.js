@@ -1,6 +1,5 @@
 Oev.Animation = (function(){
 	'use strict';
-	
 	var api = {
 		
 	};

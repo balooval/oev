@@ -3,20 +3,14 @@ var Globe = function () {
 	this.tilesBase = [];
 	this.tiles2dMng = undefined;
 	this.tilesEledMng = undefined;
-	// this.meter = this.radius / 6371000.0;
-	
-	// perimetre : 40075017 metres
 	this.meter = this.radius / 40075017.0;
-	
 	this.meshe = new THREE.Mesh( new THREE.Geometry() );
 	this.CUR_ZOOM = 4;
 	this.globalScale = 1;
 	this.coordDetails = new THREE.Vector2( 0, 0 );
-	
 	this.eleActiv = false;
 	this.loadBuildings = false;
 	this.loadLanduse = false;
-
 	this.LOD_PLANET = 0;
 	this.LOD_STREET = 10;
 	this.curLOD = this.LOD_PLANET;
@@ -27,9 +21,7 @@ var Globe = function () {
 	this.tilesDefinition = 8;
 	// this.tilesDefinition = 16;
 	this.eleFactor = 1;
-	
 	this.coordToXYZ = this.coordToXYZPlane;
-	
 	this.nodesLoadManager = new DatasMng( "NODES" );
 	this.providersLoadManager = new DatasMng( "OBJECTS" );
 	this.modelsMesheMat = {

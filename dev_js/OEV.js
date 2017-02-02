@@ -1,4 +1,3 @@
-
 var OpenEarthViewer = function ( _containerId ) {
 	this.htmlContainer = _containerId;
 	this.sceneWidth = 400;
@@ -9,7 +8,6 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.containerOffset = undefined;
 	this.tileLoader = new THREE.TextureLoader();
 	this.earth;
-	// this.atmosphereMeshe = undefined;
 	this.texturesToPreload = [ 'waypoint.png', 'loading.png', 'sky.png', 'building_wall_5.png', 'checker_alpha.png' ];
 	this.texturesToPreload.push( 'roof.png' );
 	this.texturesToPreload.push( 'sun2.png' );

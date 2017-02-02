@@ -18,10 +18,8 @@ var Sky = function () {
 	this.sunLightBack = undefined;
 	this.sunLightBackHelper = undefined;
 	this.fogActive = true;
-	
 	this.lightHemi = undefined;
 	this.hemiIntensity = 0.35;
-	
 	this.cloudsActiv = false;
 	this.cloudsActiv = true;
 	this.sunPoint = undefined;

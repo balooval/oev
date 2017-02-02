@@ -4,7 +4,6 @@ var CamCtrlGod = function () {
 	this.planet = undefined;
 	this.pointer = undefined;
 	this.mouseLastPos = new THREE.Vector2( 0, 0 );
-
 	this.zoomCur = 4;
 	this.coordLookat = new THREE.Vector3( 4.1862, 43.7682, 0 );
 	this.zoomDest = this.zoomCur;
@@ -14,35 +13,24 @@ var CamCtrlGod = function () {
 	this.camRotation = new THREE.Vector2( Math.PI, 0.2 );
 	this.dragging = false;
 	this.rotating = false;
-	
 	this.coordOnGround = new THREE.Vector2( 0, 0 );
-	
-	
 	this.coordStartDrag = new THREE.Vector2( 0, 0 );
-	
 	this.zoomTweenValueStart = this.zoomCur;
 	this.zoomTweenValueEnd = this.zoomCur;
 	this.zoomTweenTimeStart = -1;
-	
-	this.tweenZoom = new Oev.Animation.TweenValue( this.zoomCur );
-	this.tweenLon = new Oev.Animation.TweenValue( this.coordLookat.x );
-	this.tweenLat = new Oev.Animation.TweenValue( this.coordLookat.y );
-	
+	this.tweenZoom = new Oev.Animation.TweenValue(this.zoomCur);
+	this.tweenLon = new Oev.Animation.TweenValue(this.coordLookat.x);
+	this.tweenLat = new Oev.Animation.TweenValue(this.coordLookat.y);
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
-	
 	this.evt = new Oev.Utils.Evt();
-	
-	
 	Oev.Input.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
 	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 	Oev.Input.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
-	
 	this.MUST_UPDATE = false;
 }
-
 
 CamCtrlGod.prototype.init = function( _cam, _planet ) {
 	this.camera = _cam;

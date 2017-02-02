@@ -20,12 +20,10 @@ UI.prototype.onMouseDownLeft = function() {
 	var coordOnGround = OEV.checkMouseWorldPos();
 	if (coordOnGround === undefined){
 		dragSun = true;
-		console.log('dragSun', dragSun);
 	}
 }
 UI.prototype.onMouseUpLeft = function() {
 	dragSun = false;
-	console.log('dragSun', dragSun);
 }
 
 function initUi(){
@@ -49,7 +47,6 @@ function initUi(){
 	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.onMouseDown,false);
 	OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.onMouseUp,true);
 	OEV.renderer.domElement.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
-	
 	var elem = document.getElementsByClassName( "toolsBox" );
 	for( var i = 0; i < elem.length; i ++ ){
 		var title = elem[i].getElementsByTagName("h3")[0];
