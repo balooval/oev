@@ -42,7 +42,7 @@ var Sky = function () {
 	this.weatherEnabled = false;
 	// this.weatherEnabled = true;
 	
-	this.evt = new Evt();
+	this.evt = new Oev.Utils.Evt();
 }
 
 
@@ -651,20 +651,6 @@ var RainEmiter = function ( _sky ) {
 	this.pMaterial.alphaTest = 0.4;
 	this.pMaterial.transparent = true;
 
-	/*
-	for (var p = 0; p < this.maxParticleCount; p++) {
-		this.partSpeed.push( Math.random() * 0.4 + 0.5 );
-		var particle = this.getDropStartingPoint();
-		particles.vertices.push( particle );
-	}
-
-	// create the particle system
-	this.particleSystem = new THREE.Points( particles, this.pMaterial );
-	this.particleSystem.position.x = this.sky.posCenter.x;
-	this.particleSystem.position.y = this.altitude;
-	this.particleSystem.position.z = this.sky.posCenter.z;
-	OEV.scene.add( this.particleSystem );
-	*/
 	this.setPercent( 100 );
 	
 	this.wind = 0;
@@ -691,27 +677,6 @@ RainEmiter.prototype.setPercent = function( _prct ) {
 	this.particleSystem.position.y = this.altitude;
 	this.particleSystem.position.z = this.sky.posCenter.z;
 	OEV.scene.add( this.particleSystem );
-	
-	
-	/*
-	var finalVertNb = Math.round( ( this.maxParticleCount * _prct ) / 100 );
-	debug( 'this.maxParticleCount : ' + this.maxParticleCount );
-	debug( 'setPercent : ' + _prct );
-	debug( 'finalVertNb : ' + finalVertNb );
-	
-	if( finalVertNb > this.particleSystem.geometry.vertices.length ){
-		while( this.particleSystem.geometry.vertices.length < finalVertNb ){
-			var dropPos = this.getDropStartingPoint();
-			this.particleSystem.geometry.vertices.push( dropPos );
-		}
-	}else if( finalVertNb < this.particleSystem.geometry.vertices.length ){
-		while( this.particleSystem.geometry.vertices.length > finalVertNb ){
-			this.particleSystem.geometry.vertices.pop();
-		}
-	}
-	
-	this.particleSystem.geometry.verticesNeedUpdate = true;
-	*/
 }
 
 

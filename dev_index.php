@@ -43,18 +43,21 @@ $cfgJS .= '};';
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/input.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/navigation.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/sky.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/math.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/animation.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/OEV.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/UI.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/CamCtrl.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Sky.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/GeoTile.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Tile3d.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/TileSurface.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/TileNodes.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Globe.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/DatasMng.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Waypoints.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/DatasProvider.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Earcut.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/utils/lineclip.js"></script>

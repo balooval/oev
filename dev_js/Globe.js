@@ -64,7 +64,7 @@ var Globe = function () {
 	this.gpxMillisStep = -1;
 	this.gpxTravelMillis = -1;
 	
-	this.evt = new Evt();
+	this.evt = new Oev.Utils.Evt();
 	
 }
 
@@ -240,7 +240,6 @@ Globe.prototype.updateZoom = function( _value ){
 	}
 }
 
-
 Globe.prototype.switchProjection = function(){
 	if( this.projection == "SPHERE" ){
 		this.setProjection( "PLANE" );
@@ -251,13 +250,13 @@ Globe.prototype.switchProjection = function(){
 
 Globe.prototype.setProjection = function( _mode ){
 	if( _mode == "PLANE" ){
-		OEV.sky.activAtmosphere( false );
-		OEV.sky.activSky( true );
+		Oev.Sky.activAtmosphere( false );
+		Oev.Sky.activSky( true );
 		this.coordToXYZ = this.coordToXYZPlane;
 		OEV.camera.up.set( 0, 0, 1 );
 	}else if( _mode == "SPHERE" ){
-		OEV.sky.activAtmosphere( true );
-		OEV.sky.activSky( false );
+		Oev.Sky.activAtmosphere( true );
+		Oev.Sky.activSky( false );
 		this.coordToXYZ = this.coordToXYZSphere;
 		OEV.camera.up.set( 0, 1, 0 );
 	}
@@ -351,7 +350,7 @@ Globe.prototype.checkLOD = function(){
 			OEV.camera.near = ( this.radius * this.globalScale ) / 1000000;
 			OEV.camera.updateProjectionMatrix();
 			
-			OEV.sky.initSunPos();
+			Oev.Sky.initSunPos();
 			
 			if( OEV.scene.fog ){
 				OEV.scene.fog.near = this.radius * ( 0.01 * this.globalScale );
@@ -362,7 +361,7 @@ Globe.prototype.checkLOD = function(){
 			
 			this.evt.fireEvent( "LOD_CHANGED" );
 			
-			OEV.sky.updateCloudsPos();
+			Oev.Sky.updateCloudsPos();
 			return true;
 		}
 	}else if( this.CUR_ZOOM >= this.LOD_PLANET ){
@@ -380,7 +379,7 @@ Globe.prototype.checkLOD = function(){
 			OEV.camera.near = ( this.radius * this.globalScale ) / 1000000;
 			OEV.camera.updateProjectionMatrix();
 			
-			OEV.sky.initSunPos();
+			Oev.Sky.initSunPos();
 			
 			
 			if( OEV.scene.fog ){
@@ -392,7 +391,7 @@ Globe.prototype.checkLOD = function(){
 			
 			this.evt.fireEvent( "LOD_CHANGED" );
 			
-			OEV.sky.updateCloudsPos();
+			Oev.Sky.updateCloudsPos();
 			return true;
 		}
 	}

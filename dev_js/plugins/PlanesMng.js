@@ -112,8 +112,8 @@ OpenEarthViewer.plugins["PLANES"] = OpenEarthViewer.planes;
 
 var Plane = function ( _start, _end ) {
 	this.onStage = true;
-	this.tweenLon = new TweenValue( _start.x );
-	this.tweenLat = new TweenValue( _start.y );
+	this.tweenLon = new Oev.Animation.TweenValue( _start.x );
+	this.tweenLat = new Oev.Animation.TweenValue( _start.y );
 	// this.altitude = 2000;
 	this.altitude = 5000;
 	var posTmp = OEV.earth.coordToXYZ( this.tweenLon.value, this.tweenLat.value, this.altitude );
