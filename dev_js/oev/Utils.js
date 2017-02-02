@@ -5,6 +5,7 @@ var Oev = (function(){
 })();
 
 Oev.Utils = (function(){
+	'use strict';
 	var api = {
 		tileToCoords : function(_tile_x, _tile_y, _zoom){
 			var p = new THREE.Vector2( 0, 0 );
@@ -52,54 +53,53 @@ Oev.Utils = (function(){
 			return distance;
 		}, 
 	};
-	return api;
-})();
+	
+	api.Evt = function() {
+		this.events = {};
+		this.listeners = {};
+	};
+	
+	api.Evt.prototype = {
+		addEventListener : function(name, listener, handler) {
+			if (this.events.hasOwnProperty(name)){
+				this.events[name].push(handler);
+				this.listeners[name].push(listener);
+			}else{
+				this.events[name] = [handler];
+				this.listeners[name] = [listener];
+			}
+		}, 
+		
+		removeEventListener : function(name, listener, handler) {
+			if (!this.events.hasOwnProperty(name))
+				return;
+			var index = -1;
+			for( var i = 0; i < this.listeners[name].length; i ++ ){
+				if( this.listeners[name][i] == listener && this.events[name][i] == handler ){
+					index = i;
+				}
+			}
+			if (index != -1){
+				this.events[name].splice(index, 1);
+				this.listeners[name].splice(index, 1);
+			}else{
+				debug( "removeEventListener NOT found" );
+			}
+		}, 
 
-var Evt = function () {
-    var _this = this;
-    _this.events = {};
-    _this.listeners = {};
-
-    _this.addEventListener = function(name, listener, handler) {
-        if (_this.events.hasOwnProperty(name)){
-            _this.events[name].push(handler);
-            _this.listeners[name].push(listener);
-        }else{
-            _this.events[name] = [handler];
-            _this.listeners[name] = [listener];
-		}
-    };
-
-    _this.removeEventListener = function(name, listener, handler) {
-        if (!_this.events.hasOwnProperty(name))
-            return;
-		var index = -1;
-		for( var i = 0; i < _this.listeners[name].length; i ++ ){
-			if( _this.listeners[name][i] == listener && _this.events[name][i] == handler ){
-				index = i;
+		fireEvent : function(name, args) {
+			if (!this.events.hasOwnProperty(name)) {
+				return;
+			}
+			if (args === undefined || !args.length) {
+				args = [];
+			}
+			var evs = this.events[name], l = evs.length;
+			for (var i = 0; i < l; i++) {
+				evs[i].apply(this.listeners[name][i], args);
 			}
 		}
-		if (index != -1){
-            _this.events[name].splice(index, 1);
-            _this.listeners[name].splice(index, 1);
-		}else{
-			debug( "removeEventListener NOT found" );
-		}
-    };
-
-    _this.fireEvent = function(name, args) {
-        if (!_this.events.hasOwnProperty(name))
-            return;
-
-        if (!args || !args.length)
-            args = [];
-
-        var evs = _this.events[name], l = evs.length;
-        for (var i = 0; i < l; i++) {
-            // evs[i].apply(null, args);
-            evs[i].apply(_this.listeners[name][i], args);
-        }
-    };
-}
-
-
+	}
+	
+	return api;
+})();

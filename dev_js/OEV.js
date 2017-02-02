@@ -9,7 +9,6 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.containerOffset = undefined;
 	this.tileLoader = new THREE.TextureLoader();
 	this.earth;
-	this.sky = undefined;
 	// this.atmosphereMeshe = undefined;
 	this.texturesToPreload = [ 'waypoint.png', 'loading.png', 'sky.png', 'building_wall_5.png', 'checker_alpha.png' ];
 	this.texturesToPreload.push( 'roof.png' );
@@ -123,7 +122,6 @@ OpenEarthViewer.prototype.init = function() {
 	this.sceneHeight = Math.min( intElemClientHeight, 800 );
 	this.scene = new THREE.Scene();
 	this.camera = new THREE.PerspectiveCamera( 90, this.sceneWidth / this.sceneHeight, 0.1, 20000 );
-	this.sky = new Sky();
 	this.earth = new Globe();
 	this.scene.add( this.earth.meshe );
 	this.renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
@@ -168,14 +166,7 @@ OpenEarthViewer.prototype.init = function() {
 		this.netCtrl = new NetCtrl();
 		this.netCtrl.init( this );
 	}
-	
-	
-	
-	
-	
 }
-
-
 
 OpenEarthViewer.prototype.initShadow = function() {
 	this.renderer.shadowMap.enabled = true;
@@ -199,13 +190,12 @@ OpenEarthViewer.prototype.initPlugins = function() {
 	}
 }
 
-
 OpenEarthViewer.prototype.switchClouds = function() {
-	if( this.sky.cloudsActiv ){
-		this.sky.clearClouds();
+	if (Oev.Sky.cloudsActiv) {
+		Oev.Sky.clearClouds();
 		setElementActiv( document.getElementById( "btnClouds" ), false );
 	}else{
-		this.sky.makeClouds();
+		Oev.Sky.makeClouds();
 		setElementActiv( document.getElementById( "btnClouds" ), true );
 	}
 }
@@ -223,6 +213,7 @@ OpenEarthViewer.prototype.switchDof = function() {
 OpenEarthViewer.prototype.start = function() {
 	
 	initUi();
+	Oev.Input.init();
 	this.fountainPartMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: ( ( this.earth.meter ) * 10 ), map: this.textures['particleWater'] });
 	this.fountainPartMat.alphaTest = 0.4;
 	this.fountainPartMat.transparent = true;
@@ -246,7 +237,7 @@ OpenEarthViewer.prototype.start = function() {
 	// this.earth.updateCamera();
 	var debugMouse = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 );
 	var debugMouseMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
-	this.sky.construct();
+	Oev.Sky.init();
 	this.camCtrl.init( this.camera, this.earth );
 	this.camCtrl.updateCamera();
 	initTouch();
@@ -266,50 +257,6 @@ OpenEarthViewer.prototype.start = function() {
 			
 		}
 	}
-	
-	
-	
-	
-	
-	/*
-	this.water = new THREE.Water( this.renderer, this.camera, this.scene, {
-			textureWidth: 256,
-			textureHeight: 256,
-			waterNormals: this.textures['waternormals'],
-			alpha: 	1.0,
-			sunDirection: this.sky.lightSun.position.normalize(),
-			sunColor: 0xffffff,
-			waterColor: 0x001e0f,
-			// betaVersion: 0,
-			// side: THREE.DoubleSide
-		});
-	
-
-	
-	this.aMeshMirror = new THREE.Mesh(
-		new THREE.PlaneBufferGeometry(2000, 2000, 10, 10), 
-		this.water.material
-		// new THREE.MeshBasicMaterial({ color: 0xFF0000 })
-	);
-	this.aMeshMirror.add(this.water);
-	this.aMeshMirror.rotation.x = Math.PI * 0.5;
-	this.aMeshMirror.position.y = -10;
-	this.scene.add( this.aMeshMirror );
-	*/
-	
-
-	
-	/*
-	var material = new THREE.ShaderMaterial({
-		uniforms: this.tuniform,
-		vertexShader: document.getElementById('vertex-ocean').textContent,
-		fragmentShader: document.getElementById('fragment-ocean').textContent
-	});
-	var mesh = new THREE.Mesh(
-		new THREE.PlaneBufferGeometry(10, 10, 4), material
-	);
-	this.scene.add( mesh );
-	*/
 }
 
 
@@ -381,8 +328,8 @@ OpenEarthViewer.prototype.loadTextures = function() {
 
 
 OpenEarthViewer.prototype.checkMouseWorldPos = function() {
-	var mX = ( ( mouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
-	var mY = -( ( mouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
+	var mX = ( ( Oev.Input.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
+	var mY = -( ( Oev.Input.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
 	
 	this.mouseScreenClick.x = mX;
 	this.mouseScreenClick.y = mY;
@@ -423,13 +370,13 @@ OpenEarthViewer.prototype.render = function() {
 		}
 		if( this.water != undefined ){
 			this.water.material.uniforms.time.value += 1.0 / 60.0;
-			this.water.material.uniforms.sunDirection.value = this.sky.lightSun.position.normalize();
-			this.water.material.uniforms.sunColor.value = this.sky.lightSun.color;
+			this.water.material.uniforms.sunDirection.value = Oev.Sky.lightSun.position.normalize();
+			this.water.material.uniforms.sunColor.value = Oev.Sky.lightSun.color;
 			this.water.render();
 		}
 		if( this.aMeshMirror != undefined ){
-			this.aMeshMirror.position.x = this.sky.posCenter.x;
-			this.aMeshMirror.position.z = this.sky.posCenter.z;
+			this.aMeshMirror.position.x = Oev.Sky.posCenter.x;
+			this.aMeshMirror.position.z = Oev.Sky.posCenter.z;
 		}
 	
 	
@@ -447,19 +394,11 @@ OpenEarthViewer.prototype.render = function() {
 	}
 	
 	this.camCtrl.update();
-	
-	if( dragView ){
-		// this.earth.dragCamera();
-	}
+
 	if( dragSun ){
-		var mX = ( ( mouseX - this.containerOffset.x ) / this.sceneWidth );
-		this.sky.setSunTime( mX );
+		var mX = ( ( Oev.Input.curMouseX - this.containerOffset.x ) / this.sceneWidth );
+		Oev.Sky.setSunTime( mX );
 	}
-	if( rotateView ){
-		// this.earth.rotateCamera( ( mouseX - lastMouseX ) / 100.0, ( mouseY - lastMouseY ) / 100.0 ); // OK
-	}
-	lastMouseX = mouseX;
-	lastMouseY = mouseY;
 	if( this.showRendererInfos ){
 		var rendererInfos = '';
 		for( var key in this.renderer.info ){
@@ -470,7 +409,7 @@ OpenEarthViewer.prototype.render = function() {
 		debug( rendererInfos, true );
 	}
 	this.earth.update();
-	this.sky.update();
+	Oev.Sky.update();
 	
 	for( var u = 0; u < this.objToUpdate.length; u ++ ){
 		this.objToUpdate[u].update();

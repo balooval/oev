@@ -42,7 +42,7 @@ var Sky = function () {
 	this.weatherEnabled = false;
 	// this.weatherEnabled = true;
 	
-	this.evt = new Evt();
+	this.evt = new Oev.Utils.Evt();
 }
 
 

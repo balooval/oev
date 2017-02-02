@@ -31,7 +31,14 @@ var CamCtrlGod = function () {
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
 	
-	this.evt = new Evt();
+	this.evt = new Oev.Utils.Evt();
+	
+	
+	Oev.Input.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	Oev.Input.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 	
 	this.MUST_UPDATE = false;
 }
@@ -61,10 +68,8 @@ CamCtrlGod.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
-	
-	OEV.sky.lightSun.target = this.pointer;
+	Oev.Sky.lightSun.target = this.pointer;
 }
-
 
 CamCtrlGod.prototype.setZoomDest = function( _zoom, _duration ) {
 	this.zoomDest = Math.min( Math.max( _zoom, 4 ), 19 );
@@ -91,8 +96,8 @@ CamCtrlGod.prototype.update = function() {
 		this.MUST_UPDATE = false;
 	}
 	
-	this.mouseLastPos.x = mouseX;
-	this.mouseLastPos.y = mouseY;
+	this.mouseLastPos.x = Oev.Input.curMouseX;
+	this.mouseLastPos.y = Oev.Input.curMouseY;
 }
 
 CamCtrlGod.prototype.setDestination = function( _lon, _lat, _duration ) {
@@ -160,24 +165,8 @@ CamCtrlGod.prototype.zoomOk = function() {
 
 
 CamCtrlGod.prototype.drag = function() {
-	
-	// TEST
-	/*
-	var mX = ( ( mouseX - OEV.containerOffset.x ) / OEV.sceneWidth ) * 2 - 1;
-	var mY = -( ( mouseY - OEV.containerOffset.y ) / OEV.sceneHeight ) * 2 + 1;
-	var prctDragX = ( OEV.mouseScreenClick.x - mX ) / OEV.mouseScreenClick.x;
-	var prctDragY = ( OEV.mouseScreenClick.y - mY ) / OEV.mouseScreenClick.y;
-	var depTotX = ( this.coordOnGround.x - this.coordStartDrag.x ) * ( prctDragX * Math.cos( this.camRotation.x ) - prctDragY * Math.sin( this.camRotation.x ) );
-	var depTotY = ( this.coordOnGround.y - this.coordStartDrag.y ) * ( prctDragY * Math.cos( this.camRotation.x ) + prctDragX * Math.sin( this.camRotation.x ) );
-	var finalLon = this.coordStartDrag.x - depTotX;
-	var finalLat = this.coordStartDrag.y - depTotY;
-	this.setLookAt( finalLon, finalLat );
-	*/
-	
-	
-	// OK
-	var depX = ( mouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
-	var depY = ( mouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
+	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
+	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
 	var finalLon = this.coordLookat.x + ( depX * Math.cos( this.camRotation.x ) - depY * Math.sin( this.camRotation.x ) );
 	var finalLat = this.coordLookat.y - ( depY * Math.cos( this.camRotation.x ) + depX * Math.sin( this.camRotation.x ) );
 	this.setLookAt( finalLon, finalLat );
@@ -197,8 +186,8 @@ CamCtrlGod.prototype.setLookAt = function( _lon, _lat ) {
 }
 
 CamCtrlGod.prototype.rotate = function() {
-	var depX = ( mouseX - this.mouseLastPos.x ) / 100.0;
-	var depY = ( mouseY - this.mouseLastPos.y ) / 100.0;
+	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / 100.0;
+	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / 100.0;
 	this.camRotation.x += depX;
 	this.camRotation.y += depY;
 	if( this.camRotation.x > Math.PI ){
@@ -309,26 +298,11 @@ CamCtrlGod.prototype.updateCamera = function() {
 	this.evt.fireEvent( "CAM_UPDATED" );
 	
 	
-	if( OEV.sky != undefined ){
-		OEV.sky.posCenter = this.posLookat;
-		OEV.sky.globalScale = this.planet.globalScale;
-		OEV.sky.updateSun();
+	if (Oev.Sky != undefined) {
+		Oev.Sky.posCenter = this.posLookat;
+		Oev.Sky.globalScale = this.planet.globalScale;
+		Oev.Sky.updateSun();
 	}
-	
-	
-	
-	
-	
-	/*
-	var lightPosX = this.posLookat.x - ( Math.cos( OEV.sky.sunRotation ) * ( OEV.earth.radius / 64 ) );
-	var lightPosY = this.posLookat.y + ( Math.sin( OEV.sky.sunRotation ) * ( OEV.earth.radius / 64 ) );
-	var lightPosZ = this.posLookat.z + ( Math.sin( OEV.sky.sunRotation ) * ( OEV.earth.radius / 128 ) );
-	
-	this.tmpLight.position.x = lightPosX;
-	this.tmpLight.position.y = lightPosY;
-	this.tmpLight.position.z = lightPosZ;
-	this.tmpHelper.update();
-	*/
 }
 
 
@@ -378,14 +352,18 @@ CamCtrlGod.prototype.updateCameraOk = function() {
 	OEV.MUST_RENDER = true;
 	
 	
-	if( OEV.sky != undefined ){
-		OEV.sky.posCenter = this.posLookat;
-		OEV.sky.globalScale = this.planet.globalScale;
-		OEV.sky.updateSun();
+	if (Oev.Sky != undefined) {
+		Oev.Sky.posCenter = this.posLookat;
+		Oev.Sky.globalScale = this.planet.globalScale;
+		Oev.Sky.updateSun();
 	}
 }
 
 
+
+CamCtrlGod.prototype.onMouseWheel = function(_delta){
+	this.setZoomDest( this.zoomDest + _delta, 200);
+}
 
 CamCtrlGod.prototype.onMouseDownLeft = function(){
 	this.coordOnGround = OEV.checkMouseWorldPos();
@@ -475,7 +453,7 @@ var CamCtrlFps = function () {
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
 	
-	this.evt = new Evt();
+	this.evt = new Oev.Utils.Evt();
 	
 	this.MUST_UPDATE = false;
 	
@@ -489,6 +467,11 @@ var CamCtrlFps = function () {
 	this.keyMoveX = new THREE.Vector2( 0, 0 );
 	this.keyMoveY = new THREE.Vector2( 0, 0 );
 	this.keyMoveCam = new THREE.Vector2( 0, 0 );
+	
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	Oev.Input.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 }
 
 
@@ -553,7 +536,7 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 		this.MUST_UPDATE = true;
 	}
 	
-	OEV.sky.lightSun.target = this.pointer;
+	Oev.Sky.lightSun.target = this.pointer;
 	
 	UiObj.evt.addEventListener( "ON_KEY_DOWN", this, this.onKeyDown );
 	UiObj.evt.addEventListener( "ON_KEY_UP", this, this.onKeyUp );
@@ -620,8 +603,8 @@ CamCtrlFps.prototype.update = function() {
 		this.MUST_UPDATE = false;
 	}
 	
-	this.mouseLastPos.x = mouseX;
-	this.mouseLastPos.y = mouseY;
+	this.mouseLastPos.x = Oev.Input.curMouseX;
+	this.mouseLastPos.y = Oev.Input.curMouseY;
 }
 
 CamCtrlFps.prototype.setDestination = function( _lon, _lat, _duration ) {
@@ -678,8 +661,8 @@ CamCtrlFps.prototype.zoom = function() {
 
 
 CamCtrlFps.prototype.drag = function() {
-	var depX = ( mouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
-	var depY = ( mouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
+	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
+	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
 	var finalLon = this.coordLookat.x - ( depX * Math.cos( this.camRotation.x ) - depY * Math.sin( this.camRotation.x ) );
 	var finalLat = this.coordLookat.y + ( depY * Math.cos( this.camRotation.x ) + depX * Math.sin( this.camRotation.x ) );
 	this.setLookAt( finalLon, finalLat );
@@ -699,8 +682,8 @@ CamCtrlFps.prototype.setLookAt = function( _lon, _lat ) {
 }
 
 CamCtrlFps.prototype.rotate = function() {
-	var depX = ( mouseX - this.mouseLastPos.x ) / 100.0;
-	var depY = ( mouseY - this.mouseLastPos.y ) / 100.0;
+	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / 100.0;
+	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / 100.0;
 	this.camRotation.x += depX;
 	this.camRotation.y += depY;
 	if( this.camRotation.x > Math.PI ){
@@ -710,6 +693,7 @@ CamCtrlFps.prototype.rotate = function() {
 	}
 	this.camRotation.y = Math.min( Math.max( this.camRotation.y, 0.0 ), ( Math.PI / 2 ) + 2.05 );
 	document.getElementById("camHeading").style.transform = "rotate("+( 180 + ( 180 * this.camRotation.x / Math.PI ) )+"deg)";
+	
 	this.MUST_UPDATE = true;
 }
 
@@ -830,10 +814,10 @@ CamCtrlFps.prototype.updateCamera = function() {
 	OEV.MUST_RENDER = true;
 	
 	
-	if( OEV.sky != undefined ){
-		OEV.sky.posCenter = this.posLookat;
-		OEV.sky.globalScale = this.planet.globalScale;
-		OEV.sky.updateSun();
+	if (Oev.Sky != undefined) {
+		Oev.Sky.posCenter = this.posLookat;
+		Oev.Sky.globalScale = this.planet.globalScale;
+		Oev.Sky.updateSun();
 	}
 	
 }
@@ -885,10 +869,10 @@ CamCtrlFps.prototype.updateCameraOk = function() {
 	OEV.MUST_RENDER = true;
 	
 	
-	if( OEV.sky != undefined ){
-		OEV.sky.posCenter = this.posLookat;
-		OEV.sky.globalScale = this.planet.globalScale;
-		OEV.sky.updateSun();
+	if( Oev.Sky != undefined ){
+		Oev.Sky.posCenter = this.posLookat;
+		Oev.Sky.globalScale = this.planet.globalScale;
+		Oev.Sky.updateSun();
 	}
 }
 

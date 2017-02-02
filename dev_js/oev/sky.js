@@ -1,8 +1,6 @@
 Oev.Sky = (function(){
 	'use strict';
-	console.warn('Oev.Sky.js loaded but not used');
 	var lightAmbiant = undefined;
-	var lightSun = undefined;
 	var lightSunTarget = undefined;
 	var sunSpriteMat = undefined;
 	var sunSpriteObj = undefined;
@@ -12,44 +10,35 @@ Oev.Sky = (function(){
 	var skyDome = undefined;
 	var skyMat = undefined;
 	var sunRotation = -1.5;
+	var sunTarget = undefined;
 	var animateSun = false;
 	var particleSystem = undefined;
 	var pMaterial = undefined;
 	var colorsGradient = undefined;
-	var normalizedTime = 0.5;
 	var sunLightBack = undefined;
 	var sunLightBackHelper = undefined;
 	var fogActive = true;
-	
 	var lightHemi = undefined;
 	var hemiIntensity = 0.35;
-	
-	var cloudsActiv = false;
-	var cloudsActiv = true;
 	var sunPoint = undefined;
 	var stars = null;
 	var starsMat = null;
-	
 	var snowEmiter = undefined;
-	
-	var destTime = normalizedTime;
+	var destTime = 0;
 	var destTimeSpeed = 0.01;
-	
-	var globalScale = 1;
-	
 	var rainEnabled = false;
-	// var rainEnabled = true;
-	
 	var weatherEnabled = false;
-	// var weatherEnabled = true;
-	
 	
 	var api = {
-		evt : new Evt(), 
-		
+		evt : new Oev.Utils.Evt(), 
+		cloudsActiv : true, 
+		lightSun : undefined, 
+		globalScale : 1, 
+		normalizedTime : 0.5, 
 		posCenter : new THREE.Vector3( 0, 0, 0 ), 
 		
 		init : function() {
+			destTime = api.normalizedTime;
 			if( fogActive ){
 				OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 			}
@@ -86,24 +75,24 @@ Oev.Sky = (function(){
 			lightSunTarget.position.x = api.posCenter.x;
 			lightSunTarget.position.y = api.posCenter.y;
 			lightSunTarget.position.z = api.posCenter.z;
-			lightSun = new THREE.DirectionalLight(0xffffff, 0);
-			lightSun.up = new THREE.Vector3(0, 1, 0);
+			api.lightSun = new THREE.DirectionalLight(0xffffff, 0);
+			api.lightSun.up = new THREE.Vector3(0, 1, 0);
 			if (OEV.shadowsEnabled) {
-				lightSun.castShadow = true;
-				lightSun.shadowDarkness = 1
-				lightSun.shadowCameraFar = OEV.earth.radius * OEV.earth.globalScale;
-				lightSun.shadowCameraNear = 1;
-				lightSun.shadowMapWidth = 2048;
-				lightSun.shadowMapHeight = 2048;
-				lightSun.shadowCameraLeft = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
-				lightSun.shadowCameraRight = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				lightSun.shadowCameraTop = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				lightSun.shadowCameraBottom = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
+				api.lightSun.castShadow = true;
+				api.lightSun.shadowDarkness = 1
+				api.lightSun.shadowCameraFar = OEV.earth.radius * OEV.earth.globalScale;
+				api.lightSun.shadowCameraNear = 1;
+				api.lightSun.shadowMapWidth = 2048;
+				api.lightSun.shadowMapHeight = 2048;
+				api.lightSun.shadowCameraLeft = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
+				api.lightSun.shadowCameraRight = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
+				api.lightSun.shadowCameraTop = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
+				api.lightSun.shadowCameraBottom = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
 			}
-			OEV.scene.add(lightSun);
-			sunHelper = new THREE.DirectionalLightHelper(lightSun, 1000);
+			OEV.scene.add(api.lightSun);
+			sunHelper = new THREE.DirectionalLightHelper(api.lightSun, 1000);
 			api.initSunPos();
-			if(cloudsActiv){
+			if(api.cloudsActiv){
 				api.makeClouds();
 			}
 			api.makeStars();
@@ -119,16 +108,41 @@ Oev.Sky = (function(){
 		}, 
 		
 		
+		update : function() {
+			if (destTime != api.normalizedTime) {
+				var delta = destTime - api.normalizedTime;
+				if (delta > 0) {
+					api.normalizedTime += destTimeSpeed;
+					if (api.normalizedTime > destTime) {
+						api.normalizedTime = destTime;
+					}
+				} else {
+					api.normalizedTime -= destTimeSpeed;
+					if (api.normalizedTime < destTime) {
+						api.normalizedTime = destTime;
+					}
+				}
+				api.updateSun();
+				
+				if (destTime == api.normalizedTime) {
+					debug( "sunTime END" );
+					OEV.earth.walkRecorder.endCmdStep( "sunTime" );
+				}
+			}
+			updateStarsPos();
+		}, 
+		
+		
 		initSunPos : function() {
 			var sunPos = OEV.earth.coordToXYZ( 0, 0, OEV.earth.radius );
-			lightSun.position.x = sunPos.x;
-			lightSun.position.y = sunPos.y;
-			lightSun.position.z = sunPos.z;
+			api.lightSun.position.x = sunPos.x;
+			api.lightSun.position.y = sunPos.y;
+			api.lightSun.position.z = sunPos.z;
 		},
 
 		setSunTime : function(_time) {
-			normalizedTime = _time;
-			destTime = normalizedTime;
+			api.normalizedTime = _time;
+			destTime = api.normalizedTime;
 			api.updateSun();
 		}, 	
 
@@ -136,10 +150,10 @@ Oev.Sky = (function(){
 			if( skyDome != undefined ){
 				updateSkyDome();
 			}
-			if( lightSun != undefined ){
-				sunRotation = 2.0 + ( normalizedTime * 5 );
+			if( api.lightSun != undefined ){
+				sunRotation = 2.0 + (api.normalizedTime * 5);
 				
-				var gradientValue = Math.round((Math.min(Math.max(normalizedTime, 0), 1)) * 127);
+				var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
 				var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
 				var rampColorClouds = getPixel(colorsGradient, 32, gradientValue);
 				var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
@@ -171,7 +185,7 @@ Oev.Sky = (function(){
 					lightSunTarget.position.x = api.posCenter.x;
 					lightSunTarget.position.y = api.posCenter.y;
 					lightSunTarget.position.z = api.posCenter.z;
-					lightSun.color = sunCol;
+					api.lightSun.color = sunCol;
 					sunPoint.color = sunCol;
 				}else{
 					var sunPosX = OEV.camera.position.x;
@@ -181,9 +195,9 @@ Oev.Sky = (function(){
 					lightSunTarget.position.y = 0;
 					lightSunTarget.position.z = 0;
 				}
-				lightSun.position.x = sunPosX;
-				lightSun.position.y = sunPosY;
-				lightSun.position.z = sunPosZ;
+				api.lightSun.position.x = sunPosX;
+				api.lightSun.position.y = sunPosY;
+				api.lightSun.position.z = sunPosZ;
 				sunPoint.position.x = sunPosX;
 				sunPoint.position.y = sunPosY;
 				sunPoint.position.z = sunPosZ;
@@ -197,7 +211,7 @@ Oev.Sky = (function(){
 				lightHemi.position.z = sunPosZ;
 				lightHemi.lookAt( new THREE.Vector3(api.posCenter.x, api.posCenter.y, api.posCenter.z));
 				var sunBackCol = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
-				var spotAngle = Math.abs(normalizedTime - 0.5) + 0.5;
+				var spotAngle = Math.abs(api.normalizedTime - 0.5) + 0.5;
 				spotAngle = (spotAngle - 0.5) * 3;
 				sunLightBack.color = sunBackCol;
 				sunLightBack.angle = spotAngle;
@@ -216,14 +230,14 @@ Oev.Sky = (function(){
 					var sunSpritePosY = api.posCenter.y + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
 					var sunSpritePosZ = api.posCenter.z + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
 				}else{
-					var sunSpritePosX = Math.cos(normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
+					var sunSpritePosX = Math.cos(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
 					var sunSpritePosY = 0;
-					var sunSpritePosZ = Math.sin(normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
+					var sunSpritePosZ = Math.sin(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
 				}
 				sunSpriteObj.position.x = sunSpritePosX;
 				sunSpriteObj.position.y = sunSpritePosY;
 				sunSpriteObj.position.z = sunSpritePosZ;
-				if (cloudsActiv){
+				if (api.cloudsActiv){
 					pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 				}
 				OEV.earth.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
@@ -239,8 +253,71 @@ Oev.Sky = (function(){
 			}
 		},
 		
+		activAtmosphere : function(_state) {
+			if (_state) {
+				if (atmosphereMeshe == undefined) {
+					var skyGeo = new THREE.SphereGeometry( OEV.earth.radius * 1.5, 32, 15 );
+					var skyMat = new THREE.ShaderMaterial( 
+					{
+						uniforms: {  },
+						vertexShader:   document.getElementById( 'vertAtmosphere'   ).textContent,
+						fragmentShader: document.getElementById( 'fragAtmosphere' ).textContent,
+						side: THREE.BackSide,
+						blending: THREE.AdditiveBlending,
+						transparent: true
+					}   );
+					atmosphereMeshe = new THREE.Mesh( skyGeo, skyMat );
+				}
+				OEV.scene.add(atmosphereMeshe);
+			} else if (!_state && atmosphereMeshe != undefined) {
+				OEV.scene.remove(atmosphereMeshe);
+			}
+		}, 
+		
+		activSky : function(_state) {
+			if (_state) {
+				if (skyDome == undefined){
+					skyMat = new THREE.MeshPhongMaterial({ color: new THREE.Color("rgb(103,144,230)"), side: THREE.BackSide, fog:false});
+					skyDome = new THREE.Mesh(new THREE.SphereGeometry( OEV.earth.radius * 0.8, 32, 15 ), skyMat);
+				}
+				OEV.scene.add(skyDome);
+			} else if (!_state && skyDome != undefined){
+				OEV.scene.remove(skyDome);
+			}
+		}, 
+		
+		clearClouds : function() {
+			if (particleSystem != undefined) {
+				particleSystem.geometry.dispose();
+				OEV.scene.remove(particleSystem);
+				particleSystem = undefined;
+			}
+			api.cloudsActiv = false;
+			OEV.MUST_RENDER = true;
+		}, 
+		
+		updateCloudsPos : function() {
+			if (particleSystem != undefined){
+				particleSystem.position.x = api.posCenter.x;
+				particleSystem.position.y = api.posCenter.y;
+				particleSystem.position.z = api.posCenter.z;
+				particleSystem.scale.x = OEV.earth.globalScale;
+				particleSystem.scale.y = OEV.earth.globalScale;
+				particleSystem.scale.z = OEV.earth.globalScale;
+				pMaterial.size = 800 * OEV.earth.globalScale;
+			}
+			
+			stars.position.x = this.posCenter.x;
+			stars.position.y = this.posCenter.y;
+			stars.position.z = this.posCenter.z;
+			stars.scale.x = OEV.earth.globalScale;
+			stars.scale.y = OEV.earth.globalScale;
+			stars.scale.z = OEV.earth.globalScale;
+			starsMat.size = 30 * OEV.earth.globalScale;
+		}, 
+
 		makeClouds : function() {
-			cloudsActiv = true;
+			api.cloudsActiv = true;
 			var ptDist = OEV.earth.radius * 0.8;
 			var particleCount = 1000;
 			var particles = new THREE.Geometry();
@@ -346,11 +423,17 @@ Oev.Sky = (function(){
 	};
 	
 	
+	function updateStarsPos() {
+		stars.position.x = api.posCenter.x;
+		stars.position.y = api.posCenter.y;
+		stars.position.z = api.posCenter.z;
+	}
+	
 	function updateSkyDome() {
 		skyDome.position.x = api.posCenter.x;
 		skyDome.position.y = api.posCenter.y;
 		skyDome.position.z = api.posCenter.z;
-		var skyScale = globalScale;
+		var skyScale = api.globalScale;
 		skyDome.scale.set( skyScale, skyScale, skyScale );
 	}
 	

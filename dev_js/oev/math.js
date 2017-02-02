@@ -1,5 +1,6 @@
 Oev.Math = (function(){
-	api = {
+	'use strict';
+	var api = {
 		radians : function(_degres){
 			return Math.PI * _degres / 180;
 		}, 

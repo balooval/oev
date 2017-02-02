@@ -15,7 +15,7 @@ Oev.Animation = (function(){
 		this.timeTotal = -1;
 		this.running = false;
 		
-		this.evt = new Evt();
+		this.evt = new Oev.Utils.Evt();
 	};
 	
 	api.TweenValue.prototype = {

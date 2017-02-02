@@ -44,6 +44,7 @@ $cfgJS .= '};';
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/input.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/navigation.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/sky.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/math.js"></script>
@@ -51,7 +52,6 @@ $cfgJS .= '};';
 		<script type="text/javascript" src="<?php echo $dev;?>js/OEV.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/UI.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/CamCtrl.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Sky.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/GeoTile.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/Tile3d.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/TileSurface.js"></script>
