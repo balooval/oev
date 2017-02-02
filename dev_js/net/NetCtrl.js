@@ -34,19 +34,20 @@ NetCtrl.prototype.updateUsersList = function( _oev ) {
 	document.getElementById( 'ws_users_list' ).innerHTML = html;
 }
 
+
 NetCtrl.prototype.setControllingRemote = function( _state, _uId ) {
 	if( _state ){
 		this.remoteControlling = _uId;
 		var html = 'User ' + _uId + ' has accepted your remote control';
 		showNotification( html );
 		OEV.earth.evt.addEventListener( 'DATAS_TO_LOAD_CHANGED', this, this.onDatasToLoadChanged );
-		Oev.Sky.evt.addEventListener( 'SUN_CHANGED', this, this.onSunChanged );
+		OEV.sky.evt.addEventListener( 'SUN_CHANGED', this, this.onSunChanged );
 	}else{
 		this.remoteControlling = '';
 		var html = 'User ' + _uId + ' has rejected your remote control';
 		showNotification( html );
 		OEV.earth.evt.removeEventListener( 'DATAS_TO_LOAD_CHANGED', this, this.onDatasToLoadChanged );
-		Oev.Sky.evt.removeEventListener( 'SUN_CHANGED', this, this.onSunChanged );
+		OEV.sky.evt.removeEventListener( 'SUN_CHANGED', this, this.onSunChanged );
 	}
 }
 
@@ -55,14 +56,15 @@ NetCtrl.prototype.onSunChanged = function() {
 		'type' : 'remoteCtrl', 
 		'targetUID' : this.remoteControlling, 
 		'step' : 'sunState', 
-		'sunState' : Oev.Sky.normalizedTime 
+		'sunState' : OEV.sky.normalizedTime 
 	};
 	this.send( JSON.stringify( msg ) );
 }
 
 NetCtrl.prototype.setRemoteSun = function( _remoteSunTime ) {
-	Oev.Sky.setSunTime( _remoteSunTime );
+	OEV.sky.setSunTime( _remoteSunTime );
 }
+
 
 NetCtrl.prototype.setRemoteDatasToLoad = function( _datasToLoad ) {
 	OEV.earth.activElevation( _datasToLoad['elevation'] );

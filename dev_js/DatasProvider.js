@@ -62,7 +62,7 @@ DatasProvider.prototype.drawDatas = function() {
 				var lat = this.datasContent["elements"][t]["lat"];
 				
 				if( OEV.MODELS_CFG[this.name]["SHOW_MARKER"] && OEV.MODELS_CFG[this.name]["MARKER"] != 'none' && OEV.MODELS_CFG[this.name]["MARKER"] != 'default' ){
-					this.wayPoints.push( new Oev.Navigation.WayPoint( lon, lat, this.geoTile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"] ) );
+					this.wayPoints.push( new WayPoint( lon, lat, this.geoTile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"] ) );
 				}
 				
 				var ele = this.geoTile.interpolateEle( lon, lat, true );

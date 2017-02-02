@@ -76,9 +76,11 @@ var GeoTile = function ( _globe, _tileX, _tileY, _zoom ) {
 			textureHeight: 256,
 			waterNormals: OEV.textures['waternormals'],
 			alpha: 	1.0,
-			sunDirection: Oev.Sky.lightSun.position.normalize(),
+			sunDirection: OEV.sky.lightSun.position.normalize(),
 			sunColor: 0xffffff,
 			waterColor: 0x001e0f,
+			// betaVersion: 0,
+			// side: THREE.DoubleSide
 		});
 		
 		this.canvasOverlay = document.createElement('canvas');
