@@ -12,7 +12,6 @@ var UI = function () {
 }
 
 UI.prototype.init = function() {
-	console.log('init');
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 }
