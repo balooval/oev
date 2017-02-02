@@ -240,7 +240,6 @@ OpenEarthViewer.prototype.start = function() {
 	Oev.Sky.init();
 	this.camCtrl.init( this.camera, this.earth );
 	this.camCtrl.updateCamera();
-	initTouch();
 	render();
 	
 	this.saveWaypoint( 4.231021, 43.795594, 13, "Capitelles" );

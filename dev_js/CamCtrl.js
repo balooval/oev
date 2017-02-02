@@ -468,6 +468,7 @@ var CamCtrlFps = function () {
 	this.keyMoveY = new THREE.Vector2( 0, 0 );
 	this.keyMoveCam = new THREE.Vector2( 0, 0 );
 	
+	Oev.Input.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
 	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
 	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
@@ -905,4 +906,8 @@ CamCtrlFps.prototype.onMouseDownRight = function(){
 
 CamCtrlFps.prototype.onMouseUpRight = function(){
 	this.rotating = false;
+}
+
+CamCtrlFps.prototype.onMouseWheel = function(_delta){
+	
 }

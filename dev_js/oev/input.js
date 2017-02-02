@@ -1,18 +1,16 @@
 Oev.Input = (function(){
 	'use strict';
-	console.warn('Oev.Input.js');
-	
-	var mouseBtnLeftState = false;
-	var mouseBtnMiddleState = false;
-	var mouseBtnRightState = false;
 	
 	var api = {
 		curMouseX : 0, 
 		curMouseY : 0, 
+		mouseBtnLeftState : false, 
+		mouseBtnMiddleState : false, 
+		mouseBtnRightState : false, 
 		evt : new Oev.Utils.Evt(), 
 		
 		init : function() {
-			// document.onmousemove = api.onMouseMove;
+			document.onmousemove = api.onMouseMove;
 			document.addEventListener('mousewheel', api.onMouseWheel, false)
 		}, 
 		
@@ -23,21 +21,16 @@ Oev.Input = (function(){
 				btnCode = evt.button;
 				switch (btnCode) {
 					case 0:
-						mouseBtnLeftState = true;
-						onMouseLeftClick();
-						// UiObj.onMouseClick();
+						api.mouseBtnLeftState = true;
+						onMouseLeftDown();
 					break;
 					case 1:
-					   mouseBtnMiddleState = true;
-					   // UiObj.onMouseClick();
+					   api.mouseBtnMiddleState = true;
 					break;
 					case 2:
-						mouseBtnRightState = true;
-						onMouseRightClick();
-						// UiObj.onMouseClick();
+						api.mouseBtnRightState = true;
+						onMouseRightDown();
 					break;
-					default:
-						console.log('Unexpected code: ' + btnCode);
 				}
 			}
 		}, 
@@ -48,21 +41,16 @@ Oev.Input = (function(){
 				btnCode = evt.button;
 				switch (btnCode) {
 					case 0:
-						mouseBtnLeftState = false;
+						api.mouseBtnLeftState = false;
 						onMouseLeftUp();
-						onMouseReleased();
 					break;
 					case 1:
-						mouseBtnMiddleState = false;
-						onMouseReleased();
+						api.mouseBtnMiddleState = false;
 					break;
 					case 2:
-						mouseBtnRightState = false;
+						api.mouseBtnRightState = false;
 						onMouseRightUp();
-						onMouseReleased();
 					break;
-					default:
-						console.log('Unexpected code: ' + btnCode);
 				}
 			}
 		}, 
@@ -75,39 +63,14 @@ Oev.Input = (function(){
 		onMouseWheel : function(evt) {
 			var delta = evt.wheelDelta / 360;
 			api.evt.fireEvent('MOUSE_WHEEL', [delta]);
-			/*
-			if( _value > 0 ){
-				zoomIn( _value * 1 );
-			}else{
-				zoomOut( Math.abs( _value * 1 ) );
-			}
-			*/
 		}, 
 	};
 	
 	
-	function onMouseClick() {
-		/*
-		if (mouseBtnLeftState == true) {
-			var coordOnGround = OEV.checkMouseWorldPos();
-			if (coordOnGround != undefined) {
-				dragView = true;
-				this.coordOnGround = coordOnGround;
-				if (majActiv) {
-					this.evt.fireEvent( 'ON_CLICK_GROUND' );
-				}
-			} else {
-				dragSun = true;
-			}
-		}else if (mouseBtnRightState == true) {
-			rotateView = true;
-		}
-		*/
-	}
-	function onMouseLeftClick() {
+	function onMouseLeftDown() {
 		api.evt.fireEvent('MOUSE_LEFT_DOWN');
 	}
-	function onMouseRightClick() {
+	function onMouseRightDown() {
 		api.evt.fireEvent('MOUSE_RIGHT_DOWN');
 	}
 	
@@ -116,13 +79,6 @@ Oev.Input = (function(){
 	}
 	function onMouseRightUp() {
 		api.evt.fireEvent('MOUSE_RIGHT_UP');
-	}
-	
-	function onMouseReleased(){
-		// dragSun = false;
-		// dragView = false;
-		// rotateView = false;
-		// showUICoords();
 	}
 	
 	return api;

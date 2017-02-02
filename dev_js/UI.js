@@ -1,14 +1,4 @@
-var lastMouseBtnLeft = false;
-var mouseBtnLeft = false;
-var mouseBtnMiddle = false;
-var mouseBtnRight = false;
 var dragSun = false;
-var mouseX = 0;
-var mouseY = 0;
-var lastMouseX = 0;
-var lastMouseY = 0;
-var dragView = false;
-var rotateView = false;
 var majActiv = false;
 var notifCloseTimer = -1;
 var urlParams = [];
@@ -22,11 +12,25 @@ var UI = function () {
 }
 
 UI.prototype.init = function() {
-	
+	console.log('init');
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+}
+UI.prototype.onMouseDownLeft = function() {
+	var coordOnGround = OEV.checkMouseWorldPos();
+	if (coordOnGround === undefined){
+		dragSun = true;
+		console.log('dragSun', dragSun);
+	}
+}
+UI.prototype.onMouseUpLeft = function() {
+	dragSun = false;
+	console.log('dragSun', dragSun);
 }
 
 function initUi(){
 	UiObj = new UI();
+	UiObj.init();
 	var elem = document.getElementsByName( "cfg_tile_layer" );
 	for( var i = 0; i < elem.length; i ++ ){
 		elem[i].addEventListener("click", changeTilesLayer );
@@ -42,10 +46,8 @@ function initUi(){
 	document.getElementById( "cfg_load_landuse" ).addEventListener("click", switchLanduse );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
-	OEV.renderer.domElement.addEventListener('mousedown',onMouseDown,false);
-	// OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.onMouseDown,false);
-	OEV.renderer.domElement.addEventListener('mouseup',onMouseUp,true);
-	// OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.onMouseUp,true);
+	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.onMouseDown,false);
+	OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.onMouseUp,true);
 	OEV.renderer.domElement.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
 	
 	var elem = document.getElementsByClassName( "toolsBox" );
@@ -241,66 +243,6 @@ function minimapSetPos( _id, _lon, _lat ){
 	elementStyle.top = posY+"px";
 }
 
-var onMouseDown = function (e) {
-    var e = e || window.event;      
-    var btnCode;
-    if ('object' === typeof e) {
-        btnCode = e.button;
-        switch (btnCode) {
-            case 0:
-				mouseBtnLeft = true;
-				UiObj.onMouseClick();
-            break;
-            case 1:
-               mouseBtnMiddle = true;
-			   UiObj.onMouseClick();
-            break;
-            case 2:
-                mouseBtnRight = true;
-				UiObj.onMouseClick();
-            break;
-            default:
-                console.log('Unexpected code: ' + btnCode);
-        }
-    }
-	
-	Oev.Input.onMouseDown(e);
-}
-
-var onMouseUp = function (e) {
-    var e = e || window.event;
-    var btnCode;
-    if ('object' === typeof e) {
-        btnCode = e.button;
-        switch (btnCode) {
-            case 0:
-                mouseBtnLeft = false;
-				onMouseReleased();
-            break;
-            case 1:
-                mouseBtnMiddle = false;
-				onMouseReleased();
-            break;
-            case 2:
-                mouseBtnRight = false;
-				onMouseReleased();
-            break;
-            default:
-                console.log('Unexpected code: ' + btnCode);
-        }
-    }
-	Oev.Input.onMouseUp(e);
-}
-
-
-
-document.onmousemove = handleMouseMove;
-function handleMouseMove(event) {
-	mouseX = event.clientX;
-	mouseY = event.clientY;
-	
-	Oev.Input.onMouseMove(event);
-}
 
 function keyEvent(event) {
 	if( document.activeElement.type == undefined ){
@@ -415,31 +357,6 @@ function updateWaypointsList( _waysPts ){
 	}
 }
 
-UI.prototype.onMouseClick = function(){
-	lastMouseX = mouseX;
-	lastMouseY = mouseY;
-	if( mouseBtnLeft == true ){
-		var coordOnGround = OEV.checkMouseWorldPos();
-		if( coordOnGround != undefined ){
-			dragView = true;
-			this.coordOnGround = coordOnGround;
-			if( majActiv ){
-				this.evt.fireEvent( 'ON_CLICK_GROUND' );
-			}
-		}else{
-			dragSun = true;
-		}
-	}else if( mouseBtnRight == true ){
-		rotateView = true;
-	}
-}
-
-function onMouseReleased(){
-	dragSun = false;
-	dragView = false;
-	rotateView = false;
-	showUICoords();
-}
 
 function showUICoords(){
 	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ "m<br>Ele. factor : " + OEV.earth.eleFactor+'<br>SunTime: ' + Math.round( Oev.Sky.normalizedTime * 24 )+'H';
@@ -568,39 +485,4 @@ function openPlugins(){
 		modalContent += OpenEarthViewer.plugins[key].drawDialog() + ' ';
 	}
 	openModal( modalContent );
-}
-
-
-function initTouch(){
-	var el = document.getElementById( OEV.htmlContainer );
-	el.addEventListener("touchstart", handleStart, false);
-	el.addEventListener("touchend", handleEnd, false);
-	el.addEventListener("touchcancel", handleCancel, false);
-	el.addEventListener("touchleave", handleEnd, false);
-	el.addEventListener("touchmove", handleMove, false);
-}
-
-function handleStart(evt) {
-  var touches = evt.changedTouches;
-  mouseBtnLeft = true;
-  UiObj.onMouseClick();
-}
-
-function handleMove(evt) {
-  evt.preventDefault();
-  var touches = evt.changedTouches;
-  for (var i=0; i<touches.length; i++) {
-		mouseX = touches[i].pageX;
-		mouseY = touches[i].pageY;
-  }
-}
-
-function handleEnd(evt) {
-	onMouseReleased();
-}
-
-function handleCancel(evt) {
-  evt.preventDefault();
-  onMouseReleased();
-  var touches = evt.changedTouches;
 }
