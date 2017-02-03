@@ -80,26 +80,18 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.raycaster = undefined;
 	this.preloadQuery = [];
 	this.camCtrl = new CamCtrlGod();
-	// this.camCtrl = new CamCtrlFps();
 	this.userMat = undefined;
 	this.waypoints = [];
-	
 	this.plugins = [];
 	this.WpStored = [];
-	
 	this.shadowsEnabled = true;
 	this.objToUpdate = [];
-	
 	this.globalTime = 0;
-	
 	this.mouseScreenClick = new THREE.Vector2( 0, 0 );
-	
 	this.socketEnabled = false;
 	// this.socketEnabled = true;
-	
 	this.water = undefined;
 	this.aMeshMirror = undefined;
-	
 	this.tuniform = {
 		iGlobalTime: {
 			type: 'f',
@@ -110,10 +102,8 @@ var OpenEarthViewer = function ( _containerId ) {
 
 OpenEarthViewer.plugins = {};
 
-
 OpenEarthViewer.prototype.init = function() {
 	document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
-	
 	var intElemClientWidth = document.getElementById( this.htmlContainer ).clientWidth;
 	var intElemClientHeight = document.getElementById( "tools" ).clientHeight;
 	this.sceneWidth = Math.min( intElemClientWidth, 13000 );
@@ -136,7 +126,6 @@ OpenEarthViewer.prototype.init = function() {
 	this.bokehPass = new THREE.BokehPass( this.scene, this.camera, {
 		focus: 		1.0,
 		aperture:	0.055,
-		//maxblur:	0.02, // OK
 		maxblur:	0.2, // OK
 		width: this.sceneWidth,
 		height: this.sceneHeight
@@ -147,19 +136,12 @@ OpenEarthViewer.prototype.init = function() {
 	composer.addPass( this.bokehPass );
 	this.postprocessing.composer = composer;
 	this.postprocessing.bokeh = this.bokehPass;
-	
-	// this.renderer.setClearColor( 0x202040, 1 );
 	this.renderer.setClearColor( 0x101020, 1 );
-	
 	this.tmpCanvas = document.createElement('canvas');
-	
-	
 	this.initPlugins();
-	
 	if( this.shadowsEnabled ){
 		this.initShadow();
 	}
-	
 	if( this.socketEnabled ){
 		this.netCtrl = new NetCtrl();
 		this.netCtrl.init( this );
@@ -179,7 +161,6 @@ OpenEarthViewer.prototype.initShadow = function() {
 	// this.renderer.shadowMapWidth = 1024;
 	// this.renderer.shadowMapHeight = 1024;
 }
-
 
 OpenEarthViewer.prototype.initPlugins = function() {
 	for (var key in OpenEarthViewer.plugins) {
@@ -209,15 +190,12 @@ OpenEarthViewer.prototype.switchDof = function() {
 }
 
 OpenEarthViewer.prototype.start = function() {
-	
 	initUi();
 	Oev.Input.Mouse.init();
 	this.fountainPartMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: ( ( this.earth.meter ) * 10 ), map: this.textures['particleWater'] });
 	this.fountainPartMat.alphaTest = 0.4;
 	this.fountainPartMat.transparent = true;
-	
 	this.userMat = new THREE.SpriteMaterial( { map: this.textures['god'], color: 0xffffff, fog: false } );
-	
 	var debugGeo = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 ); 
 	var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 	this.geoDebug = new THREE.Mesh( debugGeo, debugMat );
@@ -228,23 +206,17 @@ OpenEarthViewer.prototype.start = function() {
 			this.materialWaypoints['MARKER_' + this.MODELS_CFG[model]["NAME"]] = new THREE.SpriteMaterial( { map: this.textures['MARKER_' + this.MODELS_CFG[model]["NAME"]], color: 0xffffff, fog: false } );
 		}
 	}
-	
 	this.materialPOILine = new THREE.LineBasicMaterial({color: 0xFFFFFF});
 	this.earth.construct();
-	
-	// this.earth.updateCamera();
 	var debugMouse = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 );
 	var debugMouseMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
 	Oev.Sky.init();
 	this.camCtrl.init( this.camera, this.earth );
 	this.camCtrl.updateCamera();
 	render();
-	
 	this.saveWaypoint( 4.231021, 43.795594, 13, "Capitelles" );
 	this.saveWaypoint( 3.854188, 43.958125, 13, "Cevennes" );
 	this.saveWaypoint( 2.383138,48.880945, 13, "Paris" );
-	
-	
 	if( localStorage.getItem("waypoints") == undefined ){
 		localStorage.setItem("waypoints", JSON.stringify( this.WpStored ) );
 	}else{
@@ -256,12 +228,9 @@ OpenEarthViewer.prototype.start = function() {
 	}
 }
 
-
-
-
 OpenEarthViewer.prototype.loadConfig = function() {
 	openModal( "Loading resources..." );
-	var ajaxCfg = new AjaxMng( 'cfg_models.json', {'APP':this}, function( res, _params ){
+	var ajaxCfg = new AjaxMng( 'cfg_models.json', {'APP':this}, function(res, _params){
 			debug( 'Config loaded' );
 			_params['APP'].MODELS_CFG = JSON.parse( res );
 			for( var model in _params['APP'].MODELS_CFG ){
@@ -273,16 +242,16 @@ OpenEarthViewer.prototype.loadConfig = function() {
 			}
 			openModal( "Loading textures..." );
 			_params['APP'].loadTextures();
-		});
+		}
+	);
 }
-
-
 
 OpenEarthViewer.prototype.loadModels = function() {
 	this.curModelLoading ++;
 	var curModel = this.modelsToLoad.shift();
-	// debug( "loading model " + curModel );
-	this.modelsLoader.load( 'models/'+curModel, function ( object ) {
+	this.modelsLoader.load(
+		'assets/models/'+curModel, 
+		function(object) {
 			object.rotation.x = Math.PI;
 			object.scale.x = 0.005;
 			object.scale.y = 0.005;
@@ -295,42 +264,42 @@ OpenEarthViewer.prototype.loadModels = function() {
 				closeModal();
 				OEV.start();
 			}
-	} );
+		}, function(_xhr) {
+			console.log(curModel + ' loading : ' + _xhr.loaded + ' / ' + _xhr.total);
+		}
+	);
 }
-
 
 OpenEarthViewer.prototype.loadTextures = function() {
 	var curText = this.texturesToPreload.shift();
 	this.curTextureLoading ++;
-	this.tileLoader.load( "textures/"+curText, 
-			function(t){
-				OEV.textures[OEV.texturesNames[OEV.curTextureLoading]] = t;
-				OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapS = OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapT = THREE.RepeatWrapping;
-				if( OEV.texturesToPreload.length == 0 ){
-					debug( "All " + OEV.texturesNames.length + " textures loaded" );
-					openModal( "Loading models..." );
-					OEV.loadModels();
-				}else{
-					OEV.loadTextures();
-				}
-			}, 
-			function ( xhr ) {
-				// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-			},
-			function ( xhr ) {
-				debug( 'TilesMng. An error happened' );
+	this.tileLoader.load(
+		'assets/textures/' + curText, 
+		function(t){
+			OEV.textures[OEV.texturesNames[OEV.curTextureLoading]] = t;
+			OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapS = OEV.textures[OEV.texturesNames[OEV.curTextureLoading]].wrapT = THREE.RepeatWrapping;
+			if( OEV.texturesToPreload.length == 0 ){
+				debug( "All " + OEV.texturesNames.length + " textures loaded" );
+				openModal( "Loading models..." );
+				OEV.loadModels();
+			}else{
+				OEV.loadTextures();
 			}
-		);
+		}, 
+		function(xhr) {
+			console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+		},
+		function(xhr) {
+			debug( 'TilesMng. An error happened' );
+		}
+	);
 }
-
 
 OpenEarthViewer.prototype.checkMouseWorldPos = function() {
 	var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
 	var mY = -( ( Oev.Input.Mouse.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
-	
 	this.mouseScreenClick.x = mX;
 	this.mouseScreenClick.y = mY;
-	
 	this.raycaster.near = this.camera.near;
 	this.raycaster.far = this.camera.far;
 	this.raycaster.setFromCamera( new THREE.Vector2( mX, mY ), this.camera );
@@ -341,7 +310,6 @@ OpenEarthViewer.prototype.checkMouseWorldPos = function() {
 	}
 	return coord;
 }
-
 
 OpenEarthViewer.prototype.addObjToUpdate = function( _obj ) {
 	if( this.objToUpdate.indexOf( _obj ) < 0 ){
@@ -359,8 +327,6 @@ OpenEarthViewer.prototype.removeObjToUpdate = function( _obj ) {
 }
 
 OpenEarthViewer.prototype.render = function() {
-	
-	
 	if( this.MUST_RENDER ){
 		if( this.tuniform != undefined ){
 			this.tuniform.iGlobalTime.value += 0.1;
@@ -375,12 +341,8 @@ OpenEarthViewer.prototype.render = function() {
 			this.aMeshMirror.position.x = Oev.Sky.posCenter.x;
 			this.aMeshMirror.position.z = Oev.Sky.posCenter.z;
 		}
-	
-	
 		var d = new Date();
 		this.globalTime = d.getTime();
-		// debug( 'this.globalTime: ' + ( ( this.globalTime - 1456688420000 ) / 10 ) );
-		
 		showUICoords();
 		if( this.dofActiv ){
 			this.postprocessing.composer.render( 0.0 );
@@ -389,9 +351,7 @@ OpenEarthViewer.prototype.render = function() {
 		}
 		this.MUST_RENDER = false;
 	}
-	
 	this.camCtrl.update();
-
 	if( dragSun ){
 		var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth );
 		Oev.Sky.setSunTime( mX );
@@ -419,15 +379,12 @@ OpenEarthViewer.prototype.gotoWaypoint = function( _wp ) {
 }
 
 OpenEarthViewer.prototype.saveWaypoint = function( _lon, _lat, _zoom, _name, _textureName, _localStore ) {
-	// debug( 'OpenEarthViewer.saveWaypoint DESACTIVE' );
-	// return false;
 	_name = _name || "WP " + this.waypoints.length;
 	_textureName = _textureName || 'default';
 	_localStore = _localStore || false;
 	var wp = new Oev.Navigation.WayPoint( _lon, _lat, _zoom, _name, _textureName );
 	this.waypoints.push( wp );
 	updateWaypointsList( this.waypoints );
-	
 	if( _localStore ){
 		console.log( this.WpStored );
 		this.WpStored.push( { "name" : _name, "lon" : _lon, "lat" : _lat, "zoom" : _zoom } );
@@ -435,7 +392,6 @@ OpenEarthViewer.prototype.saveWaypoint = function( _lon, _lat, _zoom, _name, _te
 	}
 	return wp;
 }
-
 
 OpenEarthViewer.prototype.removeWaypoint = function( _wId ) {
 	for( w = 0; w < this.WpStored.length; w ++ ){
@@ -447,10 +403,7 @@ OpenEarthViewer.prototype.removeWaypoint = function( _wId ) {
 		}
 	}
 	localStorage.setItem("waypoints", JSON.stringify( this.WpStored ) );	
-	
-	
 	this.waypoints[_wId].dispose();
 	this.waypoints.splice( _wId, 1 );
-	
 	updateWaypointsList( this.waypoints );
 }

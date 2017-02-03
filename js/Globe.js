@@ -16,7 +16,6 @@ var Globe = function () {
 	this.curLOD = this.LOD_PLANET;
 	this.curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 	this.curTile = new THREE.Vector2( 0, 0, 0 );
-	
 	// this.tilesDefinition = 4;
 	this.tilesDefinition = 8;
 	// this.tilesDefinition = 16;
@@ -25,27 +24,21 @@ var Globe = function () {
 	this.nodesLoadManager = new DatasMng( "NODES" );
 	this.providersLoadManager = new DatasMng( "OBJECTS" );
 	this.modelsMesheMat = {
-			"TREE":new THREE.MeshLambertMaterial({color: 0x678713 }), 
-			"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
-			"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
-			"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
-			"default" : new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
-			"fountain" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
-			"statue" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
-			"poubelle" : new THREE.MeshLambertMaterial({color: 0x9fc091 }), 
-			'recycling' : new THREE.MeshLambertMaterial({color: 0x546e10 })
-		};
-	
+		"TREE":new THREE.MeshLambertMaterial({color: 0x678713 }), 
+		"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
+		"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
+		"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
+		"default" : new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
+		"fountain" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
+		"statue" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
+		"poubelle" : new THREE.MeshLambertMaterial({color: 0x9fc091 }), 
+		'recycling' : new THREE.MeshLambertMaterial({color: 0x546e10 })
+	};
 	this.tilesProvider = "tileOsm";
-	
 	this.tilesDetailsMarge = 2;
-	
-	// OEV.scene.add( this.meshe );	
-	
 	this.grassMat = undefined;
 	this.vineyardMat = undefined;
 	this.forestMat = undefined;
-	
 	this.gpxDatas = null;
 	this.gpxSpeed = 50;
 	this.gpxStep = -1;
@@ -55,25 +48,14 @@ var Globe = function () {
 	this.gpxTimeout = -1;
 	this.gpxMillisStep = -1;
 	this.gpxTravelMillis = -1;
-	
 	this.evt = new Oev.Utils.Evt();
-	
 }
-
 
 Globe.prototype.updateTilesModelProvider = function( _added, _name ) {
 	for( var i = 0; i < this.tilesBase.length; i ++ ){
 		nb = this.tilesBase[i].updateDatasProviders( _added, _name );
 	}
 }
-
-/*
-Globe.prototype.configure = function( _params ) {
-	this.eleActiv = _params['load_ele'];
-	this.loadBuildings = _params['load_buildings'];
-	this.tilesDefinition = _params['tile_res'];
-}
-*/
 
 Globe.prototype.setTilesProvider = function( _provider ) {
 	if( this.tilesProvider != _provider ){
@@ -123,11 +105,9 @@ Globe.prototype.activElevation = function( _state ) {
 	this.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
 }
 
-
 Globe.prototype.update = function() {
 	
 }
-
 
 Globe.prototype.getCurrentBBox = function( _wId ) {
 	var bbox = { "left" : this.coordDetails.x, "top" : this.coordDetails.y, "right" : this.coordDetails.x, "bottom" : this.coordDetails.y };
@@ -137,7 +117,6 @@ Globe.prototype.getCurrentBBox = function( _wId ) {
 	return bbox;
 }
 
-
 Globe.prototype.updateLOD = function() {
 	for( var i = 0; i < this.tilesBase.length; i ++ ){
 		this.tilesBase[i].updateVertex();
@@ -146,36 +125,6 @@ Globe.prototype.updateLOD = function() {
 		OEV.waypoints[w].updatePos();
 	}
 }
-
-
-Globe.prototype.onAllDatasLoaded = function() {
-	/*
-	if( this.tilesDetailsMarge == 2 ){
-		var allLoaded = true;
-		if( this.tiles2dMng.datasWaiting.length > 0 ){
-			allLoaded = false;
-		}
-		if( this.tilesEledMng.datasWaiting.length > 0 ){
-			allLoaded = false;
-		}
-		if( this.tilesModelsMng.datasWaiting.length > 0 ){
-			allLoaded = false;
-		}
-		if( this.tilesBuildingsMng.datasWaiting.length > 0 ){
-			allLoaded = false;
-		}
-		if( allLoaded ){
-			// debug( "onAllDatasLoaded All loaded" );
-			this.tilesDetailsMarge = 3;
-			for( var i = 0; i < this.tilesBase.length; i ++ ){
-				this.tilesBase[i].updateDetails();
-			}
-			this.tilesDetailsMarge = 2;
-		}
-	}
-	*/
-}
-
 
 Globe.prototype.construct = function() {
 	this.setProjection( "PLANE" );
@@ -333,26 +282,17 @@ Globe.prototype.checkLOD = function(){
 			this.curLodOrigine = this.coordToXYZ( this.coordDetails.x, this.coordDetails.y, 0 );
 			this.globalScale = 10;
 			this.curLOD = this.LOD_STREET;
-			
 			this.updateLOD();
-			
 			this.setProjection( "PLANE" );
-			
 			OEV.camera.far = this.radius * this.globalScale;
 			OEV.camera.near = ( this.radius * this.globalScale ) / 1000000;
 			OEV.camera.updateProjectionMatrix();
-			
 			Oev.Sky.initSunPos();
-			
 			if( OEV.scene.fog ){
 				OEV.scene.fog.near = this.radius * ( 0.01 * this.globalScale );
 				OEV.scene.fog.far = this.radius * ( 0.9 * this.globalScale );
 			}
-			
-			// this.updateCamera();
-			
 			this.evt.fireEvent( "LOD_CHANGED" );
-			
 			Oev.Sky.updateCloudsPos();
 			return true;
 		}
@@ -362,37 +302,24 @@ Globe.prototype.checkLOD = function(){
 			this.curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 			this.globalScale = 1;
 			this.curLOD = this.LOD_PLANET;
-			
 			this.updateLOD();
-			
 			this.setProjection( "SPHERE" );
-			
 			OEV.camera.far = ( this.radius * 2 ) * this.globalScale;
 			OEV.camera.near = ( this.radius * this.globalScale ) / 1000000;
 			OEV.camera.updateProjectionMatrix();
-			
 			Oev.Sky.initSunPos();
-			
-			
 			if( OEV.scene.fog ){
 				OEV.scene.fog.near = this.radius * ( 0.01 * this.globalScale );
 				OEV.scene.fog.far = this.radius * ( 0.9 * this.globalScale );
 			}
-
-			// this.updateCamera();
-			
 			this.evt.fireEvent( "LOD_CHANGED" );
-			
 			Oev.Sky.updateCloudsPos();
 			return true;
 		}
 	}
-	
-	this.meter = ( this.radius / 40075017.0 ) * this.globalScale;
-	
+	this.meter = (this.radius / 40075017.0) * this.globalScale;
 	return false;
 }
-
 
 Globe.prototype.getElevationAtCoords = function( _lon, _lat, _inMeters ){
 	_inMeters = _inMeters || false;

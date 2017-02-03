@@ -440,7 +440,6 @@ GeoTile.prototype.updateDetails = function() {
 			var childZoom = this.zoom + 1;
 			var middleLat = this.angleYStart + ( this.angleYEnd - this.angleYStart ) / 2;
 			var middleLon = this.angleXStart + ( this.angleXEnd - this.angleXStart ) / 2;
-			var newTile;
 			var newTileA = new GeoTile( this.globe, this.tileX * 2, this.tileY * 2, childZoom );
 			newTileA.parentTile = this;
 			newTileA.parentOffset = new THREE.Vector2( 0, 0 );
@@ -755,19 +754,16 @@ GeoTile.prototype.getElevation = function( _lon, _lat ) {
 
 
 GeoTile.prototype.interpolateEle = function( _lon, _lat, _debug ) {
+	// console.log('interpolateEle');
 	_debug = _debug || false;
 	if( this.globe.eleActiv ){
 		// get coord percent
 		var gapLeft = this.endCoord.x - this.startCoord.x;
 		var distFromLeft = _lon - this.startCoord.x;
 		var prctLeft = distFromLeft / gapLeft;
-		
 		var gapTop = this.endCoord.y - this.startCoord.y;
 		var distFromTop = _lat - this.startCoord.y;
 		var prctTop = distFromTop / gapTop;
-		
-		
-		
 		if( prctLeft < 0 || prctLeft > 1 || prctTop < 0 || prctTop > 1 ){
 			if( _debug ){
 				// console.log( "OUT interpolateEle " + prctLeft + " / " + prctTop );
@@ -779,7 +775,6 @@ GeoTile.prototype.interpolateEle = function( _lon, _lat, _debug ) {
 				return -9999;
 			}
 		}
-
 		// get boundings vertex
 		if( prctLeft == 1 ){
 			var vertLeftTopIdX = Math.floor( this.detailsSeg * prctLeft ) - 1;
@@ -828,7 +823,6 @@ GeoTile.prototype.interpolateEle = function( _lon, _lat, _debug ) {
 			var vertRightBottomIdY = Math.floor( this.detailsSeg * prctTop ) + 1;
 		}
 		var vertRightBottomId = vertRightBottomIdY + ( vertRightBottomIdX * ( this.detailsSeg + 1 ) );
-		
 		if( vertLeftTopId > this.vertCoords.length - 1 ){
 			console.log( "Overflow A " + vertLeftTopId + " / " + this.vertCoords.length );
 			console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
@@ -845,36 +839,28 @@ GeoTile.prototype.interpolateEle = function( _lon, _lat, _debug ) {
 			console.log( "Overflow D " + vertRightBottomId + " / " + this.vertCoords.length );
 			console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
 		}
-		
 		// interpolate boundings vertex elevations
 		var ampEleTop = this.vertCoords[vertRightTopId].z - this.vertCoords[vertLeftTopId].z;
 		var ampEleBottom = this.vertCoords[vertRightBottomId].z - this.vertCoords[vertLeftBottomId].z;
 		var ampEleLeft = this.vertCoords[vertLeftBottomId].z - this.vertCoords[vertLeftTopId].z;
 		var ampEleRight = this.vertCoords[vertRightBottomId].z - this.vertCoords[vertRightTopId].z;
-		
 		var gapVertLeft = this.vertCoords[vertRightTopId].x - this.vertCoords[vertLeftTopId].x;
 		var distFromVertLeft = _lon - this.vertCoords[vertLeftTopId].x;
 		var prctVertLeft = distFromVertLeft / gapVertLeft;
 		var gapVertTop = this.vertCoords[vertLeftBottomId].y - this.vertCoords[vertLeftTopId].y;
 		var distFromVertTop = _lat - this.vertCoords[vertLeftTopId].y;
 		var prctVertTop = distFromVertTop / gapVertTop;
-		
 		var eleInterpolTop = this.vertCoords[vertLeftTopId].z + ( ampEleTop * prctVertLeft );
 		var eleInterpolBottom = this.vertCoords[vertLeftBottomId].z + ( ampEleTop * prctVertLeft );
 		var amplVert = eleInterpolBottom - eleInterpolTop;
 		var eleInterpolFinal = eleInterpolTop + ( amplVert * prctVertTop );
-		
 		if( isNaN( eleInterpolFinal ) ){
 			console.log( "NaN eleInterpolFinal : " + vertLeftTopId + " / " + vertRightTopId + " / " + vertLeftBottomId + " / " + vertRightBottomId );
 		}
-		
-		// eleInterpolFinal = eleInterpolFinal / ( earth.meter / earth.eleFactor );
 		return eleInterpolFinal;
 	}
 	return 0;
 }
-
-
 
 GeoTile.prototype.computeEle = function( _datas ) {
 	this.eleLoaded = true;
@@ -903,7 +889,6 @@ GeoTile.prototype.computeEle = function( _datas ) {
 	this.updateVertex();
 }
 
-
 GeoTile.prototype.computeEleOk = function( _datas ) {
 	this.eleLoaded = true;
 	if( _datas["RESULT"] != 'OK' ){
@@ -931,8 +916,6 @@ GeoTile.prototype.computeEleOk = function( _datas ) {
 	this.updateVertex();
 }
 
-
-
 GeoTile.prototype.calcBBoxCurZoom = function( _bbox ) {
 	if( this.zoom == Math.round( this.globe.CUR_ZOOM ) ){
 		if( this.startCoord.x < _bbox["left"] ){
@@ -955,8 +938,6 @@ GeoTile.prototype.calcBBoxCurZoom = function( _bbox ) {
 	return _bbox;
 }
 
-
-
 GeoTile.prototype.dispose = function() {
 	this.globe.evt.removeEventListener( "DATAS_TO_LOAD_CHANGED", this, this.loadDatas );
 	
@@ -967,22 +948,15 @@ GeoTile.prototype.dispose = function() {
 		this.tile3d.dispose();
 		this.tile3d = undefined;
 	}
-	
 	this.nodesProvider.dispose();
-	// this.nodesProvider = undefined;
-	
 	for( var i = 0; i < this.surfacesProviders.length; i ++ ){
 		this.surfacesProviders[i].dispose();
 	}
-	
 	for( var i = 0; i < this.datasProviders.length; i ++ ){
 		this.datasProviders[i].dispose();
 	}
-	
 	if( this.meshe != undefined ){
 		this.meshe.geometry.dispose();
-		// this.material.map.dispose();
-		// this.remoteTex.dispose();
 		this.material.dispose();
 	}
 	if( this.mesheBorder != undefined ){
@@ -993,7 +967,6 @@ GeoTile.prototype.dispose = function() {
 	if( this.textureLoaded ){
 		this.remoteTex.dispose();
 	}
-	
 	this.canvasOverlay = undefined;
 	if( this.mustUpdate ){
 		OEV.removeObjToUpdate( this );

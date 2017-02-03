@@ -457,7 +457,7 @@ function extractElevationInterpolate( $_lat, $_lon ){
 
 function parseGpx( $_gpxFilename ){
 	$gpxPts = array();
-	$xml = simplexml_load_file( dirname( __FILE__).'/../gpx/'.$_gpxFilename.'.gpx' );
+	$xml = simplexml_load_file( dirname( __FILE__).'/../assets/gpx/'.$_gpxFilename.'.gpx' );
 	
 	foreach($xml->children() as $trk) {
 		foreach($trk->children() as $trkseg) {
