@@ -34,7 +34,7 @@ OpenEarthViewer.gpx = {
 		if( this.json == undefined ){
 			OEV.camCtrl.evt.addEventListener( "DEST_REACH", this, this.playNextPt );
 			debug( "Loading gpx ..." );
-			var url = DEV+"libs/remoteImg.php?gpx=1&name="+this.fileName+"";
+			var url = "libs/remoteImg.php?gpx=1&name="+this.fileName+"";
 			var _gpx = this;
 			var ajaxMng = new AjaxMng( url, {'gpx':_gpx}, function( res, _params ){
 				debug( "Gpx loaded" );

@@ -10,7 +10,7 @@ var Tile3d = function ( _geoTile, _tileX, _tileY, _zoom ) {
 	this.datas = undefined;
 	
 	
-	this.myWorker = new Worker( 'dev_js/utils/WorkerTiles3d.js' );
+	this.myWorker = new Worker( 'js/utils/WorkerTiles3d.js' );
 	var _self = this;
 	this.myWorker.onmessage = function(event){
 		if( _self.onStage ){

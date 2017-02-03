@@ -207,7 +207,7 @@ DatasMng.prototype.loadNext = function() {
 
 DatasMng.prototype.loadWeather = function( _loadInfos ) {
 	var mng = this;
-	var url = DEV+"libs/remoteImg.php?getWeather=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"];
+	var url = "libs/remoteImg.php?getWeather=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"];
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
 			if( _params["geoTile"] != undefined ){
@@ -225,7 +225,7 @@ DatasMng.prototype.loadBuildings = function( _loadInfos ) {
 	if( Tile3d.prototype.useCache ){
 		useCache = '';
 	}
-	var url = DEV+"libs/remoteImg.php?3dtile=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"]+''+useCache;
+	var url = "libs/remoteImg.php?3dtile=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"]+''+useCache;
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = res;
 			if( _params["geoTile"] != undefined ){
@@ -244,8 +244,7 @@ DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 	if( Tile3d.prototype.useCache ){
 		useCache = '';
 	}
-	// var url = DEV+"libs/remoteImg.php?3dtile=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"];
-	var url = DEV+"libs/remoteImg.php?overpass_buildings=1&zoom="+_loadInfos["z"]+"&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+''+useCache;
+	var url = "libs/remoteImg.php?overpass_buildings=1&zoom="+_loadInfos["z"]+"&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+''+useCache;
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 			var bbox = undefined;
 			
@@ -257,8 +256,6 @@ DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 					"maxLat" : _params["geoTile"].geoTile.startCoord.y
 				};
 			}
-			
-			// var myWorker = new Worker( DEV+"js/WorkerBuildings.js" );
 			var myWorker = TileBuildings.worker;
 			myWorker.postMessage( { "json" : res, "bbox" : bbox } );
 			
@@ -290,7 +287,7 @@ DatasMng.prototype.loadNodes = function( _loadInfos ) {
 	var mng = this;
 	var useCache = '';
 	// var useCache = '&nocache=1';
-	var url = DEV+"libs/remoteImg.php?overpass_nodes=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
+	var url = "libs/remoteImg.php?overpass_nodes=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 		
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
@@ -306,7 +303,7 @@ DatasMng.prototype.loadNodes = function( _loadInfos ) {
 DatasMng.prototype.loadObjects = function( _loadInfos ) {
 	// debug( "loadObjects " + this.type + " : " + _loadInfos["z"] + " / " + _loadInfos["tile"].name );
 	var mng = this;
-	var url = DEV+"libs/remoteImg.php?overpass_obj=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&model="+_loadInfos["tile"].name;
+	var url = "libs/remoteImg.php?overpass_obj=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&model="+_loadInfos["tile"].name;
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 		
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
@@ -325,7 +322,7 @@ DatasMng.prototype.loadSurfaces = function( _loadInfos ) {
 	}
 	
 	var mng = this;
-	var url = DEV+"libs/remoteImg.php?overpass_surface=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
+	var url = "libs/remoteImg.php?overpass_surface=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
 			if( _params["geoTile"] != undefined ){
@@ -339,7 +336,7 @@ DatasMng.prototype.loadSurfaces = function( _loadInfos ) {
 
 DatasMng.prototype.loadOverpass = function( _loadInfos ) {
 	var mng = this;
-	var url = DEV+"libs/remoteImg.php?overpass=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"];
+	var url = "libs/remoteImg.php?overpass=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"];
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 		
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
@@ -364,7 +361,7 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 	}
 	*/
 	
-	tileLoader.load( DEV+'libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
+	tileLoader.load( 'libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
 			function(t){
 				/*
 				var curLoader = _loadInfos['curLoader'];
@@ -402,7 +399,7 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 DatasMng.prototype.loadElevation = function( _loadInfos ) {
 	
 	var mng = this;
-	var url = DEV+"libs/remoteImg.php?elevationTile=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&def="+_loadInfos["tile"].detailsSeg;
+	var url = "libs/remoteImg.php?elevationTile=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&def="+_loadInfos["tile"].detailsSeg;
 
 	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, function( res, _params ){
 			try{

@@ -1,11 +1,11 @@
 <html>
 	<head>
-		<title>DEV OpenEarthView</title>
+		<title>OpenEarthView</title>
 		<meta charset="UTF-8">
 	</head>
 <a href="index.php">RUN</a>
 <br>
-<a href="dev_index.php">DEV</a>
+<a href="index.php">Index</a>
 <br>
 <br>
 <a href="?getDiskUsage">Disk usage</a>

@@ -2,7 +2,7 @@
 Explorer la planète en 3d via son navigateur, basé sur les données d'OSM (openstreetmap)
 
 #### Démo live
-Main : http://val.openearthview.net/dev_index.php
+Main : http://val.openearthview.net/index.php
 
 Paris : http://val.openearthview.net/index.php#location=16/2.3435/48.8862/tree,buildings,landuse
 

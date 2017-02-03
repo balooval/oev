@@ -70,7 +70,7 @@ TileBuildings.prototype.setDatas = function( _datas ) {
 
 
 TileBuildings.exculdedId = [23762981, 19441489, 201247295, 150335048, 309413981, 249003371];
-TileBuildings.worker = new Worker( DEV+"js/WorkerBuildings.js" );
+TileBuildings.worker = new Worker( "js/WorkerBuildings.js" );
 
 
 

@@ -1,40 +1,5 @@
 <?php
 include( 'libs/init.php' );
-$dev = '';
-
-
-$cfgJS = 'var CFG_GLOBE = {';
-$cfgDatas = array( 'load_ele'=>false, 'load_models'=>false, 'load_buildings'=>false, 'tile_res'=>4 );
-if( isset( $_POST['setConfig'] ) ){
-	foreach( $cfgDatas as $key=>$value ){
-		if( $key == 'tile_res' ){
-			$cfgDatas[$key] = $_POST['cfg_tile_res'];
-		}else{
-			if( isset( $_POST['cfg_'.$key] ) && $_POST['cfg_'.$key] == 1 ){
-				$cfgDatas[$key] = true;
-			}else{
-				$cfgDatas[$key] = false;
-			}
-		}
-	}
-}
-
-$cfgForm = array( 'load_ele'=>'', 'load_models'=>'', 'load_buildings'=>'', 'tile_res'=>array( '2'=>'', '4'=>'', '8'=>'' ) );
-foreach( $cfgForm as $key=>$value ){
-	if( $key == 'tile_res' ){
-			$cfgForm['tile_res'][$cfgDatas['tile_res']] = 'checked="checked" ';
-			$cfgJS .= '"tile_res":'.$cfgDatas['tile_res'].',';
-	}else{
-		if( $cfgDatas[$key] == true ){
-			$cfgForm[$key] = 'checked="checked" ';
-			$cfgJS .= '"'.$key.'":true,';
-		}else{
-			$cfgJS .= '"'.$key.'":false,';
-		}
-	}
-}
-
-$cfgJS .= '};';
 ?>
 <!DOCTYPE html>
 <html>
@@ -42,40 +7,42 @@ $cfgJS .= '};';
 		<title>OpenEarthViewer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
-		<script type="text/javascript" src="js/three.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Utils.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/OEV.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/UI.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/CamCtrl.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Sky.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/GeoTile.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Tile3d.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/TileSurface.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/TileNodes.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Globe.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/DatasMng.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Waypoints.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/DatasProvider.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/Earcut.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/utils/lineclip.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/utils/geojson-area.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/plugins/GpxMng.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/plugins/PlanesMng.js"></script>
+		<script type="text/javascript" src="js/libs/three.js"></script>
+		<script type="text/javascript" src="js/oev/utils.js"></script>
+		<script type="text/javascript" src="js/oev/geo.js"></script>
+		<script type="text/javascript" src="js/oev/input.js"></script>
+		<script type="text/javascript" src="js/oev/navigation.js"></script>
+		<script type="text/javascript" src="js/oev/sky.js"></script>
+		<script type="text/javascript" src="js/oev/math.js"></script>
+		<script type="text/javascript" src="js/oev/animation.js"></script>
+		<script type="text/javascript" src="js/OEV.js"></script>
+		<script type="text/javascript" src="js/UI.js"></script>
+		<script type="text/javascript" src="js/CamCtrl.js"></script>
+		<script type="text/javascript" src="js/GeoTile.js"></script>
+		<script type="text/javascript" src="js/Tile3d.js"></script>
+		<script type="text/javascript" src="js/TileSurface.js"></script>
+		<script type="text/javascript" src="js/TileNodes.js"></script>
+		<script type="text/javascript" src="js/Globe.js"></script>
+		<script type="text/javascript" src="js/DatasMng.js"></script>
+		<script type="text/javascript" src="js/DatasProvider.js"></script>
+		<script type="text/javascript" src="js/Earcut.js"></script>
+		<script type="text/javascript" src="js/utils/lineclip.js"></script>
+		<script type="text/javascript" src="js/utils/geojson-area.js"></script>
+		<script type="text/javascript" src="js/plugins/GpxMng.js"></script>
+		<script type="text/javascript" src="js/plugins/PlanesMng.js"></script>
+		<script type="text/javascript" src="js/net/NetCtrl.js"></script>
 		
-		<script type="text/javascript" src="<?php echo $dev;?>js/net/NetCtrl.js"></script>
+		<script type="text/javascript" src="js/postprocessing/EffectComposer.js"></script>
+		<script type="text/javascript" src="js/postprocessing/CopyShader.js"></script>
+		<script type="text/javascript" src="js/postprocessing/ShaderPass.js"></script>
+		<script type="text/javascript" src="js/postprocessing/RenderPass.js"></script>
+		<script type="text/javascript" src="js/postprocessing/MaskPass.js"></script>
+		<script type="text/javascript" src="js/postprocessing/BokehPass.js"></script>
+		<script type="text/javascript" src="js/postprocessing/BokehShader.js"></script>
 		
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/EffectComposer.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/CopyShader.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/ShaderPass.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/RenderPass.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/MaskPass.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/BokehPass.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/BokehShader.js"></script>
-		
-		<script type="text/javascript" src="<?php echo $dev;?>js/utils/water.js"></script>
+		<script type="text/javascript" src="js/utils/water.js"></script>
 	</head>
-	<body onkeydown="keyEvent(event)" onkeyup="metaKeyUp(event)">
-		
+	<body onkeydown="Oev.Input.Keyboad.onKeyDown(event)" onkeyup="Oev.Input.Keyboad.onKeyUp(event)">
 		<div id="modalContainer">
 			<div id="modalWindow">
 				<a href="#" onclick="closeModal();"><img src="img/ico_close.png" alt="close" title="close"></a>
@@ -92,16 +59,16 @@ $cfgJS .= '};';
 			<div id="header">OpenEarthView(er)</div>
 			<div id="main">
 				<div id="tools">
-					<?php echo $dev;?> <a href="standby.php">STOP</a>
+					<a href="standby.php">STOP</a>
 					<div id="debugBox"></div>
 					<div class="toolsBox" id="search_box">
 						<form onsubmit="return querySearch();" action="#top">
 							<input type="text" name="search_value" id="search_value" placeholder="search place">
 						</form>
 					</div>
-					<div class="toolsBox" id="config_box">
-						<h3 data-content="layers" class="activ"><div class="ico_expend activ" id="expend_layers"></div> Network</h3>
-						<div class="toolsContent activ" id="toolsContent_layers">
+					<div class="toolsBox" id="config_network">
+						<h3 data-content="network" class="activ"><div class="ico_expend activ" id="expend_network"></div> Network</h3>
+						<div class="toolsContent activ" id="toolsContent_network">
 							<div id="ws_status">
 								...
 							</div>
@@ -150,17 +117,6 @@ $cfgJS .= '};';
 							Fog Near <input type="range" id="cfg_fog_near">
 							<br>
 							Fog Far <input type="range" id="cfg_fog_far">
-							<br>
-							<!--
-							aperture <input type="range" id="cfg_bokeh_aperture">
-							<br>
-							maxblur <input type="range" id="cfg_bokeh_maxblur">
-							<br>
-							Focus <input type="range" id="cfg_bokeh_focus">
-							<br>
-							Hemilight <input type="range" id="cfg_hemilight_intensity">
-							<br>
-							-->
 						</div>
 					</div>
 					<div class="toolsBox">
@@ -210,24 +166,22 @@ $cfgJS .= '};';
 				<a id="contactLink" href="mailto:toto@toto.com">Contact</a>
 			</div>
 <?php
-	include( $dev.'js/shaders/ocean.php' );
-	include( $dev.'js/shaders/atmosphere.php' );
-	include( $dev.'js/shaders/water.php' );
+	include( 'js/shaders/ocean.php' );
+	include( 'js/shaders/atmosphere.php' );
+	include( 'js/shaders/water.php' );
 ?>
-
 		<script>
 <?php
-			echo $cfgJS;
+			// echo $cfgJS;
 			echo 'var DEV = "";';
 ?>
 		</script>
-<script type="text/javascript" src="<?php echo $dev;?>js/TileBuildings.js"></script>
-
+		<script type="text/javascript" src="js/TileBuildings.js"></script>
 		<script>
 		
 			var vertMixShader = document.getElementById('vertWater').innerHTML;
 			var fragMixShader = document.getElementById('fragWater').innerHTML;
-
+			
 			var OEV = new OpenEarthViewer( 'threeContainer' );
 			OEV.init();
 			
@@ -239,9 +193,8 @@ $cfgJS .= '};';
 				requestAnimationFrame( render );
 				OEV.render();
 			}
-			
 		</script>
-		
+			
 	</body>
 </html>
 <?php

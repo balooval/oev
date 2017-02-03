@@ -299,7 +299,7 @@ function querySearch(){
 	var searchValue = document.getElementById( "search_value" ).value;
 	debug( "searchValue: " + searchValue );
 	var bbox = OEV.earth.getCurrentBBox();
-	var url = DEV+"libs/remoteImg.php?nominatim=1&searchValue="+searchValue+"&left="+bbox["left"]+"&top="+bbox["top"]+"&right="+bbox["right"]+"&bottom="+bbox["bottom"]+"";
+	var url = "libs/remoteImg.php?nominatim=1&searchValue="+searchValue+"&left="+bbox["left"]+"&top="+bbox["top"]+"&right="+bbox["right"]+"&bottom="+bbox["bottom"]+"";
 	var ajaxMng = new AjaxMng( url, { "searchValue" : searchValue }, function( res, _params ){
 		var results = JSON.parse( res );
 		if( results.length > 0 ){
