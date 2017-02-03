@@ -44,6 +44,7 @@ $cfgJS .= '};';
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="<?php echo $dev;?>js/libs/three.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/utils.js"></script>
+		<script type="text/javascript" src="<?php echo $dev;?>js/oev/geo.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/input.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/navigation.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/oev/sky.js"></script>
@@ -64,9 +65,7 @@ $cfgJS .= '};';
 		<script type="text/javascript" src="<?php echo $dev;?>js/utils/geojson-area.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/plugins/GpxMng.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/plugins/PlanesMng.js"></script>
-		
 		<script type="text/javascript" src="<?php echo $dev;?>js/net/NetCtrl.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/ElevationCustom.js"></script>
 		
 		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/EffectComposer.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/CopyShader.js"></script>

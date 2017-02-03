@@ -527,8 +527,8 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 	
 	Oev.Sky.lightSun.target = this.pointer;
 	
-	UiObj.evt.addEventListener( "ON_KEY_DOWN", this, this.onKeyDown );
-	UiObj.evt.addEventListener( "ON_KEY_UP", this, this.onKeyUp );
+	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
+	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_UP", this, this.onKeyUp);
 }
 
 

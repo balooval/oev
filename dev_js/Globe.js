@@ -427,26 +427,16 @@ Globe.prototype.onCurTileChange = function( _newTile ){
 Globe.prototype.updateCurTile = function( _coordX, _coordY ){
 	this.coordDetails.x = _coordX;
 	this.coordDetails.y = _coordY;
-	var newTile = this.coordsToTile( this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM );
+	var newTile = Oev.Geo.coordsToTile( this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM );
 	if( newTile.x != this.curTile.x || newTile.y != this.curTile.y || newTile.z != this.curTile.z ){
 		this.onCurTileChange( newTile );
 	}
 	this.curTile = newTile;
 }
 
-Globe.prototype.coordsToTile = function( _lon, _lat, _zoom ){
-	_zoom = Math.floor( _zoom );
-	var tile = new THREE.Vector2();
-	tile.x = Math.floor( ( _lon + 180 ) / 360 * Math.pow( 2, _zoom) );
-	tile.y = Math.floor( ( 1 - Math.log( Math.tan( _lat * Math.PI / 180 ) + 1 / Math.cos( _lat * Math.PI / 180 ) ) / Math.PI ) / 2 * Math.pow( 2, _zoom ) );
-	tile.z = _zoom;
-	return tile;
-}
-
 
 Globe.prototype.zoomFromAltitude = function( _altitude ) { // _altitude : meters units
-	var a = ( ( this.radius * this.globalScale ) * Math.PI * 2 ) / _altitude;
-	return Math.min( Math.max( Math.log(a) / Math.log(2), 4 ), 19 );
+	return Oev.Geo.zoomFromAltitude(_altitude, this.radius, this.globalScale);
 }
 
 
@@ -470,11 +460,6 @@ Globe.prototype.zoomFromAltitudeTest = function( _altitude ) { // _altitude : me
 
 
 Globe.prototype.altitude = function( _zoomlevel ) { // return altitude in opengl unit
-	if( this.projection == "SPHERE" ){
-		var C = ( Math.PI * 2 ) * this.radius;
-		return ( C * Math.cos( 0 ) / Math.pow( 2, _zoomlevel ) );
-	}else if( this.projection == "PLANE" ){
-		return ( ( this.radius * Math.PI * 2 ) / Math.pow( 2, _zoomlevel ) );
-	}
+	return Oev.Geo.getAltitude(_zoomlevel, this.radius);
 }
 

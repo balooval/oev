@@ -406,7 +406,7 @@ Oev.Sky = (function(){
 		onCurTileChanged : function() {
 			if (weatherEnabled) {
 				if( OEV.earth.CUR_ZOOM >= 11 ){
-					var newTile = OEV.earth.coordsToTile(OEV.earth.coordDetails.x, OEV.earth.coordDetails.y, 11);
+					var newTile = Oev.Geo.coordsToTile(OEV.earth.coordDetails.x, OEV.earth.coordDetails.y, 11);
 					loadWeather(11, newTile.x, newTile.y);
 				}
 			}

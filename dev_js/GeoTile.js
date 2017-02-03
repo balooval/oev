@@ -115,32 +115,6 @@ var GeoTile = function ( _globe, _tileX, _tileY, _zoom ) {
 	this.customEle = true;
 
 	
-	if( this.customEle ){
-		if( this.zoom == 8 ){
-			UiObj.evt.addEventListener( 'ON_CLICK_GROUND', this, this.createCustomElevation );
-			// var customEle = new ElevationCustom( this.startCoord, this.endCoord );
-			// ElevationCustom.liste[this.tileX+'/'+this.tileY] = customEle;
-		}
-	}
-}
-
-
-GeoTile.prototype.createCustomElevation = function() {
-	if( UiObj.coordOnGround.x > this.startCoord.x && UiObj.coordOnGround.x < this.endCoord.x && UiObj.coordOnGround.y < this.startCoord.y && UiObj.coordOnGround.y > this.endCoord.y ){
-		UiObj.evt.removeEventListener( 'ON_CLICK_GROUND', this, this.createCustomElevation );
-		var customEle = new ElevationCustom( this.startCoord, this.endCoord );
-		ElevationCustom.liste[this.tileX+'/'+this.tileY] = customEle;
-	}
-}
-
-GeoTile.prototype.getCustomElevation = function( _lon, _lat ) {
-	var tileX = Math.floor( ( _lon + 180 ) / 360 * Math.pow( 2, 8 ) );
-	var tileY = Math.floor( ( 1 - Math.log( Math.tan( _lat * Math.PI / 180 ) + 1 / Math.cos( _lat * Math.PI / 180 ) ) / Math.PI ) / 2 * Math.pow( 2, 8 ) );
-	
-	if( ElevationCustom.liste[tileX+'/'+tileY] != undefined ){
-		return ElevationCustom.liste[tileX+'/'+tileY].getCustomElevation( _lon, _lat );
-	}
-	return 0;
 }
 
 

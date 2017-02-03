@@ -118,7 +118,7 @@ var Plane = function ( _start, _end ) {
 	this.altitude = 5000;
 	var posTmp = OEV.earth.coordToXYZ( this.tweenLon.value, this.tweenLat.value, this.altitude );
 	this.zoom = Math.floor( OEV.earth.zoomFromAltitude( Math.abs( posTmp.y ) ) );
-	this.tile = OEV.earth.coordsToTile( this.tweenLon.value, this.tweenLat.value, this.zoom );
+	this.tile = Oev.Geo.coordsToTile( this.tweenLon.value, this.tweenLat.value, this.zoom );
 	debug( "Plane.this.zoom : " + this.zoom );
 
 	var distance = Oev.Utils.coordDistance( _start.x, _start.y, _end.x, _end.y );

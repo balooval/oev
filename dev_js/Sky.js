@@ -365,7 +365,7 @@ Sky.prototype.construct = function() {
 Sky.prototype.onCurTileChanged = function() {
 	if( this.weatherEnabled ){
 		if( OEV.earth.CUR_ZOOM >= 11 ){
-			var newTile = OEV.earth.coordsToTile( OEV.earth.coordDetails.x, OEV.earth.coordDetails.y, 11 );
+			var newTile = Oev.Geo.coordsToTile( OEV.earth.coordDetails.x, OEV.earth.coordDetails.y, 11 );
 			this.loadWeather( 11, newTile.x, newTile.y );
 		}
 	}

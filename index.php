@@ -63,7 +63,6 @@ $cfgJS .= '};';
 		<script type="text/javascript" src="<?php echo $dev;?>js/plugins/PlanesMng.js"></script>
 		
 		<script type="text/javascript" src="<?php echo $dev;?>js/net/NetCtrl.js"></script>
-		<script type="text/javascript" src="<?php echo $dev;?>js/ElevationCustom.js"></script>
 		
 		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/EffectComposer.js"></script>
 		<script type="text/javascript" src="<?php echo $dev;?>js/postprocessing/CopyShader.js"></script>
