@@ -1,13 +1,10 @@
 var dragSun = false;
-var majActiv = false;
 var notifCloseTimer = -1;
 var urlParams = [];
 var UiObj = undefined;
 
 var UI = function () {
 	this.evt = new Oev.Utils.Evt();
-	this.lastKeyDown = -1;
-	this.lastKeyUp = -1;
 	this.coordOnGround = new THREE.Vector3( 0, 0, 0 );
 }
 
@@ -261,12 +258,9 @@ function updateWaypointsList( _waysPts ){
 	}
 }
 
-
 function showUICoords(){
 	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ "m<br>Ele. factor : " + OEV.earth.eleFactor+'<br>SunTime: ' + Math.round( Oev.Sky.normalizedTime * 24 )+'H';
 }
-
-
 
 function onPostChatMsg( evt ){
 	evt.returnValue = false;
@@ -349,7 +343,6 @@ function openConfigBuildings(){
 	openModal( content );
 }
 
-
 function openConfigModel( _name ){
 	var content = '';
 	content += '<h3>'+OEV.MODELS_CFG[_name]["NAME"]+'</h3><br>';
@@ -370,8 +363,6 @@ function openConfigModel( _name ){
 	content += 'SHOW MARKER : <input type="checkbox" '+disabled+' onclick="OEV.MODELS_CFG[\''+_name+'\'][\'SHOW_MARKER\']='+(!OEV.MODELS_CFG[_name]["SHOW_MARKER"])+';" '+checked+'><br>';
 	openModal( content );
 }
-
-
 
 function showCredits(){
 	var html = '<h3>Credits</h3>';

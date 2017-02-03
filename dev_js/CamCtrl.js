@@ -472,13 +472,13 @@ CamCtrlFps.prototype.checkKeyMovement = function() {
 }
 
 CamCtrlFps.prototype.onKeyDown = function() {
-	if( UiObj.lastKeyDown == 37 ){ // LEFT
+	if (Oev.Input.Keyboad.lastKeyDown == 37) { // LEFT
 		this.keyMoveX.x = -1;
-	}else if( UiObj.lastKeyDown == 39 ){ // RIGHT
+	}else if (Oev.Input.Keyboad.lastKeyDown == 39) { // RIGHT
 		this.keyMoveX.y = 1;
-	}else if( UiObj.lastKeyDown == 38 ){ // TOP
+	}else if (Oev.Input.Keyboad.lastKeyDown == 38) { // TOP
 		this.keyMoveY.x = -1;
-	}else if( UiObj.lastKeyDown == 40 ){ // BOTTOM
+	}else if (Oev.Input.Keyboad.lastKeyDown == 40) { // BOTTOM
 		this.keyMoveY.y = 1;
 	}
 	
@@ -486,13 +486,13 @@ CamCtrlFps.prototype.onKeyDown = function() {
 }
 
 CamCtrlFps.prototype.onKeyUp = function() {
-	if( UiObj.lastKeyUp == 37 ){ // LEFT
+	if (Oev.Input.Keyboad.lastKeyUp == 37) { // LEFT
 		this.keyMoveX.x = 0;
-	}else if( UiObj.lastKeyUp == 39 ){ // RIGHT
+	}else if (Oev.Input.Keyboad.lastKeyUp == 39) { // RIGHT
 		this.keyMoveX.y = 0;
-	}else if( UiObj.lastKeyUp == 38 ){ // TOP
+	}else if (Oev.Input.Keyboad.lastKeyUp == 38) { // TOP
 		this.keyMoveY.x = 0;
-	}else if( UiObj.lastKeyUp == 40 ){ // BOTTOM
+	}else if (Oev.Input.Keyboad.lastKeyUp == 40) { // BOTTOM
 		this.keyMoveY.y = 0;
 	}
 	
