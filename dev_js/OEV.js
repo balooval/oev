@@ -211,7 +211,7 @@ OpenEarthViewer.prototype.switchDof = function() {
 OpenEarthViewer.prototype.start = function() {
 	
 	initUi();
-	Oev.Input.init();
+	Oev.Input.Mouse.init();
 	this.fountainPartMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: ( ( this.earth.meter ) * 10 ), map: this.textures['particleWater'] });
 	this.fountainPartMat.alphaTest = 0.4;
 	this.fountainPartMat.transparent = true;
@@ -325,8 +325,8 @@ OpenEarthViewer.prototype.loadTextures = function() {
 
 
 OpenEarthViewer.prototype.checkMouseWorldPos = function() {
-	var mX = ( ( Oev.Input.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
-	var mY = -( ( Oev.Input.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
+	var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
+	var mY = -( ( Oev.Input.Mouse.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
 	
 	this.mouseScreenClick.x = mX;
 	this.mouseScreenClick.y = mY;
@@ -393,7 +393,7 @@ OpenEarthViewer.prototype.render = function() {
 	this.camCtrl.update();
 
 	if( dragSun ){
-		var mX = ( ( Oev.Input.curMouseX - this.containerOffset.x ) / this.sceneWidth );
+		var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth );
 		Oev.Sky.setSunTime( mX );
 	}
 	if( this.showRendererInfos ){

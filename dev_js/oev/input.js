@@ -1,6 +1,14 @@
 Oev.Input = (function(){
 	'use strict';
+	var api = {
+		
+	};
 	
+	return api;
+})();
+	
+Oev.Input.Mouse = (function(){
+	'use strict';
 	var api = {
 		curMouseX : 0, 
 		curMouseY : 0, 

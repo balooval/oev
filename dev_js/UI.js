@@ -12,8 +12,8 @@ var UI = function () {
 }
 
 UI.prototype.init = function() {
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 }
 UI.prototype.onMouseDownLeft = function() {
 	var coordOnGround = OEV.checkMouseWorldPos();
@@ -43,8 +43,8 @@ function initUi(){
 	document.getElementById( "cfg_load_landuse" ).addEventListener("click", switchLanduse );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
-	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.onMouseDown,false);
-	OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.onMouseUp,true);
+	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.Mouse.onMouseDown,false);
+	OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.Mouse.onMouseUp,true);
 	OEV.renderer.domElement.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
 	var elem = document.getElementsByClassName( "toolsBox" );
 	for( var i = 0; i < elem.length; i ++ ){

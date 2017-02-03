@@ -24,11 +24,11 @@ var CamCtrlGod = function () {
 	this.clicPointer = undefined;
 	this.debugPointer = undefined;
 	this.evt = new Oev.Utils.Evt();
-	Oev.Input.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
-	Oev.Input.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 	this.MUST_UPDATE = false;
 }
 
@@ -84,8 +84,8 @@ CamCtrlGod.prototype.update = function() {
 		this.MUST_UPDATE = false;
 	}
 	
-	this.mouseLastPos.x = Oev.Input.curMouseX;
-	this.mouseLastPos.y = Oev.Input.curMouseY;
+	this.mouseLastPos.x = Oev.Input.Mouse.curMouseX;
+	this.mouseLastPos.y = Oev.Input.Mouse.curMouseY;
 }
 
 CamCtrlGod.prototype.setDestination = function( _lon, _lat, _duration ) {
@@ -153,8 +153,8 @@ CamCtrlGod.prototype.zoomOk = function() {
 
 
 CamCtrlGod.prototype.drag = function() {
-	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
-	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
+	var depX = ( Oev.Input.Mouse.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
+	var depY = ( Oev.Input.Mouse.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
 	var finalLon = this.coordLookat.x + ( depX * Math.cos( this.camRotation.x ) - depY * Math.sin( this.camRotation.x ) );
 	var finalLat = this.coordLookat.y - ( depY * Math.cos( this.camRotation.x ) + depX * Math.sin( this.camRotation.x ) );
 	this.setLookAt( finalLon, finalLat );
@@ -174,8 +174,8 @@ CamCtrlGod.prototype.setLookAt = function( _lon, _lat ) {
 }
 
 CamCtrlGod.prototype.rotate = function() {
-	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / 100.0;
-	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / 100.0;
+	var depX = ( Oev.Input.Mouse.curMouseX - this.mouseLastPos.x ) / 100.0;
+	var depY = ( Oev.Input.Mouse.curMouseY - this.mouseLastPos.y ) / 100.0;
 	this.camRotation.x += depX;
 	this.camRotation.y += depY;
 	if( this.camRotation.x > Math.PI ){
@@ -456,11 +456,11 @@ var CamCtrlFps = function () {
 	this.keyMoveY = new THREE.Vector2( 0, 0 );
 	this.keyMoveCam = new THREE.Vector2( 0, 0 );
 	
-	Oev.Input.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-	Oev.Input.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
-	Oev.Input.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
-	Oev.Input.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	Oev.Input.Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 }
 
 
@@ -592,8 +592,8 @@ CamCtrlFps.prototype.update = function() {
 		this.MUST_UPDATE = false;
 	}
 	
-	this.mouseLastPos.x = Oev.Input.curMouseX;
-	this.mouseLastPos.y = Oev.Input.curMouseY;
+	this.mouseLastPos.x = Oev.Input.Mouse.curMouseX;
+	this.mouseLastPos.y = Oev.Input.Mouse.curMouseY;
 }
 
 CamCtrlFps.prototype.setDestination = function( _lon, _lat, _duration ) {
@@ -650,8 +650,8 @@ CamCtrlFps.prototype.zoom = function() {
 
 
 CamCtrlFps.prototype.drag = function() {
-	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
-	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
+	var depX = ( Oev.Input.Mouse.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
+	var depY = ( Oev.Input.Mouse.curMouseY - this.mouseLastPos.y ) / Math.pow( 2.0, this.zoomCur );
 	var finalLon = this.coordLookat.x - ( depX * Math.cos( this.camRotation.x ) - depY * Math.sin( this.camRotation.x ) );
 	var finalLat = this.coordLookat.y + ( depY * Math.cos( this.camRotation.x ) + depX * Math.sin( this.camRotation.x ) );
 	this.setLookAt( finalLon, finalLat );
@@ -671,8 +671,8 @@ CamCtrlFps.prototype.setLookAt = function( _lon, _lat ) {
 }
 
 CamCtrlFps.prototype.rotate = function() {
-	var depX = ( Oev.Input.curMouseX - this.mouseLastPos.x ) / 100.0;
-	var depY = ( Oev.Input.curMouseY - this.mouseLastPos.y ) / 100.0;
+	var depX = ( Oev.Input.Mouse.curMouseX - this.mouseLastPos.x ) / 100.0;
+	var depY = ( Oev.Input.Mouse.curMouseY - this.mouseLastPos.y ) / 100.0;
 	this.camRotation.x += depX;
 	this.camRotation.y += depY;
 	if( this.camRotation.x > Math.PI ){
