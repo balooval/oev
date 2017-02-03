@@ -78,6 +78,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.MODELS_CFG;
 	this.showRendererInfos = false;
 	this.raycaster = undefined;
+	this.clock = null;
 	this.preloadQuery = [];
 	this.camCtrl = new CamCtrlGod();
 	this.userMat = undefined;
@@ -103,6 +104,7 @@ var OpenEarthViewer = function ( _containerId ) {
 OpenEarthViewer.plugins = {};
 
 OpenEarthViewer.prototype.init = function() {
+	this.clock = new THREE.Clock();
 	document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
 	var intElemClientWidth = document.getElementById( this.htmlContainer ).clientWidth;
 	var intElemClientHeight = document.getElementById( "tools" ).clientHeight;
@@ -265,7 +267,7 @@ OpenEarthViewer.prototype.loadModels = function() {
 				OEV.start();
 			}
 		}, function(_xhr) {
-			console.log(curModel + ' loading : ' + _xhr.loaded + ' / ' + _xhr.total);
+			// console.log(curModel + ' loading : ' + _xhr.loaded + ' / ' + _xhr.total);
 		}
 	);
 }
@@ -287,7 +289,7 @@ OpenEarthViewer.prototype.loadTextures = function() {
 			}
 		}, 
 		function(xhr) {
-			console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+			// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
 		},
 		function(xhr) {
 			debug( 'TilesMng. An error happened' );

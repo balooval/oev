@@ -3,6 +3,9 @@ var notifCloseTimer = -1;
 var urlParams = [];
 var UiObj = undefined;
 
+var htmlElmtLoadingDatas;
+var lastTimeLoadingUpdated = 0;
+
 var UI = function () {
 	this.evt = new Oev.Utils.Evt();
 	this.coordOnGround = new THREE.Vector3( 0, 0, 0 );
@@ -25,6 +28,15 @@ UI.prototype.onMouseUpLeft = function() {
 function initUi(){
 	UiObj = new UI();
 	UiObj.init();
+	htmlElmtLoadingDatas = {
+		'loading_OBJECTS' : document.getElementById( "loading_OBJECTS"), 
+		'loading_TILE2D' : document.getElementById( "loading_TILE2D"), 
+		'loading_ELE' : document.getElementById( "loading_ELE"), 
+		'loading_MODELS' : document.getElementById( "loading_MODELS"), 
+		'loading_BUILDINGS' : document.getElementById( "loading_BUILDINGS"), 
+		'loading_SURFACE' : document.getElementById( "loading_SURFACE"), 
+		'loading_NODES' : document.getElementById( "loading_NODES")
+	};
 	var elem = document.getElementsByName( "cfg_tile_layer" );
 	for( var i = 0; i < elem.length; i ++ ){
 		elem[i].addEventListener("click", changeTilesLayer );
@@ -271,9 +283,10 @@ function onPostChatMsg( evt ){
 }
 
 function updateLoadingDatas( _datasMng ){
-	var elmt = document.getElementById( "loading_" + _datasMng.type );
-	if( elmt != null ){
-		elmt.innerHTML = _datasMng.datasWaiting.length + " " + _datasMng.type + " to load";
+	var curTime = OEV.clock.getElapsedTime();
+	if (curTime - lastTimeLoadingUpdated > 1) {
+		lastTimeLoadingUpdated = curTime;
+		htmlElmtLoadingDatas['loading_' + _datasMng.type].innerHTML = _datasMng.datasWaiting.length + " " + _datasMng.type + " to load";
 	}
 }
 
