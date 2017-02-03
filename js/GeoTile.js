@@ -106,7 +106,8 @@ var GeoTile = function ( _globe, _tileX, _tileY, _zoom ) {
 		});
 		
 	}else{
-		this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
+		// this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
+		this.material = Oev.Cache.getMaterial();
 	}
 	
 	
@@ -141,12 +142,11 @@ GeoTile.prototype.updateDatasProviders = function( _added, _name ) {
 
 
 GeoTile.prototype.makeFace = function() {
-	this.distToCam = ( ( this.globe.coordDetails.x - this.middleCoord.x ) * ( this.globe.coordDetails.x - this.middleCoord.x ) + ( this.globe.coordDetails.y - this.middleCoord.y ) * ( this.globe.coordDetails.y - this.middleCoord.y ) );
-	// this.detailsSeg = this.globe.tilesDefinition;
+	this.distToCam = ((this.globe.coordDetails.x - this.middleCoord.x) * (this.globe.coordDetails.x - this.middleCoord.x) + (this.globe.coordDetails.y - this.middleCoord.y) * (this.globe.coordDetails.y - this.middleCoord.y));
 	var geometry = new THREE.Geometry();
 	geometry.dynamic = false;
 	geometry.faceVertexUvs[0] = [];
-	if( !this.eleLoaded ){
+	if (!this.eleLoaded) {
 		this.vertCoords = [];
 	}
 	var vect;
@@ -177,43 +177,34 @@ GeoTile.prototype.makeFace = function() {
 			v ++;
 		}
 	}
-	
-	for( x = 0; x < this.detailsSeg; x ++ ){
-		for( y = 0; y < this.detailsSeg; y ++ ){
-			geometry.faces.push( new THREE.Face3( ( y + 1 ) + ( x * ( this.detailsSeg + 1 ) ), y + ( ( x + 1 ) * ( this.detailsSeg + 1 ) ), y + ( x * ( this.detailsSeg + 1 ) ) ) );
+	for (x = 0; x < this.detailsSeg; x ++) {
+		for (y = 0; y < this.detailsSeg; y ++) {
+			geometry.faces.push(new THREE.Face3((y + 1) + (x * (this.detailsSeg + 1)), y + ((x + 1) * (this.detailsSeg + 1)), y + (x * (this.detailsSeg + 1))));
 			
-			geometry.faceVertexUvs[0][( geometry.faces.length - 1 )] = [ new THREE.Vector2( ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV ) ), new THREE.Vector2( ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV ) ), new THREE.Vector2( ( x * stepUV ), 1 - ( y * stepUV ) ) ];
+			geometry.faceVertexUvs[0][(geometry.faces.length - 1 )] = [new THREE.Vector2((x * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - (y * stepUV)), new THREE.Vector2((x * stepUV), 1 - (y * stepUV))];
 			
-			geometry.faces.push( new THREE.Face3( ( y + 1 ) + ( x * ( this.detailsSeg + 1 ) ), ( y + 1 ) + ( ( x + 1 ) * ( this.detailsSeg + 1 ) ), y + ( ( x + 1 ) * ( this.detailsSeg + 1 ) ) ) );
+			geometry.faces.push(new THREE.Face3((y + 1) + (x * (this.detailsSeg + 1)), (y + 1) + ((x + 1) * (this.detailsSeg + 1)), y + ((x + 1) * (this.detailsSeg + 1))));
 			
-			geometry.faceVertexUvs[0][( geometry.faces.length - 1 )] = [ new THREE.Vector2( ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV ) ), new THREE.Vector2( ( ( x + 1 ) * stepUV ), 1 - ( ( y + 1 ) * stepUV ) ), new THREE.Vector2( ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV ) ) ];
+			geometry.faceVertexUvs[0][( geometry.faces.length - 1 )] = [new THREE.Vector2((x * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - (y * stepUV))];
 		}
 	}
-	
 	this.makeBorders();
-	
 	geometry.uvsNeedUpdate = true;
 	geometry.computeFaceNormals();
 	geometry.mergeVertices()
 	geometry.computeVertexNormals();
-	   
-	this.meshe = new THREE.Mesh( geometry, this.material );
-	// this.meshe = new THREE.Mesh( new THREE.BufferGeometry().fromGeometry( geometry ), this.material );
+	this.meshe = new THREE.Mesh(geometry, this.material);
 	this.meshe.matrixAutoUpdate = false;
 	if( this.mesheBorder != undefined ){
 		this.meshe.add( this.mesheBorder );
 	}
-	
 	if( this.onStage ){
 		this.globe.meshe.add( this.meshe );
 	}
-	
 	this.meshe.castShadow = true;
 	this.meshe.receiveShadow = true;
-	
 	this.mapParentTexture();
 	this.loadImage();
-	
 	this.loadDatas();
 }
 
@@ -227,6 +218,10 @@ GeoTile.prototype.loadDatas = function() {
 
 
 GeoTile.prototype.mapParentTexture = function() {
+	var x;
+	var y;
+	var stepUV;
+	var curFace;
 	var curParent = this.parentTile;
 	if( !this.textureLoaded && curParent != undefined ){
 		var uvReduc = 0.5;
@@ -240,10 +235,10 @@ GeoTile.prototype.mapParentTexture = function() {
 		}
 		if( curParent != undefined ){
 			this.material.map = curParent.material.map;
-			var curFace = 0;
-			var stepUV = uvReduc / this.detailsSeg;
-			for( var x = 0; x < this.detailsSeg; x ++ ){
-				for( var y = 0; y < this.detailsSeg; y ++ ){
+			curFace = 0;
+			stepUV = uvReduc / this.detailsSeg;
+			for (x = 0; x < this.detailsSeg; x ++) {
+				for (y = 0; y < this.detailsSeg; y ++){
 					this.meshe.geometry.faceVertexUvs[0][curFace][0].set( curOffsetX + ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV )- curOffsetY );
 					this.meshe.geometry.faceVertexUvs[0][curFace][1].set( curOffsetX + ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV )- curOffsetY );
 					this.meshe.geometry.faceVertexUvs[0][curFace][2].set( curOffsetX + ( x * stepUV ), 1 - ( y * stepUV )- curOffsetY ) ;
@@ -257,19 +252,18 @@ GeoTile.prototype.mapParentTexture = function() {
 			}
 		}
 	}else if( this.textureLoaded ){
-		var curFace = 0;
-		var stepUV = 1 / this.detailsSeg;
-		for( var x = 0; x < this.detailsSeg; x ++ ){
-			for( var y = 0; y < this.detailsSeg; y ++ ){
-				this.meshe.geometry.faceVertexUvs[0][curFace][0].set( ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV ) );
-				this.meshe.geometry.faceVertexUvs[0][curFace][1].set( ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV ) );
-				this.meshe.geometry.faceVertexUvs[0][curFace][2].set( ( x * stepUV ), 1 - ( y * stepUV ) );
+		curFace = 0;
+		stepUV = 1 / this.detailsSeg;
+		for (x = 0; x < this.detailsSeg; x ++) {
+			for (y = 0; y < this.detailsSeg; y ++) {
+				this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
+				this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - (y * stepUV));
+				this.meshe.geometry.faceVertexUvs[0][curFace][2].set((x * stepUV), 1 - (y * stepUV));
 				curFace ++;
-				this.meshe.geometry.faceVertexUvs[0][curFace][0].set( ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV ) );
-				this.meshe.geometry.faceVertexUvs[0][curFace][1].set( ( ( x + 1 ) * stepUV ), 1 - ( ( y + 1 ) * stepUV ) );
-				this.meshe.geometry.faceVertexUvs[0][curFace][2].set( ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV ) );
+				this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
+				this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - ((y + 1) * stepUV));
+				this.meshe.geometry.faceVertexUvs[0][curFace][2].set(((x + 1) * stepUV), 1 - (y * stepUV));
 				curFace ++;
-				
 			}
 		}
 		this.meshe.geometry.uvsNeedUpdate = true;
@@ -277,21 +271,22 @@ GeoTile.prototype.mapParentTexture = function() {
 }
 
 GeoTile.prototype.makeBorders = function() {
-	if( this.globe.eleActiv ){
-		if( this.mesheBorder != undefined ){
-			this.meshe.remove( this.mesheBorder );
+	var b;
+	if (this.globe.eleActiv) {
+		if (this.mesheBorder != undefined) {
+			this.meshe.remove(this.mesheBorder);
 			this.mesheBorder.geometry.dispose();
 			this.mesheBorder = undefined;
 		}
 		var stepUV = 1 / this.detailsSeg;
-		var stepCoord = new THREE.Vector2( ( this.endCoord.x - this.startCoord.x ) / this.detailsSeg, ( this.endCoord.y - this.startCoord.y ) / this.detailsSeg );
+		var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.detailsSeg, (this.endCoord.y - this.startCoord.y) / this.detailsSeg);
 		var geoBorders = new THREE.Geometry();
 		geoBorders.dynamic = false;
 		geoBorders.faceVertexUvs[0] = [];
 		var vertBorder = [];
 		var vertUvs = [];
 		var vEId;
-		for( x = 0; x < ( this.detailsSeg + 1 ); x ++ ){
+		for (x = 0; x < (this.detailsSeg + 1); x ++) {
 			vertUvs.push( new THREE.Vector2( x * stepUV, 0 ) );
 			vertUvs.push( new THREE.Vector2( x * stepUV, 0 ) );
 			vEId = x * ( this.detailsSeg + 1 );
@@ -301,7 +296,7 @@ GeoTile.prototype.makeBorders = function() {
 			vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y, 0 );
 			vertBorder.push( vect );
 		}
-		for( y = 1; y < this.detailsSeg + 1; y ++ ){
+		for (y = 1; y < this.detailsSeg + 1; y ++ ){
 			vertUvs.push( new THREE.Vector2( 0, y * stepUV ) );
 			vertUvs.push( new THREE.Vector2( 0, y * stepUV ) );
 			
@@ -312,7 +307,7 @@ GeoTile.prototype.makeBorders = function() {
 			vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * this.detailsSeg ), this.startCoord.y + ( stepCoord.y * y ), 0 );
 			vertBorder.push( vect );
 		}
-		for( x = 1; x < ( this.detailsSeg + 1 ); x ++ ){
+		for (x = 1; x < ( this.detailsSeg + 1 ); x ++ ){
 			vertUvs.push( new THREE.Vector2( 1 - ( x * stepUV ), 0 ) );
 			vertUvs.push( new THREE.Vector2( 1 - ( x * stepUV ), 0 ) );
 			
@@ -323,7 +318,7 @@ GeoTile.prototype.makeBorders = function() {
 			vect = this.globe.coordToXYZ( this.endCoord.x - ( stepCoord.x * x ), this.endCoord.y, 0 );
 			vertBorder.push( vect );
 		}
-		for( y = 1; y < ( this.detailsSeg + 1 ); y ++ ){
+		for (y = 1; y < ( this.detailsSeg + 1 ); y ++ ){
 			vertUvs.push( new THREE.Vector2( 1, 1 - ( y * stepUV ) ) );
 			vertUvs.push( new THREE.Vector2( 1, 1 - ( y * stepUV ) ) );
 			vEId = ( ( this.detailsSeg + 0 ) - y ) + ( 0 );
@@ -334,11 +329,10 @@ GeoTile.prototype.makeBorders = function() {
 			vertBorder.push( vect );
 		}
 		
-		for( var b = 0; b < vertBorder.length; b ++ ){
-			geoBorders.vertices.push( vertBorder[b] );
+		for (b = 0; b < vertBorder.length; b ++) {
+			geoBorders.vertices.push(vertBorder[b]);
 		}
-		for( var b = 0; b < vertBorder.length - 2; b += 2 ){
-			var startVertBorderIndex = b;
+		for (b = 0; b < vertBorder.length - 2; b += 2) {
 			geoBorders.faces.push( new THREE.Face3( b + 2, b + 1, b + 0 ) );
 			geoBorders.faceVertexUvs[0][( geoBorders.faces.length - 1 )] = [ vertUvs[b+2], vertUvs[b+1], vertUvs[b+0] ];
 			geoBorders.faces.push( new THREE.Face3( b + 1, b + 2, b + 3 ) );
@@ -347,8 +341,8 @@ GeoTile.prototype.makeBorders = function() {
 		geoBorders.uvsNeedUpdate = true;
 		geoBorders.computeFaceNormals();
 		geoBorders.mergeVertices()
-		geoBorders.computeVertexNormals();
-		this.mesheBorder = new THREE.Mesh( geoBorders, this.materialBorder );
+		// geoBorders.computeVertexNormals();
+		this.mesheBorder = new THREE.Mesh(geoBorders, this.materialBorder);
 		this.mesheBorder.matrixAutoUpdate = false;
 	}
 }
@@ -403,7 +397,6 @@ GeoTile.prototype.hide = function( _state ) {
 		for( var i = 0; i < this.surfacesProviders.length; i ++ ){
 			this.surfacesProviders[i].hide( false );
 		}
-		// this.loadModels();
 		this.nodesProvider.hide( false );
 		for( var i = 0; i < this.datasProviders.length; i ++ ){
 			this.datasProviders[i].drawDatas();
@@ -434,59 +427,57 @@ GeoTile.prototype.clearTilesOverzoomed = function() {
 	
 
 GeoTile.prototype.updateDetails = function() {
-	if( this.checkCameraHover( this.globe.tilesDetailsMarge ) ){
-		if( this.childTiles.length == 0 && this.zoom < this.globe.CUR_ZOOM ){
+	var i;
+	var newTile;
+	var middleLat;
+	var childZoom;
+	if (this.checkCameraHover(this.globe.tilesDetailsMarge)) {
+		if (this.childTiles.length == 0 && this.zoom < this.globe.CUR_ZOOM) {
 			this.childsZoom = this.globe.CUR_ZOOM;
-			var childZoom = this.zoom + 1;
-			var middleLat = this.angleYStart + ( this.angleYEnd - this.angleYStart ) / 2;
-			var middleLon = this.angleXStart + ( this.angleXEnd - this.angleXStart ) / 2;
-			var newTileA = new GeoTile( this.globe, this.tileX * 2, this.tileY * 2, childZoom );
-			newTileA.parentTile = this;
-			newTileA.parentOffset = new THREE.Vector2( 0, 0 );
-			newTileA.makeFace();
-			this.childTiles.push( newTileA );
-			newTileA.updateDetails();
-			var newTileB = new GeoTile( this.globe, this.tileX * 2, this.tileY * 2 + 1, childZoom );
-			newTileB.parentTile = this;
-			newTileB.parentOffset = new THREE.Vector2( 0, 1 );
-			newTileB.makeFace();
-			this.childTiles.push( newTileB );
-			newTileB.updateDetails();
-			var newTileC = new GeoTile( this.globe, this.tileX * 2 + 1, this.tileY * 2, childZoom );
-			newTileC.parentTile = this;
-			newTileC.parentOffset = new THREE.Vector2( 1, 0 );
-			newTileC.makeFace();
-			this.childTiles.push( newTileC );
-			newTileC.updateDetails();
-			var newTileD = new GeoTile( this.globe, this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom );
-			newTileD.parentTile = this;
-			newTileD.parentOffset = new THREE.Vector2( 1, 1 );
-			newTileD.makeFace();
-			this.childTiles.push( newTileD );
-			newTileD.updateDetails();
-			
+			childZoom = this.zoom + 1;
+			newTile = new GeoTile(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
+			newTile.parentTile = this;
+			newTile.parentOffset = new THREE.Vector2( 0, 0 );
+			newTile.makeFace();
+			this.childTiles.push(newTile);
+			newTile.updateDetails();
+			newTile = new GeoTile(this.globe, this.tileX * 2, this.tileY * 2 + 1, childZoom);
+			newTile.parentTile = this;
+			newTile.parentOffset = new THREE.Vector2( 0, 1 );
+			newTile.makeFace();
+			this.childTiles.push( newTile );
+			newTile.updateDetails();
+			newTile = new GeoTile(this.globe, this.tileX * 2 + 1, this.tileY * 2, childZoom);
+			newTile.parentTile = this;
+			newTile.parentOffset = new THREE.Vector2( 1, 0 );
+			newTile.makeFace();
+			this.childTiles.push(newTile);
+			newTile.updateDetails();
+			newTile = new GeoTile(this.globe, this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
+			newTile.parentTile = this;
+			newTile.parentOffset = new THREE.Vector2( 1, 1 );
+			newTile.makeFace();
+			this.childTiles.push(newTile);
+			newTile.updateDetails();
 			this.hide( true );
-
-			for( var i = 0; i < this.datasProviders.length; i ++ ){
+			for (i = 0; i < this.datasProviders.length; i ++ ){
 				this.datasProviders[i].passModelsToChilds();
 			}
 		}else{
-			if( this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM ){
+			if( this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM) {
 				this.clearTilesOverzoomed();
 			}
-			for( var i = 0; i < this.childTiles.length; i ++ ){
+			for (i = 0; i < this.childTiles.length; i ++) {
 				this.childTiles[i].updateDetails();
 			}
 		}
 	}else{
 		this.clearChildrens();
-		
 		if( this.zoom + 5 < this.globe.CUR_ZOOM ){
 			this.hide( true );
 		}else{
 			this.hide( false );	
 		}
-		
 	}
 }
 
@@ -957,7 +948,8 @@ GeoTile.prototype.dispose = function() {
 	}
 	if( this.meshe != undefined ){
 		this.meshe.geometry.dispose();
-		this.material.dispose();
+		// this.material.dispose();
+		Oev.Cache.freeMaterial(this.material);
 	}
 	if( this.mesheBorder != undefined ){
 		this.mesheBorder.geometry.dispose();
@@ -972,3 +964,23 @@ GeoTile.prototype.dispose = function() {
 		OEV.removeObjToUpdate( this );
 	}
 }
+
+
+Oev.Cache = (function(){
+	var materials = [];
+	
+	var api = {
+		getMaterial : function() {
+			if (materials.length == 0) {
+				materials.push(new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } ));
+			}
+			return materials.pop();
+		}, 
+		
+		freeMaterial : function(_material) {
+			materials.push(_material);
+		}, 
+	};
+	
+	return api;
+})();
