@@ -78,7 +78,7 @@ $cfgJS .= '};';
 		
 		<script type="text/javascript" src="<?php echo $dev;?>js/utils/water.js"></script>
 	</head>
-	<body onkeydown="keyEvent(event)" onkeyup="metaKeyUp(event)">
+	<body onkeydown="Oev.Input.Keyboad.onKeyDown(event)" onkeyup="Oev.Input.Keyboad.onKeyUp(event)">
 		
 		<div id="modalContainer">
 			<div id="modalWindow">
