@@ -112,7 +112,7 @@ Oev.Input.Mouse = (function(){
 		
 		init : function() {
 			document.onmousemove = api.onMouseMove;
-			document.addEventListener('mousewheel', api.onMouseWheel, false)
+			document.addEventListener('mousewheel', api.onMouseWheel, {passive: true});
 		}, 
 		
 		onMouseDown : function(evt) {
