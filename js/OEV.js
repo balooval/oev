@@ -113,7 +113,7 @@ OpenEarthViewer.prototype.init = function() {
 	this.scene = new THREE.Scene();
 	this.camera = new THREE.PerspectiveCamera( 90, this.sceneWidth / this.sceneHeight, 0.1, 20000 );
 	this.earth = new Globe();
-	this.scene.add( this.earth.meshe );
+	this.scene.add(this.earth.meshe);
 	this.renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
 	this.raycaster = new THREE.Raycaster();
 	this.renderer.setSize( this.sceneWidth, this.sceneHeight );

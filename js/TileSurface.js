@@ -6,7 +6,6 @@ var TileSurface = function ( _geoTile, _tileX, _tileY, _zoom ) {
 	this.tileY = _tileY;
 	this.onStage = true;
 	this.datas = undefined;
-	// this.particules = undefined;
 	this.partMeshes = {
 		'vineyard' : undefined, 
 		'forest' : undefined, 
