@@ -1,6 +1,5 @@
 Oev.Geo = (function(){
 	'use strict';
-	console.warn('use Oev.Geo');
 	
 	var api = {
 		projection : 'PLANE', 

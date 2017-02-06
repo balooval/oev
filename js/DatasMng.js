@@ -172,7 +172,6 @@ DatasMng.prototype.loadNext = function() {
 		}else if( this.type == "MODELS" ){
 			this.loadOverpass( loadInfos );
 		}else if( this.type == "BUILDINGS" ){
-			// this.loadBuildings( loadInfos );
 			this.loadBuildingsOverpass( loadInfos );
 		}else if( this.type == "NODES" ){
 			this.loadNodes( loadInfos );
@@ -201,26 +200,6 @@ DatasMng.prototype.loadWeather = function( _loadInfos ) {
 	);
 }
 
-DatasMng.prototype.loadBuildings = function( _loadInfos ) {
-	var mng = this;
-	var useCache = '&nocache=1';
-	if( Tile3d.prototype.useCache ){
-		useCache = '';
-	}
-	var url = "libs/remoteImg.php?3dtile=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"]+''+useCache;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
-		function( res, _params ){
-			_params["mng"].datasLoaded[ _params["key"]] = res;
-			if( _params["geoTile"] != undefined ){
-				// _params["geoTile"].setDatas( res );
-				_params["geoTile"].setDatas( _params["mng"].datasLoaded[ _params["key"]] );
-			}
-			_params["mng"].removeLoadingList( _params["key"] );
-			_params["mng"].checkForNextLoad();
-		}
-	);
-}
-
 DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 	var mng = this;
 	var useCache = '&nocache=1';
@@ -240,7 +219,7 @@ DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 					"maxLat" : _params["geoTile"].geoTile.startCoord.y
 				};
 			}
-			var myWorker = TileBuildings.worker;
+			var myWorker = Oev.Tile.buildingWorker;
 			myWorker.postMessage( { "json" : res, "bbox" : bbox } );
 			
 			myWorker.onmessage = function( evt ) {
@@ -329,7 +308,7 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 			function(t){
 				mng.datasLoaded[_loadInfos["key"]] = t;
 				if( _loadInfos["tile"] != undefined ){
-					_loadInfos["tile"].setTexture( t );
+					_loadInfos["tile"].setTexture(t);
 				}
 				mng.removeLoadingList( _loadInfos["key"] );
 				mng.checkForNextLoad();

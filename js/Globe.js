@@ -4,7 +4,7 @@ var Globe = function () {
 	this.tiles2dMng = undefined;
 	this.tilesEledMng = undefined;
 	this.meter = this.radius / 40075017.0;
-	this.meshe = new THREE.Mesh( new THREE.Geometry() );
+	this.meshe = new THREE.Mesh(new THREE.Geometry());
 	this.CUR_ZOOM = 4;
 	this.globalScale = 1;
 	this.coordDetails = new THREE.Vector2( 0, 0 );
@@ -49,6 +49,14 @@ var Globe = function () {
 	this.gpxMillisStep = -1;
 	this.gpxTravelMillis = -1;
 	this.evt = new Oev.Utils.Evt();
+}
+
+Globe.prototype.addMeshe = function(_meshe) {
+	this.meshe.add(_meshe);
+}
+
+Globe.prototype.removeMeshe = function(_meshe) {
+	this.meshe.remove(_meshe);
 }
 
 Globe.prototype.updateTilesModelProvider = function( _added, _name ) {
@@ -152,23 +160,21 @@ Globe.prototype.construct = function() {
 	this.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['grass'] });
 	this.grassMat.alphaTest = 0.4;
 	this.grassMat.transparent = true;
-		
 	// make faces
-	
 	var zoomBase = 4;
 	var nbTiles = Math.pow( 2, zoomBase );
 	for( var curTileY = 0; curTileY < nbTiles + 1; curTileY ++ ){
 		if( curTileY > 0 ){
 			for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
 				if( curTileX > 0 ){
-					var geoTile = new GeoTile( this, curTileX - 1, curTileY - 1, zoomBase );
+					// var geoTile = new GeoTile( this, curTileX - 1, curTileY - 1, zoomBase );
+					var geoTile = new Oev.Globe.GeoTile( this, curTileX - 1, curTileY - 1, zoomBase );
 					this.tilesBase.push( geoTile );
 					geoTile.makeFace();
 				}
 			}
 		}
 	}
-	
 	this.matWayPoints = new THREE.SpriteMaterial( { map: OEV.textures['waypoint'], color: 0xffffff, fog: false } );
 }
 

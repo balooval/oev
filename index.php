@@ -9,8 +9,10 @@ include( 'libs/init.php' );
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="js/libs/three.js"></script>
 		<script type="text/javascript" src="js/oev/utils.js"></script>
+		<script type="text/javascript" src="js/oev/globe.js"></script>
 		<script type="text/javascript" src="js/oev/geo.js"></script>
 		<script type="text/javascript" src="js/oev/input.js"></script>
+		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
 		<script type="text/javascript" src="js/oev/navigation.js"></script>
 		<script type="text/javascript" src="js/oev/sky.js"></script>
 		<script type="text/javascript" src="js/oev/math.js"></script>
@@ -18,7 +20,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/OEV.js"></script>
 		<script type="text/javascript" src="js/UI.js"></script>
 		<script type="text/javascript" src="js/CamCtrl.js"></script>
-		<script type="text/javascript" src="js/GeoTile.js"></script>
+		
 		<script type="text/javascript" src="js/Tile3d.js"></script>
 		<script type="text/javascript" src="js/TileSurface.js"></script>
 		<script type="text/javascript" src="js/TileNodes.js"></script>
@@ -176,7 +178,6 @@ include( 'libs/init.php' );
 			echo 'var DEV = "";';
 ?>
 		</script>
-		<script type="text/javascript" src="js/TileBuildings.js"></script>
 		<script>
 		
 			var vertMixShader = document.getElementById('vertWater').innerHTML;

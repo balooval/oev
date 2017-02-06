@@ -34,6 +34,31 @@ Oev.Math = (function(){
 			}
 			return true;
 		}, 
+		
+		findCentroid : function (pts){
+			var nPts = pts.length;
+			var off = pts[0];
+			var twicearea = 0;
+			var x = 0;
+			var y = 0;
+			var p1,p2;
+			var i;
+			var j;
+			var f;
+			for (i = 0, j = nPts - 1; i < nPts; j = i++) {
+				p1 = pts[i];
+				p2 = pts[j];
+				f = (p1[1] - off[1]) * (p2[0] - off[0]) - (p2[1] - off[1]) * (p1[0] - off[0]);
+				twicearea += f;
+				x += (p1[1] + p2[1] - 2 * off[1]) * f;
+				y += (p1[0] + p2[0] - 2 * off[0]) * f;
+			}
+			f = twicearea * 3;
+			return {
+				lat: x / f + off[1],
+				lon: y / f + off[0]
+			};
+		},
 	};
 	
 	return api;
