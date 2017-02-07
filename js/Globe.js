@@ -167,10 +167,9 @@ Globe.prototype.construct = function() {
 		if( curTileY > 0 ){
 			for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
 				if( curTileX > 0 ){
-					// var geoTile = new GeoTile( this, curTileX - 1, curTileY - 1, zoomBase );
-					var geoTile = new Oev.Globe.GeoTile( this, curTileX - 1, curTileY - 1, zoomBase );
-					this.tilesBase.push( geoTile );
-					geoTile.makeFace();
+					var tile = new Oev.Tile.Basic( this, curTileX - 1, curTileY - 1, zoomBase );
+					this.tilesBase.push(tile);
+					tile.makeFace();
 				}
 			}
 		}

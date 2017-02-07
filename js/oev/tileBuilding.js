@@ -1,15 +1,5 @@
-Oev.Tile = (function(){
-	'use strict';
-	console.warn('use Oev.Tile.Building');
-	
-	var api = {
-		buildingWorker : new Worker( "js/WorkerBuildings.js" ), 
-	};
-	return api;
-})();
-
-Oev.Tile.Building = function (_geoTile, _tileX, _tileY, _zoom) {
-	this.geoTile = _geoTile;
+Oev.Tile.Building = function (_tile, _tileX, _tileY, _zoom) {
+	this.tile = _tile;
 	this.datasLoaded = false;
 	this.zoom = _zoom;
 	this.tileX = _tileX;
@@ -26,7 +16,7 @@ Oev.Tile.Building.prototype = {
 
 	load : function() {
 		if (!this.datasLoaded) {
-			OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.geoTile.distToCam );
+			OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam );
 		} else {
 			this.construct();
 		}
@@ -50,12 +40,12 @@ Oev.Tile.Building.prototype = {
 		var pos;
 		for (i = 0; i < _pts.length; i ++) {
 			roofVertShape.push( [_pts[i]['lon'], _pts[i]['lat']] );
-			elevation = this.geoTile.interpolateEle(_pts[i]['lon'], _pts[i]['lat'], true);
+			elevation = this.tile.interpolateEle(_pts[i]['lon'], _pts[i]['lat'], true);
 			pos = OEV.earth.coordToXYZ(_pts[i]['lon'], _pts[i]['lat'], elevation + _params['height']);
 			this.geometry.vertices.push(pos);
 		}
 		var centroid = Oev.Math.findCentroid(roofVertShape);
-		elevation = this.geoTile.interpolateEle(centroid.lon, centroid.lat, true);
+		elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
 		var cenroidPos = OEV.earth.coordToXYZ(centroid.lon, centroid.lat, elevation + _params['height'] + _params['roofHeight']);
 		this.geometry.vertices.push( cenroidPos );
 		var lastVertId = this.geometry.vertices.length - 1;
@@ -102,7 +92,7 @@ Oev.Tile.Building.prototype = {
 		var highestPos = cenroidPos.y - distMax;
 		heightOffset = OEV.earth.altitudeFromPos(highestPos);
 		heightOffset -= _params['height']
-		elevation = this.geoTile.interpolateEle(centroid.lon, centroid.lat, true);
+		elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
 		cenroidPos = OEV.earth.coordToXYZ(centroid.lon, centroid.lat, elevation + _params['height'] - heightOffset);
 		var vertexPos;
 		var rs;
@@ -162,7 +152,7 @@ Oev.Tile.Building.prototype = {
 		var roofVert = [];
 		var ptsLen = _pts.length;
 		for (i = 0; i < ptsLen; i ++) {
-			elevation = this.geoTile.interpolateEle( _pts[i]['lon'], _pts[i]['lat'], true );
+			elevation = this.tile.interpolateEle( _pts[i]['lon'], _pts[i]['lat'], true );
 			pos = OEV.earth.coordToXYZ(_pts[i]['lon'], _pts[i]['lat'], elevation + _params['height']);
 			roofVert.push(pos.x, pos.z, pos.y);
 			this.geometry.vertices.push(pos);
@@ -240,14 +230,14 @@ Oev.Tile.Building.prototype = {
 		for (curLevel = _params['minLevels']; curLevel < _params['levels']; curLevel ++) {
 			for (c = 0; c < _pts.length; c ++) {
 				if (vertLonA != undefined) {
-					elevation = this.geoTile.interpolateEle(vertLonA, vertLatA, true);
+					elevation = this.tile.interpolateEle(vertLonA, vertLatA, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonA, vertLatA, elevation + (curLevel * _params['levelHeight']) + _params['minHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonA, vertLatA, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] + _params['levelHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					vertLonB = _pts[c]['lon'];
 					vertLatB = _pts[c]['lat'];
-					elevation = this.geoTile.interpolateEle(vertLonB, vertLatB, true);
+					elevation = this.tile.interpolateEle(vertLonB, vertLatB, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonB, vertLatB, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] + _params['levelHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonB, vertLatB, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] );
@@ -345,7 +335,7 @@ Oev.Tile.Building.prototype = {
 			this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.geometry), OEV.earth.buildingsWallMat);
 			this.geometry.dispose();
 			this.geometry = undefined;
-			this.geoTile.meshe.add( this.meshe );
+			this.tile.meshe.add( this.meshe );
 			this.meshe.receiveShadow = true;
 			this.meshe.castShadow = true;
 			OEV.MUST_RENDER = true;
@@ -357,14 +347,14 @@ Oev.Tile.Building.prototype = {
 			this.onStage = false;
 			if (this.datasLoaded){
 				if (this.meshe != undefined) {
-					this.geoTile.meshe.remove(this.meshe);
+					this.tile.meshe.remove(this.meshe);
 				}
 			}
 		} else if (!_state && this.onStage == false) {
 			this.onStage = true;
 			if (this.datasLoaded) {
 				if (this.meshe != undefined) {
-					this.geoTile.meshe.add(this.meshe);
+					this.tile.meshe.add(this.meshe);
 				}
 			} else {
 				this.load();

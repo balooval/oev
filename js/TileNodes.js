@@ -1,17 +1,17 @@
-var TileNodes = function ( _geoTile ) {
-	this.geoTile = _geoTile;
+var TileNodes = function (_tile) {
+	this.tile = _tile;
 	this.datasLoaded = false;
 	this.datasContent = undefined;
 	this.meshe = undefined;
 	this.meshes = undefined;
-	this.onStage = this.geoTile.onStage;
+	this.onStage = this.tile.onStage;
 	this.mustUpdate = false;
 	this.particules = [];
 }
 
 TileNodes.prototype.loadDatas = function() {
-	if( OEV.earth.loadNodes && this.onStage && this.geoTile.zoom >= 17 ){
-		OEV.earth.nodesLoadManager.getDatas( this, this.geoTile.zoom+'/'+this.geoTile.tileX+'/'+this.geoTile.tileY, this.geoTile.tileX, this.geoTile.tileY, this.geoTile.zoom, this.geoTile.distToCam );
+	if (OEV.earth.loadNodes && this.onStage && this.tile.zoom >= 17) {
+		OEV.earth.nodesLoadManager.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
 	}
 }
 
@@ -27,7 +27,7 @@ TileNodes.prototype.onDatasLoaded = function( _datas ) {
 	
 
 TileNodes.prototype.drawDatas = function() {
-	this.onStage = this.geoTile.onStage;
+	this.onStage = this.tile.onStage;
 	if( !this.datasLoaded ){
 		this.loadDatas();
 	}else{
@@ -76,7 +76,7 @@ TileNodes.prototype.drawDatas = function() {
 					var lon = this.datasContent["elements"][t]["lon"];
 					var lat = this.datasContent["elements"][t]["lat"];
 					
-					var ele = this.geoTile.interpolateEle( lon, lat, true );
+					var ele = this.tile.interpolateEle( lon, lat, true );
 					var pos = OEV.earth.coordToXYZ( lon, lat, ele );
 					
 					if( curNodeType == 'fountain' ){
@@ -128,7 +128,7 @@ TileNodes.prototype.hide = function( _state ) {
 		this.onStage = false;
 		
 		if( !this.datasLoaded ){
-			OEV.earth.nodesLoadManager.removeWaitingList( this.geoTile.zoom + "/" + this.geoTile.tileX + "/" + this.geoTile.tileY );
+			OEV.earth.nodesLoadManager.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
 		}
 		
 		for (var key in this.meshes) {
@@ -158,7 +158,7 @@ TileNodes.prototype.hide = function( _state ) {
 
 TileNodes.prototype.dispose = function() {
 	if( !this.datasLoaded ){
-		OEV.earth.nodesLoadManager.removeWaitingList( this.geoTile.zoom + "/" + this.geoTile.tileX + "/" + this.geoTile.tileY );
+		OEV.earth.nodesLoadManager.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
 	}
 	this.hide( true );
 	OEV.MUST_RENDER = true;

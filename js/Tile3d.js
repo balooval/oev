@@ -1,5 +1,5 @@
-var Tile3d = function ( _geoTile, _tileX, _tileY, _zoom ) {
-	this.geoTile = _geoTile;
+var Tile3d = function ( _tile, _tileX, _tileY, _zoom ) {
+	this.tile = _tile;
 	this.datasLoaded = false;
 	this.meshe = undefined;
 	this.roofMeshe = undefined;
@@ -24,7 +24,7 @@ Tile3d.prototype.useCache = true;
 
 Tile3d.prototype.load = function() {
 	if( !this.datasLoaded ){
-		OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.geoTile.distToCam );
+		OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam );
 	}else{
 		// this.construct();
 		this.myWorker.postMessage( {'JSON' : this.rawDatas } );
@@ -61,7 +61,7 @@ Tile3d.prototype.buildFromWorker = function( _datas ) {
 			var curLevel = walls['vertexCoords'][l];
 			for( var v = 0; v < curLevel.length; v ++ ){
 				var vertexCoords = curLevel[v];
-				var ele = this.geoTile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
+				var ele = this.tile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
 				// var vertexPos = OEV.earth.coordToXYZ( vertexCoords[0], vertexCoords[1], ele + ( ( l + _datas[b]['buildingMinLevel'] ) * levelHeight ) );
 				var vertexPos = OEV.earth.coordToXYZ( vertexCoords[0], vertexCoords[1], ele + ( l * levelHeight ) + ( _datas[b]['buildingMinLevel'] * levelHeight ) );
 				curBuildingGeometry.vertices.push( vertexPos );	
@@ -87,7 +87,7 @@ Tile3d.prototype.buildFromWorker = function( _datas ) {
 		curRoofGeometry.faceVertexUvs[0] = [];
 		for( var v = 0; v < roof['vertexCoords'].length; v ++ ){
 			var vertexCoords = roof['vertexCoords'][v];
-			var ele = this.geoTile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
+			var ele = this.tile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
 			var vertexPos = OEV.earth.coordToXYZ( vertexCoords[0], vertexCoords[1], ele + ( levelHeight * _datas[b]['buildingLevels'] ) );
 			curRoofGeometry.vertices.push( vertexPos );	
 		}
@@ -110,7 +110,7 @@ Tile3d.prototype.buildFromWorker = function( _datas ) {
 	buffRoof.fromGeometry( bigRoofGeometry );
 	bigRoofGeometry.dispose();
 	this.roofMeshe = new THREE.Mesh( buffRoof, OEV.earth.buildingsRoofMat );
-	this.geoTile.meshe.add( this.roofMeshe );
+	this.tile.meshe.add( this.roofMeshe );
 	
 	
 	buildingsGeometry.computeFaceNormals();
@@ -121,7 +121,7 @@ Tile3d.prototype.buildFromWorker = function( _datas ) {
 	buffBuild.fromGeometry( buildingsGeometry );
 	buildingsGeometry.dispose();
 	this.meshe = new THREE.Mesh( buffBuild, OEV.earth.buildingsWallMat );
-	this.geoTile.meshe.add( this.meshe );
+	this.tile.meshe.add( this.meshe );
 	OEV.MUST_RENDER = true;
 }
 
@@ -189,7 +189,7 @@ Tile3d.prototype.construct = function() {
 						var buildingPerimeter = 0;
 						for( var v = 0; v < vertexsList.length; v ++ ){
 							var vertexCoords = vertexsList[v];
-							var ele = this.geoTile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
+							var ele = this.tile.interpolateEle( vertexCoords[0], vertexCoords[1], true );
 							var vertexPos = OEV.earth.coordToXYZ( vertexCoords[0], vertexCoords[1], ele + ( l * levelHeight ) );
 							curBuildingGeometry.vertices.push( vertexPos );
 							
@@ -265,8 +265,8 @@ Tile3d.prototype.construct = function() {
 	buffRoof.fromGeometry( bigRoofGeometry );
 	bigRoofGeometry.dispose();
 	this.roofMeshe = new THREE.Mesh( buffRoof, OEV.earth.buildingsRoofMat );
-	this.geoTile.meshe.add( this.meshe );
-	this.geoTile.meshe.add( this.roofMeshe );
+	this.tile.meshe.add( this.meshe );
+	this.tile.meshe.add( this.roofMeshe );
 	
 	
 	this.meshe.receiveShadow = true;
@@ -282,28 +282,28 @@ Tile3d.prototype.hide = function( _state ) {
 	if( _state && this.onStage == true ){
 		this.onStage = false;
 		if( this.meshe != undefined ){
-			this.geoTile.meshe.remove( this.meshe );
+			this.tile.meshe.remove( this.meshe );
 		}
 		if( this.roofMeshe != undefined ){
-			this.geoTile.meshe.remove( this.roofMeshe );
+			this.tile.meshe.remove( this.roofMeshe );
 		}
 		/*
 		if( this.datasLoaded ){
-			this.geoTile.meshe.remove( this.meshe );
-			this.geoTile.meshe.remove( this.roofMeshe );
+			this.tile.meshe.remove( this.meshe );
+			this.tile.meshe.remove( this.roofMeshe );
 		}
 		*/
 	}else if( !_state && this.onStage == false ){
 		this.onStage = true;
 		if( this.datasLoaded ){
 			if( this.meshe != undefined ){
-				this.geoTile.meshe.add( this.meshe );
+				this.tile.meshe.add( this.meshe );
 			}
 			if( this.roofMeshe != undefined ){
-				this.geoTile.meshe.add( this.roofMeshe );
+				this.tile.meshe.add( this.roofMeshe );
 			}
-			// this.geoTile.meshe.add( this.meshe );
-			// this.geoTile.meshe.add( this.roofMeshe );
+			// this.tile.meshe.add( this.meshe );
+			// this.tile.meshe.add( this.roofMeshe );
 		}else{
 			this.load();
 		}
@@ -319,8 +319,8 @@ Tile3d.prototype.dispose = function() {
 	if( !this.datasLoaded ){
 		OEV.earth.tilesBuildingsMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
 	}
-	// this.geoTile.meshe.remove( this.meshe );
-	// this.geoTile.meshe.remove( this.roofMeshe );
+	// this.tile.meshe.remove( this.meshe );
+	// this.tile.meshe.remove( this.roofMeshe );
 	this.hide( true );
 	
 	if( this.meshe != undefined ){

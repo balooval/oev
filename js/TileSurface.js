@@ -1,5 +1,5 @@
-var TileSurface = function ( _geoTile, _tileX, _tileY, _zoom ) {
-	this.geoTile = _geoTile;
+var TileSurface = function (_tile, _tileX, _tileY, _zoom) {
+	this.tile = _tile;
 	this.datasLoaded = false;
 	this.zoom = _zoom;
 	this.tileX = _tileX;
@@ -18,7 +18,7 @@ TileSurface.prototype.useCache = true;
 
 TileSurface.prototype.load = function() {
 	if( !this.datasLoaded ){
-		OEV.earth.tilesLandusesMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.geoTile.distToCam );
+		OEV.earth.tilesLandusesMng.getDatas(this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam);
 	}else{
 		this.construct();
 	}
@@ -45,8 +45,8 @@ TileSurface.prototype.construct = function() {
 		
 		var surfacesTypes = [];
 		var surfaces = [];
-		var tileW = this.geoTile.endCoord.x - this.geoTile.startCoord.x;
-		var tileH = Math.abs( this.geoTile.endCoord.y - this.geoTile.startCoord.y );
+		var tileW = this.tile.endCoord.x - this.tile.startCoord.x;
+		var tileH = Math.abs(this.tile.endCoord.y - this.tile.startCoord.y);
 		for( var i = 0; i < this.datas['elements'].length; i ++ ){
 			if( this.datas['elements'][i]['type'] == 'way' ){
 				var curSurface = [];
@@ -91,7 +91,7 @@ TileSurface.prototype.construct = function() {
 		}
 		
 		var nbVert = 0;
-		var bbox = [ this.geoTile.startCoord.x, this.geoTile.endCoord.y, this.geoTile.endCoord.x, this.geoTile.startCoord.y ];
+		var bbox = [this.tile.startCoord.x, this.tile.endCoord.y, this.tile.endCoord.x, this.tile.startCoord.y];
 		for( var s = 0; s < surfaces.length; s ++ ){
 			var curPoly = [];
 			for( var n = 0; n < surfaces[s].length - 1; n ++ ){
@@ -102,14 +102,14 @@ TileSurface.prototype.construct = function() {
 				res.push( res[0] );
 			}
 			
-			// this.geoTile.makeTextureOverlay( res, surfacesTypes[s] );
+			// this.tile.makeTextureOverlay( res, surfacesTypes[s] );
 
 			if( surfacesTypes[s] == 'vineyard' ){
-				for( var coordLon = this.geoTile.startCoord.x; coordLon < this.geoTile.endCoord.x; coordLon += tileW / 40 ){
-					for( var coordLat = this.geoTile.endCoord.y; coordLat < this.geoTile.startCoord.y; coordLat += tileH / 80 ){
+				for (var coordLon = this.tile.startCoord.x; coordLon < this.tile.endCoord.x; coordLon += tileW / 40) {
+					for (var coordLat = this.tile.endCoord.y; coordLat < this.tile.startCoord.y; coordLat += tileH / 80) {
 						if( this.isIn( res, coordLon, coordLat ) ){
-							var altP = this.geoTile.interpolateEle( coordLon, coordLat, true );
-							var pos = OEV.earth.coordToXYZ( coordLon + ( ( tileW / 100 ) * Math.random() ), coordLat + ( ( tileH / 120 ) * Math.random() ), altP + 1 - ( Math.random() * 0.5 ) );
+							var altP = this.tile.interpolateEle(coordLon, coordLat, true);
+							var pos = OEV.earth.coordToXYZ(coordLon + ((tileW / 100) * Math.random()), coordLat + ((tileH / 120) * Math.random()), altP + 1 - (Math.random() * 0.5));
 							var particle = new THREE.Vector3( pos.x, pos.y, pos.z );
 							partGeom[surfacesTypes[s]].vertices.push( particle );
 						}
@@ -123,19 +123,19 @@ TileSurface.prototype.construct = function() {
 				var curArea = Math.round( geojsonArea.geometry( surGeoJson ) / 50 );
 				var nbPartIn = 0;
 				while( nbPartIn < curArea ){
-					var coordLon = this.geoTile.startCoord.x + ( tileW * Math.random() );
-					var coordLat = this.geoTile.endCoord.y + ( tileH * Math.random() );
-					if( this.isIn( res, coordLon, coordLat ) ){
+					var coordLon = this.tile.startCoord.x + ( tileW * Math.random() );
+					var coordLat = this.tile.endCoord.y + ( tileH * Math.random() );
+					if (this.isIn( res, coordLon, coordLat)) {
 						nbPartIn ++;
-						var altP = this.geoTile.interpolateEle( coordLon, coordLat, true );
+						var altP = this.tile.interpolateEle( coordLon, coordLat, true );
 						var pos = OEV.earth.coordToXYZ( coordLon, coordLat, altP + 5 - Math.random() * 2 );
 						var particle = new THREE.Vector3( pos.x, pos.y, pos.z );
 						partGeom[surfacesTypes[s]].vertices.push( particle );
 					}
 				}
 				
-			}else if( surfacesTypes[s] == 'water' && this.geoTile.showWater ){
-				this.geoTile.makeTextureOverlay( res, surfacesTypes[s] );
+			} else if (surfacesTypes[s] == 'water' && this.tile.showWater) {
+				this.tile.makeTextureOverlay(res, surfacesTypes[s]);
 			}
 		}
 		

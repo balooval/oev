@@ -1,11 +1,11 @@
-Oev.Globe = (function(){
+Oev.Tile = (function(){
 	'use strict';
 	
 	var api = {
-		
+		buildingWorker : new Worker("js/WorkerBuildings.js"), 
 	};
 		
-	api.GeoTile = function ( _globe, _tileX, _tileY, _zoom ) {
+	api.Basic = function ( _globe, _tileX, _tileY, _zoom ) {
 		this.onStage = true;
 		this.globe = _globe;
 		this.parentTile = undefined;
@@ -15,9 +15,6 @@ Oev.Globe = (function(){
 		this.zoom = _zoom;
 		// this.detailsSeg = 1;
 		this.detailsSeg = this.globe.tilesDefinition;
-		// if( this.zoom > 11 ){
-			// this.detailsSeg *= 2;
-		// }
 		this.childsZoom = _zoom;
 		this.childTiles = [];
 		this.textureLoaded = false;
@@ -26,8 +23,8 @@ Oev.Globe = (function(){
 		this.remoteTex = undefined;
 		this.meshe = undefined;
 		this.mesheBorder = undefined;
-		// this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"] });
-		this.materialBorder = Oev.Cache.getMaterial('MeshBasicMaterial');
+		this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"] });
+		// this.materialBorder = Oev.Cache.getMaterial('MeshBasicMaterial');
 		
 		this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
 		this.endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
@@ -36,33 +33,23 @@ Oev.Globe = (function(){
 		this.startMidCoord = Oev.Utils.tileToCoords( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
 		this.endMidCoord = Oev.Utils.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
 		this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
-		
 		this.vertCoords = [];
-		
 		this.myLOD = 0;
 		if( this.zoom >= this.globe.LOD_STREET ){
 			this.myLOD = this.globe.LOD_STREET;
 		}else if( this.zoom >= this.globe.LOD_PLANET ){
 			this.myLOD = this.globe.LOD_PLANET;
 		}
-		
 		var nbTiles = Math.pow( 2, this.zoom );
 		this.angleStep = ( 1.0 / nbTiles ) * Math.PI;
 		this.angleXStart = this.tileX * ( this.angleStep * 2 );
 		this.angleXEnd = ( this.tileX + 1 ) * ( this.angleStep * 2 );
 		this.angleYStart = this.tileY * this.angleStep;
 		this.angleYEnd = ( this.tileY + 1 ) * this.angleStep;
-		
 		this.tile3d = undefined;
-		
 		this.surfacesProviders = [];
-		// this.tileSurface = undefined;
-		
 		this.datasProviders = [];
-		
 		this.nodesProvider = new TileNodes( this );
-		
-		
 		for( var model in OEV.MODELS_CFG ){
 			if( OEV.MODELS_CFG[model]["ACTIV"] ){
 				if( this.zoom >= OEV.MODELS_CFG[model]["ZOOM_MIN"] ){
@@ -71,13 +58,8 @@ Oev.Globe = (function(){
 			}
 		}
 		this.distToCam = -1;
-		
 		this.globe.evt.addEventListener( "DATAS_TO_LOAD_CHANGED", this, this.loadDatas );
-		
-		
 		this.showWater = false;
-		// this.showWater = true;
-		
 		if( this.showWater ){
 			this.water = new THREE.Water( OEV.renderer, OEV.camera, OEV.scene, {
 				textureWidth: 256,
@@ -88,7 +70,6 @@ Oev.Globe = (function(){
 				sunColor: 0xffffff,
 				waterColor: 0x001e0f,
 			});
-			
 			this.canvasOverlay = document.createElement('canvas');
 			this.canvasOverlay.height = 256;
 			this.canvasOverlay.width = 256;
@@ -99,7 +80,6 @@ Oev.Globe = (function(){
 			var texture1 = new THREE.Texture( this.canvasOverlay ) 
 			texture1.needsUpdate = true;
 			this.mustUpdate = false;
-
 			// var attributes = {}; // custom attributes
 			var uniforms = {    // custom uniforms (your textures)
 				tOne: { type: "t", value: texture1 },
@@ -112,15 +92,14 @@ Oev.Globe = (function(){
 				vertexShader: vertMixShader,
 				fragmentShader: fragMixShader
 			});
-			
 		}else{
-			// this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
-			this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
+			this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
+			// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		}
 		this.customEle = false;
 	}
 
-	api.GeoTile.prototype = {
+	api.Basic.prototype = {
 		updateDatasProviders : function( _added, _name ) {
 			for( var i = 0; i < this.childTiles.length; i ++ ){
 				this.childTiles[i].updateDatasProviders( _added, _name );
@@ -441,25 +420,25 @@ Oev.Globe = (function(){
 				if (this.childTiles.length == 0 && this.zoom < this.globe.CUR_ZOOM) {
 					this.childsZoom = this.globe.CUR_ZOOM;
 					childZoom = this.zoom + 1;
-					newTile = new Oev.Globe.GeoTile(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
+					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 0, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
-					newTile = new Oev.Globe.GeoTile(this.globe, this.tileX * 2, this.tileY * 2 + 1, childZoom);
+					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 0, 1 );
 					newTile.makeFace();
 					this.childTiles.push( newTile );
 					newTile.updateDetails();
-					newTile = new Oev.Globe.GeoTile(this.globe, this.tileX * 2 + 1, this.tileY * 2, childZoom);
+					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2 + 1, this.tileY * 2, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
-					newTile = new Oev.Globe.GeoTile(this.globe, this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
+					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 1 );
 					newTile.makeFace();
@@ -903,14 +882,14 @@ Oev.Globe = (function(){
 			if( this.meshe != undefined ){
 				this.meshe.geometry.dispose();
 				this.material.map.dispose();
-				// this.material.dispose();
-				Oev.Cache.freeMaterial('MeshPhongMaterial', this.material);
+				this.material.dispose();
+				// Oev.Cache.freeMaterial('MeshPhongMaterial', this.material);
 			}
 			if( this.mesheBorder != undefined ){
 				this.mesheBorder.geometry.dispose();
 				this.materialBorder.map.dispose();
-				// this.materialBorder.dispose();
-				Oev.Cache.freeMaterial('MeshBasicMaterial', this.materialBorder);
+				this.materialBorder.dispose();
+				// Oev.Cache.freeMaterial('MeshBasicMaterial', this.materialBorder);
 			}
 			if( this.textureLoaded ){
 				this.remoteTex.dispose();

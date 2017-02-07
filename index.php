@@ -9,7 +9,7 @@ include( 'libs/init.php' );
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="js/libs/three.js"></script>
 		<script type="text/javascript" src="js/oev/utils.js"></script>
-		<script type="text/javascript" src="js/oev/globe.js"></script>
+		<script type="text/javascript" src="js/oev/tile.js"></script>
 		<script type="text/javascript" src="js/oev/geo.js"></script>
 		<script type="text/javascript" src="js/oev/input.js"></script>
 		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>

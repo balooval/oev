@@ -59,34 +59,34 @@ DatasMng.prototype.updateLastAccess = function( _key ) {
 }
 
 
-DatasMng.prototype.setDatas = function( _geoTile, _datas ) {
+DatasMng.prototype.setDatas = function(_tile, _datas) {
 	if( this.type == "ELE" ){
-		_geoTile.computeEle( _datas );
+		_tile.computeEle( _datas );
 	}else if( this.type == "TILE2D" ){
-		_geoTile.setTexture( _datas );
+		_tile.setTexture( _datas );
 	}else if( this.type == "MODELS" ){
-		_geoTile.drawModels( _datas );
+		_tile.drawModels( _datas );
 	}else if( this.type == "BUILDINGS" ){
-		_geoTile.setDatas( _datas );
+		_tile.setDatas( _datas );
 	}else if( this.type == "NODES" ){
-		_geoTile.onDatasLoaded( _datas );
+		_tile.onDatasLoaded( _datas );
 	}else if( this.type == "OBJECTS" ){
-		_geoTile.onDatasLoaded( _datas );
+		_tile.onDatasLoaded( _datas );
 	}else if( this.type == "SURFACE" ){
-		_geoTile.setDatas( _datas );
+		_tile.setDatas( _datas );
 	}else if( this.type == "WEATHER" ){
-		_geoTile.setWeather( _datas );
+		_tile.setWeather( _datas );
 	}
 }
 
-DatasMng.prototype.getDatas = function( _geoTile, _key, _tileX, _tileY, _zoom, _priority ) {
+DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority ) {
 	// debug( "getDatas " + _key );
 	// this.clearOldDatas();
 	_priority = _priority || -1;
 	var key = _key;
 	if( this.datasLoaded[key] != undefined ){
-		if( _geoTile != undefined ){
-			this.setDatas( _geoTile, this.datasLoaded[key] );
+		if (_tile != undefined) {
+			this.setDatas(_tile, this.datasLoaded[key]);
 		}
 		this.updateLastAccess( key );
 	}else{
@@ -111,7 +111,7 @@ DatasMng.prototype.getDatas = function( _geoTile, _key, _tileX, _tileY, _zoom, _
 				var inserted = false;
 				for( var w = 0; w < this.datasWaiting.length; w ++ ){
 					if( this.datasWaiting[w]["priority"] > _priority ){
-						this.datasWaiting.splice( w, 0, { "priority" : _priority, "key" : key, "tile" : _geoTile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
+						this.datasWaiting.splice( w, 0, { "priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
 						mustLoad = false;
 						break;
 					}
@@ -119,7 +119,7 @@ DatasMng.prototype.getDatas = function( _geoTile, _key, _tileX, _tileY, _zoom, _
 			}
 		}
 		if( mustLoad ){
-			this.datasWaiting.push( { "priority" : _priority, "key" : key, "tile" : _geoTile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
+			this.datasWaiting.push( { "priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
 			this.checkForNextLoad();
 		}
 	}
@@ -188,11 +188,11 @@ DatasMng.prototype.loadNext = function() {
 DatasMng.prototype.loadWeather = function( _loadInfos ) {
 	var mng = this;
 	var url = "libs/remoteImg.php?getWeather=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"];
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].setWeather( _params["mng"].datasLoaded[ _params["key"]] );
+			if( _params["tile"] != undefined ){
+				_params["tile"].setWeather( _params["mng"].datasLoaded[ _params["key"]] );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
@@ -200,34 +200,36 @@ DatasMng.prototype.loadWeather = function( _loadInfos ) {
 	);
 }
 
+DatasMng.prototype.onWorkerBuildingResponse = function(evt) {
+	
+}
+
 DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 	var mng = this;
 	var useCache = '&nocache=1';
-	if( Tile3d.prototype.useCache ){
+	if (Tile3d.prototype.useCache) {
 		useCache = '';
 	}
 	var url = "libs/remoteImg.php?overpass_buildings=1&zoom="+_loadInfos["z"]+"&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+''+useCache;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			var bbox = undefined;
-			
-			if( _params["geoTile"] != undefined ){
+			if (_params["tile"] != undefined) {
 				bbox = { 
-					"minLon" : _params["geoTile"].geoTile.startCoord.x, 
-					"maxLon" : _params["geoTile"].geoTile.endCoord.x, 
-					"minLat" : _params["geoTile"].geoTile.endCoord.y, 
-					"maxLat" : _params["geoTile"].geoTile.startCoord.y
+					"minLon" : _params["tile"].tile.startCoord.x, 
+					"maxLon" : _params["tile"].tile.endCoord.x, 
+					"minLat" : _params["tile"].tile.endCoord.y, 
+					"maxLat" : _params["tile"].tile.startCoord.y
 				};
 			}
 			var myWorker = Oev.Tile.buildingWorker;
-			myWorker.postMessage( { "json" : res, "bbox" : bbox } );
-			
-			myWorker.onmessage = function( evt ) {
+			myWorker.postMessage({"json" : res, "bbox" : bbox});
+			myWorker.onmessage = function(evt) {
 				_params["mng"].datasLoaded[ _params["key"]] = evt.data;
-				if( _params["geoTile"] != undefined ){
-					_params["geoTile"].setDatas( _params["mng"].datasLoaded[ _params["key"]] );
+				if (_params["tile"] != undefined) {
+					_params["tile"].setDatas(_params["mng"].datasLoaded[ _params["key"]]);
 				}
-				_params["mng"].removeLoadingList( _params["key"] );
+				_params["mng"].removeLoadingList(_params["key"]);
 				_params["mng"].checkForNextLoad();
 			}
 		}
@@ -239,11 +241,11 @@ DatasMng.prototype.loadNodes = function( _loadInfos ) {
 	var useCache = '';
 	// var useCache = '&nocache=1';
 	var url = "libs/remoteImg.php?overpass_nodes=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].onDatasLoaded( JSON.parse( res ) );
+			if( _params["tile"] != undefined ){
+				_params["tile"].onDatasLoaded( JSON.parse( res ) );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
@@ -254,11 +256,11 @@ DatasMng.prototype.loadNodes = function( _loadInfos ) {
 DatasMng.prototype.loadObjects = function( _loadInfos ) {
 	var mng = this;
 	var url = "libs/remoteImg.php?overpass_obj=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&model="+_loadInfos["tile"].name;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].onDatasLoaded( JSON.parse( res ) );
+			if( _params["tile"] != undefined ){
+				_params["tile"].onDatasLoaded( JSON.parse( res ) );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
@@ -273,11 +275,11 @@ DatasMng.prototype.loadSurfaces = function( _loadInfos ) {
 	}
 	var mng = this;
 	var url = "libs/remoteImg.php?overpass_surface=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+useCache;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].setDatas( JSON.parse( res ) );
+			if( _params["tile"] != undefined ){
+				_params["tile"].setDatas( JSON.parse( res ) );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
@@ -289,11 +291,11 @@ DatasMng.prototype.loadSurfaces = function( _loadInfos ) {
 DatasMng.prototype.loadOverpass = function( _loadInfos ) {
 	var mng = this;
 	var url = "libs/remoteImg.php?overpass=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"];
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			_params["mng"].datasLoaded[ _params["key"]] = JSON.parse( res );
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].drawModels( JSON.parse( res ) );
+			if( _params["tile"] != undefined ){
+				_params["tile"].drawModels( JSON.parse( res ) );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
@@ -327,16 +329,16 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 DatasMng.prototype.loadElevation = function( _loadInfos ) {
 	var mng = this;
 	var url = "libs/remoteImg.php?elevationTile=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&def="+_loadInfos["tile"].detailsSeg;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "geoTile":_loadInfos["tile"], "mng" : mng}, 
+	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
 		function( res, _params ){
 			try{
 				var altDatas = JSON.parse( res );
 			}catch( e ){
-				debug( 'Elevation ERROR : ' + _params["geoTile"]['zoom']+'/'+_params["geoTile"]['tileX']+'/'+_params["geoTile"]['tileY'] );
+				debug( 'Elevation ERROR : ' + _params["tile"]['zoom']+'/'+_params["tile"]['tileX']+'/'+_params["tile"]['tileY'] );
 			}
 			_params["mng"].datasLoaded[ _params["key"]] = altDatas;
-			if( _params["geoTile"] != undefined ){
-				_params["geoTile"].computeEle( altDatas );
+			if( _params["tile"] != undefined ){
+				_params["tile"].computeEle( altDatas );
 			}
 			_params["mng"].removeLoadingList( _params["key"] );
 			_params["mng"].checkForNextLoad();
