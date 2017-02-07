@@ -505,14 +505,11 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 	this.planet = _planet;
 	this.camera.up.set( 0, -1, 0 );
 	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
-	OEV.scene.add( this.pointer );
+	OEV.scene.add(this.pointer);
 	this.clicPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x0000ff }) );
 	OEV.scene.add( this.clicPointer );
 	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
 	OEV.scene.add( this.debugPointer );
-	
-
-	
 	if( location.hash != '' ){
 		var urlParamsLoc = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
 		this.zoomCur = parseFloat( urlParamsLoc[0] );
@@ -524,9 +521,7 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
-	
 	Oev.Sky.lightSun.target = this.pointer;
-	
 	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
 	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_UP", this, this.onKeyUp);
 }

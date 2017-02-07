@@ -152,16 +152,8 @@ OpenEarthViewer.prototype.init = function() {
 
 OpenEarthViewer.prototype.initShadow = function() {
 	this.renderer.shadowMap.enabled = true;
-	// this.renderer.shadowMapSoft = true;
-
-	// this.renderer.shadowCameraNear = 3;
-	// this.renderer.shadowCameraFar = this.camera.far;
-	// this.renderer.shadowCameraFov = 50;
-
-	// this.renderer.shadowMapBias = 0.0039;
-	// this.renderer.shadowMapDarkness = 0.5;
-	// this.renderer.shadowMapWidth = 1024;
-	// this.renderer.shadowMapHeight = 1024;
+	this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+	// this.renderer.shadowMap.type = THREE.BasicShadowMap; // default THREE.PCFShadowMap
 }
 
 OpenEarthViewer.prototype.initPlugins = function() {
@@ -175,7 +167,7 @@ OpenEarthViewer.prototype.switchClouds = function() {
 	if (Oev.Sky.cloudsActiv) {
 		Oev.Sky.clearClouds();
 		setElementActiv( document.getElementById( "btnClouds" ), false );
-	}else{
+	} else {
 		Oev.Sky.makeClouds();
 		setElementActiv( document.getElementById( "btnClouds" ), true );
 	}
@@ -200,8 +192,8 @@ OpenEarthViewer.prototype.start = function() {
 	this.userMat = new THREE.SpriteMaterial( { map: this.textures['god'], color: 0xffffff, fog: false } );
 	var debugGeo = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 ); 
 	var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
-	this.geoDebug = new THREE.Mesh( debugGeo, debugMat );
-	this.scene.add( this.geoDebug );
+	this.geoDebug = new THREE.Mesh(debugGeo, debugMat);
+	this.scene.add(this.geoDebug);
 	this.materialWaypoints['default'] = new THREE.SpriteMaterial( { map: this.textures['waypoint'], color: 0xffffff, fog: false } );
 	for( var model in this.MODELS_CFG ){
 		if( this.MODELS_CFG[model]["MARKER"] != "none" && this.MODELS_CFG[model]["MARKER"] != 'default' && this.texturesToPreload.indexOf( this.MODELS_CFG[model]["MARKER"] ) < 0 ){
@@ -210,8 +202,6 @@ OpenEarthViewer.prototype.start = function() {
 	}
 	this.materialPOILine = new THREE.LineBasicMaterial({color: 0xFFFFFF});
 	this.earth.construct();
-	var debugMouse = new THREE.SphereGeometry( this.earth.meter * 100, 16, 7 );
-	var debugMouseMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
 	Oev.Sky.init();
 	this.camCtrl.init( this.camera, this.earth );
 	this.camCtrl.updateCamera();
