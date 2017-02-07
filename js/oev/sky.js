@@ -61,7 +61,7 @@ Oev.Sky = (function(){
 			sunTargetCoord = new THREE.Vector3(0, 0, 0);
 			var sunTargetGeo = new THREE.SphereGeometry(OEV.earth.meter * 100, 16, 7); 
 			var debugMat = new THREE.MeshBasicMaterial({color: 0xFFFF00});
-			sunTarget = new THREE.Mesh( sunTargetGeo, debugMat );
+			sunTarget = new THREE.Mesh(sunTargetGeo, debugMat);
 			var sunTargetPos = OEV.earth.coordToXYZ(sunTargetCoord.x, sunTargetCoord.y, sunTargetCoord.z);
 			sunTarget.position.x = sunTargetPos.x;
 			sunTarget.position.y = 0;
@@ -79,15 +79,16 @@ Oev.Sky = (function(){
 			api.lightSun.up = new THREE.Vector3(0, 1, 0);
 			if (OEV.shadowsEnabled) {
 				api.lightSun.castShadow = true;
-				api.lightSun.shadowDarkness = 1
-				api.lightSun.shadowCameraFar = OEV.earth.radius * OEV.earth.globalScale;
-				api.lightSun.shadowCameraNear = 1;
-				api.lightSun.shadowMapWidth = 2048;
-				api.lightSun.shadowMapHeight = 2048;
-				api.lightSun.shadowCameraLeft = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
-				api.lightSun.shadowCameraRight = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				api.lightSun.shadowCameraTop = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				api.lightSun.shadowCameraBottom = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
+				// api.lightSun.shadowDarkness = 1
+				api.lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
+				console.log('api.lightSun.shadow.camera.far', api.lightSun.shadow.camera.far);
+				api.lightSun.shadow.camera.near = 1;
+				api.lightSun.shadow.mapSize.width = 1024;
+				api.lightSun.shadow.mapSize.height = 1024;
+				api.lightSun.shadow.camera.left = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
+				api.lightSun.shadow.camera.right = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
+				api.lightSun.shadow.camera.top = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
+				api.lightSun.shadow.camera.bottom = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
 			}
 			OEV.scene.add(api.lightSun);
 			sunHelper = new THREE.DirectionalLightHelper(api.lightSun, 1000);
