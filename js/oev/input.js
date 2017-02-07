@@ -48,6 +48,7 @@ Oev.Input.Keyboad = (function(){
 				}else if( key == 51 ){ // 3
 					
 				}else if( key == 65 ){ // a
+					Oev.Sky.tmp(0.00001);
 					
 				}else if( key == 66 ){ // b
 					
@@ -70,6 +71,7 @@ Oev.Input.Keyboad = (function(){
 				}else if( key == 83 ){ // s
 					
 				}else if( key == 90 ){ // z
+				Oev.Sky.tmp(-0.00001);
 					
 				}else if( key == 107 ){ // +
 					

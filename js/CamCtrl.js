@@ -56,7 +56,6 @@ CamCtrlGod.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
-	Oev.Sky.lightSun.target = this.pointer;
 }
 
 CamCtrlGod.prototype.setZoomDest = function( _zoom, _duration ) {
@@ -255,20 +254,16 @@ CamCtrlGod.prototype.updateCamera = function() {
 		this.posCam.y = this.posLookat.y - Math.cos( this.camRotation.y ) * ( this.coordCam.z );
 		this.camera.up.set( 0, -1, 0 );
 	}
-	
 	this.camera.position.x = this.posCam.x;
 	this.camera.position.y = this.posCam.y;
 	this.camera.position.z = this.posCam.z;
-	
 	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
 	this.coordCam.x = tmpCoords.x;
 	this.coordCam.y = tmpCoords.y;
-	this.camera.lookAt( this.posLookat );
-	
+	this.camera.lookAt(this.posLookat);
 	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
 	this.planet.zoomDetails = this.zoomCur;
 	this.planet.checkLOD();
-	
 	var wpScale = ( this.coordCam.z / this.planet.radius ) * 500;
 	this.pointer.scale.x = wpScale;
 	this.pointer.scale.y = wpScale;
@@ -276,16 +271,11 @@ CamCtrlGod.prototype.updateCamera = function() {
 	this.pointer.position.x = this.posLookat.x;
 	this.pointer.position.y = this.posLookat.y;
 	this.pointer.position.z = this.posLookat.z;
-	
 	this.debugPointer.scale.x = wpScale;
 	this.debugPointer.scale.y = wpScale;
 	this.debugPointer.scale.z = wpScale;
-	
 	OEV.MUST_RENDER = true;
-	
 	this.evt.fireEvent( "CAM_UPDATED" );
-	
-	
 	if (Oev.Sky != undefined) {
 		Oev.Sky.posCenter = this.posLookat;
 		Oev.Sky.globalScale = this.planet.globalScale;
@@ -521,7 +511,6 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
-	Oev.Sky.lightSun.target = this.pointer;
 	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
 	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_UP", this, this.onKeyUp);
 }

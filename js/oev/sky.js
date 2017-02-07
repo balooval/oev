@@ -1,26 +1,18 @@
 Oev.Sky = (function(){
 	'use strict';
 	var lightAmbiant = undefined;
-	var lightSunTarget = undefined;
 	var sunSpriteMat = undefined;
 	var sunSpriteObj = undefined;
-	var sunHelper = undefined;
-	var sunTargetCoord = undefined;
 	var atmosphereMeshe = undefined;
 	var skyDome = undefined;
 	var skyMat = undefined;
 	var sunRotation = -1.5;
-	var sunTarget = undefined;
-	var animateSun = false;
 	var particleSystem = undefined;
 	var pMaterial = undefined;
 	var colorsGradient = undefined;
-	var sunLightBack = undefined;
-	var sunLightBackHelper = undefined;
 	var fogActive = true;
-	var lightHemi = undefined;
 	var hemiIntensity = 0.35;
-	var sunPoint = undefined;
+	// var sunPoint = undefined;
 	var stars = null;
 	var starsMat = null;
 	var snowEmiter = undefined;
@@ -29,10 +21,12 @@ Oev.Sky = (function(){
 	var rainEnabled = false;
 	var weatherEnabled = false;
 	
+	
+	var lightSun;
+	
 	var api = {
 		evt : new Oev.Utils.Evt(), 
 		cloudsActiv : true, 
-		lightSun : undefined, 
 		globalScale : 1, 
 		normalizedTime : 0.5, 
 		posCenter : new THREE.Vector3( 0, 0, 0 ), 
@@ -43,12 +37,12 @@ Oev.Sky = (function(){
 				OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 			}
 			colorsGradient = getImageData(OEV.textures['sky_gradient'].image);	
-			sunPoint = new THREE.PointLight(0xffffff, 1.0, OEV.earth.radius);
-			OEV.scene.add( sunPoint );
+			// sunPoint = new THREE.PointLight(0xffffff, 1.0, OEV.earth.radius);
+			// OEV.scene.add(sunPoint);
 			
-			sunLightBack = new THREE.SpotLight(0xffffff, 1, 0.0, 1.0, 20);
-			OEV.scene.add(sunLightBack);
-			sunLightBackHelper = new THREE.SpotLightHelper(sunLightBack);
+			
+			lightSun = new THREE.DirectionalLight(0xffffff, 1);
+			OEV.scene.add(lightSun);
 
 			sunSpriteMat = new THREE.SpriteMaterial({map: OEV.textures['sun'], color: 0xffffff, blending: THREE.AdditiveBlending, fog: false});
 			sunSpriteObj = new THREE.Sprite(sunSpriteMat);
@@ -57,41 +51,23 @@ Oev.Sky = (function(){
 			sunSpriteObj.scale.y = sunSpriteScale;
 			sunSpriteObj.scale.z = sunSpriteScale;
 			OEV.scene.add(sunSpriteObj);
-			sunLightBack.target = sunSpriteObj;
-			sunTargetCoord = new THREE.Vector3(0, 0, 0);
-			var sunTargetGeo = new THREE.SphereGeometry(OEV.earth.meter * 100, 16, 7); 
-			var debugMat = new THREE.MeshBasicMaterial({color: 0xFFFF00});
-			sunTarget = new THREE.Mesh(sunTargetGeo, debugMat);
-			var sunTargetPos = OEV.earth.coordToXYZ(sunTargetCoord.x, sunTargetCoord.y, sunTargetCoord.z);
-			sunTarget.position.x = sunTargetPos.x;
-			sunTarget.position.y = 0;
-			sunTarget.position.z = sunTargetPos.z;
-			OEV.scene.add(sunTarget);
-			lightHemi = new THREE.HemisphereLight(0xffffbb, 0x3992e5, hemiIntensity);
-			OEV.scene.add(lightHemi);
-			lightAmbiant = new THREE.AmbientLight(0x111111);
+			lightAmbiant = new THREE.AmbientLight(0x25282d);
 			OEV.scene.add(lightAmbiant);
-			lightSunTarget = new THREE.Mesh(new THREE.Geometry());
-			lightSunTarget.position.x = api.posCenter.x;
-			lightSunTarget.position.y = api.posCenter.y;
-			lightSunTarget.position.z = api.posCenter.z;
-			api.lightSun = new THREE.DirectionalLight(0xffffff, 0);
-			api.lightSun.up = new THREE.Vector3(0, 1, 0);
 			if (OEV.shadowsEnabled) {
-				api.lightSun.castShadow = true;
-				// api.lightSun.shadowDarkness = 1
-				api.lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
-				console.log('api.lightSun.shadow.camera.far', api.lightSun.shadow.camera.far);
-				api.lightSun.shadow.camera.near = 1;
-				api.lightSun.shadow.mapSize.width = 1024;
-				api.lightSun.shadow.mapSize.height = 1024;
-				api.lightSun.shadow.camera.left = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
-				api.lightSun.shadow.camera.right = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				api.lightSun.shadow.camera.top = (OEV.earth.radius * OEV.earth.globalScale) * 0.002;
-				api.lightSun.shadow.camera.bottom = (OEV.earth.radius * OEV.earth.globalScale) * -0.002;
+				var factor = 0.002;
+				// var factor = 1;
+				lightSun.castShadow = true;
+				lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
+				lightSun.shadow.camera.near = 1;
+				lightSun.shadow.mapSize.width = 2048;
+				lightSun.shadow.mapSize.height = 2048;
+				
+				lightSun.shadow.camera.left = lightSun.shadow.camera.far * factor * -1;
+				lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
+				lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;
+				lightSun.shadow.camera.bottom = lightSun.shadow.camera.far * factor * -1;
+				
 			}
-			OEV.scene.add(api.lightSun);
-			sunHelper = new THREE.DirectionalLightHelper(api.lightSun, 1000);
 			api.initSunPos();
 			if(api.cloudsActiv){
 				api.makeClouds();
@@ -108,6 +84,10 @@ Oev.Sky = (function(){
 			}
 		}, 
 		
+		tmp : function(_value) {
+			lightSun.shadow.bias += _value;
+			console.log('lightSun.shadow.bias', lightSun.shadow.bias);
+		}, 
 		
 		update : function() {
 			if (destTime != api.normalizedTime) {
@@ -135,10 +115,7 @@ Oev.Sky = (function(){
 		
 		
 		initSunPos : function() {
-			var sunPos = OEV.earth.coordToXYZ( 0, 0, OEV.earth.radius );
-			api.lightSun.position.x = sunPos.x;
-			api.lightSun.position.y = sunPos.y;
-			api.lightSun.position.z = sunPos.z;
+			var sunPos = OEV.earth.coordToXYZ(0, 0, OEV.earth.radius);
 		},
 
 		setSunTime : function(_time) {
@@ -148,110 +125,94 @@ Oev.Sky = (function(){
 		}, 	
 
 		updateSun : function() {
+			
+			lightSun.target = OEV.camCtrl.pointer;
+			
+			
+			
 			if( skyDome != undefined ){
 				updateSkyDome();
 			}
-			if( api.lightSun != undefined ){
-				sunRotation = 2.0 + (api.normalizedTime * 5);
+			sunRotation = 2.0 + (api.normalizedTime * 5);
+			
+			var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
+			var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
+			var rampColorClouds = getPixel(colorsGradient, 32, gradientValue);
+			var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
+			var rampColorFog = getPixel(colorsGradient, 1, gradientValue);
+			
+			if (rainEnabled){
+				var grey = Math.round( ( rampColorSky.r + rampColorSky.g + rampColorSky.b ) / 3 );
+				rampColorSky.r = grey;
+				rampColorSky.g = grey;
+				rampColorSky.b = grey;
 				
-				var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
-				var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
-				var rampColorClouds = getPixel(colorsGradient, 32, gradientValue);
-				var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
-				var rampColorFog = getPixel(colorsGradient, 1, gradientValue);
+				grey = Math.round( ( rampColorFog.r + rampColorFog.g + rampColorFog.b ) / 3 );
+				rampColorFog.r = grey;
+				rampColorFog.g = grey;
+				rampColorFog.b = grey;
 				
-				if (rainEnabled){
-					var grey = Math.round( ( rampColorSky.r + rampColorSky.g + rampColorSky.b ) / 3 );
-					rampColorSky.r = grey;
-					rampColorSky.g = grey;
-					rampColorSky.b = grey;
-					
-					grey = Math.round( ( rampColorFog.r + rampColorFog.g + rampColorFog.b ) / 3 );
-					rampColorFog.r = grey;
-					rampColorFog.g = grey;
-					rampColorFog.b = grey;
-					
-					grey = Math.round( ( rampColorLight.r + rampColorLight.g + rampColorLight.b ) / 3 );
-					rampColorLight.r = grey;
-					rampColorLight.g = grey;
-					rampColorLight.b = grey;
-				}
-				var cos = Math.abs(Math.cos((sunRotation / 2) - 0.75)); 
-				starsMat.opacity = cos;
-				var sunCol = new THREE.Color("rgb("+rampColorLight.r+","+rampColorLight.g+","+rampColorLight.b+")");
-				if (OEV.earth.projection == "PLANE") {
-					var sunPosX = api.posCenter.x - (Math.cos(sunRotation) * (OEV.earth.radius / 4));
-					var sunPosY = api.posCenter.y + (Math.sin(sunRotation) * (OEV.earth.radius / 4));
-					var sunPosZ = api.posCenter.z + (Math.sin(sunRotation) * (OEV.earth.radius / 8));
-					lightSunTarget.position.x = api.posCenter.x;
-					lightSunTarget.position.y = api.posCenter.y;
-					lightSunTarget.position.z = api.posCenter.z;
-					api.lightSun.color = sunCol;
-					sunPoint.color = sunCol;
-				}else{
-					var sunPosX = OEV.camera.position.x;
-					var sunPosY = OEV.camera.position.y;
-					var sunPosZ = OEV.camera.position.z;
-					lightSunTarget.position.x = 0;
-					lightSunTarget.position.y = 0;
-					lightSunTarget.position.z = 0;
-				}
-				api.lightSun.position.x = sunPosX;
-				api.lightSun.position.y = sunPosY;
-				api.lightSun.position.z = sunPosZ;
-				sunPoint.position.x = sunPosX;
-				sunPoint.position.y = sunPosY;
-				sunPoint.position.z = sunPosZ;
-				hemiIntensity = 0.35 - (0.3 * cos);
-				
-				lightHemi.intensity = hemiIntensity;
-				lightHemi.color = sunCol;
-				lightHemi.groundColor = new THREE.Color("rgb("+Math.round(200*cos)+","+Math.round(200*cos)+","+Math.round(255*cos)+")");
-				lightHemi.position.x = sunPosX;
-				lightHemi.position.y = sunPosY;
-				lightHemi.position.z = sunPosZ;
-				lightHemi.lookAt( new THREE.Vector3(api.posCenter.x, api.posCenter.y, api.posCenter.z));
-				var sunBackCol = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
-				var spotAngle = Math.abs(api.normalizedTime - 0.5) + 0.5;
-				spotAngle = (spotAngle - 0.5) * 3;
-				sunLightBack.color = sunBackCol;
-				sunLightBack.angle = spotAngle;
-				sunLightBack.exponent = 20 - (spotAngle * 10);
-				sunLightBack.position.x = sunPosX;
-				sunLightBack.position.y = sunPosY;
-				sunLightBack.position.z = sunPosZ;
-				sunLightBackHelper.update();
-				sunSpriteMat.color = new THREE.Color("rgb("+ Math.round(255 - cos * 1) +", "+ Math.round(255 - cos * 50) +", "+ Math.round(255 - cos * 150) +")");
-				var sunSpriteScale = 1000 * OEV.earth.globalScale;
-				sunSpriteObj.scale.x = sunSpriteScale;
-				sunSpriteObj.scale.y = sunSpriteScale;
-				sunSpriteObj.scale.z = sunSpriteScale;
-				if (OEV.earth.projection == "PLANE"){
-					var sunSpritePosX = api.posCenter.x - ( Math.cos(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-					var sunSpritePosY = api.posCenter.y + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-					var sunSpritePosZ = api.posCenter.z + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-				}else{
-					var sunSpritePosX = Math.cos(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
-					var sunSpritePosY = 0;
-					var sunSpritePosZ = Math.sin(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
-				}
-				sunSpriteObj.position.x = sunSpritePosX;
-				sunSpriteObj.position.y = sunSpritePosY;
-				sunSpriteObj.position.z = sunSpritePosZ;
-				if (api.cloudsActiv){
-					pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-				}
-				OEV.earth.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-				OEV.earth.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-				OEV.earth.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-				skyMat.emissive = new THREE.Color("rgb("+rampColorSky.r+","+rampColorSky.g+","+rampColorSky.b+")");
-				if (fogActive) {
-					OEV.scene.fog.color = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
-				}
-				sunHelper.update();
-				OEV.MUST_RENDER = true;
-				api.evt.fireEvent("SUN_CHANGED");
+				grey = Math.round( ( rampColorLight.r + rampColorLight.g + rampColorLight.b ) / 3 );
+				rampColorLight.r = grey;
+				rampColorLight.g = grey;
+				rampColorLight.b = grey;
 			}
+			var cos = Math.abs(Math.cos((sunRotation / 2) - 0.75)); 
+			starsMat.opacity = cos;
+			var sunCol = new THREE.Color("rgb("+rampColorLight.r+","+rampColorLight.g+","+rampColorLight.b+")");
+			if (OEV.earth.projection == "PLANE") {
+				var sunPosX = api.posCenter.x - (Math.cos(sunRotation) * (OEV.earth.radius / 4));
+				var sunPosY = api.posCenter.y + (Math.sin(sunRotation) * (OEV.earth.radius / 4));
+				var sunPosZ = api.posCenter.z + (Math.sin(sunRotation) * (OEV.earth.radius / 8));
+				// sunPoint.color = sunCol;
+			}else{
+				var sunPosX = OEV.camera.position.x;
+				var sunPosY = OEV.camera.position.y;
+				var sunPosZ = OEV.camera.position.z;
+			}
+			// sunPoint.position.x = sunPosX;
+			// sunPoint.position.y = sunPosY;
+			// sunPoint.position.z = sunPosZ;
+			
+			
+			lightSun.position.x = sunPosX;
+			lightSun.position.y = sunPosY;
+			lightSun.position.z = sunPosZ;
+			
+			hemiIntensity = 0.35 - (0.3 * cos);
+			
+			var sunBackCol = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
+			var spotAngle = Math.abs(api.normalizedTime - 0.5) + 0.5;
+			spotAngle = (spotAngle - 0.5) * 3;
+			sunSpriteMat.color = new THREE.Color("rgb("+ Math.round(255 - cos * 1) +", "+ Math.round(255 - cos * 50) +", "+ Math.round(255 - cos * 150) +")");
+			var sunSpriteScale = 1000 * OEV.earth.globalScale;
+			sunSpriteObj.scale.x = sunSpriteScale;
+			sunSpriteObj.scale.y = sunSpriteScale;
+			sunSpriteObj.scale.z = sunSpriteScale;
+			if (OEV.earth.projection == "PLANE"){
+				var sunSpritePosX = api.posCenter.x - ( Math.cos(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
+				var sunSpritePosY = api.posCenter.y + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
+				var sunSpritePosZ = api.posCenter.z + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
+			}else{
+				var sunSpritePosX = Math.cos(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
+				var sunSpritePosY = 0;
+				var sunSpritePosZ = Math.sin(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
+			}
+			sunSpriteObj.position.x = sunSpritePosX;
+			sunSpriteObj.position.y = sunSpritePosY;
+			sunSpriteObj.position.z = sunSpritePosZ;
+			if (api.cloudsActiv){
+				pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+			}
+			OEV.earth.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+			OEV.earth.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+			OEV.earth.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+			skyMat.emissive = new THREE.Color("rgb("+rampColorSky.r+","+rampColorSky.g+","+rampColorSky.b+")");
+			if (fogActive) {
+				OEV.scene.fog.color = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
+			}
+			OEV.MUST_RENDER = true;
+			api.evt.fireEvent("SUN_CHANGED");
 		},
 		
 		activAtmosphere : function(_state) {
@@ -308,9 +269,9 @@ Oev.Sky = (function(){
 				pMaterial.size = 800 * OEV.earth.globalScale;
 			}
 			
-			stars.position.x = this.posCenter.x;
-			stars.position.y = this.posCenter.y;
-			stars.position.z = this.posCenter.z;
+			stars.position.x = api.posCenter.x;
+			stars.position.y = api.posCenter.y;
+			stars.position.z = api.posCenter.z;
 			stars.scale.x = OEV.earth.globalScale;
 			stars.scale.y = OEV.earth.globalScale;
 			stars.scale.z = OEV.earth.globalScale;
