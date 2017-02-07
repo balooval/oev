@@ -59,43 +59,8 @@ Oev.Tile = (function(){
 		}
 		this.distToCam = -1;
 		this.globe.evt.addEventListener( "DATAS_TO_LOAD_CHANGED", this, this.loadDatas );
-		this.showWater = false;
-		if( this.showWater ){
-			this.water = new THREE.Water( OEV.renderer, OEV.camera, OEV.scene, {
-				textureWidth: 256,
-				textureHeight: 256,
-				waterNormals: OEV.textures['waternormals'],
-				alpha: 	1.0,
-				sunDirection: Oev.Sky.lightSun.position.normalize(),
-				sunColor: 0xffffff,
-				waterColor: 0x001e0f,
-			});
-			this.canvasOverlay = document.createElement('canvas');
-			this.canvasOverlay.height = 256;
-			this.canvasOverlay.width = 256;
-			var context1 = this.canvasOverlay.getContext('2d');
-			context1.beginPath();
-			context1.fillStyle = "rgba(255, 255, 255, 0)";
-			context1.fill();
-			var texture1 = new THREE.Texture( this.canvasOverlay ) 
-			texture1.needsUpdate = true;
-			this.mustUpdate = false;
-			// var attributes = {}; // custom attributes
-			var uniforms = {    // custom uniforms (your textures)
-				tOne: { type: "t", value: texture1 },
-				tSec: { type: "t", value: OEV.textures["checker"] }, 
-				time: { type: "f", value: 0 }, 
-				tileOffset: { type: "v2", value: new THREE.Vector2( this.tileX, this.tileY ) }
-			};
-			this.material = new THREE.ShaderMaterial({
-				uniforms: uniforms,
-				vertexShader: vertMixShader,
-				fragmentShader: fragMixShader
-			});
-		}else{
-			this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
-			// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
-		}
+		this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
+		// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		this.customEle = false;
 	}
 
@@ -575,13 +540,8 @@ Oev.Tile = (function(){
 		setTexture : function( _texture ) {
 			this.textureLoaded = true;
 			this.remoteTex = _texture;
-			if( this.showWater ){
-				this.material.uniforms.tSec.value = _texture;
-				this.material.uniforms.tSec.needsUpdate = true;
-			}else{
-				this.material.map = this.remoteTex;
-				this.material.map.anisotropy = 8;
-			}
+			this.material.map = this.remoteTex;
+			this.material.map.anisotropy = 8;
 			this.materialBorder.map = this.remoteTex;
 			this.mapParentTexture();
 			OEV.MUST_RENDER = true;

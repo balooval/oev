@@ -91,7 +91,6 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.mouseScreenClick = new THREE.Vector2( 0, 0 );
 	this.socketEnabled = false;
 	// this.socketEnabled = true;
-	this.water = undefined;
 	this.aMeshMirror = undefined;
 	this.tuniform = {
 		iGlobalTime: {
@@ -322,12 +321,6 @@ OpenEarthViewer.prototype.render = function() {
 	if( this.MUST_RENDER ){
 		if( this.tuniform != undefined ){
 			this.tuniform.iGlobalTime.value += 0.1;
-		}
-		if( this.water != undefined ){
-			this.water.material.uniforms.time.value += 1.0 / 60.0;
-			this.water.material.uniforms.sunDirection.value = Oev.Sky.lightSun.position.normalize();
-			this.water.material.uniforms.sunColor.value = Oev.Sky.lightSun.color;
-			this.water.render();
 		}
 		if( this.aMeshMirror != undefined ){
 			this.aMeshMirror.position.x = Oev.Sky.posCenter.x;

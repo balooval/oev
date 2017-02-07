@@ -101,9 +101,6 @@ TileSurface.prototype.construct = function() {
 			if( res.length > 0 ){
 				res.push( res[0] );
 			}
-			
-			// this.tile.makeTextureOverlay( res, surfacesTypes[s] );
-
 			if( surfacesTypes[s] == 'vineyard' ){
 				for (var coordLon = this.tile.startCoord.x; coordLon < this.tile.endCoord.x; coordLon += tileW / 40) {
 					for (var coordLat = this.tile.endCoord.y; coordLat < this.tile.startCoord.y; coordLat += tileH / 80) {
@@ -133,9 +130,6 @@ TileSurface.prototype.construct = function() {
 						partGeom[surfacesTypes[s]].vertices.push( particle );
 					}
 				}
-				
-			} else if (surfacesTypes[s] == 'water' && this.tile.showWater) {
-				this.tile.makeTextureOverlay(res, surfacesTypes[s]);
 			}
 		}
 		
