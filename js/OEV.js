@@ -147,6 +147,14 @@ OpenEarthViewer.prototype.init = function() {
 		this.netCtrl = new NetCtrl();
 		this.netCtrl.init( this );
 	}
+	
+
+	var tmp = new Oev.DataLoader.Elevation();
+	tmp.load({
+		zoom : 14, 
+		tileX : 8365, 
+		tileY : 5971
+	});
 }
 
 OpenEarthViewer.prototype.initShadow = function() {
@@ -194,7 +202,7 @@ OpenEarthViewer.prototype.start = function() {
 	this.geoDebug = new THREE.Mesh(debugGeo, debugMat);
 	this.scene.add(this.geoDebug);
 	this.materialWaypoints['default'] = new THREE.SpriteMaterial( { map: this.textures['waypoint'], color: 0xffffff, fog: false } );
-	for( var model in this.MODELS_CFG ){
+	for (var model in this.MODELS_CFG) {
 		if( this.MODELS_CFG[model]["MARKER"] != "none" && this.MODELS_CFG[model]["MARKER"] != 'default' && this.texturesToPreload.indexOf( this.MODELS_CFG[model]["MARKER"] ) < 0 ){
 			this.materialWaypoints['MARKER_' + this.MODELS_CFG[model]["NAME"]] = new THREE.SpriteMaterial( { map: this.textures['MARKER_' + this.MODELS_CFG[model]["NAME"]], color: 0xffffff, fog: false } );
 		}
@@ -221,9 +229,9 @@ OpenEarthViewer.prototype.start = function() {
 
 OpenEarthViewer.prototype.loadConfig = function() {
 	openModal( "Loading resources..." );
-	var ajaxCfg = new AjaxMng( 'cfg_models.json', {'APP':this}, function(res, _params){
-			debug( 'Config loaded' );
-			_params['APP'].MODELS_CFG = JSON.parse( res );
+	var ajaxCfg = new AjaxMng('cfg_models.json', {'APP':this}, function(res, _params){
+			debug('Config loaded');
+			_params['APP'].MODELS_CFG = JSON.parse(res);
 			for( var model in _params['APP'].MODELS_CFG ){
 				if( _params['APP'].MODELS_CFG[model]["MARKER"] != "none" && _params['APP'].MODELS_CFG[model]["MARKER"] != 'default' && _params['APP'].texturesToPreload.indexOf( _params['APP'].MODELS_CFG[model]["MARKER"] ) < 0 ){
 					_params['APP'].texturesToPreload.push( _params['APP'].MODELS_CFG[model]["MARKER"] );

@@ -222,6 +222,13 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 	echo $res;
 	
 	
+}else if( isset( $_GET['tileEle'] ) ){
+	$x = round($_GET['x']);
+	$y = round($_GET['y']);
+	$z = round($_GET['z']);
+	getEleImg($x, $y, $z, 32);
+	
+	
 }else if( isset( $_GET['tileOsm'] ) ){
 	header('Content-type: image/png');
 	$x = round( $_GET['x'] );
