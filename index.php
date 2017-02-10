@@ -12,6 +12,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/oev/tile.js"></script>
 		<script type="text/javascript" src="js/oev/geo.js"></script>
 		<script type="text/javascript" src="js/oev/input.js"></script>
+		<script type="text/javascript" src="js/oev/dataLoader.js"></script>
 		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
 		<script type="text/javascript" src="js/oev/navigation.js"></script>
 		<script type="text/javascript" src="js/oev/sky.js"></script>
@@ -61,6 +62,10 @@ include( 'libs/init.php' );
 			<div id="header">OpenEarthView(er)</div>
 			<div id="main">
 				<div id="tools">
+					
+					<canvas id="myCanvas" width="64" height="64"></canvas> 
+				
+				
 					<a href="standby.php">STOP</a>
 					<div id="debugBox"></div>
 					<div class="toolsBox" id="search_box">

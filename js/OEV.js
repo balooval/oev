@@ -138,7 +138,6 @@ OpenEarthViewer.prototype.init = function() {
 	this.postprocessing.composer = composer;
 	this.postprocessing.bokeh = this.bokehPass;
 	this.renderer.setClearColor( 0x101020, 1 );
-	this.tmpCanvas = document.createElement('canvas');
 	this.initPlugins();
 	if( this.shadowsEnabled ){
 		this.initShadow();
@@ -148,13 +147,18 @@ OpenEarthViewer.prototype.init = function() {
 		this.netCtrl.init( this );
 	}
 	
-
+/*
 	var tmp = new Oev.DataLoader.Elevation();
 	tmp.load({
-		zoom : 14, 
-		tileX : 8365, 
-		tileY : 5971
+		z : 14, 
+		x : 8365, 
+		y : 5971
 	});
+*/
+}
+
+function toto(_datas){
+	console.log('toto', _datas);
 }
 
 OpenEarthViewer.prototype.initShadow = function() {

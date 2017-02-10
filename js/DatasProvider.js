@@ -9,18 +9,18 @@ var DatasProvider = function(_tile, _name) {
 }
 
 DatasProvider.prototype.loadDatas = function() {
-	if( this.tile.zoom == OEV.MODELS_CFG[this.name]["ZOOM_MIN"] ){
-		OEV.earth.providersLoadManager.getDatas( this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY+'/'+this.name, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam );
+	if (this.tile.zoom == OEV.MODELS_CFG[this.name]["ZOOM_MIN"]) {
+		OEV.earth.providersLoadManager.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY+'/'+this.name, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
 	}
 }
 
 
-DatasProvider.prototype.onDatasLoaded = function( _datas ) {
+DatasProvider.prototype.onDatasLoaded = function(_datas) {
 	this.datasLoaded = true;
 	this.datasContent = _datas;
-	if( this.onStage ){
+	if (this.onStage) {
 		this.drawDatas();
-	}else{
+	} else {
 		this.passModelsToChilds();
 	}
 }
@@ -47,43 +47,48 @@ DatasProvider.prototype.passModelsToChilds = function() {
 
 DatasProvider.prototype.drawDatas = function() {
 	this.onStage = this.tile.onStage;
-	if( !this.datasLoaded ){
+	if (!this.datasLoaded) {
 		this.loadDatas();
-	}else{
-		if( this.meshe == undefined ){
+	} else {
+		if (this.meshe == undefined) {
 			var bigGeo = new THREE.Geometry();
 			var bigGeosTab = new THREE.Geometry();
 			var modelLod = Math.min(2, Math.max(0, (this.tile.zoom - 16)));
-			
-			for( var t = 0; t < this.datasContent["elements"].length; t ++ ){
-				var tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
-				var tmpGeo = new THREE.Geometry().fromBufferGeometry( tmpBuffGeo );
-				var importMeshe = new THREE.Mesh( tmpGeo );
+			var tmpBuffGeo;
+			var tmpGeo;
+			var importMeshe;
+			var lon;
+			var lat;
+			var ele;
+			var pos;
+			var scaleVariation;
+			var t;
+			var contentLen = this.datasContent["elements"].length;
+			for (t = 0; t < contentLen; t ++) {
+				tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
+				tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
+				importMeshe = new THREE.Mesh(tmpGeo);
+				lon = this.datasContent["elements"][t]["lon"];
+				lat = this.datasContent["elements"][t]["lat"];
 				
-				var lon = this.datasContent["elements"][t]["lon"];
-				var lat = this.datasContent["elements"][t]["lat"];
-				
-				if( OEV.MODELS_CFG[this.name]["SHOW_MARKER"] && OEV.MODELS_CFG[this.name]["MARKER"] != 'none' && OEV.MODELS_CFG[this.name]["MARKER"] != 'default' ){
-					this.wayPoints.push( new Oev.Navigation.WayPoint(lon, lat, this.tile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"]));
+				if (OEV.MODELS_CFG[this.name]["SHOW_MARKER"] && OEV.MODELS_CFG[this.name]["MARKER"] != 'none' && OEV.MODELS_CFG[this.name]["MARKER"] != 'default') {
+					this.wayPoints.push(new Oev.Navigation.WayPoint(lon, lat, this.tile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"]));
 				}
-				
-				var ele = this.tile.interpolateEle(lon, lat, true);
-				var pos = OEV.earth.coordToXYZ(lon, lat, ele);
+				ele = this.tile.interpolateEle(lon, lat, true);
+				pos = OEV.earth.coordToXYZ(lon, lat, ele);
 				importMeshe.position.x = pos.x;
 				importMeshe.position.y = pos.y;
 				importMeshe.position.z = pos.z;
 				importMeshe.rotation.x = Math.PI;
 				importMeshe.rotation.y = Math.random() * 3.14;
-				
-				var scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
-				
+				scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
 				importMeshe.scale.x = scaleVariation;
 				importMeshe.scale.y = scaleVariation;
 				importMeshe.scale.z = scaleVariation;
 				importMeshe.updateMatrix();
 				bigGeosTab.merge( importMeshe.geometry, importMeshe.matrix );
 			}
-			if( !OEV.earth.modelsMesheMat.hasOwnProperty( this.name ) ){
+			if (!OEV.earth.modelsMesheMat.hasOwnProperty(this.name)) {
 				OEV.earth.modelsMesheMat[this.name] = new THREE.MeshBasicMaterial({color: 0xFF0000 })
 			}
 			bigGeosTab.dynamic = false;
@@ -91,13 +96,13 @@ DatasProvider.prototype.drawDatas = function() {
 			this.meshe.receiveShadow = true;
 			this.meshe.castShadow = true;
 		}
-		if( this.onStage ){
-			for( var i = 0; i < this.wayPoints.length; i ++ ){
-				this.wayPoints[i].hide( false );
+		if (this.onStage) {
+			for (var i = 0; i < this.wayPoints.length; i ++) {
+				this.wayPoints[i].hide(false);
 			}
-			OEV.scene.add( this.meshe );
+			OEV.scene.add(this.meshe);
 			OEV.MUST_RENDER = true;
-		}else{
+		} else {
 			this.passModelsToChilds();
 		}
 	}

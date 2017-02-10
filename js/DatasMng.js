@@ -39,9 +39,9 @@ var DatasMng = function(_type) {
 }
 
 DatasMng.prototype.clearOldDatas = function() {
-	if( this.datasLastAccess.length > this.maxRamNb ){
-		debug( this.type + " A clearOldDatas " + this.datasLastAccess.length );
-		while( this.datasLastAccess.length > this.maxRamNb / 2 ){
+	if (this.datasLastAccess.length > this.maxRamNb) {
+		debug(this.type + " A clearOldDatas " + this.datasLastAccess.length);
+		while(this.datasLastAccess.length > this.maxRamNb / 2) {
 			var keyToDel = this.datasLastAccess.pop();
 			this.datasLoaded[keyToDel] = null;
 			delete this.datasLoaded[keyToDel];
@@ -52,10 +52,10 @@ DatasMng.prototype.clearOldDatas = function() {
 
 DatasMng.prototype.updateLastAccess = function( _key ) {
 	var prevId = this.datasLastAccess.indexOf( _key );
-	if( prevId >= 0 ){
-		this.datasLastAccess.splice( prevId, 1 );
+	if (prevId >= 0) {
+		this.datasLastAccess.splice(prevId, 1);
 	}
-	this.datasLastAccess.unshift( _key );
+	this.datasLastAccess.unshift(_key);
 }
 
 
@@ -80,46 +80,44 @@ DatasMng.prototype.setDatas = function(_tile, _datas) {
 }
 
 DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority ) {
-	// debug( "getDatas " + _key );
-	// this.clearOldDatas();
 	_priority = _priority || -1;
+	var i;
 	var key = _key;
-	if( this.datasLoaded[key] != undefined ){
+	if (this.datasLoaded[key] != undefined) {
 		if (_tile != undefined) {
 			this.setDatas(_tile, this.datasLoaded[key]);
 		}
-		this.updateLastAccess( key );
-	}else{
+		this.updateLastAccess(key);
+	} else {
 		var mustLoad = true;
-		for( var i = 0; i < this.datasLoading.length; i ++ ){
-			if( this.datasLoading[i]["key"] == key ){
+		for (i = 0; i < this.datasLoading.length; i ++ ){
+			if (this.datasLoading[i]["key"] == key) {
 				mustLoad = false;
 				break;
 			}
 		}
-		if( mustLoad ){
-			for( var i = 0; i < this.datasWaiting.length; i ++ ){
-				if( this.datasWaiting[i]["key"] == key ){
+		if (mustLoad) {
+			for (i = 0; i < this.datasWaiting.length; i ++ ){
+				if (this.datasWaiting[i]["key"] == key) {
 					mustLoad = false;
 					break;
 				}
 			}
 		}
-		if( mustLoad ){
-			if( _priority >= 0 && this.datasWaiting.length > 0 ){
+		if (mustLoad) {
+			if (_priority >= 0 && this.datasWaiting.length > 0) {
 				_priority /= _zoom;
-				var inserted = false;
-				for( var w = 0; w < this.datasWaiting.length; w ++ ){
-					if( this.datasWaiting[w]["priority"] > _priority ){
-						this.datasWaiting.splice( w, 0, { "priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
+				for (var w = 0; w < this.datasWaiting.length; w ++) {
+					if (this.datasWaiting[w]["priority"] > _priority) {
+						this.datasWaiting.splice(w, 0, {"priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
 						mustLoad = false;
 						break;
 					}
 				}
 			}
 		}
-		if( mustLoad ){
-			this.datasWaiting.push( { "priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY } );
+		if (mustLoad) {
+			this.datasWaiting.push({"priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
 			this.checkForNextLoad();
 		}
 	}
@@ -128,59 +126,59 @@ DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _prio
 
 DatasMng.prototype.checkForNextLoad = function() {
 	updateLoadingDatas( this );
-	if( this.datasLoading.length < this.simulLoad ){
+	if (this.datasLoading.length < this.simulLoad) {
 		this.loadNext();
 	}
 }
 
 DatasMng.prototype.removeWaitingList = function( _key ) {
-	for( var i = 0; i < this.datasWaiting.length; i ++ ){
-		if( this.datasWaiting[i]["key"] == _key ){
-			this.datasWaiting.splice( i, 1 );
+	for (var i = 0; i < this.datasWaiting.length; i ++) {
+		if (this.datasWaiting[i]["key"] == _key) {
+			this.datasWaiting.splice(i, 1);
 			break;
 		}
 	}
-	updateLoadingDatas( this );
+	updateLoadingDatas(this);
 }
 
-DatasMng.prototype.removeLoadingList = function( _key ) {
-	for( var i = 0; i < this.datasLoading.length; i ++ ){
-		if( this.datasLoading[i]["key"] == _key ){
-			this.datasLoading.splice( i, 1 );
+DatasMng.prototype.removeLoadingList = function(_key) {
+	for (var i = 0; i < this.datasLoading.length; i ++) {
+		if (this.datasLoading[i]["key"] == _key) {
+			this.datasLoading.splice(i, 1);
 			break;
 		}
 	}
 }
 
-DatasMng.prototype.clearAll = function( _key ) {
+DatasMng.prototype.clearAll = function() {
 	this.datasLoaded = {};
 	this.datasWaiting = [];
 	this.datasLoading = [];
 }
 
 DatasMng.prototype.loadNext = function() {
-	if( this.datasWaiting.length > 0 ){
+	if (this.datasWaiting.length > 0) {
 		var loadInfos = this.datasWaiting.shift();
-		this.datasLoading.push( loadInfos );
-		if( this.logQuery ){
-			preloadQuery.push( { "type" : this.type, "key" : loadInfos["key"], "x" : loadInfos["x"], "y" : loadInfos["y"], "z" : loadInfos["z"] } );
+		this.datasLoading.push(loadInfos);
+		if (this.logQuery) {
+			preloadQuery.push({"type" : this.type, "key" : loadInfos["key"], "x" : loadInfos["x"], "y" : loadInfos["y"], "z" : loadInfos["z"]});
 		}
-		if( this.type == "ELE" ){
-			this.loadElevation( loadInfos );
-		}else if( this.type == "TILE2D" ){
-			this.loadTile2d( loadInfos );
-		}else if( this.type == "MODELS" ){
-			this.loadOverpass( loadInfos );
-		}else if( this.type == "BUILDINGS" ){
-			this.loadBuildingsOverpass( loadInfos );
-		}else if( this.type == "NODES" ){
-			this.loadNodes( loadInfos );
-		}else if( this.type == "OBJECTS" ){
-			this.loadObjects( loadInfos );
-		}else if( this.type == "WEATHER" ){
-			this.loadWeather( loadInfos );
-		}else if( this.type == "SURFACE" ){
-			this.loadSurfaces( loadInfos );
+		if (this.type == "ELE") {
+			this.loadElevation(loadInfos);
+		} else if(this.type == "TILE2D") {
+			this.loadTile2d(loadInfos);
+		} else if (this.type == "MODELS") {
+			this.loadOverpass(loadInfos);
+		} else if (this.type == "BUILDINGS") {
+			this.loadBuildingsOverpass(loadInfos);
+		} else if (this.type == "NODES") {
+			this.loadNodes(loadInfos);
+		} else if (this.type == "OBJECTS") {
+			this.loadObjects(loadInfos);
+		} else if (this.type == "WEATHER") {
+			this.loadWeather(loadInfos);
+		} else if (this.type == "SURFACE") {
+			this.loadSurfaces(loadInfos);
 		}
 	}
 }
@@ -304,9 +302,11 @@ DatasMng.prototype.loadOverpass = function( _loadInfos ) {
 }
 
 DatasMng.prototype.loadTile2d = function( _loadInfos ) {
+	console.log('loadTile2d');
 	var mng = this;
 	var tileLoader = new THREE.TextureLoader();
 	tileLoader.load( 'libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
+	// tileLoader.load( 'libs/remoteImg.php?tileEle=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
 			function(t){
 				mng.datasLoaded[_loadInfos["key"]] = t;
 				if( _loadInfos["tile"] != undefined ){
