@@ -2,7 +2,6 @@ var Globe = function () {
 	this.radius = 10000;
 	this.tilesBase = [];
 	this.tiles2dMng = undefined;
-	this.tilesEledMng = undefined;
 	this.meter = this.radius / 40075017.0;
 	this.meshe = new THREE.Mesh(new THREE.Geometry());
 	this.CUR_ZOOM = 4;
@@ -17,8 +16,8 @@ var Globe = function () {
 	this.curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 	this.curTile = new THREE.Vector2( 0, 0, 0 );
 	// this.tilesDefinition = 4;
-	// this.tilesDefinition = 8;
-	this.tilesDefinition = 16;
+	this.tilesDefinition = 8;
+	// this.tilesDefinition = 16;
 	this.eleFactor = 1;
 	this.coordToXYZ = this.coordToXYZPlane;
 	this.nodesLoadManager = new DatasMng( "NODES" );
@@ -142,7 +141,6 @@ Globe.prototype.construct = function() {
 	this.setProjection( "PLANE" );
 	// this.setProjection( "SPHERE" );
 	this.tiles2dMng = new DatasMng( "TILE2D" );
-	this.tilesEledMng = new DatasMng( "ELE" );
 	this.tilesModelsMng = new DatasMng( "MODELS" );
 	this.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 	this.tilesWeatherMng = new DatasMng( "WEATHER" );

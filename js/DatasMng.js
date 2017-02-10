@@ -5,6 +5,7 @@ var DatasMng = function(_type) {
 	this.loaderBusy = [];
 	this.type = _type;
 	if( this.type == "ELE" ){
+		console.error('DatasMng ELE must not be used');
 		this.simulLoad = 2;
 		this.maxRamNb = 1000;
 	}else if( this.type == "TILE2D" ){
@@ -61,7 +62,7 @@ DatasMng.prototype.updateLastAccess = function( _key ) {
 
 DatasMng.prototype.setDatas = function(_tile, _datas) {
 	if( this.type == "ELE" ){
-		_tile.computeEle( _datas );
+		// _tile.computeEle( _datas );
 	}else if( this.type == "TILE2D" ){
 		_tile.setTexture( _datas );
 	}else if( this.type == "MODELS" ){
@@ -164,7 +165,7 @@ DatasMng.prototype.loadNext = function() {
 			preloadQuery.push({"type" : this.type, "key" : loadInfos["key"], "x" : loadInfos["x"], "y" : loadInfos["y"], "z" : loadInfos["z"]});
 		}
 		if (this.type == "ELE") {
-			this.loadElevation(loadInfos);
+			// this.loadElevation(loadInfos);
 		} else if(this.type == "TILE2D") {
 			this.loadTile2d(loadInfos);
 		} else if (this.type == "MODELS") {
@@ -324,26 +325,6 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 				mng.checkForNextLoad();
 			}
 		);
-}
-
-DatasMng.prototype.loadElevation = function( _loadInfos ) {
-	var mng = this;
-	var url = "libs/remoteImg.php?elevationTile=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&def="+_loadInfos["tile"].detailsSeg;
-	var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
-		function( res, _params ){
-			try{
-				var altDatas = JSON.parse( res );
-			}catch( e ){
-				debug( 'Elevation ERROR : ' + _params["tile"]['zoom']+'/'+_params["tile"]['tileX']+'/'+_params["tile"]['tileY'] );
-			}
-			_params["mng"].datasLoaded[ _params["key"]] = altDatas;
-			if( _params["tile"] != undefined ){
-				_params["tile"].computeEle( altDatas );
-			}
-			_params["mng"].removeLoadingList( _params["key"] );
-			_params["mng"].checkForNextLoad();
-		}
-	);
 }
 
 var AjaxMng = function ( url, params, callbackFunction ) {
