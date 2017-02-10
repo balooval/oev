@@ -61,19 +61,20 @@ function getWeather( $_x, $_y, $_z, $_noCache=false ){
 
 
 
-// getEleImg(8365, 5971, 14, 32);
+// getEleImg(8365, 5971, 14, 4);
+// makeEleBmp(8365, 5971, 14, 32);
 
 function getEleImg($_x, $_y, $_z, $_def) {
 	$USE_CACHE = true;
 	$dirName = 'cacheEleImg';
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
-	if(!$USE_CACHE || !is_file($fullPath.'/' . $_def . '.png')){
+	if(!$USE_CACHE || !is_file($fullPath.'/' . ($_def + 1) . '.png')){
 		makeEleBmp($_x, $_y, $_z, $_def);
 	}
 	
 	header('Content-Type: image/png');
 	// echo file_get_contents($fullPath.'/' . $_def . '.png');
-	readfile($fullPath.'/' . $_def . '.png');
+	readfile($fullPath.'/' . ($_def + 1) . '.png');
 }
 
 // write bmp image from elevation
@@ -87,13 +88,13 @@ function makeEleBmp($_x, $_y, $_z, $_def) {
 	$stepLat = ( $north - $south ) / $_def;
 	$stepLon = ( $west - $east ) / $_def;
 	$step = 0;
-	$imgEle = imagecreatetruecolor($_def, $_def);
+	$imgEle = imagecreatetruecolor($_def + 1, $_def + 1);
 	$pixX = 0;
 	$pixY = 0;
 	for( $curLon = $east; $curLon <= $west; $curLon += $stepLon ){
-		for( $i = 0; $i < $_def; $i ++ ){
+		for( $i = 0; $i <= $_def; $i ++ ){
 			$curLat = ( $north - ( $i * $stepLat ) );
-			$elevation = extractElevation( $curLat, $curLon );
+			$elevation = max(-100, min(9000, extractElevation( $curLat, $curLon )));
 			$step ++;
 			$red = floor($elevation / 256);
 			$blue = $elevation - ($red * 256);
@@ -109,7 +110,8 @@ function makeEleBmp($_x, $_y, $_z, $_def) {
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
 	makDirCache(array(CACHE_BASE_PATH, $dirName, $_z, $_x, $_y));
 	header('Content-Type: image/png');
-	imagepng($imgEle, $fullPath.'/' . $_def . '.png', 9);
+	// imagepng($imgEle, $fullPath.'/' . $_def . '.png', 9);
+	imagepng($imgEle, $fullPath.'/' . ($_def + 1) . '.png', 9);
 	imagedestroy($imgEle);
 }
 
