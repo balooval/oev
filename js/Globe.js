@@ -17,12 +17,12 @@ var Globe = function () {
 	this.curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 	this.curTile = new THREE.Vector2( 0, 0, 0 );
 	// this.tilesDefinition = 4;
-	this.tilesDefinition = 8;
-	// this.tilesDefinition = 16;
+	// this.tilesDefinition = 8;
+	this.tilesDefinition = 16;
 	this.eleFactor = 1;
 	this.coordToXYZ = this.coordToXYZPlane;
 	this.nodesLoadManager = new DatasMng( "NODES" );
-	this.providersLoadManager = new DatasMng( "OBJECTS" );
+	this.providersLoadManager = new DatasMng("OBJECTS");
 	this.modelsMesheMat = {
 		"TREE":new THREE.MeshLambertMaterial({color: 0x678713 }), 
 		"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
@@ -49,6 +49,10 @@ var Globe = function () {
 	this.gpxMillisStep = -1;
 	this.gpxTravelMillis = -1;
 	this.evt = new Oev.Utils.Evt();
+	
+	Oev.DataLoader.Elevation.definition = this.tilesDefinition;
+	this.loaderTile2D = new Oev.DataLoader.Proxy('TILE2D');
+	this.loaderEle = new Oev.DataLoader.Proxy('ELE');
 }
 
 Globe.prototype.addMeshe = function(_meshe) {
@@ -66,10 +70,10 @@ Globe.prototype.updateTilesModelProvider = function( _added, _name ) {
 }
 
 Globe.prototype.setTilesProvider = function( _provider ) {
-	if( this.tilesProvider != _provider ){
-		if( this.tiles2dMng != undefined ){
+	if (this.tilesProvider != _provider) {
+		if (this.tiles2dMng != undefined) {
 			this.tiles2dMng.clearAll();
-			for( var i = 0; i < this.tilesBase.length; i ++ ){
+			for (var i = 0; i < this.tilesBase.length; i ++) {
 				this.tilesBase[i].reloadTexture();
 			}
 		}
@@ -137,20 +141,15 @@ Globe.prototype.updateLOD = function() {
 Globe.prototype.construct = function() {
 	this.setProjection( "PLANE" );
 	// this.setProjection( "SPHERE" );
-	
 	this.tiles2dMng = new DatasMng( "TILE2D" );
 	this.tilesEledMng = new DatasMng( "ELE" );
 	this.tilesModelsMng = new DatasMng( "MODELS" );
 	this.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 	this.tilesWeatherMng = new DatasMng( "WEATHER" );
-	
 	this.tilesLandusesMng = new DatasMng( "SURFACE" );
-
 	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-	
 	this.testForestMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['natural_tree'] });
-	
 	this.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['natural_tree'] });
 	this.forestMat.alphaTest = 0.4;
 	this.forestMat.transparent = true;

@@ -40,28 +40,30 @@ Oev.Tile = (function(){
 		}else if( this.zoom >= this.globe.LOD_PLANET ){
 			this.myLOD = this.globe.LOD_PLANET;
 		}
-		var nbTiles = Math.pow( 2, this.zoom );
-		this.angleStep = ( 1.0 / nbTiles ) * Math.PI;
-		this.angleXStart = this.tileX * ( this.angleStep * 2 );
-		this.angleXEnd = ( this.tileX + 1 ) * ( this.angleStep * 2 );
+		var nbTiles = Math.pow(2, this.zoom);
+		this.angleStep = (1.0 / nbTiles) * Math.PI;
+		this.angleXStart = this.tileX * (this.angleStep * 2);
+		this.angleXEnd = (this.tileX + 1) * (this.angleStep * 2);
 		this.angleYStart = this.tileY * this.angleStep;
-		this.angleYEnd = ( this.tileY + 1 ) * this.angleStep;
+		this.angleYEnd = (this.tileY + 1) * this.angleStep;
 		this.tile3d = undefined;
 		this.surfacesProviders = [];
 		this.datasProviders = [];
-		this.nodesProvider = new TileNodes( this );
-		for( var model in OEV.MODELS_CFG ){
-			if( OEV.MODELS_CFG[model]["ACTIV"] ){
+		this.nodesProvider = new TileNodes(this);
+		for (var model in OEV.MODELS_CFG) {
+			if (OEV.MODELS_CFG[model]["ACTIV"]) {
 				if( this.zoom >= OEV.MODELS_CFG[model]["ZOOM_MIN"] ){
-					this.datasProviders.push( new DatasProvider( this, OEV.MODELS_CFG[model]["NAME"] ) );
+					this.datasProviders.push(new DatasProvider(this, OEV.MODELS_CFG[model]["NAME"]));
 				}
 			}
 		}
 		this.distToCam = -1;
-		this.globe.evt.addEventListener( "DATAS_TO_LOAD_CHANGED", this, this.loadDatas );
-		this.material = new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"] } );
+		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
+		this.material = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, map: OEV.textures["checker"]});
 		// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		this.customEle = false;
+		
+		this.elevationBuffer = new Uint16Array((32 * 32) / 4);;
 	}
 
 	api.Basic.prototype = {
@@ -72,7 +74,7 @@ Oev.Tile = (function(){
 			
 			if( _added ){
 				if( this.zoom >= OEV.MODELS_CFG[_name]["ZOOM_MIN"] ){
-					this.datasProviders.push( new DatasProvider( this, _name ) );
+					this.datasProviders.push(new DatasProvider(this, _name));
 					this.loadModels();
 				}
 			}else{
@@ -87,6 +89,7 @@ Oev.Tile = (function(){
 		}, 
 
 
+		
 		makeFace : function() {
 			this.distToCam = ((this.globe.coordDetails.x - this.middleCoord.x) * (this.globe.coordDetails.x - this.middleCoord.x) + (this.globe.coordDetails.y - this.middleCoord.y) * (this.globe.coordDetails.y - this.middleCoord.y));
 			var geometry = new THREE.Geometry();
@@ -105,17 +108,17 @@ Oev.Tile = (function(){
 			for( x = 0; x < ( this.detailsSeg + 1 ); x ++ ){
 				for( y = 0; y < ( this.detailsSeg + 1 ); y ++ ){
 					vertEle = 0;
-					this.vertCoords.push( new THREE.Vector3( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y + ( stepCoord.y * y ), vertEle ) );
-					if( this.globe.eleActiv ){
-						if( !this.eleLoaded ){
-							if( this.parentTile != undefined ){
-								vertEle = this.parentTile.interpolateEle( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y + ( stepCoord.y * y ) );
+					this.vertCoords.push(new THREE.Vector3(this.startCoord.x + (stepCoord.x * x), this.startCoord.y + (stepCoord.y * y), vertEle));
+					if (this.globe.eleActiv) {
+						if (!this.eleLoaded) {
+							if (this.parentTile != undefined) {
+								vertEle = this.parentTile.interpolateEle(this.startCoord.x + (stepCoord.x * x), this.startCoord.y + (stepCoord.y * y));
 							}
 							this.vertCoords[this.vertCoords.length - 1].z = vertEle;
-						}else{
+						} else {
 							vertEle = this.vertCoords[v].z;
 						}
-					}else if( this.zoom > 5 && this.customEle ){
+					} else if (this.zoom > 5 && this.customEle) {
 						vertEle = this.getCustomElevation( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y + ( stepCoord.y * y ) ) * 10;
 					}
 					vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y + ( stepCoord.y * y ), vertEle );
@@ -153,6 +156,7 @@ Oev.Tile = (function(){
 			this.loadImage();
 			this.loadDatas();
 		}, 
+		
 
 		loadDatas : function() {
 			this.loadEle();
@@ -299,56 +303,64 @@ Oev.Tile = (function(){
 
 
 		updateVertex : function() {
-			if( this.tile3d != undefined ){
-				this.tile3d.hide( true );
+			if (this.tile3d != undefined) {
+				this.tile3d.hide(true);
 			}
 			this.globe.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 			this.makeFace();
-
 			for( var i = 0; i < this.childTiles.length; i ++ ){
 				this.childTiles[i].updateVertex();
 			}
 			OEV.MUST_RENDER = true;
 		}, 
 
-
-
 		hide : function( _state ) {
-			if( _state && this.onStage == true ){
+			var i;
+			if (_state && this.onStage == true) {
 				this.globe.removeMeshe( this.meshe );
-				if( !this.textureLoaded ){
-					this.globe.tiles2dMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
+				if (!this.textureLoaded) {
+					// this.globe.tiles2dMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
+					this.globe.loaderTile2D.abort({
+						z : this.zoom, 
+						x : this.tileX, 
+						y : this.tileY
+					});
 				}
-				if( !this.eleLoaded ){
-					this.globe.tilesEledMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
+				if (!this.eleLoaded) {
+					// this.globe.tilesEledMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
+					this.globe.loaderEle.abort({
+						z : this.zoom, 
+						x : this.tileX, 
+						y : this.tileY
+					});
 				}
 				this.onStage = false;
 				this.clearModels();
-				if( this.tile3d != undefined ){
-					this.tile3d.hide( true );
+				if (this.tile3d != undefined) {
+					this.tile3d.hide(true);
 				}
-				for( var i = 0; i < this.datasProviders.length; i ++ ){
+				for (i = 0; i < this.datasProviders.length; i ++) {
 					this.datasProviders[i].hideDatas();
 				}
-				for( var i = 0; i < this.surfacesProviders.length; i ++ ){
-					this.surfacesProviders[i].hide( true );
+				for (i = 0; i < this.surfacesProviders.length; i ++) {
+					this.surfacesProviders[i].hide(true);
 				}
 				this.nodesProvider.hide( true );
-			}else if( !_state && this.onStage == false ){
+			}else if (!_state && this.onStage == false) {
 				this.globe.addMeshe(this.meshe);
 				this.onStage = true;
 				this.loadImage();
 				this.loadBuildings();
 				this.loadEle();
-				if( this.tile3d != undefined ){
-					this.tile3d.hide( false );
+				if (this.tile3d != undefined) {
+					this.tile3d.hide(false);
 				}
-				for( var i = 0; i < this.surfacesProviders.length; i ++ ){
+				for (i = 0; i < this.surfacesProviders.length; i ++) {
 					this.surfacesProviders[i].hide( false );
 				}
 				this.nodesProvider.hide( false );
-				for( var i = 0; i < this.datasProviders.length; i ++ ){
+				for (i = 0; i < this.datasProviders.length; i ++) {
 					this.datasProviders[i].drawDatas();
 				}
 				this.loadNodes();
@@ -451,9 +463,9 @@ Oev.Tile = (function(){
 
 
 		passDatasToProvider : function( _name, _datas ) {
-			for( var i = 0; i < this.datasProviders.length; i ++ ){
-				if( this.datasProviders[i].name == _name ){
-					this.datasProviders[i].onDatasLoaded( _datas );
+			for (var i = 0; i < this.datasProviders.length; i ++) {
+				if (this.datasProviders[i].name == _name) {
+					this.datasProviders[i].onDatasLoaded(_datas);
 					this.datasProviders[i].drawDatas();
 					break;
 				}
@@ -548,10 +560,22 @@ Oev.Tile = (function(){
 		}, 
 
 		loadImage : function() {
+			// this.globe.loaderTile2D
 			if( !this.textureLoaded ){
-				this.globe.tiles2dMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.distToCam );
+				var _self = this;
+				this.globe.loaderTile2D.getData({
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY, 
+					priority : this.distToCam
+				}, 
+				function(_texture) {
+					_self.setTexture(_texture);
+				}
+			);
+				// this.globe.tiles2dMng.getDatas(this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.distToCam);
 			}else{
-				this.setTexture( this.remoteTex );
+				this.setTexture(this.remoteTex);
 			}
 		}, 
 
@@ -607,9 +631,42 @@ Oev.Tile = (function(){
 			}
 		}, 
 
-
+		
+		onEleLoadedNew : function(_datas) {
+			var i;
+			this.elevationBuffer = _datas;
+			this.eleLoaded = true;
+			var eleMapDef = this.globe.tilesDefinition;
+			
+			var x, y;
+			var index = 0;
+			var nbVertX = this.detailsSeg + 1;
+			var nbVertY = this.detailsSeg + 1;
+			for (x = 0; x < nbVertX; x ++) {
+				for (y = 0; y < nbVertY; y ++) {
+					var tmp = (x * nbVertY + y);
+					var ele = this.elevationBuffer[tmp];
+					this.vertCoords[index].z = ele;
+					index ++;
+				}
+			}
+			this.updateVertex();
+		}, 
+		
 		loadEle : function() {
-			if( this.globe.eleActiv && !this.eleLoaded ){
+			if (this.globe.eleActiv && !this.eleLoaded) {
+				var _self = this;
+				this.globe.loaderEle.getData({
+						z : this.zoom, 
+						x : this.tileX, 
+						y : this.tileY, 
+						priority : this.distToCam
+					}, 
+					function(_datas) {
+						_self.onEleLoadedNew(_datas);
+					}
+				);
+				/*
 				var nbVertToQuery = 0;
 				for( var v = 0; v < this.vertCoords.length; v ++ ){
 					var vertCoord = this.vertCoords[v];
@@ -620,6 +677,7 @@ Oev.Tile = (function(){
 				if( nbVertToQuery > 0 ){
 					this.globe.tilesEledMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.distToCam );
 				}
+				*/
 			}
 		}, 
 
@@ -823,7 +881,7 @@ Oev.Tile = (function(){
 		}, 
 
 		dispose : function() {
-			this.globe.evt.removeEventListener( "DATAS_TO_LOAD_CHANGED", this, this.loadDatas );
+			this.globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 			
 			this.clearChildrens();
 			this.clearModels();
