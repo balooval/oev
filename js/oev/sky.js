@@ -125,28 +125,21 @@ Oev.Sky = (function(){
 		}, 	
 
 		updateSun : function() {
-			
 			lightSun.target = OEV.camCtrl.pointer;
-			
-			
-			
 			if( skyDome != undefined ){
 				updateSkyDome();
 			}
 			sunRotation = 2.0 + (api.normalizedTime * 5);
-			
 			var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
 			var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
 			var rampColorClouds = getPixel(colorsGradient, 32, gradientValue);
 			var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
 			var rampColorFog = getPixel(colorsGradient, 1, gradientValue);
-			
 			if (rainEnabled){
 				var grey = Math.round( ( rampColorSky.r + rampColorSky.g + rampColorSky.b ) / 3 );
 				rampColorSky.r = grey;
 				rampColorSky.g = grey;
 				rampColorSky.b = grey;
-				
 				grey = Math.round( ( rampColorFog.r + rampColorFog.g + rampColorFog.b ) / 3 );
 				rampColorFog.r = grey;
 				rampColorFog.g = grey;
@@ -164,17 +157,11 @@ Oev.Sky = (function(){
 				var sunPosX = api.posCenter.x - (Math.cos(sunRotation) * (OEV.earth.radius / 4));
 				var sunPosY = api.posCenter.y + (Math.sin(sunRotation) * (OEV.earth.radius / 4));
 				var sunPosZ = api.posCenter.z + (Math.sin(sunRotation) * (OEV.earth.radius / 8));
-				// sunPoint.color = sunCol;
 			}else{
 				var sunPosX = OEV.camera.position.x;
 				var sunPosY = OEV.camera.position.y;
 				var sunPosZ = OEV.camera.position.z;
 			}
-			// sunPoint.position.x = sunPosX;
-			// sunPoint.position.y = sunPosY;
-			// sunPoint.position.z = sunPosZ;
-			
-			
 			lightSun.position.x = sunPosX;
 			lightSun.position.y = sunPosY;
 			lightSun.position.z = sunPosZ;
@@ -208,6 +195,9 @@ Oev.Sky = (function(){
 			OEV.earth.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 			OEV.earth.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 			skyMat.emissive = new THREE.Color("rgb("+rampColorSky.r+","+rampColorSky.g+","+rampColorSky.b+")");
+			lightAmbiant.color.r = rampColorLight.r / 400;
+			lightAmbiant.color.g = rampColorLight.g / 400;
+			lightAmbiant.color.b = rampColorLight.b / 400;
 			if (fogActive) {
 				OEV.scene.fog.color = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
 			}
