@@ -24,7 +24,7 @@ Oev.DataLoader.Proxy.prototype = {
 		if (this._sendCachedData(_params) === true) {
 			return true;
 		}
-		if (this._isWaiting() || this._isLoading()) {
+		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
 			return false;
 		}
 		this._addSorted(_params);
@@ -46,7 +46,7 @@ Oev.DataLoader.Proxy.prototype = {
 	}, 
 	
 	onDataLoaded : function(_data, _params) {
-		if (this._type == 'ELE') {
+		if (this._type == 'AAELE') {
 			var date = new Date();
 			console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
 		}
@@ -87,7 +87,6 @@ Oev.DataLoader.Proxy.prototype = {
 		return true;
 	}, 
 	
-	// removeLoadingList
 	abort : function(_params) {
 		if (_params.key === undefined) {
 			_params.key = _params.z + '-' + _params.x + '-' + _params.y;
@@ -126,10 +125,6 @@ Oev.DataLoader.Proxy.prototype = {
 			return false;
 		}
 		var currentLoadingParams = this._datasWaiting.shift();
-		// if (this._sendCachedData(currentLoadingParams) === true) {
-			// console.log('_loadNext in cache', currentLoadingParams.key);
-			// return true;
-		// }
 		this._datasLoading.push(currentLoadingParams);
 		freeLoader.load(currentLoadingParams);
 	}, 
@@ -145,17 +140,23 @@ Oev.DataLoader.Proxy.prototype = {
 	}, 
 	
 	_isWaiting : function(_key) {
-		if (this._datasWaiting.indexOf(_key) < 0) {
-			return false;
+		var i;
+		for (i = 0; i < this._datasWaiting.length; i ++) {
+			if (this._datasWaiting[i].key == _key) {
+				return true;
+			}
 		}
-		return true;
+		return false;
 	}, 
 	
 	_isLoading : function(_key) {
-		if (this._datasLoading.indexOf(_key) < 0) {
-			return false;
+		var i;
+		for (i = 0; i < this._datasLoading.length; i ++) {
+			if (this._datasLoading[i].key == _key) {
+				return true;
+			}
 		}
-		return true;
+		return false;
 	}, 
 }
 
