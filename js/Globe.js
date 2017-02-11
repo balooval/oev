@@ -175,10 +175,10 @@ Globe.prototype.construct = function() {
 }
 
 
-Globe.prototype.updateZoom = function( _value ){
-	if( this.CUR_ZOOM != _value ){
+Globe.prototype.updateZoom = function(_value){
+	if (this.CUR_ZOOM != _value) {
 		this.CUR_ZOOM = _value;
-		document.getElementById( "zoom_level" ).innerHTML = this.CUR_ZOOM + "";
+		// document.getElementById("zoom_level").innerHTML = this.CUR_ZOOM + "";
 		this.checkLOD();
 	}
 }
