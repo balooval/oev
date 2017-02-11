@@ -13,7 +13,6 @@ Oev.Tile = (function(){
 		this.tileX = _tileX;
 		this.tileY = _tileY;
 		this.zoom = _zoom;
-		// this.detailsSeg = 1;
 		this.detailsSeg = this.globe.tilesDefinition;
 		this.childsZoom = _zoom;
 		this.childTiles = [];
@@ -59,7 +58,8 @@ Oev.Tile = (function(){
 		}
 		this.distToCam = -1;
 		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
-		this.material = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, map: OEV.textures["checker"]});
+		// this.material = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, map: OEV.textures["checker"]});
+		this.material = new THREE.MeshLambertMaterial({color: 0xA0A0A0, map: OEV.textures["checker"]});
 		// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		this.customEle = false;
 		
@@ -125,16 +125,13 @@ Oev.Tile = (function(){
 					geometry.faceVertexUvs[0][(geometry.faces.length - 1)] = [new THREE.Vector2((x * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - (y * stepUV))];
 				}
 			}
-			this.makeBorders();
 			geometry.uvsNeedUpdate = true;
 			geometry.computeFaceNormals();
-			geometry.mergeVertices()
+			// geometry.mergeVertices();
 			geometry.computeVertexNormals();
 			this.meshe = new THREE.Mesh(geometry, this.material);
 			this.meshe.matrixAutoUpdate = false;
-			if( this.mesheBorder != undefined ){
-				this.meshe.add(this.mesheBorder);
-			}
+			this.makeBorders();
 			if (this.onStage) {
 				this.globe.addMeshe(this.meshe);
 			}
@@ -171,7 +168,7 @@ Oev.Tile = (function(){
 					curOffsetY = curParent.parentOffset.y * 0.5 + (curOffsetY * 0.5);
 					curParent = curParent.parentTile;
 				}
-				if( curParent != undefined ){
+				if (curParent != undefined) {
 					this.material.map = curParent.material.map;
 					curFace = 0;
 					stepUV = uvReduc / this.detailsSeg;
@@ -190,10 +187,17 @@ Oev.Tile = (function(){
 					}
 				}
 			} else if(this.textureLoaded) {
+				// console.warn('inutile ?', this.tileX, this.tileY, this.zoom);
+				// return false;
 				curFace = 0;
 				stepUV = 1 / this.detailsSeg;
+				if (this.meshe.geometry.faceVertexUvs[0].length == 0) {
+					console.warn('ERROR', this.tileX, this.tileY, this.zoom);
+					return false;
+				}
 				for (x = 0; x < this.detailsSeg; x ++) {
 					for (y = 0; y < this.detailsSeg; y ++) {
+						try{
 						this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
 						this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - (y * stepUV));
 						this.meshe.geometry.faceVertexUvs[0][curFace][2].set((x * stepUV), 1 - (y * stepUV));
@@ -202,6 +206,11 @@ Oev.Tile = (function(){
 						this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - ((y + 1) * stepUV));
 						this.meshe.geometry.faceVertexUvs[0][curFace][2].set(((x + 1) * stepUV), 1 - (y * stepUV));
 						curFace ++;
+						} catch (e) {
+							console.log('ERROR', this.tileX, this.tileY, this.zoom);
+							// console.warn(e);
+							// debugger;
+						}
 					}
 				}
 				this.meshe.geometry.uvsNeedUpdate = true;
@@ -286,6 +295,7 @@ Oev.Tile = (function(){
 			geoBorders.computeVertexNormals();
 			this.mesheBorder = new THREE.Mesh(geoBorders, this.materialBorder);
 			this.mesheBorder.matrixAutoUpdate = false;
+			this.meshe.add(this.mesheBorder);
 		}, 
 
 		updateVertex : function() {
@@ -301,82 +311,88 @@ Oev.Tile = (function(){
 			OEV.MUST_RENDER = true;
 		}, 
 
-		hide : function( _state ) {
-			var i;
-			if (_state && this.onStage == true) {
-				this.globe.removeMeshe( this.meshe );
-				if (!this.textureLoaded) {
-					this.globe.loaderTile2D.abort({
-						z : this.zoom, 
-						x : this.tileX, 
-						y : this.tileY
-					});
-				}
-				if (!this.eleLoaded) {
-					this.globe.loaderEle.abort({
-						z : this.zoom, 
-						x : this.tileX, 
-						y : this.tileY
-					});
-				}
-				this.onStage = false;
-				this.clearModels();
-				if (this.tile3d != undefined) {
-					this.tile3d.hide(true);
-				}
-				for (i = 0; i < this.datasProviders.length; i ++) {
-					this.datasProviders[i].hideDatas();
-				}
-				for (i = 0; i < this.surfacesProviders.length; i ++) {
-					this.surfacesProviders[i].hide(true);
-				}
-				this.nodesProvider.hide( true );
-			}else if (!_state && this.onStage == false) {
-				this.globe.addMeshe(this.meshe);
-				this.onStage = true;
-				this.loadImage();
-				this.loadBuildings();
-				this.loadElevation();
-				if (this.tile3d != undefined) {
-					this.tile3d.hide(false);
-				}
-				for (i = 0; i < this.surfacesProviders.length; i ++) {
-					this.surfacesProviders[i].hide( false );
-				}
-				this.nodesProvider.hide( false );
-				for (i = 0; i < this.datasProviders.length; i ++) {
-					this.datasProviders[i].drawDatas();
-				}
-				this.loadNodes();
+		show : function() {
+			if (this.onStage) {
+				return false;
 			}
+			var i;
+			this.onStage = true;
+			this.globe.addMeshe(this.meshe);
+			this.loadImage();
+			this.loadBuildings();
+			this.loadElevation();
+			if (this.tile3d != undefined) {
+				this.tile3d.hide(false);
+			}
+			for (i = 0; i < this.surfacesProviders.length; i ++) {
+				this.surfacesProviders[i].hide(false);
+			}
+			this.nodesProvider.hide(false);
+			for (i = 0; i < this.datasProviders.length; i ++) {
+				this.datasProviders[i].drawDatas();
+			}
+			this.loadNodes();
+		}, 
+		
+		hide : function() {
+			if (!this.onStage) {
+				return false;
+			}
+			var i;
+			this.onStage = false;
+			this.globe.removeMeshe(this.meshe);
+			if (!this.textureLoaded) {
+				this.globe.loaderTile2D.abort({
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY
+				});
+			}
+			if (!this.eleLoaded) {
+				this.globe.loaderEle.abort({
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY
+				});
+			}
+			this.clearModels();
+			if (this.tile3d != undefined) {
+				this.tile3d.hide(true);
+			}
+			for (i = 0; i < this.datasProviders.length; i ++) {
+				this.datasProviders[i].hideDatas();
+			}
+			for (i = 0; i < this.surfacesProviders.length; i ++) {
+				this.surfacesProviders[i].hide(true);
+			}
+			this.nodesProvider.hide(true);
 		}, 
 
 		clearChildrens : function() {
-			if( this.childTiles.length > 0 ){
-				for( var i = 0; i < this.childTiles.length; i ++ ){
-					this.childTiles[i].dispose();
-					this.childTiles[i] = undefined;
-				}
-				this.childTiles = [];
-				this.hide( false );
+			if( this.childTiles.length == 0 ){
+				return false;
 			}
+			for (var i = 0; i < this.childTiles.length; i ++) {
+				this.childTiles[i].dispose();
+				this.childTiles[i] = undefined;
+			}
+			this.childTiles = [];
+			this.show();
 		}, 
 
-
 		clearTilesOverzoomed : function() {
-			if( ( this.zoom + 1 ) > this.globe.CUR_ZOOM ){
+			if ((this.zoom + 1) > this.globe.CUR_ZOOM) {
 				this.clearChildrens();
 			}
 		}, 
-			
 
 		updateDetails : function() {
 			var i;
 			var newTile;
-			var middleLat;
 			var childZoom;
 			if (this.checkCameraHover(this.globe.tilesDetailsMarge)) {
-				if (this.childTiles.length == 0 && this.zoom < this.globe.CUR_ZOOM) {
+				// console.log('updateDetails', this.zoom, this.globe.CUR_ZOOM);
+				if (this.childTiles.length == 0 && this.zoom < Math.floor(this.globe.CUR_ZOOM)) {
 					this.childsZoom = this.globe.CUR_ZOOM;
 					childZoom = this.zoom + 1;
 					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
@@ -403,12 +419,12 @@ Oev.Tile = (function(){
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
-					this.hide( true );
+					this.hide();
 					for (i = 0; i < this.datasProviders.length; i ++ ){
 						this.datasProviders[i].passModelsToChilds();
 					}
 				}else{
-					if( this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM) {
+					if (this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM) {
 						this.clearTilesOverzoomed();
 					}
 					for (i = 0; i < this.childTiles.length; i ++) {
@@ -418,26 +434,26 @@ Oev.Tile = (function(){
 			}else{
 				this.clearChildrens();
 				if( this.zoom + 5 < this.globe.CUR_ZOOM ){
-					this.hide( true );
+					this.hide();
 				}else{
-					this.hide( false );	
+					this.show();	
 				}
 			}
 		}, 
 
 		checkCameraHover : function( _marge ) {
-			var startLimit = Oev.Utils.tileToCoords( this.tileX - ( _marge - 1 ), this.tileY - ( _marge - 1 ), this.zoom );
-			var endLimit = Oev.Utils.tileToCoords( this.tileX + _marge, this.tileY + _marge, this.zoom );
-			if( startLimit.x > this.globe.coordDetails.x ){
+			var startLimit = Oev.Utils.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
+			var endLimit = Oev.Utils.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
+			if (startLimit.x > this.globe.coordDetails.x) {
 				return false;
 			}
-			if( endLimit.x < this.globe.coordDetails.x ){
+			if (endLimit.x < this.globe.coordDetails.x) {
 				return false;
 			}
-			if( startLimit.y < this.globe.coordDetails.y ){
+			if (startLimit.y < this.globe.coordDetails.y) {
 				return false;
 			}
-			if( endLimit.y > this.globe.coordDetails.y ){
+			if (endLimit.y > this.globe.coordDetails.y) {
 				return false;
 			}
 			return true;
@@ -456,15 +472,15 @@ Oev.Tile = (function(){
 
 		loadBuildings : function() {
 			if( this.globe.loadBuildings ){
-				if( this.onStage && this.zoom >= 16 ){
-					if( this.tile3d == undefined ){
+				if (this.onStage && this.zoom >= 15) {
+					if (this.tile3d == undefined) {
 						this.tile3d = new Oev.Tile.Building(this, this.tileX, this.tileY, this.zoom);
 						this.tile3d.load();
-					}else{
-						this.tile3d.hide( false );
+					} else {
+						this.tile3d.hide(false);
 					}
 				}
-			}else if( !this.globe.loadBuildings && this.tile3d != undefined ){
+			} else if (!this.globe.loadBuildings && this.tile3d != undefined) {
 				this.tile3d.dispose();
 				this.tile3d = undefined;
 				OEV.MUST_RENDER = true;
@@ -474,7 +490,7 @@ Oev.Tile = (function(){
 
 		loadLanduse : function() {
 			if( this.globe.loadLanduse ){
-				if( this.onStage && this.zoom >= 15 ){
+				if (this.onStage && this.zoom >= 15) {
 					var myParent = this;
 					while( myParent.zoom > 15 ){
 						myParent = myParent.parentTile;
@@ -485,30 +501,7 @@ Oev.Tile = (function(){
 						surfA.load();
 					}else{
 						for( var i = 0; i < this.surfacesProviders.length; i ++ ){
-							this.surfacesProviders[i].hide( false );
-						}
-					}
-				}
-			}else if( !this.globe.loadLanduse ){
-				for( var i = 0; i < this.surfacesProviders.length; i ++ ){
-					this.surfacesProviders[i].dispose();
-					this.surfacesProviders[i] = undefined;
-				}
-				this.surfacesProviders = [];
-				OEV.MUST_RENDER = true;
-			}
-		}, 
-
-		loadLanduseOk : function() {
-			if( this.globe.loadLanduse ){
-				if( this.onStage && this.zoom == 15 ){
-					if( this.surfacesProviders.length == 0 ){
-						var surfA = new TileSurface( this, this.tileX, this.tileY, this.zoom );
-						this.surfacesProviders.push( surfA );
-						surfA.load();
-					}else{
-						for( var i = 0; i < this.surfacesProviders.length; i ++ ){
-							this.surfacesProviders[i].hide( false );
+							this.surfacesProviders[i].hide(false);
 						}
 					}
 				}
@@ -576,7 +569,7 @@ Oev.Tile = (function(){
 			if( this.globe.loadNodes ){
 				this.nodesProvider.drawDatas();
 			}else{
-				this.nodesProvider.hide( true );
+				this.nodesProvider.hide(true);
 			}
 		}, 
 			
@@ -606,10 +599,8 @@ Oev.Tile = (function(){
 			var i;
 			this.elevationBuffer = _datas;
 			this.eleLoaded = true;
-			var eleMapDef = this.globe.tilesDefinition;
-			
-			
 			this.applyElevationToGeometry();
+			// this.updateVertex();
 		}, 
 		
 		applyElevationToGeometry : function() {
@@ -800,10 +791,9 @@ Oev.Tile = (function(){
 
 		dispose : function() {
 			this.globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
-			
 			this.clearChildrens();
 			this.clearModels();
-			this.hide( true );
+			this.hide();
 			if( this.tile3d != undefined ){
 				this.tile3d.dispose();
 				this.tile3d = undefined;
@@ -819,13 +809,11 @@ Oev.Tile = (function(){
 				this.meshe.geometry.dispose();
 				this.material.map.dispose();
 				this.material.dispose();
-				// Oev.Cache.freeMaterial('MeshPhongMaterial', this.material);
 			}
 			if( this.mesheBorder != undefined ){
 				this.mesheBorder.geometry.dispose();
 				this.materialBorder.map.dispose();
 				this.materialBorder.dispose();
-				// Oev.Cache.freeMaterial('MeshBasicMaterial', this.materialBorder);
 			}
 			if( this.textureLoaded ){
 				this.remoteTex.dispose();
