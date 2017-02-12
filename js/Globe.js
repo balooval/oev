@@ -149,6 +149,7 @@ Globe.prototype.construct = function() {
 	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
+	this.testForestMat.alphaTest = 0.4;
 	this.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['natural_tree'] });
 	this.forestMat.alphaTest = 0.4;
 	this.forestMat.transparent = true;

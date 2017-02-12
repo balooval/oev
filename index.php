@@ -14,6 +14,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/oev/input.js"></script>
 		<script type="text/javascript" src="js/oev/dataLoader.js"></script>
 		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
+		<script type="text/javascript" src="js/oev/tileSurface.js"></script>
 		<script type="text/javascript" src="js/oev/navigation.js"></script>
 		<script type="text/javascript" src="js/oev/sky.js"></script>
 		<script type="text/javascript" src="js/oev/math.js"></script>

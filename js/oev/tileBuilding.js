@@ -1,3 +1,32 @@
+Oev.Tile.BuildingProcessQueue = (function(){
+	var waitingTiles = [];
+	
+	var api = {
+		addWaiting : function(_tile) {
+			waitingTiles.push(_tile);
+			OEV.addObjToUpdate(api);
+		}, 
+		
+		processNext : function() {
+			if (waitingTiles.length == 0) {
+				OEV.removeObjToUpdate(api);
+				return null;
+			}
+			return waitingTiles.shift();
+		}, 
+		
+		update : function() {
+			var tile = api.processNext();
+			if (tile === null) {
+				return false;
+			}
+			tile.construct();
+		}, 
+	};
+	
+	return api;
+})();
+
 Oev.Tile.Building = function (_tile, _tileX, _tileY, _zoom) {
 	this.tile = _tile;
 	this.datasLoaded = false;
@@ -16,16 +45,39 @@ Oev.Tile.Building.prototype = {
 
 	load : function() {
 		if (!this.datasLoaded) {
-			OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam );
+			
+			var bbox = { 
+				"minLon" : this.tile.startCoord.x, 
+				"maxLon" : this.tile.endCoord.x, 
+				"minLat" : this.tile.endCoord.y, 
+				"maxLat" : this.tile.startCoord.y
+			};
+			var _self = this;
+			OEV.earth.loaderBuilding.getData(
+				{
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY, 
+					priority : this.tile.distToCam, 
+					bbox : bbox, 
+				}, 
+				function(_datas) {
+					_self.setDatas(_datas);
+				}
+			);
+			
+			// OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam );
 		} else {
-			this.construct();
+			// this.construct();
+			Oev.Tile.BuildingProcessQueue.addWaiting(this);
 		}
 	}, 
 
 	setDatas : function( _datas ) {
 		this.datasLoaded = true;
 		this.datas = _datas;
-		this.construct();
+		// this.construct();
+		Oev.Tile.BuildingProcessQueue.addWaiting(this);
 	}, 
 	
 	makeRoofPyramidal : function(_pts, _params, _roofColor) {
@@ -350,6 +402,11 @@ Oev.Tile.Building.prototype = {
 					this.tile.meshe.remove(this.meshe);
 				}
 			}
+			OEV.earth.loaderBuilding.abort({
+				z : this.zoom, 
+				x : this.tileX, 
+				y : this.tileY
+			});
 		} else if (!_state && this.onStage == false) {
 			this.onStage = true;
 			if (this.datasLoaded) {
