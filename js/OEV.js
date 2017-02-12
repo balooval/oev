@@ -16,6 +16,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'grass.png' );
 	this.texturesToPreload.push( 'vineyard.png' );
 	this.texturesToPreload.push( 'natural_tree.png' );
+	this.texturesToPreload.push( 'tree_side.png' );
 	this.texturesToPreload.push( 'plane_contrail_2.png' );
 	this.texturesToPreload.push( 'particleWater.png' );
 	this.texturesToPreload.push( 'testMix.png' );
@@ -31,6 +32,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesNames.push( 'grass' );
 	this.texturesNames.push( 'vineyard' );
 	this.texturesNames.push( 'natural_tree' );
+	this.texturesNames.push( 'tree_side' );
 	this.texturesNames.push( 'plane_contrail' );
 	this.texturesNames.push( 'particleWater' );
 	this.texturesNames.push( 'testMix' );

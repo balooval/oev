@@ -52,6 +52,7 @@ var Globe = function () {
 	Oev.DataLoader.Elevation.definition = this.tilesDefinition;
 	this.loaderTile2D = new Oev.DataLoader.Proxy('TILE2D');
 	this.loaderEle = new Oev.DataLoader.Proxy('ELE');
+	this.loaderBuilding = new Oev.DataLoader.Proxy('BUILDINGS');
 }
 
 Globe.prototype.addMeshe = function(_meshe) {
@@ -147,7 +148,7 @@ Globe.prototype.construct = function() {
 	this.tilesLandusesMng = new DatasMng( "SURFACE" );
 	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-	this.testForestMat = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['natural_tree'] });
+	this.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
 	this.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['natural_tree'] });
 	this.forestMat.alphaTest = 0.4;
 	this.forestMat.transparent = true;
@@ -254,11 +255,11 @@ Globe.prototype.coordToXYZSphere = function( lon, lat, _elevation ){
 
 
 Globe.prototype.posFromAltitude = function( _altitude ) {
-	return ( 0 - ( _altitude * ( this.meter * this.eleFactor ) ) );
+	return 0 - (_altitude * (this.meter * this.eleFactor));
 }
 
 Globe.prototype.altitudeFromPos = function( _pos ) {
-	return ( ( _pos / this.globalScale ) / ( this.meter * this.eleFactor ) ) * -1;
+	return ((_pos / this.globalScale) / (this.meter * this.eleFactor)) * -1;
 }
 
 
