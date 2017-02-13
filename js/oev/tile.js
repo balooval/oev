@@ -2,7 +2,8 @@ Oev.Tile = (function(){
 	'use strict';
 	
 	var api = {
-		buildingWorker : new Worker("js/WorkerBuildings.js"), 
+		workerBuilding : new Worker("js/WorkerBuildings.js"), 
+		// workerSurface : new Worker("js/oev/workerSurface.js"), 
 	};
 		
 	api.Basic = function ( _globe, _tileX, _tileY, _zoom ) {
@@ -17,12 +18,13 @@ Oev.Tile = (function(){
 		this.childsZoom = _zoom;
 		this.childTiles = [];
 		this.textureLoaded = false;
+		this.normalLoaded = false;
 		this.eleLoaded = false;
 		this.tileLoader = new THREE.TextureLoader();
 		this.remoteTex = undefined;
 		this.meshe = undefined;
 		this.mesheBorder = undefined;
-		this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"] });
+		this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
 		// this.materialBorder = Oev.Cache.getMaterial('MeshBasicMaterial');
 		
 		this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
@@ -58,8 +60,8 @@ Oev.Tile = (function(){
 		}
 		this.distToCam = -1;
 		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
-		// this.material = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, map: OEV.textures["checker"]});
-		this.material = new THREE.MeshLambertMaterial({color: 0xA0A0A0, map: OEV.textures["checker"]});
+		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		// this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, map: OEV.textures["checker"], shininess:10, normalMap : OEV.textures['normal_test']});
 		// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		this.customEle = false;
 		
@@ -149,6 +151,7 @@ Oev.Tile = (function(){
 			this.loadModels();
 			this.loadLanduse();
 			this.loadNodes();
+			this.loadNormal();
 		}, 
 
 
@@ -182,7 +185,6 @@ Oev.Tile = (function(){
 							this.meshe.geometry.faceVertexUvs[0][curFace][1].set( curOffsetX + ( ( x + 1 ) * stepUV ), 1 - ( ( y + 1 ) * stepUV )- curOffsetY );
 							this.meshe.geometry.faceVertexUvs[0][curFace][2].set( curOffsetX + ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV )- curOffsetY );
 							curFace ++;
-							
 						}
 					}
 				}
@@ -319,8 +321,9 @@ Oev.Tile = (function(){
 			this.onStage = true;
 			this.globe.addMeshe(this.meshe);
 			this.loadImage();
-			this.loadBuildings();
-			this.loadElevation();
+			// this.loadBuildings();
+			// this.loadElevation();
+			this.loadDatas();
 			if (this.tile3d != undefined) {
 				this.tile3d.hide(false);
 			}
@@ -343,6 +346,13 @@ Oev.Tile = (function(){
 			this.globe.removeMeshe(this.meshe);
 			if (!this.textureLoaded) {
 				this.globe.loaderTile2D.abort({
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY
+				});
+			}
+			if (!this.normalLoaded) {
+				this.globe.loaderNormal.abort({
 					z : this.zoom, 
 					x : this.tileX, 
 					y : this.tileY
@@ -469,6 +479,32 @@ Oev.Tile = (function(){
 				}
 			}
 		}, 
+		
+		loadNormal : function() {
+			if (this.normalLoaded || this.zoom < 6) {
+				return false;
+			}
+			var _self = this;
+			this.globe.loaderNormal.getData(
+				{
+					z : this.zoom, 
+					x : this.tileX, 
+					y : this.tileY, 
+					priority : this.distToCam
+				}, 
+				function(_texture) {
+					_self.setNormal(_texture);
+				}
+			);
+		}, 
+		
+		setNormal : function(_normaleMap) {
+			this.normalLoaded = true;
+			this.material.normalMap = _normaleMap;
+			this.material.needsUpdate = true;
+			OEV.MUST_RENDER = true;
+		}, 
+		
 
 		loadBuildings : function() {
 			if( this.globe.loadBuildings ){
@@ -496,7 +532,7 @@ Oev.Tile = (function(){
 						myParent = myParent.parentTile;
 					}
 					if( this.surfacesProviders.length == 0 ){
-						var surfA = new TileSurface( this, myParent.tileX, myParent.tileY, myParent.zoom );
+						var surfA = new Oev.Tile.Surface( this, myParent.tileX, myParent.tileY, myParent.zoom );
 						this.surfacesProviders.push( surfA );
 						surfA.load();
 					}else{
@@ -524,7 +560,7 @@ Oev.Tile = (function(){
 			this.loadImage();
 		}, 
 
-		setTexture : function( _texture ) {
+		setTexture : function(_texture) {
 			this.textureLoaded = true;
 			this.remoteTex = _texture;
 			this.material.map = this.remoteTex;
@@ -537,16 +573,17 @@ Oev.Tile = (function(){
 		loadImage : function() {
 			if( !this.textureLoaded ){
 				var _self = this;
-				this.globe.loaderTile2D.getData({
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY, 
-					priority : this.distToCam
-				}, 
-				function(_texture) {
-					_self.setTexture(_texture);
-				}
-			);
+				this.globe.loaderTile2D.getData(
+					{
+						z : this.zoom, 
+						x : this.tileX, 
+						y : this.tileY, 
+						priority : this.distToCam
+					}, 
+					function(_texture) {
+						_self.setTexture(_texture);
+					}
+				);
 			}else{
 				this.setTexture(this.remoteTex);
 			}
@@ -824,6 +861,36 @@ Oev.Tile = (function(){
 			}
 		}, 
 	}
+	
+	return api;
+})();
+
+
+Oev.Tile.ProcessQueue = (function(){
+	var waitingTiles = [];
+	
+	var api = {
+		addWaiting : function(_tile) {
+			waitingTiles.push(_tile);
+			OEV.addObjToUpdate(api);
+		}, 
+		
+		processNext : function() {
+			if (waitingTiles.length == 0) {
+				OEV.removeObjToUpdate(api);
+				return null;
+			}
+			return waitingTiles.shift();
+		}, 
+		
+		update : function() {
+			var tile = api.processNext();
+			if (tile === null) {
+				return false;
+			}
+			tile.construct();
+		}, 
+	};
 	
 	return api;
 })();

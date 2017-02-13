@@ -14,8 +14,31 @@ Oev.Tile.Surface = function (_tile, _tileX, _tileY, _zoom) {
 		'scrub' : undefined, 
 	};
 	
+	this.twoSideProps = {
+		'forest' : {
+			width : 0.0001, 
+			depth : 0.0001, 
+			height : 15, 
+		}, 
+		'scrub' : {
+			width : 0.00003, 
+			depth : 0.00003, 
+			height : 7, 
+		}, 
+	};
+	this.twoSideMeshes = {
+		'vineyard' : undefined, 
+		'forest' : undefined, 
+		'scrub' : undefined, 
+	};
+	this.twoSideGeos = {
+		'vineyard' : new THREE.Geometry(), 
+		'forest' : new THREE.Geometry(), 
+		'scrub' : new THREE.Geometry(), 
+	};
 	this.twoSideMesh = undefined;
 	this.twoSideGeo = new THREE.Geometry();
+	this.halfRot = Math.PI / 2;
 }
 
 Oev.Tile.Surface.prototype = {
@@ -26,16 +49,14 @@ Oev.Tile.Surface.prototype = {
 		if( !this.datasLoaded ){
 			OEV.earth.tilesLandusesMng.getDatas(this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam);
 		}else{
-			// this.construct();
-			Oev.Tile.BuildingProcessQueue.addWaiting(this);
+			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
 	}, 
 
 	setDatas : function( _datas ) {
 		this.datasLoaded = true;
 		this.datas = _datas;
-		// this.construct();
-		Oev.Tile.BuildingProcessQueue.addWaiting(this);
+		Oev.Tile.ProcessQueue.addWaiting(this);
 	}, 
 
 	construct : function() {
@@ -131,12 +152,13 @@ Oev.Tile.Surface.prototype = {
 						// var pos = OEV.earth.coordToXYZ( coordLon, coordLat, altP + 5 - Math.random() * 2 );
 						// var particle = new THREE.Vector3(pos.x, pos.y, pos.z);
 						// partGeom[surfacesTypes[s]].vertices.push(particle);
-						this.buildTwoSideElmt(coordLon, coordLat, altP);
+						this.buildTwoSideElmt(coordLon, coordLat, altP, surfacesTypes[s]);
 					}
 				}
 			}
 		}
 		var mat;
+		var matTwoSide;
 		for( var type in partGeom ){
 			if (!partGeom.hasOwnProperty(type)) continue;
 			if (partGeom[type] === undefined) continue;
@@ -144,94 +166,64 @@ Oev.Tile.Surface.prototype = {
 				mat = OEV.earth.vineyardMat;
 			} else if (type == 'scrub') {
 				mat = OEV.earth.vineyardMat;
+				matTwoSide = OEV.earth.testScrubMat;
 			} else {
 				mat = OEV.earth.forestMat;
+				matTwoSide = OEV.earth.testForestMat;
 			}
 			this.partMeshes[type] = new THREE.Points(partGeom[type], mat);
 			OEV.scene.add(this.partMeshes[type]);
+			
+			this.twoSideMeshes[type] = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeos[type]), matTwoSide);
+			OEV.scene.add(this.twoSideMeshes[type]);
 		}
 		OEV.MUST_RENDER = true;
-		
-		this.twoSideMesh = new THREE.Mesh(this.twoSideGeo, OEV.earth.testForestMat);
+		/*
+		this.twoSideMesh = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeo), OEV.earth.testForestMat);
 		this.twoSideMesh.receiveShadow = true;
 		this.twoSideMesh.castShadow = true;
 		OEV.scene.add(this.twoSideMesh);
+		*/
 	}, 
 	
-	buildTwoSideElmt : function(_lon, _lat, _alt) {
+	buildTwoSideElmt : function(_lon, _lat, _alt, _type) {
 		_alt -= 0.5;
-		var elmtWidth = 0.0001;
-		var elmtDepth = 0.0001;
-		var elmtHeight = 15 + Math.random() * 5;
-		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidth, depth: 0, height: elmtHeight});
-		this.buildElmtSide(_lon, _lat, _alt, {width: 0, depth: elmtDepth, height: elmtHeight});
+		var treeSize = 0.7 + Math.random() * 0.5;
+		var elmtWidth = this.twoSideProps[_type].width * treeSize;
+		var elmtDepth = this.twoSideProps[_type].depth * treeSize;
+		var elmtHeight = this.twoSideProps[_type].height * treeSize;
+		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidth, depth: 0, height: elmtHeight, type:_type});
+		this.buildElmtSide(_lon, _lat, _alt, {width: 0, depth: elmtDepth, height: elmtHeight, type:_type});
 	}, 
 	
 	buildElmtSide : function(_lon, _lat, _alt, props) {
-		var elmtHeight = 80;
-		var vertId = (this.twoSideGeo.faces.length / 2) * 6;
-		var nbFaces = this.twoSideGeo.faces.length;
+		var vertId = (this.twoSideGeos[props.type].faces.length / 2) * 6;
+		var nbFaces = this.twoSideGeos[props.type].faces.length;
 		var posA = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt);
 		var posB = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt);
 		var posC = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt + props.height);
 		var posD = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt + props.height);
 		var posE = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt + props.height);
 		var posF = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt);
-		this.twoSideGeo.vertices.push(posA);
-		this.twoSideGeo.vertices.push(posB);
-		this.twoSideGeo.vertices.push(posC);
-		this.twoSideGeo.vertices.push(posD);
-		this.twoSideGeo.vertices.push(posE);
-		this.twoSideGeo.vertices.push(posF);
-		this.twoSideGeo.faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
-		this.twoSideGeo.faceVertexUvs[0][nbFaces] = [
+		this.twoSideGeos[props.type].vertices.push(posA);
+		this.twoSideGeos[props.type].vertices.push(posB);
+		this.twoSideGeos[props.type].vertices.push(posC);
+		this.twoSideGeos[props.type].vertices.push(posD);
+		this.twoSideGeos[props.type].vertices.push(posE);
+		this.twoSideGeos[props.type].vertices.push(posF);
+		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
+		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces] = [
 			new THREE.Vector2(1, 0), 
 			new THREE.Vector2(0, 0), 
 			new THREE.Vector2(0, 1)
 		];
-		this.twoSideGeo.faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
-		this.twoSideGeo.faceVertexUvs[0][nbFaces + 1] = [
+		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
+		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces + 1] = [
 			new THREE.Vector2(0, 1), 
 			new THREE.Vector2(1, 1), 
 			new THREE.Vector2(1, 0)
 		];
 	},
-	
-	buildElmtSideOk : function(_lon, _lat, _alt) {
-		var elmtwidth = 0.0003;
-		var elmtHeight = 50;
-		var vertId = (this.twoSideGeo.faces.length / 2) * 6;
-		var nbFaces = this.twoSideGeo.faces.length;
-		var posA = OEV.earth.coordToXYZ(_lon + elmtwidth, _lat, _alt);
-		var posB = OEV.earth.coordToXYZ(_lon - elmtwidth, _lat, _alt);
-		var posC = OEV.earth.coordToXYZ(_lon - elmtwidth, _lat, _alt + elmtHeight);
-		var posD = OEV.earth.coordToXYZ(_lon - elmtwidth, _lat, _alt + elmtHeight);
-		var posE = OEV.earth.coordToXYZ(_lon + elmtwidth, _lat, _alt + elmtHeight);
-		var posF = OEV.earth.coordToXYZ(_lon + elmtwidth, _lat, _alt);
-		this.twoSideGeo.vertices.push(posA);
-		this.twoSideGeo.vertices.push(posB);
-		this.twoSideGeo.vertices.push(posC);
-		this.twoSideGeo.vertices.push(posD);
-		this.twoSideGeo.vertices.push(posE);
-		this.twoSideGeo.vertices.push(posF);
-		this.twoSideGeo.faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
-		this.twoSideGeo.faceVertexUvs[0][nbFaces] = [
-			new THREE.Vector2(1, 0), 
-			new THREE.Vector2(0, 0), 
-			new THREE.Vector2(0, 1)
-		];
-		this.twoSideGeo.faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
-		this.twoSideGeo.faceVertexUvs[0][nbFaces + 1] = [
-			new THREE.Vector2(0, 1), 
-			new THREE.Vector2(1, 1), 
-			new THREE.Vector2(1, 0)
-		];
-		var elmtwidth = 0.0003;
-		var faceAPtA = OEV.earth.coordToXYZ(_lon - elmtwidth / 2, _lat, _alt);
-		var faceAPtB = OEV.earth.coordToXYZ(_lon + elmtwidth / 2, _lat, _alt);
-		var faceBPtA = OEV.earth.coordToXYZ(_lon, _lat - elmtwidth / 2, _alt);
-		var faceBPtB = OEV.earth.coordToXYZ(_lon, _lat + elmtwidth / 2, _alt);
-	}, 
 	
 	isIn : function( _polygon, _lon, _lat ) {
 			var angle = 0;
@@ -258,9 +250,9 @@ Oev.Tile.Surface.prototype = {
 					if( this.partMeshes[type] != undefined ){
 						OEV.scene.remove( this.partMeshes[type] );
 					}
-				}
-				if( this.twoSideMesh != undefined ){
-					OEV.scene.remove(this.twoSideMesh);
+					if( this.twoSideMeshes != undefined ){
+						OEV.scene.remove(this.twoSideMeshes[type]);
+					}
 				}
 			}
 		}else if( !_state && this.onStage == false ){
@@ -271,9 +263,9 @@ Oev.Tile.Surface.prototype = {
 					if( this.partMeshes[type] != undefined ){
 						OEV.scene.add( this.partMeshes[type] );
 					}
-				}
-				if( this.twoSideMesh != undefined ){
-					OEV.scene.add(this.twoSideMesh);
+					if( this.twoSideMeshes != undefined ){
+						OEV.scene.remove(this.twoSideMeshes[type]);
+					}
 				}
 			}else{
 				this.load();
@@ -292,7 +284,9 @@ Oev.Tile.Surface.prototype = {
 				this.partMeshes[type].geometry.dispose();
 				OEV.scene.remove( this.partMeshes[type] );
 			}
+			if( this.twoSideMeshes[type] != undefined ){
+			this.twoSideMeshes[type].geometry.dispose();
 		}
-		this.twoSideGeo.dispose();
+		}
 	}, 
 }

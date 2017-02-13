@@ -18,7 +18,7 @@ var DatasMng = function(_type) {
 		this.simulLoad = 1;
 		this.maxRamNb = 10;
 	}else if( this.type == "BUILDINGS" ){
-		this.simulLoad = 1;
+		this.simulLoad = 2;
 		this.maxRamNb = 10;
 	}else if( this.type == "OBJECTS" ){
 		this.simulLoad = 1;
@@ -221,7 +221,7 @@ DatasMng.prototype.loadBuildingsOverpass = function( _loadInfos ) {
 					"maxLat" : _params["tile"].tile.startCoord.y
 				};
 			}
-			var myWorker = Oev.Tile.buildingWorker;
+			var myWorker = Oev.Tile.workerBuilding;
 			myWorker.postMessage({"json" : res, "bbox" : bbox});
 			myWorker.onmessage = function(evt) {
 				_params["mng"].datasLoaded[ _params["key"]] = evt.data;

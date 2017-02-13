@@ -6,6 +6,8 @@ Oev.DataLoader.Proxy = function(_type) {
 	var simulByType = {
 		TILE2D : 4, 
 		ELE : 4, 
+		BUILDINGS : 4, 
+		NORMAL : 1, 
 	};
 	this._simulLoad = simulByType[this._type];
 	this._datasLoaded = {};
@@ -40,13 +42,17 @@ Oev.DataLoader.Proxy.prototype = {
 				loader = new Oev.DataLoader.Tile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			} else if (this._type == 'ELE') {
 				loader = new Oev.DataLoader.Elevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'BUILDINGS') {
+				loader = new Oev.DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'NORMAL') {
+				loader = new Oev.DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			}
 			this._loaders.push(loader);
 		}
 	}, 
 	
 	onDataLoaded : function(_data, _params) {
-		if (this._type == 'AAELE') {
+		if (this._type == 'NORMAL') {
 			var date = new Date();
 			console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
 		}
@@ -162,16 +168,15 @@ Oev.DataLoader.Proxy.prototype = {
 
 
 
-Oev.DataLoader.Ajax = function (url, params, _callbackFunction) {
+Oev.DataLoader.Ajax = function () {
 	this.request = new XMLHttpRequest();
 	this.request.onreadystatechange = this.bindFunction(this.stateChange, this);
 }
 
 Oev.DataLoader.Ajax.prototype = {
-	load : function(url, params, _callbackFunction) {
+	load : function(url, _callback) {
 		this.url = url;
-		this.params = params;
-		this.callbackFunction = _callbackFunction;
+		this.callback = _callback;
 		this.request.open("GET", url, true);
 		this.request.send();
 	}, 
@@ -184,7 +189,7 @@ Oev.DataLoader.Ajax.prototype = {
 
 	stateChange : function(object) {
 		if (this.request.readyState==4){
-			this.callbackFunction(this.request.responseText, this.params);
+			this.callback(this.request.responseText);
 		}
 	}, 
 }
@@ -196,17 +201,10 @@ Oev.DataLoader.Canvas = (function() {
 	canvas.height = '64';
 	var context = canvas.getContext('2d');
 	
-	function debugCanvas(_img) {
-		var c = document.getElementById("myCanvas");
-		var ctx = c.getContext("2d");
-		ctx.putImageData(_img, 0, 0);
-	}
-	
 	var api = {
 		extractElevation : function(_img, _w, _h) {
 			context.drawImage(_img, 0, 0, _w, _h);
 			var img = context.getImageData(0, 0, _w, _h); 
-			// debugCanvas(img);
 			var imgWidth = _w;
 			var imgHeight = _h;
 			var imageData = context.getImageData(0, 0, imgWidth, imgHeight);
@@ -298,8 +296,79 @@ Oev.DataLoader.Tile2D.prototype = {
 	
 	onDataLoadError : function() {
 		this.isLoading = false;
-		debug( 'getTile .An error happened ' + this.key);
+		console.warn( 'Oev.DataLoader.Tile2D error', this.params);
 		this.callback(null);
+	}, 
+}
+
+
+
+Oev.DataLoader.Normal = function(_callback) {
+	this.isLoading = false;
+	this.callback = _callback;
+	this.params = {};
+	this.tileLoader = new THREE.TextureLoader();
+}
+
+Oev.DataLoader.Normal.prototype = {
+	load : function(_params) {
+		this.params = _params;
+		this.isLoading = true;
+		var loader = this;
+		var url = 'libs/remoteImg.php?tileNormal';
+		this.tileLoader.load(url + '=1&def=64&z='+_params.z+'&x='+_params.x+'&y='+_params.y, 
+			function(_texture){
+				loader.onDataLoadSuccess(_texture);
+			}, 
+			function(xhr) {
+			},
+			function(xhr) {
+				loader.onDataLoadError(xhr);
+			}
+		);
+	}, 
+	
+	onDataLoadSuccess : function(_data) {
+		this.isLoading = false;
+		this.callback(_data, this.params);
+	}, 
+	
+	onDataLoadError : function(_evt) {
+		this.isLoading = false;
+		console.warn( 'Oev.DataLoader.Normal error', this.params, _evt);
+		this.callback(null);
+	}, 
+}
+
+
+Oev.DataLoader.Building = function(_callback) {
+	this.isLoading = false;
+	this.callback = _callback;
+	this.params = {};
+	this.ajax = new Oev.DataLoader.Ajax();
+	this.myWorker = Oev.Tile.workerBuilding;
+	
+	var _self = this;
+	this.myWorker.onmessage = function(evt) {
+		_self.isLoading = false;
+		_self.callback(evt.data, _self.params);
+	}
+}
+
+Oev.DataLoader.Building.prototype = {
+	load : function(_params) {
+		this.params = _params;
+		this.isLoading = true;
+		var loader = this;
+		this.ajax.load("libs/remoteImg.php?overpass_buildings=1&zoom="+_params.z+"&tileX="+_params.x+"&tileY="+_params.y, 
+			function(_datas){
+				loader.onDataLoadSuccess(_datas);
+			}
+		);
+	}, 
+	
+	onDataLoadSuccess : function(_data) {
+		this.myWorker.postMessage({"json" : _data, "bbox" : this.params.bbox});
 	}, 
 }
 

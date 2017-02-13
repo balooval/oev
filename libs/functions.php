@@ -1,5 +1,6 @@
 <?php
 define( 'CACHE_BASE_PATH', 'cache' );
+define( 'NORMAL_FILE_PREFIX', 'test_7' );
 
 
 function makDirCache( $_folders ){
@@ -53,16 +54,140 @@ function getWeather( $_x, $_y, $_z, $_noCache=false ){
 	return $weather;
 }
 
+// http://val.openearthview.net/libs/remoteImg.php?tileNormal=1&z=11&x=1045&y=749&def=64 // sete
+// getNormImg(1045, 749, 11, 64);  // sete
+// makeNormalEle(8362, 5971, 14, 32);
+// getEleImg(8362, 5971, 14, 32);
+
+function extractAltFromColor($_rgb) {
+	$r = ($_rgb >> 16) & 0xFF;
+	$g = ($_rgb >> 8) & 0xFF;
+	$b = $_rgb & 0xFF;
+	$alt = $r * 256 + $b;
+	return $alt;
+}
+
+function getNormImg($_x, $_y, $_z, $_def) {
+	$USE_CACHE = true;
+	$dirName = 'cacheNormImg';
+	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
+	if(!$USE_CACHE || !is_file($fullPath.'/' . NORMAL_FILE_PREFIX . '_' . $_def . '.png')){
+		makeNormalEle($_x, $_y, $_z, $_def);
+	}
+	header('Content-Type: image/png');
+	readfile($fullPath.'/' . NORMAL_FILE_PREFIX  .'_' . $_def . '.png');
+}
+
+function normalGetAlt($_lat, $_lon) {
+	$dirName = 'cacheElevation';
+	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_lat.'/'.$_lon;
+	makDirCache( array( CACHE_BASE_PATH, $dirName, $_lat, $_lon ) );
+	if (!is_file($fullPath.'/ele.json')) {
+		$alt = extractElevation($_lat, $_lon);
+		file_put_contents($fullPath.'/ele.json', $alt);
+	}
+	$alt = file_get_contents( $fullPath.'/ele.json' );
+	$alt = max(-100, min(9000, $alt));
+	return $alt;
+}
 
 
+function makeNormalEle($_x, $_y, $_z, $_def) {
+	set_time_limit(60);
+	$startC = tileToCoords($_x, $_y, $_z);
+	$endC = tileToCoords($_x + 1, $_y + 1, $_z);
+	$south = $endC[1];
+	$north = $startC[1];
+	$east = $startC[0];
+	$west = $endC[0];
+	$stepLat = ( $north - $south ) / $_def;
+	$stepLon = ( $west - $east ) / $_def;
+	$step = 0;
+	$pixX = 0;
+	$pixY = 0;
+	$imgNor = imagecreatetruecolor($_def, $_def);
+	
+	$storedMaxLen = 0;
+	$storedVect = array();
+	for( $curLon = $east; $curLon < $west; $curLon += $stepLon ){
+		$storedVect[$pixX] = array();
+		for( $i = 0; $i < $_def; $i ++ ){
+			$curLat = ($north - (($i - 1) * $stepLat));
+			$altXA = normalGetAlt($curLat, $curLon);
+			$curLat = ($north - (($i + 1) * $stepLat));
+			$altXB = normalGetAlt($curLat, $curLon );
+			$curLat = ($north - ($i * $stepLat));
+			$altYA = normalGetAlt($curLat, $curLon - $stepLon);
+			$altYB = normalGetAlt($curLat, $curLon + $stepLon);
+			$vecX = array(
+				'x' => 0, 
+				'y' => 1, 
+				'z' => $altXA - $altXB, 
+			);
+			$vecY = array(
+				'x' => 1, 
+				'y' => 0, 
+				'z' => $altYA - $altYB, 
+			);
+			$vectFinalX = array(
+				'x' => ($vecX['y'] * $vecY['z']) - ($vecX['z'] * $vecY['y']), 
+				'y' => ($vecX['z'] * $vecY['x']) - ($vecX['x'] * $vecY['z']), 
+				'z' => ($vecX['x'] * $vecY['y']) - ($vecX['y'] * $vecY['x']), 
+				'length' => 0
+			);
+			$vectLen = sqrt($vectFinalX['x'] * $vectFinalX['x'] + $vectFinalX['y'] * $vectFinalX['y']);
+			$vectFinalX['length'] = $vectLen;
+			if ($storedMaxLen < $vectLen) {
+				$storedMaxLen = $vectLen;
+			}
+			/*
+			if ($vectLen == 0) {
+				$vectFinalX['x'] = 0;
+				$vectFinalX['y'] = 0;
+				$vectFinalX['z'] = 1;
+			} else {
+				$vectFinalX['x'] /= $vectLen;
+				$vectFinalX['y'] /= $vectLen;
+				$vectFinalX['z'] = 1;
+			}
+			*/
+			$storedVect[$pixX][$pixY] = $vectFinalX;
+			/*
+			$red = round((($vectFinalX['x'] + 1) / 2) * 255);
+			$green = round((($vectFinalX['y'] + 1) / 2) * 255);
+			$blue = round((($vectFinalX['z'] + 1) / 2) * 255);
+			$pixColor = imagecolorallocate($imgNor, $red, $green, $blue);
+			imagesetpixel($imgNor, $pixX, $pixY, $pixColor);
+			*/
+			$pixY ++;
+		}
+		$pixX ++;
+		$pixY = 0;
+	}
+	
+	for ($x = 0; $x < $_def; $x ++) {
+		for ($y = 0; $y < $_def; $y ++) {
+			$vect = $storedVect[$x][$y];
+			$vect['x'] /= $storedMaxLen;
+			$vect['y'] /= $storedMaxLen;
+			$vect['z'] /= $storedMaxLen;
+			$red = round((($vect['x'] + 1) / 2) * 255);
+			$green = round((($vect['y'] + 1) / 2) * 255);
+			$blue = round((($vect['z'] + 1) / 2) * 255);
+			$pixColor = imagecolorallocate($imgNor, $red, $green, 255);
+			imagesetpixel($imgNor, $x, $y, $pixColor);
+		}
+	}
+	
+	
+	header('Content-Type: image/png');
+	$dirName = 'cacheNormImg';
+	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
+	makDirCache(array(CACHE_BASE_PATH, $dirName, $_z, $_x, $_y));
+	imagepng($imgNor, $fullPath.'/' . NORMAL_FILE_PREFIX . '_' . $_def . '.png', 9);
+	imagedestroy($imgNor);
+}
 
-
-
-
-
-
-// getEleImg(8365, 5971, 14, 4);
-// makeEleBmp(8365, 5971, 14, 32);
 
 function getEleImg($_x, $_y, $_z, $_def) {
 	$USE_CACHE = true;
@@ -260,39 +385,38 @@ function getEleFileFromCoord( $_lat, $_lon ){
 // echo extractElevation(43.7403, 4.1792);
 
 function extractElevation( $_lat, $_lon ){
+	set_time_limit(30);
 	$measPerDeg = 1201; // 3 second data
 	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
 	// $measPerDeg = 3601; // 1 second data
-	if( !is_file( $hgtfile ) ){
+	if (!is_file( $hgtfile)) {
 		return 0;
 	}
-	$fh = fopen( $hgtfile, 'rb' ) or die("Error opening $hgtfile. Aborting!");
+	$fh = fopen($hgtfile, 'rb') or die("Error opening $hgtfile. Aborting!");
 	$hgtfile = basename($hgtfile);
 	$starty = +substr ($hgtfile, 1, 2);
 	if (substr ($hgtfile, 0, 1) == "S") {
 		$starty = -$starty;
 	}
 	$startx = +substr ($hgtfile, 4, 3);
-	if (substr ($hgtfile, 3, 1) == "W") {
+	if (substr($hgtfile, 3, 1) == "W") {
 		$startx = -$startx;
 	}
-	if( $data = fread( $fh, 2 * $measPerDeg * $measPerDeg ) ){
+	if( $data = fread($fh, 2 * $measPerDeg * $measPerDeg)){
 		$hgtfile = basename( $hgtfile, '.hgt' );
 		$colStep = 1 / $measPerDeg;
 		// OK
-		$colDest = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
-		
-		
+		$colDest = floor((($starty + 1) - $_lat) / $colStep);
 		if (substr ($hgtfile, 0, 1) == "S") {
-			$colDest = floor( ( ( $starty + 1 ) - $_lat ) / $colStep );
+			$colDest = floor((($starty + 1 ) - $_lat) / $colStep);
 		}
-		$rowDest = floor( ( $_lon - $startx ) / $colStep );
-		$offset = $colDest * ( 2 * $measPerDeg );
+		$rowDest = floor(($_lon - $startx) / $colStep);
+		$offset = $colDest * (2 * $measPerDeg);
 		$offset += $rowDest * 2;
 		for ($j = $rowDest; $j< $measPerDeg; $j++) {
 			$short = substr ($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
-			if( $shorts < 30000 ){
+			if ($shorts < 30000) {
 				return $shorts;
 			}
 			$offset += 2;

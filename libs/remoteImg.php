@@ -221,6 +221,12 @@ if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à affi
 	$res = file_get_contents( $url );
 	echo $res;
 	
+}else if( isset( $_GET['tileNormal'] ) ){
+	$x = round($_GET['x']);
+	$y = round($_GET['y']);
+	$z = round($_GET['z']);
+	$def = round($_GET['def']) * 2;
+	getNormImg($x, $y, $z, $def);
 	
 }else if( isset( $_GET['tileEle'] ) ){
 	$x = round($_GET['x']);
