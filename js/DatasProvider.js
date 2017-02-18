@@ -1,3 +1,4 @@
+'use strict';
 var DatasProvider = function(_tile, _name) {
 	this.tile = _tile;
 	this.datasLoaded = false;
@@ -6,6 +7,8 @@ var DatasProvider = function(_tile, _name) {
 	this.onStage = this.tile.onStage;
 	this.name = _name;
 	this.wayPoints = [];
+	
+	this.curElmt = 0;
 }
 
 DatasProvider.prototype.loadDatas = function() {
@@ -31,7 +34,7 @@ DatasProvider.prototype.passModelsToChilds = function() {
 	var e;
 	if( this.datasLoaded ){
 		for (i = 0; i < this.tile.childTiles.length; i ++) {
-			var modelsObj = { "elements" : [] };
+			var modelsObj = {"elements" : []};
 			for (e = 0; e < this.datasContent["elements"].length; e ++) {
 				var modelLon = this.datasContent["elements"][e]["lon"];
 				var modelLat = this.datasContent["elements"][e]["lat"];
@@ -45,13 +48,56 @@ DatasProvider.prototype.passModelsToChilds = function() {
 }
 
 
+DatasProvider.prototype.construct = function() {
+	console.log('construct', this.curElmt);
+	if (this.datasContent["elements"].length == 0) {
+		return false;
+	}
+	var i;
+	var drawLimit = Math.min(this.curElmt + 50, this.datasContent["elements"].length);
+	var startId = this.curElmt;
+	for (i = startId; i < drawLimit; i ++) {
+		var bigGeosTab = this.meshe.geometry;
+		var lon = this.datasContent["elements"][this.curElmt]["lon"];
+		var lat = this.datasContent["elements"][this.curElmt]["lat"];
+		var ele = this.tile.interpolateEle(lon, lat, true);
+		if (this.name != 'TREE') {
+			var tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
+			var tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
+			var importMeshe = new THREE.Mesh(tmpGeo);
+			var pos = OEV.earth.coordToXYZ(lon, lat, ele);
+			importMeshe.position.x = pos.x;
+			importMeshe.position.y = pos.y;
+			importMeshe.position.z = pos.z;
+			importMeshe.rotation.x = Math.PI;
+			importMeshe.rotation.y = Math.random() * 3.14;
+			var scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
+			importMeshe.scale.x = scaleVariation;
+			importMeshe.scale.y = scaleVariation;
+			importMeshe.scale.z = scaleVariation;
+			importMeshe.updateMatrix();
+			bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
+		} else {
+			console.log('construct TREE');
+			Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele);
+		}
+		this.curElmt ++;
+	}
+	bigGeosTab.computeFaceNormals();
+	bigGeosTab.computeVertexNormals();
+	if(this.curElmt < this.datasContent["elements"].length) {
+		Oev.Tile.ProcessQueue.addWaiting(this);
+	}
+	OEV.MUST_RENDER = true;
+}
+
+
 DatasProvider.prototype.drawDatas = function() {
 	this.onStage = this.tile.onStage;
 	if (!this.datasLoaded) {
 		this.loadDatas();
 	} else {
 		if (this.meshe == undefined) {
-			var bigGeo = new THREE.Geometry();
 			var bigGeosTab = new THREE.Geometry();
 			var modelLod = Math.min(2, Math.max(0, (this.tile.zoom - 16)));
 			var tmpBuffGeo;
@@ -62,6 +108,8 @@ DatasProvider.prototype.drawDatas = function() {
 			var ele;
 			var pos;
 			var scaleVariation;
+			this.curElmt = 0;
+			
 			var t;
 			var contentLen = this.datasContent["elements"].length;
 			for (t = 0; t < contentLen; t ++) {
@@ -70,12 +118,12 @@ DatasProvider.prototype.drawDatas = function() {
 				ele = this.tile.interpolateEle(lon, lat, true);
 				
 				if (this.name == 'TREE') {
-					tmpGeo = Oev.Model.Tree.generate(lon, lat, ele);
+					// tmpGeo = Oev.Model.Tree.generate(lon, lat, ele);
 				} else {
 					tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
 					tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
+					importMeshe = new THREE.Mesh(tmpGeo);
 				}
-				importMeshe = new THREE.Mesh(tmpGeo);
 				
 				if (OEV.MODELS_CFG[this.name]["SHOW_MARKER"] && OEV.MODELS_CFG[this.name]["MARKER"] != 'none' && OEV.MODELS_CFG[this.name]["MARKER"] != 'default') {
 					this.wayPoints.push(new Oev.Navigation.WayPoint(lon, lat, this.tile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"]));
@@ -92,16 +140,29 @@ DatasProvider.prototype.drawDatas = function() {
 					importMeshe.scale.y = scaleVariation;
 					importMeshe.scale.z = scaleVariation;
 					importMeshe.updateMatrix();
+					bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
 				}
-				bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
+				if (this.name == 'TREE') {
+					Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele);
+				}
 			}
+			if (this.name == 'TREE') {
+				bigGeosTab.computeFaceNormals();
+				bigGeosTab.computeVertexNormals();
+				bigGeosTab.uvsNeedUpdate = true;
+				bigGeosTab.verticesNeedUpdate = true;
+			}
+			
 			if (!OEV.earth.modelsMesheMat.hasOwnProperty(this.name)) {
 				OEV.earth.modelsMesheMat[this.name] = new THREE.MeshBasicMaterial({color: 0xFF0000 })
 			}
 			bigGeosTab.dynamic = false;
+			// bigGeosTab.dynamic = true;
 			this.meshe = new THREE.Mesh(bigGeosTab, OEV.earth.modelsMesheMat[this.name]);
 			this.meshe.receiveShadow = true;
 			this.meshe.castShadow = true;
+			
+			// Oev.Tile.ProcessQueue.addWaiting(this);
 		}
 		if (this.onStage) {
 			for (var i = 0; i < this.wayPoints.length; i ++) {

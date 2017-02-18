@@ -27,6 +27,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'particleRain2.png' );
 	this.texturesToPreload.push( 'waternormals.png' );
 	this.texturesToPreload.push( 'normal_foliage.jpg' );
+	this.texturesToPreload.push( 'tree_procedural.png' );
 	this.texturesNames = [ 'waypoint', 'checker', 'sky', 'building_wall', 'checker_alpha' ];
 	this.texturesNames.push( 'roof' );
 	this.texturesNames.push( 'sun' );
@@ -46,6 +47,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesNames.push( 'particleRain' );
 	this.texturesNames.push( 'waternormals' );
 	this.texturesNames.push( 'normal_foliage' );
+	this.texturesNames.push( 'tree_procedural' );
 	this.textures = {};
 	this.curTextureLoading = -1;
 	this.modelsToLoad = [ 'tree_lod_1.json', 'tree_lod_1.json', 'tree_lod_0.json', 'hydrant_lod_0.json', 'hydrant_lod_1.json', 'hydrant_lod_1.json' ];
