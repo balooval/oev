@@ -86,7 +86,7 @@ Oev.Tile.Surface.prototype = {
 				var curType = 'none';
 				if ("landuse" in this.datas['elements'][i]['tags']) {
 					if (this.datas['elements'][i]['tags']['landuse'] == 'vineyard') {
-						curType = 'vineyard';
+						// curType = 'vineyard';
 					} else if (this.datas['elements'][i]['tags']['landuse'] == 'forest') {
 						curType = 'forest';
 					}
@@ -139,7 +139,6 @@ Oev.Tile.Surface.prototype = {
 					"type": "Polygon",
 					"coordinates": [res]
 				};
-				// var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 50);
 				var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 100);
 				var nbPartIn = 0;
 				var coordLon, coordLat;
@@ -149,9 +148,6 @@ Oev.Tile.Surface.prototype = {
 					if (this.isIn( res, coordLon, coordLat)) {
 						nbPartIn ++;
 						var altP = this.tile.interpolateEle(coordLon, coordLat, true);
-						// var pos = OEV.earth.coordToXYZ( coordLon, coordLat, altP + 5 - Math.random() * 2 );
-						// var particle = new THREE.Vector3(pos.x, pos.y, pos.z);
-						// partGeom[surfacesTypes[s]].vertices.push(particle);
 						this.buildTwoSideElmt(coordLon, coordLat, altP, surfacesTypes[s]);
 					}
 				}
@@ -192,8 +188,9 @@ Oev.Tile.Surface.prototype = {
 		var elmtWidth = this.twoSideProps[_type].width * treeSize;
 		var elmtDepth = this.twoSideProps[_type].depth * treeSize;
 		var elmtHeight = this.twoSideProps[_type].height * treeSize;
-		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidth, depth: 0, height: elmtHeight, type:_type});
-		this.buildElmtSide(_lon, _lat, _alt, {width: 0, depth: elmtDepth, height: elmtHeight, type:_type});
+		var textTile = Math.random() > 0.7 ? 0 : 0.5;
+		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidth, depth: 0, height: elmtHeight, type:_type, textTile:textTile});
+		this.buildElmtSide(_lon, _lat, _alt, {width: 0, depth: elmtDepth, height: elmtHeight, type:_type, textTile:textTile});
 	}, 
 	
 	buildElmtSide : function(_lon, _lat, _alt, props) {
@@ -213,15 +210,15 @@ Oev.Tile.Surface.prototype = {
 		this.twoSideGeos[props.type].vertices.push(posF);
 		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
 		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces] = [
-			new THREE.Vector2(1, 0), 
-			new THREE.Vector2(0, 0), 
-			new THREE.Vector2(0, 1)
+			new THREE.Vector2(props.textTile + 0.5, 0), 
+			new THREE.Vector2(props.textTile, 0), 
+			new THREE.Vector2(props.textTile, 1)
 		];
 		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
 		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces + 1] = [
-			new THREE.Vector2(0, 1), 
-			new THREE.Vector2(1, 1), 
-			new THREE.Vector2(1, 0)
+			new THREE.Vector2(props.textTile, 1), 
+			new THREE.Vector2(props.textTile + 0.5, 1), 
+			new THREE.Vector2(props.textTile + 0.5, 0)
 		];
 	},
 	

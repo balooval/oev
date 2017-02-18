@@ -32,7 +32,17 @@ $serversOverpass = array(
 			
 
 			
-if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à afficher
+if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
+	processHgtToImg();
+
+} else if( isset( $_GET['extractRgbAltTile'] ) ){
+	// extractRgbAltTile(131, 143, 8);
+	// extractRgbAltTile(1085, 1020, 11);
+	// extractRgbAltTile(136, 120, 8);
+	// extractRgbAltTile(366, 243, 9);
+	echo 'Altitude : ' . getAltFromRgb(8.4411, 77.7290);
+
+} else if( isset( $_GET['overpass_nodes'] ) ){ // charger tous les objets nodes à afficher
 	$x = $_GET['tileX'];
 	$y = $_GET['tileY'];
 	$z = $_GET['zoom'];

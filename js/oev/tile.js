@@ -481,7 +481,7 @@ Oev.Tile = (function(){
 		}, 
 		
 		loadNormal : function() {
-			if (this.normalLoaded || this.zoom < 6) {
+			if (this.normalLoaded || this.zoom < 6 || this.zoom > 11) {
 				return false;
 			}
 			var _self = this;

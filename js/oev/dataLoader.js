@@ -107,7 +107,6 @@ Oev.DataLoader.Proxy.prototype = {
 		return false;
 	}, 
 	
-	// clearAll
 	clear : function() {
 		this._datasLoaded = {};
 		this._datasWaiting = [];

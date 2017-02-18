@@ -1,6 +1,7 @@
 <?php
 define( 'CACHE_BASE_PATH', 'cache' );
 define( 'NORMAL_FILE_PREFIX', 'test_7' );
+// define( 'NORMAL_FILE_PREFIX', 'opti' );
 
 
 function makDirCache( $_folders ){
@@ -11,6 +12,187 @@ function makDirCache( $_folders ){
 			@mkdir( $path );
 		}
 	}
+}
+
+
+function extractRgbAltTile($_x, $_y, $_z) {
+	$DEBUG = true;
+	// $DEBUG = false;
+	$finalSize = 1201;
+	$finalScale = 1;
+	$srcRes = 1201;
+	$rgbDir = dirname( __FILE__ ).'/../../srtm/srtm90rgb/';
+	$startC = tileToCoords($_x, $_y, $_z);
+	$endC = tileToCoords($_x + 1, $_y + 1, $_z);
+	$south = $endC[1];
+	$north = $startC[1];
+	$west = $startC[0];
+	$east = $endC[0];
+	$topLeftFile = getEleFileFromCoord($north, $west);
+	$topRightFile = getEleFileFromCoord($north, $east);
+	$bottomLeftFile = getEleFileFromCoord($south, $west);
+	$bottomRightFile = getEleFileFromCoord($south, $east);
+	
+	
+	$startX = substr($topLeftFile, 0, strpos($topLeftFile, '.'));
+	$startX = intval(substr($startX, -3));
+	$endX = substr($topRightFile, 0, strpos($topRightFile, '.'));
+	$endX = intval(substr($endX, -3));
+	$endY = substr($topLeftFile, 1, 3);
+	$endY = intval($endY);
+	$startY = substr($bottomRightFile, 1, 3);
+	$startY = intval($startY);
+	$sideHor = substr($topLeftFile, 3, 1);
+	$sideVer = substr($topLeftFile, 0, 1);
+	
+	$srcScaleX = abs($endX - $startX) + 1;
+	$srcScaleY = abs($endY - $startY) + 1;
+	$srcScale = max($srcScaleX, $srcScaleY);
+	if ($DEBUG) {
+		echo '$sideHor : ' . $sideHor . '<br />';
+		echo '$sideVer : ' . $sideVer . '<br />';
+		echo '$startX : ' . $startX . '<br />';
+		echo '$endX : ' . $endX . '<br />';
+		echo '$startY : ' . $startY . '<br />';
+		echo '$endY : ' . $endY . '<br />';
+		echo '<br />';
+		echo '$srcScale : ' . $srcScale . '<br />';
+		
+		echo '<br />';
+		echo 'north : ' . $north . '<br />';
+		echo 'south : ' . $south . '<br />';
+		echo 'west : ' . $west . '<br />';
+		echo 'east : ' . $east . '<br />';
+		echo $topLeftFile . '<br />';
+		echo $topRightFile . '<br />';
+		echo $bottomLeftFile . '<br />';
+		echo $bottomRightFile . '<br />';
+		echo '<br />';
+	} else {
+		$imgFinal = imagecreatetruecolor($finalSize, $finalSize);
+	}
+	for ($x = $startX; $x <= $endX; $x ++) {
+		for ($y = $endY; $y >= $startY; $y --) {
+			$srcFile = $sideVer . str_pad($y, 2, '0', STR_PAD_LEFT) . $sideHor . str_pad($x, 3, '0', STR_PAD_LEFT);
+			$destPxlX = floor(($x - $startX) * ($srcRes / $srcScale));
+			$destPxlY = abs(ceil(($y - $endY) * ($srcRes / $srcScale)));
+			
+			if ($DEBUG) {
+				echo $x . ' / ' . $y . ' / ' . $srcFile . '<br />';
+				echo '$destPxlX : ' . $destPxlX . '<br />';
+				echo '$destPxlY : ' . $destPxlY . '<br />';
+			} else {
+				$imgSrc = imagecreatefrompng($rgbDir . $srcFile . '.hgt.png');
+				imagecopyresampled($imgFinal, $imgSrc, $destPxlY, $destPxlX, 0, 0, $srcRes / $srcScale, $srcRes / $srcScale, $srcRes, $srcRes);
+				// imagecopyresampled($imgFinal, $imgSrc, 0, 0, 0, 0, $srcRes / 1, $srcRes / 1, $srcRes, $srcRes);
+			}
+		}
+	}
+	if (!$DEBUG) {
+		header('Content-Type: image/png');
+		imagepng($imgFinal);
+		return true;
+	}
+}
+
+function processHgtToImg() {
+	$srcDir = dirname( __FILE__ ).'/../../srtm/datas';
+	$logPath = dirname( __FILE__ ).'/../../srtm/rgb_processed.log';
+	
+	$processedRgb = json_decode(file_get_contents($logPath), true);
+	$hgtFiles = scandir($srcDir);
+	$limit = 1000;
+	$cur = 0;
+	foreach ($hgtFiles as $hgtFile) {
+		if ($hgtFile == '.' || $hgtFile == '..') {
+			continue;
+		}
+		$treated = false;
+		foreach ($processedRgb as $procRgb) {
+			if ($hgtFile == $procRgb['file']) {
+				$treated = true;
+				break;
+			}
+		}
+		if ($treated === false) {
+			$cur ++;
+			$res = hgtToImg($hgtFile);
+			if ($res === true) {
+				echo 'File "' . $hgtFile . '" proccessed<br />';
+				$processedRgb[] = array('time' => date('U'), 'file' => $hgtFile);
+				file_put_contents($logPath, json_encode($processedRgb, JSON_PRETTY_PRINT));
+			} else {
+				echo 'File "' . $hgtFile . '" failed<br />';
+			}
+			if ($cur >= $limit) {
+				exit('Limit atteinte');
+			}
+		} else {
+			echo 'File "' . $hgtFile . '" already proccessed<br />';
+		}
+	}
+}
+
+function hgtToImg($_hgtFile){
+	set_time_limit(120);
+	$destDir = dirname( __FILE__ ).'/../../srtm/srtm90rgb/';
+	$measPerDeg = 1201; // 3 second data
+	// $measPerDeg = 3601; // 1 second data
+	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/' . $_hgtFile;
+	if (!is_file( $hgtfile)) {
+		echo 'File "' . $_hgtFile . '" not exist !';
+		return false;
+	}
+	$fh = fopen($hgtfile, 'rb') or die('Error opening ' . $hgtfile . ', aborting!');
+	if (($data = fread($fh, 2 * $measPerDeg * $measPerDeg)) === false) {
+		echo "Datas can't be read !";
+		return false;
+	}
+	$imgAlt = imagecreatetruecolor($measPerDeg, $measPerDeg);
+	$offset = 0;
+	$errNb = 0;
+	$lastGoodAlt = 0;
+	$altMin = 10000;
+	$altMax = 0;
+	for ($x = 0; $x < $measPerDeg; $x ++) {
+		for ($y = 0; $y < $measPerDeg; $y ++) {
+			$bin = substr($data, $offset, 2);
+			$alt = reset(unpack("n*", $bin));
+			if ($alt < 10000) {
+				$lastGoodAlt = $alt;
+			}
+			if ($lastGoodAlt < $altMin) {
+				$altMin = $lastGoodAlt;
+			}
+			if ($lastGoodAlt > $altMax) {
+				$altMax = $lastGoodAlt;
+			}
+			$offset += 2;
+		}
+	}
+	$altRatio = $altMax - $altMin;
+	$offset = 0;
+	$lastGoodAlt = 0;
+	for ($x = 0; $x < $measPerDeg; $x ++) {
+		for ($y = 0; $y < $measPerDeg; $y ++) {
+			$bin = substr($data, $offset, 2);
+			$alt = reset(unpack("n*", $bin));
+			if ($alt < 10000) {
+				$lastGoodAlt = $alt;
+			}
+			$red = floor($lastGoodAlt / 256);
+			$green = $lastGoodAlt - ($red * 256);
+			$blue = floor((($lastGoodAlt - $altMin) / $altRatio) * 256);
+			$pixColor = imagecolorallocate($imgAlt, $red, $green, $blue);
+			imagesetpixel($imgAlt, $x, $y, $pixColor);
+			$offset += 2;
+		}
+	}
+	fclose($fh);
+	// header('Content-Type: image/png');
+	imagepng($imgAlt, $destDir . $_hgtFile . '.png', 9);
+	imagedestroy($imgAlt);
+	return true;
 }
 
 
@@ -71,22 +253,36 @@ function getNormImg($_x, $_y, $_z, $_def) {
 	$USE_CACHE = true;
 	$dirName = 'cacheNormImg';
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
-	if(!$USE_CACHE || !is_file($fullPath.'/' . NORMAL_FILE_PREFIX . '_' . $_def . '.png')){
+	
+	$filePrefix = '';
+	if ($_z > 12) {
+		// $filePrefix = 'interpolate_';
+	}
+	
+	if(!$USE_CACHE || !is_file($fullPath.'/' . $filePrefix . NORMAL_FILE_PREFIX . '_' . $_def . '.png')){
 		makeNormalEle($_x, $_y, $_z, $_def);
 	}
 	header('Content-Type: image/png');
-	readfile($fullPath.'/' . NORMAL_FILE_PREFIX  .'_' . $_def . '.png');
+	readfile($fullPath.'/' . $filePrefix . NORMAL_FILE_PREFIX  .'_' . $_def . '.png');
 }
 
-function normalGetAlt($_lat, $_lon) {
+function normalGetAlt($_lat, $_lon, $_interpolate=false) {
 	$dirName = 'cacheElevation';
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_lat.'/'.$_lon;
 	makDirCache( array( CACHE_BASE_PATH, $dirName, $_lat, $_lon ) );
-	if (!is_file($fullPath.'/ele.json')) {
-		$alt = extractElevation($_lat, $_lon);
-		file_put_contents($fullPath.'/ele.json', $alt);
+	$fileCached = 'ele';
+	if( $_interpolate ){
+		$fileCached .= '_interpolate';
 	}
-	$alt = file_get_contents( $fullPath.'/ele.json' );
+	if (!is_file($fullPath.'/' . $fileCached . '.json')) {
+		if ($_interpolate) {
+			$alt = extractElevationInterpolate($_lat, $_lon);
+		} else {
+			$alt = extractElevation($_lat, $_lon);
+		}
+		file_put_contents($fullPath.'/' . $fileCached . '.json', $alt);
+	}
+	$alt = file_get_contents( $fullPath.'/' . $fileCached . '.json' );
 	$alt = max(-100, min(9000, $alt));
 	return $alt;
 }
@@ -107,18 +303,25 @@ function makeNormalEle($_x, $_y, $_z, $_def) {
 	$pixY = 0;
 	$imgNor = imagecreatetruecolor($_def, $_def);
 	
-	$storedMaxLen = 0;
+	$filePrefix = '';
+	$interpolate = false;
+	if ($_z > 12) {
+		// $interpolate = true;
+		// $filePrefix = 'interpolate_';
+	}
+	
+	$storedMaxLen = 1;
 	$storedVect = array();
 	for( $curLon = $east; $curLon < $west; $curLon += $stepLon ){
 		$storedVect[$pixX] = array();
 		for( $i = 0; $i < $_def; $i ++ ){
 			$curLat = ($north - (($i - 1) * $stepLat));
-			$altXA = normalGetAlt($curLat, $curLon);
+			$altXA = normalGetAlt($curLat, $curLon, $interpolate);
 			$curLat = ($north - (($i + 1) * $stepLat));
-			$altXB = normalGetAlt($curLat, $curLon );
+			$altXB = normalGetAlt($curLat, $curLon, $interpolate);
 			$curLat = ($north - ($i * $stepLat));
-			$altYA = normalGetAlt($curLat, $curLon - $stepLon);
-			$altYB = normalGetAlt($curLat, $curLon + $stepLon);
+			$altYA = normalGetAlt($curLat, $curLon - $stepLon, $interpolate);
+			$altYB = normalGetAlt($curLat, $curLon + $stepLon, $interpolate);
 			$vecX = array(
 				'x' => 0, 
 				'y' => 1, 
@@ -140,31 +343,12 @@ function makeNormalEle($_x, $_y, $_z, $_def) {
 			if ($storedMaxLen < $vectLen) {
 				$storedMaxLen = $vectLen;
 			}
-			/*
-			if ($vectLen == 0) {
-				$vectFinalX['x'] = 0;
-				$vectFinalX['y'] = 0;
-				$vectFinalX['z'] = 1;
-			} else {
-				$vectFinalX['x'] /= $vectLen;
-				$vectFinalX['y'] /= $vectLen;
-				$vectFinalX['z'] = 1;
-			}
-			*/
 			$storedVect[$pixX][$pixY] = $vectFinalX;
-			/*
-			$red = round((($vectFinalX['x'] + 1) / 2) * 255);
-			$green = round((($vectFinalX['y'] + 1) / 2) * 255);
-			$blue = round((($vectFinalX['z'] + 1) / 2) * 255);
-			$pixColor = imagecolorallocate($imgNor, $red, $green, $blue);
-			imagesetpixel($imgNor, $pixX, $pixY, $pixColor);
-			*/
 			$pixY ++;
 		}
 		$pixX ++;
 		$pixY = 0;
 	}
-	
 	for ($x = 0; $x < $_def; $x ++) {
 		for ($y = 0; $y < $_def; $y ++) {
 			$vect = $storedVect[$x][$y];
@@ -178,19 +362,18 @@ function makeNormalEle($_x, $_y, $_z, $_def) {
 			imagesetpixel($imgNor, $x, $y, $pixColor);
 		}
 	}
-	
-	
 	header('Content-Type: image/png');
 	$dirName = 'cacheNormImg';
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
 	makDirCache(array(CACHE_BASE_PATH, $dirName, $_z, $_x, $_y));
-	imagepng($imgNor, $fullPath.'/' . NORMAL_FILE_PREFIX . '_' . $_def . '.png', 9);
+	imagepng($imgNor, $fullPath.'/' . $filePrefix . NORMAL_FILE_PREFIX . '_' . $_def . '.png', 9);
 	imagedestroy($imgNor);
 }
 
 
 function getEleImg($_x, $_y, $_z, $_def) {
 	$USE_CACHE = true;
+	// $USE_CACHE = false;
 	$dirName = 'cacheEleImg';
 	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_z.'/'.$_x.'/'.$_y;
 	if(!$USE_CACHE || !is_file($fullPath.'/' . ($_def + 1) . '.png')){
@@ -216,10 +399,14 @@ function makeEleBmp($_x, $_y, $_z, $_def) {
 	$imgEle = imagecreatetruecolor($_def + 1, $_def + 1);
 	$pixX = 0;
 	$pixY = 0;
+	$elevation = 0;
 	for( $curLon = $east; $curLon <= $west; $curLon += $stepLon ){
 		for( $i = 0; $i <= $_def; $i ++ ){
 			$curLat = ( $north - ( $i * $stepLat ) );
-			$elevation = max(-100, min(9000, extractElevation( $curLat, $curLon )));
+			$tmpElevation = extractElevation( $curLat, $curLon );
+			if ($tmpElevation < 10000) {
+				$elevation = $tmpElevation;
+			}
 			$step ++;
 			$red = floor($elevation / 256);
 			$blue = $elevation - ($red * 256);
@@ -365,7 +552,7 @@ function drawHgtImg(){
 }
 
 
-function getEleFileFromCoord( $_lat, $_lon ){
+function getEleFileFromCoord($_lat, $_lon) {
 	$fileName = '';
 	if( $_lat > 0 ){
 		$fileName .= 'N'.str_pad( floor( $_lat-0.0001 ), 2, '0', STR_PAD_LEFT );
@@ -382,13 +569,14 @@ function getEleFileFromCoord( $_lat, $_lon ){
 }
 
 
-// echo extractElevation(43.7403, 4.1792);
+// echo extractElevationTest(43.7403, 4.1792);
 
 function extractElevation( $_lat, $_lon ){
+// function extractElevationTest( $_lat, $_lon ){
 	set_time_limit(30);
 	$measPerDeg = 1201; // 3 second data
-	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
 	// $measPerDeg = 3601; // 1 second data
+	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
 	if (!is_file( $hgtfile)) {
 		return 0;
 	}
@@ -398,14 +586,57 @@ function extractElevation( $_lat, $_lon ){
 	if (substr ($hgtfile, 0, 1) == "S") {
 		$starty = -$starty;
 	}
-	$startx = +substr ($hgtfile, 4, 3);
+	$startx = +substr($hgtfile, 4, 3);
 	if (substr($hgtfile, 3, 1) == "W") {
 		$startx = -$startx;
 	}
-	if( $data = fread($fh, 2 * $measPerDeg * $measPerDeg)){
+	$colStep = 1 / $measPerDeg;
+	$colDest = floor((($starty + 1) - $_lat) / $colStep);
+	$rowDest = floor(($_lon - $startx) / $colStep);
+	$offset = $colDest * (2 * $measPerDeg);
+	$offset += $rowDest * 2;
+	fseek($fh, $offset);
+	$tmp = fread($fh, 2);
+	$res = reset(unpack("n*", $tmp));
+	if ($res > 30000) {
+		$offset = max(0, $offset - 2 * 50);
+		for ($i = 0; $i < 100; $i ++) {
+			if ($res > 30000) {
+				$offset += 2;
+				fseek($fh, $offset);
+				$tmp = fread($fh, 2);
+				$res = reset(unpack("n*", $tmp));
+			} else {
+				break;
+			}
+		}
+	}
+	fclose($fh);
+	return $res;
+}
+
+function extractElevationOk( $_lat, $_lon ){
+	set_time_limit(30);
+	$measPerDeg = 1201; // 3 second data
+	// $measPerDeg = 3601; // 1 second data
+	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );
+	if (!is_file( $hgtfile)) {
+		return 0;
+	}
+	$fh = fopen($hgtfile, 'rb') or die("Error opening $hgtfile. Aborting!");
+	$hgtfile = basename($hgtfile);
+	$starty = +substr ($hgtfile, 1, 2);
+	if (substr ($hgtfile, 0, 1) == "S") {
+		$starty = -$starty;
+	}
+	$startx = +substr($hgtfile, 4, 3);
+	if (substr($hgtfile, 3, 1) == "W") {
+		$startx = -$startx;
+	}
+	
+	if ($data = fread($fh, 2 * $measPerDeg * $measPerDeg)) {
 		$hgtfile = basename( $hgtfile, '.hgt' );
 		$colStep = 1 / $measPerDeg;
-		// OK
 		$colDest = floor((($starty + 1) - $_lat) / $colStep);
 		if (substr ($hgtfile, 0, 1) == "S") {
 			$colDest = floor((($starty + 1 ) - $_lat) / $colStep);
@@ -414,7 +645,7 @@ function extractElevation( $_lat, $_lon ){
 		$offset = $colDest * (2 * $measPerDeg);
 		$offset += $rowDest * 2;
 		for ($j = $rowDest; $j< $measPerDeg; $j++) {
-			$short = substr ($data, $offset, 2);
+			$short = substr($data, $offset, 2);
 			$shorts = reset(unpack("n*", $short));
 			if ($shorts < 30000) {
 				return $shorts;
@@ -434,7 +665,8 @@ function queryEleDist( $_lat, $_lon ){
 	return $datas;
 }
 
-function extractElevationInterpolate( $_lat, $_lon ){
+function extractElevationInterpolate( $_lat, $_lon) {
+	set_time_limit(60);
 	// $measPerDeg = 3601; // 1 second data
 	$measPerDeg = 1201; // 3 second data
 	$hgtfile = dirname( __FILE__ ).'/../../srtm/datas/'.getEleFileFromCoord( $_lat, $_lon );

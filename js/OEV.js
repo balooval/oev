@@ -16,7 +16,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'grass.png' );
 	this.texturesToPreload.push( 'vineyard.png' );
 	this.texturesToPreload.push( 'natural_tree.png' );
-	this.texturesToPreload.push( 'tree_side.png' );
+	this.texturesToPreload.push( 'tree_tiles.png' );
 	this.texturesToPreload.push( 'scrub.png' );
 	this.texturesToPreload.push( 'normal_temple.png' );
 	this.texturesToPreload.push( 'plane_contrail_2.png' );
@@ -26,6 +26,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'particleSnow.png' );
 	this.texturesToPreload.push( 'particleRain2.png' );
 	this.texturesToPreload.push( 'waternormals.png' );
+	this.texturesToPreload.push( 'normal_foliage.jpg' );
 	this.texturesNames = [ 'waypoint', 'checker', 'sky', 'building_wall', 'checker_alpha' ];
 	this.texturesNames.push( 'roof' );
 	this.texturesNames.push( 'sun' );
@@ -44,6 +45,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesNames.push( 'particleSnow' );
 	this.texturesNames.push( 'particleRain' );
 	this.texturesNames.push( 'waternormals' );
+	this.texturesNames.push( 'normal_foliage' );
 	this.textures = {};
 	this.curTextureLoading = -1;
 	this.modelsToLoad = [ 'tree_lod_1.json', 'tree_lod_1.json', 'tree_lod_0.json', 'hydrant_lod_0.json', 'hydrant_lod_1.json', 'hydrant_lod_1.json' ];

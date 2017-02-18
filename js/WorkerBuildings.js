@@ -1,4 +1,5 @@
 importScripts('oev/utils.js');
+importScripts('libs/three.js');
 
 onmessage = function(_evt) {
 	var result = precomputeBuildings(_evt.data["json"], _evt.data["bbox"]);

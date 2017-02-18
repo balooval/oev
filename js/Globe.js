@@ -1,7 +1,7 @@
 var Globe = function () {
 	this.radius = 10000;
 	this.tilesBase = [];
-	this.tiles2dMng = undefined;
+	// this.tiles2dMng = undefined;
 	this.meter = this.radius / 40075017.0;
 	this.meshe = new THREE.Mesh(new THREE.Geometry());
 	this.CUR_ZOOM = 4;
@@ -23,7 +23,7 @@ var Globe = function () {
 	this.nodesLoadManager = new DatasMng( "NODES" );
 	this.providersLoadManager = new DatasMng("OBJECTS");
 	this.modelsMesheMat = {
-		"TREE":new THREE.MeshLambertMaterial({color: 0x678713 }), 
+		"TREE":new THREE.MeshLambertMaterial({color: 0x678713}), 
 		"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
 		"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
 		"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
@@ -72,12 +72,13 @@ Globe.prototype.updateTilesModelProvider = function( _added, _name ) {
 
 Globe.prototype.setTilesProvider = function( _provider ) {
 	if (this.tilesProvider != _provider) {
-		if (this.tiles2dMng != undefined) {
-			this.tiles2dMng.clearAll();
+		this.loaderTile2D.clear();
+		// if (this.tiles2dMng != undefined) {
+			// this.tiles2dMng.clearAll();
 			for (var i = 0; i < this.tilesBase.length; i ++) {
 				this.tilesBase[i].reloadTexture();
 			}
-		}
+		// }
 	}
 	this.tilesProvider = _provider;
 }
@@ -142,11 +143,16 @@ Globe.prototype.updateLOD = function() {
 Globe.prototype.construct = function() {
 	this.setProjection( "PLANE" );
 	// this.setProjection( "SPHERE" );
-	this.tiles2dMng = new DatasMng( "TILE2D" );
-	this.tilesModelsMng = new DatasMng( "MODELS" );
+	// this.tiles2dMng = new DatasMng( "TILE2D" );
+	// this.tilesModelsMng = new DatasMng( "MODELS" );
 	this.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 	this.tilesWeatherMng = new DatasMng( "WEATHER" );
 	this.tilesLandusesMng = new DatasMng( "SURFACE" );
+	
+	// this.modelsMesheMat['TREE'] = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
+	// this.modelsMesheMat['TREE'].normalMap = OEV.textures['normal_foliage'];
+	// this.modelsMesheMat['TREE'].needsUpdate = true;
+	
 	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 	this.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });

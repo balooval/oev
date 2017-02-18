@@ -65,34 +65,41 @@ DatasProvider.prototype.drawDatas = function() {
 			var t;
 			var contentLen = this.datasContent["elements"].length;
 			for (t = 0; t < contentLen; t ++) {
-				tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
-				tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
-				importMeshe = new THREE.Mesh(tmpGeo);
 				lon = this.datasContent["elements"][t]["lon"];
 				lat = this.datasContent["elements"][t]["lat"];
+				ele = this.tile.interpolateEle(lon, lat, true);
+				
+				if (this.name == 'TREE') {
+					tmpGeo = Oev.Model.Tree.generate(lon, lat, ele);
+				} else {
+					tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
+					tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
+				}
+				importMeshe = new THREE.Mesh(tmpGeo);
 				
 				if (OEV.MODELS_CFG[this.name]["SHOW_MARKER"] && OEV.MODELS_CFG[this.name]["MARKER"] != 'none' && OEV.MODELS_CFG[this.name]["MARKER"] != 'default') {
 					this.wayPoints.push(new Oev.Navigation.WayPoint(lon, lat, this.tile.zoom, "", 'MARKER_' + OEV.MODELS_CFG[this.name]["NAME"]));
 				}
-				ele = this.tile.interpolateEle(lon, lat, true);
-				pos = OEV.earth.coordToXYZ(lon, lat, ele);
-				importMeshe.position.x = pos.x;
-				importMeshe.position.y = pos.y;
-				importMeshe.position.z = pos.z;
-				importMeshe.rotation.x = Math.PI;
-				importMeshe.rotation.y = Math.random() * 3.14;
-				scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
-				importMeshe.scale.x = scaleVariation;
-				importMeshe.scale.y = scaleVariation;
-				importMeshe.scale.z = scaleVariation;
-				importMeshe.updateMatrix();
-				bigGeosTab.merge( importMeshe.geometry, importMeshe.matrix );
+				if (this.name != 'TREE') {
+					pos = OEV.earth.coordToXYZ(lon, lat, ele);
+					importMeshe.position.x = pos.x;
+					importMeshe.position.y = pos.y;
+					importMeshe.position.z = pos.z;
+					importMeshe.rotation.x = Math.PI;
+					importMeshe.rotation.y = Math.random() * 3.14;
+					scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
+					importMeshe.scale.x = scaleVariation;
+					importMeshe.scale.y = scaleVariation;
+					importMeshe.scale.z = scaleVariation;
+					importMeshe.updateMatrix();
+				}
+				bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
 			}
 			if (!OEV.earth.modelsMesheMat.hasOwnProperty(this.name)) {
 				OEV.earth.modelsMesheMat[this.name] = new THREE.MeshBasicMaterial({color: 0xFF0000 })
 			}
 			bigGeosTab.dynamic = false;
-			this.meshe = new THREE.Mesh( bigGeosTab, OEV.earth.modelsMesheMat[this.name] );
+			this.meshe = new THREE.Mesh(bigGeosTab, OEV.earth.modelsMesheMat[this.name]);
 			this.meshe.receiveShadow = true;
 			this.meshe.castShadow = true;
 		}

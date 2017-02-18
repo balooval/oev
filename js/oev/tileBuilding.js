@@ -10,7 +10,17 @@ Oev.Tile.Building = function (_tile, _tileX, _tileY, _zoom) {
 	this.geometry = undefined;
 }
 
-Oev.Tile.Building.exculdedId = [23762981, 19441489, 201247295, 150335048, 309413981, 249003371];
+Oev.Tile.Building.exculdedId = [23762981, 
+	19441489, 
+	201247295, 
+	150335048, 
+	309413981, 
+	249003371, 
+	249003371, 
+	112452790, 
+	3504257, 
+	227662017, 
+];
 
 Oev.Tile.Building.prototype = {
 

@@ -57,12 +57,12 @@ TileNodes.prototype.drawDatas = function() {
 						// tmpBuffGeo = OEV.modelsLib["LAMP_lod_2"].geometry.clone();
 					}
 				}else if( "artwork_type" in this.datasContent["elements"][t]['tags'] ){
+					console.log('statue');
 					curNodeType = 'statue';
 					tmpBuffGeo = OEV.modelsLib["statue"].geometry.clone();
 				}
 				
 				if( curNodeType != 'none' ){
-				
 					if( this.meshes[curNodeType] == undefined ){
 						this.meshes[curNodeType] = new THREE.Mesh( new THREE.Geometry(), OEV.earth.modelsMesheMat[curNodeType] );
 						this.meshes[curNodeType].receiveShadow = true;
@@ -95,14 +95,9 @@ TileNodes.prototype.drawDatas = function() {
 					importMeshe.scale.y = scaleVariation;
 					importMeshe.scale.z = scaleVariation;
 					importMeshe.updateMatrix();
-					this.meshes[curNodeType].geometry.merge( importMeshe.geometry, importMeshe.matrix );
+					this.meshes[curNodeType].geometry.merge(importMeshe.geometry, importMeshe.matrix);
 				}
 			}
-			// bigGeosTab.dynamic = false;
-			// this.meshe = new THREE.Mesh( bigGeosTab, OEV.earth.buildingsWallMat );
-			// this.meshe.receiveShadow = true;
-			// this.meshe.castShadow = true;
-			
 			if( this.mustUpdate ){
 				OEV.addObjToUpdate( this );
 			}
