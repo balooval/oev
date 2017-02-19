@@ -20,6 +20,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/oev/math.js"></script>
 		<script type="text/javascript" src="js/oev/animation.js"></script>
 		<script type="text/javascript" src="js/oev/modelTree.js"></script>
+		<script type="text/javascript" src="js/oev/geoBuild/geometryBuilder.js"></script>
 		<script type="text/javascript" src="js/OEV.js"></script>
 		<script type="text/javascript" src="js/UI.js"></script>
 		<script type="text/javascript" src="js/CamCtrl.js"></script>

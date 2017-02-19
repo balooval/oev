@@ -23,8 +23,8 @@ var Globe = function () {
 	this.nodesLoadManager = new DatasMng( "NODES" );
 	this.providersLoadManager = new DatasMng("OBJECTS");
 	this.modelsMesheMat = {
-		"TREE":new THREE.MeshLambertMaterial({color: 0xffffff}), 
-		// "TREE":new THREE.MeshPhongMaterial({color: 0xffffff}), 
+		// "TREE":new THREE.MeshLambertMaterial({color: 0xffffff}), 
+		"TREE":new THREE.MeshPhongMaterial({color: 0xffffff, shininess: 0}), 
 		"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
 		"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
 		"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
@@ -152,7 +152,8 @@ Globe.prototype.construct = function() {
 	
 	// this.modelsMesheMat['TREE'] = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
 	this.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
-	this.modelsMesheMat['TREE'].normalMap = OEV.textures['normal_foliage'];
+	// this.modelsMesheMat['TREE'].normalMap = OEV.textures['normal_foliage'];
+	this.modelsMesheMat['TREE'].alphaTest = 0.9;
 	this.modelsMesheMat['TREE'].needsUpdate = true;
 	
 	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });

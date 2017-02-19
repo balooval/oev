@@ -26,7 +26,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'particleSnow.png' );
 	this.texturesToPreload.push( 'particleRain2.png' );
 	this.texturesToPreload.push( 'waternormals.png' );
-	this.texturesToPreload.push( 'normal_foliage.jpg' );
+	this.texturesToPreload.push( 'normal_cloud.png' );
 	this.texturesToPreload.push( 'tree_procedural.png' );
 	this.texturesNames = [ 'waypoint', 'checker', 'sky', 'building_wall', 'checker_alpha' ];
 	this.texturesNames.push( 'roof' );

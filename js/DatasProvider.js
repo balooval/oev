@@ -22,7 +22,8 @@ DatasProvider.prototype.onDatasLoaded = function(_datas) {
 	this.datasLoaded = true;
 	this.datasContent = _datas;
 	if (this.onStage) {
-		this.drawDatas();
+		Oev.Tile.ProcessQueue.addWaiting(this);
+		// this.drawDatas();
 	} else {
 		this.passModelsToChilds();
 	}
@@ -47,50 +48,9 @@ DatasProvider.prototype.passModelsToChilds = function() {
 	}
 }
 
-
 DatasProvider.prototype.construct = function() {
-	console.log('construct', this.curElmt);
-	if (this.datasContent["elements"].length == 0) {
-		return false;
-	}
-	var i;
-	var drawLimit = Math.min(this.curElmt + 50, this.datasContent["elements"].length);
-	var startId = this.curElmt;
-	for (i = startId; i < drawLimit; i ++) {
-		var bigGeosTab = this.meshe.geometry;
-		var lon = this.datasContent["elements"][this.curElmt]["lon"];
-		var lat = this.datasContent["elements"][this.curElmt]["lat"];
-		var ele = this.tile.interpolateEle(lon, lat, true);
-		if (this.name != 'TREE') {
-			var tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
-			var tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
-			var importMeshe = new THREE.Mesh(tmpGeo);
-			var pos = OEV.earth.coordToXYZ(lon, lat, ele);
-			importMeshe.position.x = pos.x;
-			importMeshe.position.y = pos.y;
-			importMeshe.position.z = pos.z;
-			importMeshe.rotation.x = Math.PI;
-			importMeshe.rotation.y = Math.random() * 3.14;
-			var scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
-			importMeshe.scale.x = scaleVariation;
-			importMeshe.scale.y = scaleVariation;
-			importMeshe.scale.z = scaleVariation;
-			importMeshe.updateMatrix();
-			bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
-		} else {
-			console.log('construct TREE');
-			Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele);
-		}
-		this.curElmt ++;
-	}
-	bigGeosTab.computeFaceNormals();
-	bigGeosTab.computeVertexNormals();
-	if(this.curElmt < this.datasContent["elements"].length) {
-		Oev.Tile.ProcessQueue.addWaiting(this);
-	}
-	OEV.MUST_RENDER = true;
+	this.drawDatas();
 }
-
 
 DatasProvider.prototype.drawDatas = function() {
 	this.onStage = this.tile.onStage;
@@ -143,7 +103,8 @@ DatasProvider.prototype.drawDatas = function() {
 					bigGeosTab.merge(importMeshe.geometry, importMeshe.matrix);
 				}
 				if (this.name == 'TREE') {
-					Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele);
+					var treeTags = this.datasContent["elements"][t].tags || {};
+					Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele, treeTags);
 				}
 			}
 			if (this.name == 'TREE') {
@@ -157,12 +118,10 @@ DatasProvider.prototype.drawDatas = function() {
 				OEV.earth.modelsMesheMat[this.name] = new THREE.MeshBasicMaterial({color: 0xFF0000 })
 			}
 			bigGeosTab.dynamic = false;
-			// bigGeosTab.dynamic = true;
-			this.meshe = new THREE.Mesh(bigGeosTab, OEV.earth.modelsMesheMat[this.name]);
+			// this.meshe = new THREE.Mesh(bigGeosTab, OEV.earth.modelsMesheMat[this.name]);
+			this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(bigGeosTab), OEV.earth.modelsMesheMat[this.name]);
 			this.meshe.receiveShadow = true;
 			this.meshe.castShadow = true;
-			
-			// Oev.Tile.ProcessQueue.addWaiting(this);
 		}
 		if (this.onStage) {
 			for (var i = 0; i < this.wayPoints.length; i ++) {
