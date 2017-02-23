@@ -16,21 +16,43 @@
 <script id="vertex" type="text/x-glsl-vert">
 varying vec2 vUv;
 attribute vec2 offset;
-varying float test;
+varying float angleToCam;
 void main() {
 	vUv = uv;
-	test = offset.x * 0.02;
-	test = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
+	angleToCam = offset.x * 0.02;
+	angleToCam = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
 	gl_Position = projectionMatrix * (modelViewMatrix * vec4(offset.x, 0.0, offset.y, 1.0) + vec4(position.xy, 0, 0));
 
 }
 </script>
 <script id="fragment" type="text/x-glsl-frag">
-varying float test;
+varying float angleToCam;
 varying vec2 vUv;
 uniform sampler2D texture;
 void main() {
 	//gl_FragColor = texture2D(texture, vUv);
+	
+	float pi = 3.1415926535897932384626433832795;
+	float tilesNbW = 16.0;
+	float tilesNbH = 2.0;
+	float tilePrctH = 1.0 / tilesNbW;
+	float tilePrctV = 1.0 / tilesNbH;
+	vec2 uvOffset = vec2(0.0, 0.0);
+	float normalizedAngleToCam = (angleToCam + pi) / (pi * 2.0);
+	float tileIndexX = floor((normalizedAngleToCam / tilePrctH) + 0.5) * tilePrctH; // = round(normalizedAngleToCam / tilePrctH) * tilePrctH
+	
+	
+	float tileIndexY = floor((tileIndexX / tilePrctH) / 8.0);
+	tileIndexY = tileIndexY / tilesNbH;
+	
+	uvOffset.x = (vUv.x * tilePrctH) + tileIndexX * tilesNbH;
+	uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
+	uvOffset.x = mod(uvOffset.x, 1.0);
+	gl_FragColor = texture2D(texture, uvOffset);
+	
+	
+	/*
+	// OK
 	float pi = 3.1415926535897932384626433832795;
 	float tilesNb = 16.0;
 	float tileW = 1.0 / tilesNb;
@@ -40,6 +62,7 @@ void main() {
 	uvOffset.x = (vUv.x * tileW) + uvX;
 	uvOffset.y = vUv.y;
 	gl_FragColor = texture2D(texture, uvOffset);
+	*/
 }
 </script>
 		
@@ -101,8 +124,8 @@ void main() {
 	var geometry = new THREE.PlaneGeometry( 10, 10, 1 );
 	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, map: textureDyn, side: THREE.DoubleSide} );
 	var plane = new THREE.Mesh( geometry, material );
-	plane.position.y = 5;
-	scene.add( plane );
+	plane.position.y = 10;
+	<!-- scene.add( plane ); -->
 	
 	
 
@@ -130,6 +153,7 @@ void main() {
 	//geometry.addAttribute( 'offset', offsets );
 	geometry.addAttribute('offset',new THREE.BufferAttribute(offsets,2))
 	var mesh = new THREE.Mesh(geometry, shaderMat);
+	mesh.position.y = 1;
 	scene.add(mesh);
 	
 	function makeFaces(_geometry) {

@@ -7,6 +7,8 @@ var Rtt = (function(){
 	var renderer;
 	var cube;
 	var noze;
+	var hairs;
+	var barPrct;
 	
 	var textureW = 1024;
 	var textureH = 1024;
@@ -22,7 +24,7 @@ var Rtt = (function(){
 			});
 			// console.log(bufferTexture.viewport);
 			camera = new THREE.PerspectiveCamera( 70, textureW/textureH, 1, 1000 );
-			camera.position.y = 2;
+			camera.position.y = 3;
 			camera.position.z = 5;
 			
 			var light = new THREE.PointLight(0xffffff, 1, 100);
@@ -40,17 +42,53 @@ var Rtt = (function(){
 			noze.position.z = 1;
 			cube.add(noze);
 			
+			
+			var material = new THREE.MeshPhongMaterial( { color: 0xff0000});
+			var geometry = new THREE.BoxGeometry( 4, 1, 1 );
+			hairs = new THREE.Mesh(geometry, material);
+			hairs.position.x = 1;
+			cube.add(hairs);
+			
+			
+			var material = new THREE.MeshPhongMaterial( { color: 0xffffff});
+			var geometry = new THREE.BoxGeometry( 50, 0.3, 0.3 );
+			barPrct = new THREE.Mesh(geometry, material);
+			barPrct.position.x = -28;
+			barPrct.position.y = 3;
+			// bufferScene.add(barPrct);
+			
+			
+			
 			camera.lookAt(cube.position);
 			
 			
 			
 			
-			
+			/*
 			api.shader(-3.15);
 			api.shader(-1.5);
 			api.shader(0);
 			api.shader(1.7);
 			api.shader(3.15);
+			*/
+			
+			api.shaderV(0);
+			api.shaderV(2);
+			api.shaderV(4);
+			api.shaderV(8);
+			api.shaderV(10);
+			api.shaderV(12);
+			api.shaderV(14);
+			api.shaderV(16);
+		}, 
+		
+		shaderV : function(_tileX) {
+			var nbH = 16;
+			var nbV = 2;
+			var tileY = Math.floor(_tileX / (nbH / nbV));
+			tileY /= nbV;
+			// console.log('A', _tileX);
+			console.log('B', tileY);
 		}, 
 		
 		shader : function(_test) {
@@ -71,6 +109,7 @@ var Rtt = (function(){
 		
 		crop : function(_x, _y, _w, _h, _col) {
 			// renderer.setClearColor( _col, 0.6 );
+			renderer.setClearColor( _col, 0 );
 			bufferTexture.scissorTest = true;
 			bufferTexture.scissor.x = _x;
 			bufferTexture.scissor.z = _w;
@@ -89,17 +128,17 @@ var Rtt = (function(){
 			
 			
 			var nbTileW = 16;
-			var nbTileH = 1;
+			var nbTileH = 2;
 			var tileW = textureW / nbTileW;
 			var tileH = textureH / nbTileH;
 			var tilesNb = nbTileW * nbTileH;
 			var stepAngle = (Math.PI * 2) / tilesNb;
-			var cols = [0xff0000, 0x00ff00, 0x0000ff, 0xffffff];
+			var cols = [0xffff00, 0xff00ff, 0x0000ff, 0xffffff];
 			for (var j = 0; j < nbTileH; j ++) {
 				for (var i = 0; i < nbTileW; i ++) {
 					cube.rotation.y += stepAngle;
-					// noze.rotation.y -= stepAngle;
-					api.crop(i * tileW, j * tileH, tileW, tileH, cols[i]);
+					barPrct.position.x += 0.2;
+					api.crop(i * tileW, j * tileH, tileW, tileH, cols[j]);
 					renderer.render(bufferScene, camera, bufferTexture, false);
 				}
 			}
