@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Three.js</title>
+		<meta charset="UTF-8">
+		<script type="text/javascript" src="three.js"></script>
+		<script type="text/javascript" src="orbit.js"></script>
+		<script type="text/javascript" src="rtt.js"></script>
+	</head>
+	<body>
+		
+		<div id="main">
+			
+		</div>
+		
+<script id="vertex" type="text/x-glsl-vert">
+varying vec2 vUv;
+attribute vec2 offset;
+varying float test;
+void main() {
+	vUv = uv;
+	test = offset.x * 0.02;
+	test = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
+	gl_Position = projectionMatrix * (modelViewMatrix * vec4(offset.x, 0.0, offset.y, 1.0) + vec4(position.xy, 0, 0));
+
+}
+</script>
+<script id="fragment" type="text/x-glsl-frag">
+varying float test;
+varying vec2 vUv;
+uniform sampler2D texture;
+void main() {
+	//gl_FragColor = texture2D(texture, vUv);
+	float pi = 3.1415926535897932384626433832795;
+	float tilesNb = 16.0;
+	float tileW = 1.0 / tilesNb;
+	vec2 uvOffset = vec2(0.0, 0.0);
+	float tileIndex = (test + pi) / (pi * 2.0);
+	float uvX = floor((tileIndex / tileW) + 0.5) * tileW;
+	uvOffset.x = (vUv.x * tileW) + uvX;
+	uvOffset.y = vUv.y;
+	gl_FragColor = texture2D(texture, uvOffset);
+}
+</script>
+		
+<script>
+	var scene;
+    var renderer = new THREE.WebGLRenderer({
+        antialias: true
+    });
+    renderer.setClearColor(0x606060);
+    document.body.appendChild(renderer.domElement);
+    var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 40000);
+    window.onresize = function () {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    };
+    window.onresize();
+    scene = new THREE.Scene();
+    camera.position.z = 25;
+    camera.position.y = 15;
+    scene.add(camera);
+    var grid = new THREE.GridHelper(100, 10);
+    scene.add(grid);
+    var controls = new THREE.OrbitControls(camera);
+    controls.damping = 0.2;
+	
+	
+	
+	
+	var textureDyn;
+	
+	var canvasTex = document.createElement('canvas');
+	canvasTex.width = '512';
+	canvasTex.height = '128';
+	var ctx = canvasTex.getContext('2d');
+
+	ctx.fillStyle = '0xff0000';
+	ctx.fillRect(0, 0, 512, 128);
+	
+	ctx.fillStyle = '#ff0000';
+	ctx.fillRect(32, 32, 64, 64);
+	ctx.fillStyle = '#00ff00';
+	ctx.fillRect(128 + 32, 32, 64, 64);
+	ctx.fillStyle = '#0000ff';
+	ctx.fillRect(256 + 32, 32, 64, 64);
+	ctx.fillStyle = '#ffffff';
+	ctx.fillRect(256 + 128 + 32, 32, 64, 64);
+	
+	//textureDyn = new THREE.Texture(canvasTex);
+	//textureDyn.needsUpdate = true;
+	
+	Rtt.init(this.renderer);
+	Rtt.render();
+	textureDyn = Rtt.getTexture();
+	textureDyn.wrapS = THREE.RepeatWrapping;
+	textureDyn.wrapT = THREE.RepeatWrapping;
+	
+	
+	var geometry = new THREE.PlaneGeometry( 10, 10, 1 );
+	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, map: textureDyn, side: THREE.DoubleSide} );
+	var plane = new THREE.Mesh( geometry, material );
+	plane.position.y = 5;
+	scene.add( plane );
+	
+	
+
+	var shaderMat = new THREE.ShaderMaterial({  
+	
+		uniforms: {
+			texture: { type:'t', value: textureDyn}
+		},
+	
+		vertexShader: document.getElementById('vertex').textContent,
+		fragmentShader: document.getElementById('fragment').textContent, 
+		side: THREE.DoubleSide,
+		transparent: true, 
+	});
+	
+	
+	var nbBillboards = 500;
+	//var offsets = new THREE.BufferAttribute( new Float32Array( nbBillboards * 6 ), 3);
+	var offsets = new Float32Array( nbBillboards * 12 );
+	var geometry = new THREE.Geometry();
+	for (var i = 0; i < nbBillboards; i ++) {
+		makeFaces(geometry);
+	}
+	geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+	//geometry.addAttribute( 'offset', offsets );
+	geometry.addAttribute('offset',new THREE.BufferAttribute(offsets,2))
+	var mesh = new THREE.Mesh(geometry, shaderMat);
+	scene.add(mesh);
+	
+	function makeFaces(_geometry) {
+		var faceSize = 2;
+		var nbVert = _geometry.vertices.length;
+		var nbFaces = _geometry.faces.length;
+		_geometry.vertices.push(
+			new THREE.Vector3(-1 * faceSize, -1 * faceSize, 0), 
+			new THREE.Vector3(1 * faceSize, -1 * faceSize, 0), 
+			new THREE.Vector3(1 * faceSize, 1 * faceSize, 0), 
+			new THREE.Vector3(1 * faceSize, 1 * faceSize, 0), 
+			new THREE.Vector3(-1 * faceSize, 1 * faceSize, 0), 
+			new THREE.Vector3(-1 * faceSize, -1 * faceSize, 0)
+		);
+		_geometry.faces.push(new THREE.Face3(
+			nbVert + 0, 
+			nbVert + 1, 
+			nbVert + 2
+		));
+		_geometry.faces.push(new THREE.Face3(
+			nbVert + 3, 
+			nbVert + 4, 
+			nbVert + 5
+		));
+		
+		_geometry.faceVertexUvs[0].push([
+			new THREE.Vector2(0, 0), 
+			new THREE.Vector2(1, 0), 
+			new THREE.Vector2(1, 1)
+		]);
+		_geometry.faceVertexUvs[0].push([
+			new THREE.Vector2(1, 1), 
+			new THREE.Vector2(0, 1), 
+			new THREE.Vector2(0, 0)
+		]);
+					
+					
+		var localOffsetX = Math.random() * 100 - 50;
+		var localOffsetY = Math.random() * 100 - 50;
+		nbVert *= 2;
+		offsets[nbVert] = localOffsetX;
+		offsets[nbVert + 1] = localOffsetY;
+		offsets[nbVert + 2] = localOffsetX;
+		offsets[nbVert + 3] = localOffsetY;
+		offsets[nbVert + 4] = localOffsetX;
+		offsets[nbVert + 5] = localOffsetY;
+		offsets[nbVert + 6] = localOffsetX;
+		offsets[nbVert + 7] = localOffsetY;
+		offsets[nbVert + 8] = localOffsetX;
+		offsets[nbVert + 9] = localOffsetY;
+		offsets[nbVert + 10] = localOffsetX;
+		offsets[nbVert + 11] = localOffsetY;
+	}
+	
+    function animate() {
+        controls.update();
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate, renderer.domElement);
+    }
+
+    animate();
+		</script>
+		
+	</body>
+</html>
