@@ -10,8 +10,8 @@ var Rtt = (function(){
 	var hairs;
 	var barPrct;
 	
-	var textureW = 1024;
-	var textureH = 1024;
+	var textureW = 2048;
+	var textureH = 2048;
 	
 	var api = {
 		init : function(_renderer) {
@@ -28,8 +28,10 @@ var Rtt = (function(){
 			camera.position.z = 5;
 			
 			var light = new THREE.PointLight(0xffffff, 1, 100);
-			light.position.set( 3, 5, 30 );
+			light.position.set( 3, 10, 10 );
 			bufferScene.add(light);
+			var lightAmbiant = new THREE.AmbientLight(0x303030);
+			bufferScene.add(lightAmbiant);
 			
 			var material = new THREE.MeshPhongMaterial( { color: 0x00ff00});
 			var geometry = new THREE.BoxGeometry( 3, 3, 3 );
@@ -56,30 +58,8 @@ var Rtt = (function(){
 			barPrct.position.x = -28;
 			barPrct.position.y = 3;
 			// bufferScene.add(barPrct);
-			
-			
-			
+
 			camera.lookAt(cube.position);
-			
-			
-			
-			
-			/*
-			api.shader(-3.15);
-			api.shader(-1.5);
-			api.shader(0);
-			api.shader(1.7);
-			api.shader(3.15);
-			*/
-			
-			api.shaderV(0);
-			api.shaderV(2);
-			api.shaderV(4);
-			api.shaderV(8);
-			api.shaderV(10);
-			api.shaderV(12);
-			api.shaderV(14);
-			api.shaderV(16);
 		}, 
 		
 		shaderV : function(_tileX) {
@@ -87,7 +67,6 @@ var Rtt = (function(){
 			var nbV = 2;
 			var tileY = Math.floor(_tileX / (nbH / nbV));
 			tileY /= nbV;
-			// console.log('A', _tileX);
 			console.log('B', tileY);
 		}, 
 		
@@ -101,14 +80,11 @@ var Rtt = (function(){
 			console.log('A', tileIndex);
 			console.log('B', Math.round(tileIndex / tileW) * tileW);
 			console.log('C', Math.floor((tileIndex / tileW) + 0.5) * tileW);
-			// console.log('C', (1 / tileIndex));
 			console.log('');
-			// tileIndex = (tileIndex * 100.0 % tilesNb) / 100.0;
-			// console.log('tileIndex', tileIndex);
 		}, 
 		
-		crop : function(_x, _y, _w, _h, _col) {
-			// renderer.setClearColor( _col, 0.6 );
+		crop : function(_x, _y, _w, _h, _col, _alpha) {
+			// renderer.setClearColor( _col, _alpha );
 			renderer.setClearColor( _col, 0 );
 			bufferTexture.scissorTest = true;
 			bufferTexture.scissor.x = _x;
@@ -127,18 +103,31 @@ var Rtt = (function(){
 			//renderer.autoClear = false;
 			
 			
-			var nbTileW = 16;
-			var nbTileH = 2;
+			var nbTileW = 32;
+			var nbTileH = 32;
 			var tileW = textureW / nbTileW;
 			var tileH = textureH / nbTileH;
 			var tilesNb = nbTileW * nbTileH;
-			var stepAngle = (Math.PI * 2) / tilesNb;
+			var stepAngle = (Math.PI * 2) / nbTileW;
+			var stepAngleV = (Math.PI / 2) / nbTileH;
+			var curAngle = 0;
 			var cols = [0xffff00, 0xff00ff, 0x0000ff, 0xffffff];
+			var alphas = [0.4, 0.6, 0.8, 1];
+			
+			
+			var distH = 5;
+			
 			for (var j = 0; j < nbTileH; j ++) {
+				curAngle = 0;
+				distH = Math.cos(stepAngleV * j) * 5;
+				// console.log('distH', distH);
+				camera.position.y = Math.sin(stepAngleV * j) * 5;
 				for (var i = 0; i < nbTileW; i ++) {
-					cube.rotation.y += stepAngle;
-					barPrct.position.x += 0.2;
-					api.crop(i * tileW, j * tileH, tileW, tileH, cols[j]);
+					camera.position.x = Math.cos(curAngle) * distH;
+					camera.position.z = Math.sin(curAngle) * distH;
+					camera.lookAt(cube.position);
+					curAngle += stepAngle;
+					api.crop(i * tileW, j * tileH, tileW, tileH, cols[j], alphas[i]);
 					renderer.render(bufferScene, camera, bufferTexture, false);
 				}
 			}

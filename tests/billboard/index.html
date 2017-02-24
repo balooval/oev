@@ -17,24 +17,36 @@
 varying vec2 vUv;
 attribute vec2 offset;
 varying float angleToCam;
+varying float angleToCamH;
 void main() {
 	vUv = uv;
-	angleToCam = offset.x * 0.02;
+	
+	vec3 fullOffset = vec3(offset.x, 0.0, offset.y);
+	float distToCamHor = length(cameraPosition-fullOffset);
+	float distToCamVert = abs(cameraPosition.y);
+	angleToCamH = atan(distToCamVert, distToCamHor);
+	
 	angleToCam = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
 	gl_Position = projectionMatrix * (modelViewMatrix * vec4(offset.x, 0.0, offset.y, 1.0) + vec4(position.xy, 0, 0));
+	
+	/*
+	// OK
+	vUv = uv;
+	angleToCam = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
+	gl_Position = projectionMatrix * (modelViewMatrix * vec4(offset.x, 0.0, offset.y, 1.0) + vec4(position.xy, 0, 0));
+	*/
 
 }
 </script>
 <script id="fragment" type="text/x-glsl-frag">
 varying float angleToCam;
+varying float angleToCamH;
 varying vec2 vUv;
 uniform sampler2D texture;
 void main() {
-	//gl_FragColor = texture2D(texture, vUv);
-	
 	float pi = 3.1415926535897932384626433832795;
-	float tilesNbW = 16.0;
-	float tilesNbH = 2.0;
+	float tilesNbW = 32.0;
+	float tilesNbH = 32.0;
 	float tilePrctH = 1.0 / tilesNbW;
 	float tilePrctV = 1.0 / tilesNbH;
 	vec2 uvOffset = vec2(0.0, 0.0);
@@ -42,25 +54,36 @@ void main() {
 	float tileIndexX = floor((normalizedAngleToCam / tilePrctH) + 0.5) * tilePrctH; // = round(normalizedAngleToCam / tilePrctH) * tilePrctH
 	
 	
-	float tileIndexY = floor((tileIndexX / tilePrctH) / 8.0);
+	float normalizedAngleToCamVert = (angleToCamH + pi) / (pi * 2.0);
+	
+	float tileIndexY = floor((angleToCamH / tilePrctV) + 0.5) * tilePrctV;
+	//tileIndexY = tileIndexY / tilesNbH;
+	
+	uvOffset.x = (vUv.x * tilePrctH) + tileIndexX;
+	uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
+	//uvOffset.y = (vUv.y * tilePrctV) + angleToCamH;
+	uvOffset.x = mod(uvOffset.x, 1.0);
+	gl_FragColor = texture2D(texture, uvOffset);
+	
+	//gl_FragColor = texture2D(texture, vUv);
+	/*
+	// OK
+	float pi = 3.1415926535897932384626433832795;
+	float tilesNbW = 16.0;
+	float tilesNbH = 4.0;
+	float tilePrctH = 1.0 / tilesNbW;
+	float tilePrctV = 1.0 / tilesNbH;
+	vec2 uvOffset = vec2(0.0, 0.0);
+	float normalizedAngleToCam = (angleToCam + pi) / (pi * 2.0);
+	float tileIndexX = floor((normalizedAngleToCam / tilePrctH) + 0.5) * tilePrctH; // = round(normalizedAngleToCam / tilePrctH) * tilePrctH
+	
+	
+	float tileIndexY = floor((tileIndexX / tilePrctH) / (tilesNbW / tilesNbH));
 	tileIndexY = tileIndexY / tilesNbH;
 	
 	uvOffset.x = (vUv.x * tilePrctH) + tileIndexX * tilesNbH;
 	uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
 	uvOffset.x = mod(uvOffset.x, 1.0);
-	gl_FragColor = texture2D(texture, uvOffset);
-	
-	
-	/*
-	// OK
-	float pi = 3.1415926535897932384626433832795;
-	float tilesNb = 16.0;
-	float tileW = 1.0 / tilesNb;
-	vec2 uvOffset = vec2(0.0, 0.0);
-	float tileIndex = (test + pi) / (pi * 2.0);
-	float uvX = floor((tileIndex / tileW) + 0.5) * tileW;
-	uvOffset.x = (vUv.x * tileW) + uvX;
-	uvOffset.y = vUv.y;
 	gl_FragColor = texture2D(texture, uvOffset);
 	*/
 }
@@ -124,8 +147,8 @@ void main() {
 	var geometry = new THREE.PlaneGeometry( 10, 10, 1 );
 	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, map: textureDyn, side: THREE.DoubleSide} );
 	var plane = new THREE.Mesh( geometry, material );
-	plane.position.y = 10;
-	<!-- scene.add( plane ); -->
+	plane.position.y = 5;
+	scene.add( plane );
 	
 	
 
@@ -139,17 +162,24 @@ void main() {
 		fragmentShader: document.getElementById('fragment').textContent, 
 		side: THREE.DoubleSide,
 		transparent: true, 
+		alphaTest: 0.9,
 	});
 	
 	
-	var nbBillboards = 500;
+	var nbBillboards = 1000;
 	//var offsets = new THREE.BufferAttribute( new Float32Array( nbBillboards * 6 ), 3);
 	var offsets = new Float32Array( nbBillboards * 12 );
 	var geometry = new THREE.Geometry();
+	var bbox = new THREE.Box3();
+	bbox.min.y = -10;
+	bbox.max.y = 10;
 	for (var i = 0; i < nbBillboards; i ++) {
 		makeFaces(geometry);
 	}
+	console.log('bbox', bbox);
 	geometry = new THREE.BufferGeometry().fromGeometry(geometry);
+	geometry.boundingBox = bbox;
+	console.log('geometry.boundingBox', geometry.boundingBox);
 	//geometry.addAttribute( 'offset', offsets );
 	geometry.addAttribute('offset',new THREE.BufferAttribute(offsets,2))
 	var mesh = new THREE.Mesh(geometry, shaderMat);
@@ -160,13 +190,18 @@ void main() {
 		var faceSize = 2;
 		var nbVert = _geometry.vertices.length;
 		var nbFaces = _geometry.faces.length;
+		var localOffsetX = 0;
+		var localOffsetY = 0;
+		
+		//localOffsetX = Math.random() * 100 - 50;
+		//localOffsetY = Math.random() * 100 - 50;
 		_geometry.vertices.push(
-			new THREE.Vector3(-1 * faceSize, -1 * faceSize, 0), 
-			new THREE.Vector3(1 * faceSize, -1 * faceSize, 0), 
-			new THREE.Vector3(1 * faceSize, 1 * faceSize, 0), 
-			new THREE.Vector3(1 * faceSize, 1 * faceSize, 0), 
-			new THREE.Vector3(-1 * faceSize, 1 * faceSize, 0), 
-			new THREE.Vector3(-1 * faceSize, -1 * faceSize, 0)
+			new THREE.Vector3(-1 * faceSize + localOffsetX, -1 * faceSize, 0 + localOffsetY), 
+			new THREE.Vector3(1 * faceSize + localOffsetX, -1 * faceSize, 0 + localOffsetY), 
+			new THREE.Vector3(1 * faceSize + localOffsetX, 1 * faceSize, 0 + localOffsetY), 
+			new THREE.Vector3(1 * faceSize + localOffsetX, 1 * faceSize, 0 + localOffsetY), 
+			new THREE.Vector3(-1 * faceSize + localOffsetX, 1 * faceSize, 0 + localOffsetY), 
+			new THREE.Vector3(-1 * faceSize + localOffsetX, -1 * faceSize, 0 + localOffsetY)
 		);
 		_geometry.faces.push(new THREE.Face3(
 			nbVert + 0, 
@@ -189,10 +224,9 @@ void main() {
 			new THREE.Vector2(0, 1), 
 			new THREE.Vector2(0, 0)
 		]);
-					
-					
-		var localOffsetX = Math.random() * 100 - 50;
-		var localOffsetY = Math.random() * 100 - 50;
+		
+		localOffsetX = Math.random() * 100 - 50;
+		localOffsetY = Math.random() * 100 - 50;
 		nbVert *= 2;
 		offsets[nbVert] = localOffsetX;
 		offsets[nbVert + 1] = localOffsetY;
@@ -206,6 +240,12 @@ void main() {
 		offsets[nbVert + 9] = localOffsetY;
 		offsets[nbVert + 10] = localOffsetX;
 		offsets[nbVert + 11] = localOffsetY;
+		
+		bbox.min.x = Math.min(localOffsetX, bbox.min.x);
+		bbox.min.z = Math.min(localOffsetY, bbox.min.z);
+		bbox.max.x = Math.max(localOffsetX, bbox.max.x);
+		bbox.max.z = Math.max(localOffsetY, bbox.max.z);
+		
 	}
 	
     function animate() {
