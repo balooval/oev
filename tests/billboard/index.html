@@ -63,7 +63,13 @@ void main() {
 	uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
 	//uvOffset.y = (vUv.y * tilePrctV) + angleToCamH;
 	uvOffset.x = mod(uvOffset.x, 1.0);
-	gl_FragColor = texture2D(texture, uvOffset);
+	//gl_FragColor = texture2D(texture, uvOffset);
+	vec4 col = texture2D(texture, uvOffset);
+	
+	if (col.a < 0.5)
+      discard; 
+	
+	gl_FragColor = col;
 	
 	//gl_FragColor = texture2D(texture, vUv);
 	/*
