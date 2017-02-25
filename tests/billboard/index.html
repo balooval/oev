@@ -1,40 +1,20 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Three.js</title>
+		<title>Billboard</title>
 		<meta charset="UTF-8">
 		<script type="text/javascript" src="three.js"></script>
 		<script type="text/javascript" src="orbit.js"></script>
+		<script type="text/javascript" src="main.js"></script>
 		<script type="text/javascript" src="rtt.js"></script>
 		<script type="text/javascript" src="billboardBuffer.js"></script>
 		<script type="text/javascript" src="billboard.js"></script>
 	</head>
 	<body>
 		
-		<div id="main">
-			
-		</div>
-		
-<script id="vertex" type="text/x-glsl-vert">
-	varying vec2 vUv;
-	attribute vec2 offset;
-	varying float angleToCam;
-	varying float angleToCamH;
-	void main() {
-		float pi = 3.1415926535897932384626433832795;
-		vUv = uv;
-		vec3 fullOffset = vec3(offset.x, 0.0, offset.y);
-		float distToCamHor = length(cameraPosition-fullOffset);
-		float distToCamVert = abs(cameraPosition.y);
-		angleToCamH = atan(distToCamVert, distToCamHor);
-		angleToCam = atan(cameraPosition.z - offset.y, cameraPosition.x - offset.x);
-		angleToCam = (angleToCam + pi) / (pi * 2.0); // normalise
-		gl_Position = projectionMatrix * (modelViewMatrix * vec4(offset.x, 0.0, offset.y, 1.0) + vec4(position.xy, 0, 0));
-	}
-</script>
 <script id="fragment" type="text/x-glsl-frag">
-	varying float angleToCam;
 	varying float angleToCamH;
+	varying float angleToCamV;
 	varying vec2 vUv;
 	uniform sampler2D texture;
 	uniform float tilesNbW;
@@ -43,8 +23,8 @@
 	uniform float tilePrctV;
 	void main() {
 		vec2 uvOffset = vec2(0.0, 0.0);
-		float tileIndexX = floor((angleToCam / tilePrctH) + 0.5) * tilePrctH;
-		float tileIndexY = floor((angleToCamH / tilePrctV) + 0.5) * tilePrctV;
+		float tileIndexX = floor((angleToCamH / tilePrctH) + 0.5) * tilePrctH;
+		float tileIndexY = floor((angleToCamV / tilePrctV) + 0.5) * tilePrctV;
 		uvOffset.x = (vUv.x * tilePrctH) + tileIndexX;
 		uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
 		uvOffset.x = mod(uvOffset.x, 1.0);
@@ -56,162 +36,159 @@
 	}
 </script>
 
-
-
-
-
 <script id="vertexTest" type="text/x-glsl-frag">
 attribute vec3 offset;
 attribute vec3 offsetVertice;
 varying float colDebugR;
 varying float colDebugG;
 varying float colDebugB;
+varying float angleToCamH;
+varying float angleToCamV;
+varying vec2 vUv;
+uniform float meshPosX;
+uniform float meshPosZ;
 void main() {
-	// standard
-	float standard = 0.0;
-	if (standard == 1.0) {
-		gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-	} else {
-		mat4 modelView = modelViewMatrix;
-		//mat4 modelView = viewMatrix * modelViewMatrix;
+	float pi = 3.1415926535897932384626433832795;
+	vUv = uv;
+	vec3 fullPos = vec3(offset);
+	fullPos.x += meshPosX * 2.0;
+	fullPos.z += meshPosZ * 2.0;
+	angleToCamV = 0.0;
+	
+	
+	vec3 camLittle = vec3(cameraPosition);
+	camLittle.x *= 2.0;
+	camLittle.y *= 0.5;
+	camLittle.z *= 2.0;
+	float distToCamHor = length(camLittle-fullPos);
+	float distToCamVert = abs(camLittle.y);
+	angleToCamV = atan(distToCamVert, distToCamHor);
+	angleToCamH = atan((cameraPosition.z * 2.0) - fullPos.z, (cameraPosition.x * 2.0) - fullPos.x);
+	angleToCamH = (angleToCamH + pi) / (pi * 2.0); // normalise
+	
+	colDebugR = angleToCamV;
+	colDebugG = angleToCamV;
+	colDebugB = angleToCamV;
+	
 
-		
-		if (1 == 1){
-		// First colunm.
-			modelView[0][0] = 1.0; 
-			modelView[0][1] = 0.0; 
-			modelView[0][2] = 0.0;
-		}
-		if (1 == 1){
-			// Second colunm.
-			modelView[1][0] = 0.0; 
-			modelView[1][1] = 1.0; 
-			modelView[1][2] = 0.0; 
-		}
-		if (1 == 1){
-		// Thrid colunm.
-			modelView[2][0] = 0.0; 
-			modelView[2][1] = 0.0; 
-			modelView[2][2] = 1.0; 
-		}
-		
-
-		//gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-		//gl_Position = projectionMatrix * modelView * vec4(position - offset, 1.0);
-		//gl_Position = projectionMatrix * modelViewMatrix * vec4(position-offsetVertice, 1.0) * modelView * vec4(offset, 1.0);
-		
-		vec4 tmp = vec4(offset, 1.0);
-		colDebugR = (offsetVertice.x + 3.0) / 6.0;
-		colDebugG = (offsetVertice.y + 3.0) / 6.0;
-		colDebugB = (offsetVertice.z + 3.0) / 6.0;
-		
-		gl_Position = (projectionMatrix * modelViewMatrix * tmp) + (projectionMatrix * modelView * vec4(offsetVertice, 1.0));
+	mat4 modelView = modelViewMatrix;
+	if (1 == 1){
+	// First colunm.
+		modelView[0][0] = 1.0; 
+		modelView[0][1] = 0.0; 
+		modelView[0][2] = 0.0;
 	}
+	if (1 == 1){
+		// Second colunm.
+		modelView[1][0] = 0.0; 
+		modelView[1][1] = 1.0; 
+		modelView[1][2] = 0.0; 
+	}
+	if (1 == 1){
+	// Thrid colunm.
+		modelView[2][0] = 0.0; 
+		modelView[2][1] = 0.0; 
+		modelView[2][2] = 1.0; 
+	}
+	vec4 tmp = vec4(offset, 1.0);
+	/*
+	colDebugR = (offsetVertice.x + 3.0) / 6.0;
+	colDebugG = (offsetVertice.y + 3.0) / 6.0;
+	colDebugB = (offsetVertice.z + 3.0) / 6.0;
+	*/
+	
+	gl_Position = (projectionMatrix * modelViewMatrix * tmp) + (projectionMatrix * modelView * vec4(offsetVertice, 1.0));
 }
 </script>
-<script id="fragmentTest" type="text/x-glsl-frag">
+<script id="fragmentDebug" type="text/x-glsl-frag">
 	varying float colDebugR;
 	varying float colDebugG;
 	varying float colDebugB;
+	varying vec2 vUv;
+	uniform sampler2D texture;
 	void main() {
-		vec4 col = vec4(colDebugR, colDebugG, colDebugB, 1.0);
-		gl_FragColor = col;
+		//gl_FragColor = texture2D(texture, vUv);
+		gl_FragColor = vec4(colDebugR, colDebugG, colDebugB, 1.0);
 	}
 </script>
 
 
 
+<script id="fragmentBlend" type="text/x-glsl-frag">
+	varying float angleToCamH;
+	varying float angleToCamV;
+	varying vec2 vUv;
+	uniform sampler2D texture;
+	uniform float tilesNbW;
+	uniform float tilesNbH;
+	uniform float tilePrctH;
+	uniform float tilePrctV;
+	void main() {
+		float colDebugR = 1.0;
+		float colDebugG = 1.0;
+		float colDebugB = 1.0;
+		vec2 uvOffset = vec2(0.0, 0.0);
+		float tileIndexX = floor((angleToCamH / tilePrctH) + 0.5) * tilePrctH; // 0 to tilesNbW (4/8/...) by steps (int)
+		float tileIndexY = floor((angleToCamV / tilePrctV) + 0.5) * tilePrctV;
+		uvOffset.x = (vUv.x * tilePrctH) + tileIndexX;
+		uvOffset.y = (vUv.y * tilePrctV) + tileIndexY;
+		uvOffset.x = mod(uvOffset.x, 1.0);
+		vec4 col = texture2D(texture, uvOffset);
+		
+		
+		//gl_FragColor = col;
+		
+		/*
+		vec2 uvNeighbourg = vec2(uvOffset.x + tilePrctH, uvOffset.y);
+		vec4 colNeighbourg = texture2D(texture, uvNeighbourg);
+		vec4 colFinal = mix(col, colNeighbourg, angleToCamH - tileIndexX);
+		if (colFinal.a < 0.5) {
+			discard; 
+		}
+		gl_FragColor = colFinal;
+		*/
+		
+		vec4 colFinal = col;
+		float stepAngleH = floor((angleToCamH / tilePrctH) + 0.5) * tilePrctH;
+		float prctX = ((angleToCamH + (0.5 / tilesNbW)) - stepAngleH) * tilesNbW;
+		vec2 uvNeighbourg = vec2(0.0, uvOffset.y);
+		if (prctX < 0.25) {
+			colDebugR = 1.0;
+			colDebugG = 0.0;
+			colDebugB = 0.0;
+			uvNeighbourg.x = uvOffset.x - tilePrctH;
+			prctX = abs(prctX - 0.25) * 2.0;
+		} else if (prctX < 0.75) {
+			colDebugR = 0.0;
+			colDebugG = 1.0;
+			colDebugB = 0.0;
+			uvNeighbourg.x = uvOffset.x;
+		} else {
+			colDebugR = 0.0;
+			colDebugG = 0.0;
+			colDebugB = 1.0;
+			uvNeighbourg.x = uvOffset.x + tilePrctH;
+			prctX = (prctX - 0.75) * 2.0;
+		}
+		
+		vec4 colNeighbourg = texture2D(texture, uvNeighbourg);
+		colFinal = mix(col, colNeighbourg, prctX);
+		
+		if (colFinal.a < 0.5) {
+			discard; 
+		}
+		gl_FragColor = colFinal;
+		
+		
+		
+		//gl_FragColor = vec4(prctX, prctX, prctX, 1.0);
+		
+	}
+</script>
+
 <script>
-	var scene;
-    var renderer = new THREE.WebGLRenderer({
-        antialias: true
-    });
-    renderer.setClearColor(0x606060);
-    document.body.appendChild(renderer.domElement);
-    var camera = new THREE.PerspectiveCamera(55, 1, 0.1, 40000);
-    window.onresize = function () {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-    };
-    window.onresize();
-    scene = new THREE.Scene();
-    camera.position.z = 25;
-    camera.position.y = 15;
-    scene.add(camera);
-    var grid = new THREE.GridHelper(100, 10);
-    scene.add(grid);
-    var controls = new THREE.OrbitControls(camera);
-    controls.damping = 0.2;
-	
-	
-	var textureDyn;
-	Rtt.setTilesNb(4, 4);
-	Rtt.setTextureSize(128, 128);
-	Rtt.init(this.renderer);
-	Rtt.render();
-	textureDyn = Rtt.getTexture();
-	textureDyn.wrapS = THREE.RepeatWrapping;
-	textureDyn.wrapT = THREE.RepeatWrapping;
-	
-	/*
-	var geometry = new THREE.PlaneGeometry( 10, 10, 1 );
-	var material = new THREE.MeshBasicMaterial( {color: 0xffffff, map: textureDyn, side: THREE.DoubleSide} );
-	var plane = new THREE.Mesh( geometry, material );
-	plane.position.y = 5;
-	scene.add( plane );
-	*/
-	
-
-	var shaderMat = new THREE.ShaderMaterial({  
-		uniforms: {
-			texture: { type:'t', value: textureDyn}, 
-			tilesNbW : { value: Rtt.tilesX}, 
-			tilesNbH : { value: Rtt.tilesY}, 
-			tilePrctH : { value: 1.0 / Rtt.tilesX}, 
-			tilePrctV : { value: 1.0 / Rtt.tilesY}, 
-		},
-		vertexShader: document.getElementById('vertex').textContent,
-		fragmentShader: document.getElementById('fragment').textContent, 
-		side: THREE.DoubleSide,
-		transparent: true, 
-		alphaTest: 0.9,
-	});
-	
-	var shaderMatTest = new THREE.ShaderMaterial({  
-		uniforms: {
-			
-		},
-		vertexShader: document.getElementById('vertexTest').textContent,
-		fragmentShader: document.getElementById('fragmentTest').textContent, 
-		side: THREE.DoubleSide,
-	});
-	
-	//addBillboardBuffer(100);
-	addBillboard();
-	
-	
-	function addBillboard() {
-		var billGeom = Billboard.buildGeometry();
-		var billMesh = new THREE.Mesh(billGeom, shaderMatTest);
-		billMesh.position.y = 1;
-		scene.add(billMesh);
-	}
-	
-	function addBillboardBuffer(_nb) {
-		var geoBilboardBuffer = BillboardBuffer.generate(_nb);
-		var meshBilboardBuffer = new THREE.Mesh(geoBilboardBuffer, shaderMat);
-		meshBilboardBuffer.position.y = 1;
-		scene.add(meshBilboardBuffer);
-	}
-	
-    function animate() {
-        controls.update();
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate, renderer.domElement);
-    }
-
-    animate();
+	Main.init();
+	Main.start();
 </script>
 		
 	</body>

@@ -3,8 +3,9 @@ var Billboard = (function(){
 	'use strict';
 	
 	var geometry;
-	var nbFaces = 10;
-	var faceSize = 3;
+	var nbFaces = 8000;
+	var faceSizeH = 2;
+	var faceSizeV = 6;
 	var offsets;
 	var offsetsVert;
 	
@@ -30,19 +31,19 @@ var Billboard = (function(){
 				);
 				/*
 				facePos = new THREE.Vector3(
-					0, 
+					-100 + (i * (200 / nbFaces)), 
 					0, 
 					0
 				);
 				*/
 				// 1st face
 				vertPos = new THREE.Vector3(
-					-1 * faceSize, 
-					-1 * faceSize, 
+					-1 * faceSizeH, 
+					0 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = -1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = -1 * faceSize;
+				offsetsVert[curOffsetNb] = -1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 0 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
@@ -54,12 +55,12 @@ var Billboard = (function(){
 				
 				curOffsetNb += 3;
 				vertPos = new THREE.Vector3(
-					1 * faceSize, 
-					-1 * faceSize, 
+					1 * faceSizeH, 
+					0 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = 1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = -1 * faceSize;
+				offsetsVert[curOffsetNb] = 1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 0 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
@@ -69,12 +70,12 @@ var Billboard = (function(){
 				
 				curOffsetNb += 3;
 				vertPos = new THREE.Vector3(
-					1 * faceSize, 
-					1 * faceSize, 
+					1 * faceSizeH, 
+					1 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = 1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = 1 * faceSize;
+				offsetsVert[curOffsetNb] = 1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 1 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
@@ -102,12 +103,12 @@ var Billboard = (function(){
 		
 				// 2nd face
 				vertPos = new THREE.Vector3(
-					1 * faceSize, 
-					1 * faceSize, 
+					1 * faceSizeH, 
+					1 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = 1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = 1 * faceSize;
+				offsetsVert[curOffsetNb] = 1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 1 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
@@ -117,12 +118,12 @@ var Billboard = (function(){
 				
 				curOffsetNb += 3;
 				vertPos = new THREE.Vector3(
-					-1 * faceSize, 
-					1 * faceSize, 
+					-1 * faceSizeH, 
+					1 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = -1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = 1 * faceSize;
+				offsetsVert[curOffsetNb] = -1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 1 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
@@ -132,12 +133,12 @@ var Billboard = (function(){
 				
 				curOffsetNb += 3;
 				vertPos = new THREE.Vector3(
-					-1 * faceSize, 
-					-1 * faceSize, 
+					-1 * faceSizeH, 
+					0 * faceSizeV, 
 					0
 				);
-				offsetsVert[curOffsetNb] = -1 * faceSize;
-				offsetsVert[curOffsetNb + 1] = -1 * faceSize;
+				offsetsVert[curOffsetNb] = -1 * faceSizeH;
+				offsetsVert[curOffsetNb + 1] = 0 * faceSizeV;
 				offsetsVert[curOffsetNb + 2] = 0;
 				vertPos.add(facePos);
 				geometry.vertices.push(vertPos);
