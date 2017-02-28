@@ -281,6 +281,8 @@ CamCtrlGod.prototype.updateCamera = function() {
 		Oev.Sky.globalScale = this.planet.globalScale;
 		Oev.Sky.updateSun();
 	}
+	
+	OEV.earth.isCoordOnGround(this.coordLookat.x, this.coordLookat.y);
 }
 
 

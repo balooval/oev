@@ -55,6 +55,65 @@ var Globe = function () {
 	this.loaderEle = new Oev.DataLoader.Proxy('ELE');
 	this.loaderBuilding = new Oev.DataLoader.Proxy('BUILDINGS');
 	this.loaderNormal = new Oev.DataLoader.Proxy('NORMAL');
+	
+	this.coastDatas = null;
+	this.coastPxlRatio = 2048 / (20037508 * 2);
+	this.loadCoastline();
+}
+
+Globe.prototype.isCoordOnGround = function(_lon, _lat) {
+	if (this.coastDatas === null) {
+		return true;
+	}
+	var mercX = Oev.Geo.mercatorLonToX(_lon);
+	var mercY = Oev.Geo.mercatorLatToY(_lat);
+	var pxlX = Math.round(mercX * this.coastPxlRatio) + 1024;
+	var pxlY = Math.round(mercY * this.coastPxlRatio) + 1024;
+	pxlY = Math.abs(2048 - pxlY);
+	var bufferIndex = index = (pxlX * 2048 + pxlY);
+	console.log('onGround :', this.coastDatas[bufferIndex]);
+}
+
+Globe.prototype.loadCoastline = function() {
+	var _self = this;
+	var imgCoast = new Image();
+	imgCoast.onload = function() {
+		_self.onCoastLineLoaded(this);
+	};
+	imgCoast.src = 'libs/remoteImg.php?coastLine';
+}
+
+Globe.prototype.onCoastLineLoaded = function(_img) {
+	var imgW = 2048;
+	var imgH = 2048;
+	console.warn('onCoastLineLoaded');
+	var canvas = document.createElement('canvas');
+	canvas.width = imgW;
+	canvas.height = imgH;
+	var context = canvas.getContext('2d');
+	context.drawImage(_img, 0, 0, imgW, imgH);
+	var img = context.getImageData(0, 0, imgW, imgH); 
+	var imageData = context.getImageData(0, 0, imgW, imgH);
+	var data = imageData.data;
+	this.coastDatas = new Int8Array(data.length / 4);
+	var x, y;
+	var index;
+	var red;
+	var isGround;
+	var bufferIndex = 0;
+	for (x = 0; x < imgW; ++x) {
+		for (y = 0; y < imgH; ++y) {
+			index = (y * imgW + x) * 4;
+			red = data[index];
+			isGround = 0;
+			if (red > 0) {
+				isGround = 1;
+			}
+			this.coastDatas[bufferIndex] = isGround;
+			bufferIndex ++;
+		}
+	}
+	console.log('Coastline parsed');
 }
 
 Globe.prototype.addMeshe = function(_meshe) {

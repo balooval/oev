@@ -21,7 +21,6 @@ if( isset( $_GET['nocache'] ) ){
 	$NO_CACHE = true;
 }
 
-
 $serversOverpass = array( 
 	'http://www.overpass-api.de/api', 
 	'http://overpass.osm.rambler.ru/cgi', 
@@ -29,12 +28,15 @@ $serversOverpass = array(
 	'http://api.openstreetmap.fr/oapi/interpreter/',
 	'http://api.openstreetmap.fr/oapi/interpreter/'
 );
-			
 
 			
 if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
 	processHgtToImg();
 
+} else if( isset( $_GET['coastLine'] ) ){
+	header('Content-Type: image/png');
+	readfile(dirname( __FILE__ ).'/../../coastline/coastline.png');
+	
 } else if( isset( $_GET['extractRgbAltTile'] ) ){
 	// extractRgbAltTile(131, 143, 8);
 	// extractRgbAltTile(1085, 1020, 11);
@@ -143,8 +145,6 @@ if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
 		$curServer = $serversOverpass[round( rand( 0, count( $serversOverpass ) - 1 ) )];
 		$requete = '(';
 		foreach( $OVERPASS_SURFACES as $model => $params ){
-		
-		
 			if( is_array( $params['QUERY'] ) ){
 				foreach( $params['QUERY'] as $subQuery ){
 					$requete .= 'way'.$coord.''.$subQuery.';';
