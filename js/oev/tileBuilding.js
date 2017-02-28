@@ -279,6 +279,7 @@ Oev.Tile.Building.prototype = {
 					wallFace.color = wallColor;
 					this.geometry.faces.push(wallFace);
 					wallFace = new THREE.Face3(nbVert + 0, nbVert + 3, nbVert + 2);
+					wallFace.color = wallColor;
 					this.geometry.faces.push(wallFace);
 					nbVert += 4;
 				}
