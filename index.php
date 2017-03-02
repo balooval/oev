@@ -8,35 +8,9 @@ include( 'libs/init.php' );
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="js/libs/three.js"></script>
-		<script type="text/javascript" src="js/oev/utils.js"></script>
-		<script type="text/javascript" src="js/oev/tile.js"></script>
-		<script type="text/javascript" src="js/oev/geo.js"></script>
-		<script type="text/javascript" src="js/oev/input.js"></script>
-		<script type="text/javascript" src="js/oev/dataLoader.js"></script>
-		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
-		<script type="text/javascript" src="js/oev/tileSurface.js"></script>
-		<script type="text/javascript" src="js/oev/navigation.js"></script>
-		<script type="text/javascript" src="js/oev/sky.js"></script>
-		<script type="text/javascript" src="js/oev/math.js"></script>
-		<script type="text/javascript" src="js/oev/animation.js"></script>
-		<script type="text/javascript" src="js/oev/modelTree.js"></script>
-		<script type="text/javascript" src="js/oev/geoBuild/geometryBuilder.js"></script>
 		<script type="text/javascript" src="js/OEV.js"></script>
-		<script type="text/javascript" src="js/UI.js"></script>
-		<script type="text/javascript" src="js/CamCtrl.js"></script>
+		<script type="text/javascript" src="js/oev/utils.js"></script>
 		
-		<script type="text/javascript" src="js/Tile3d.js"></script>
-		<script type="text/javascript" src="js/TileSurface.js"></script>
-		<script type="text/javascript" src="js/TileNodes.js"></script>
-		<script type="text/javascript" src="js/Globe.js"></script>
-		<script type="text/javascript" src="js/DatasMng.js"></script>
-		<script type="text/javascript" src="js/DatasProvider.js"></script>
-		<script type="text/javascript" src="js/Earcut.js"></script>
-		<script type="text/javascript" src="js/utils/lineclip.js"></script>
-		<script type="text/javascript" src="js/utils/geojson-area.js"></script>
-		<script type="text/javascript" src="js/plugins/GpxMng.js"></script>
-		<script type="text/javascript" src="js/plugins/PlanesMng.js"></script>
-		<script type="text/javascript" src="js/net/NetCtrl.js"></script>
 		
 		<script type="text/javascript" src="js/postprocessing/EffectComposer.js"></script>
 		<script type="text/javascript" src="js/postprocessing/CopyShader.js"></script>
@@ -65,10 +39,6 @@ include( 'libs/init.php' );
 			<div id="header">OpenEarthView(er)</div>
 			<div id="main">
 				<div id="tools">
-					
-					<canvas id="myCanvas" width="64" height="64"></canvas> 
-				
-				
 					<a href="standby.php">STOP</a>
 					<div id="debugBox"></div>
 					<div class="toolsBox" id="search_box">
@@ -179,19 +149,53 @@ include( 'libs/init.php' );
 	include( 'js/shaders/ocean.php' );
 	include( 'js/shaders/atmosphere.php' );
 	include( 'js/shaders/water.php' );
+	include( 'js/shaders/test.php' );
 ?>
 		<script>
 <?php
 			// echo $cfgJS;
 			echo 'var DEV = "";';
 ?>
-		</script>
-		<script>
-		
 			var vertMixShader = document.getElementById('vertWater').innerHTML;
 			var fragMixShader = document.getElementById('fragWater').innerHTML;
 			
-			var OEV = new OpenEarthViewer( 'threeContainer' );
+			var OEV = new OpenEarthViewer('threeContainer');
+		</script>
+		<script type="text/javascript" src="js/oev/tile.js"></script>
+		<script type="text/javascript" src="js/oev/geo.js"></script>
+		<script type="text/javascript" src="js/oev/input.js"></script>
+		<script type="text/javascript" src="js/oev/dataLoader.js"></script>
+		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
+		<script type="text/javascript" src="js/oev/tileSurface.js"></script>
+		<script type="text/javascript" src="js/oev/navigation.js"></script>
+		<script type="text/javascript" src="js/oev/sky.js"></script>
+		<script type="text/javascript" src="js/oev/math.js"></script>
+		<script type="text/javascript" src="js/oev/animation.js"></script>
+		<script type="text/javascript" src="js/oev/modelTree.js"></script>
+		<script type="text/javascript" src="js/oev/geoBuild/geometryBuilder.js"></script>
+		<script type="text/javascript" src="js/oev/rtt.js"></script>
+		
+		<script type="text/javascript" src="js/oev/tileExtensions/tileExtension.js"></script>
+		<script type="text/javascript" src="js/oev/tileExtensions/tileExtNormal.js"></script>
+		<script type="text/javascript" src="js/oev/tileExtensions/tileExtBuilding.js"></script>
+		<script type="text/javascript" src="js/oev/tileExtensions/tileExtPlanes.js"></script>
+		<script type="text/javascript" src="js/UI.js"></script>
+		<script type="text/javascript" src="js/CamCtrl.js"></script>
+		
+		<script type="text/javascript" src="js/Tile3d.js"></script>
+		<script type="text/javascript" src="js/TileSurface.js"></script>
+		<script type="text/javascript" src="js/TileNodes.js"></script>
+		<script type="text/javascript" src="js/Globe.js"></script>
+		<script type="text/javascript" src="js/DatasMng.js"></script>
+		<script type="text/javascript" src="js/DatasProvider.js"></script>
+		<script type="text/javascript" src="js/Earcut.js"></script>
+		<script type="text/javascript" src="js/utils/lineclip.js"></script>
+		<script type="text/javascript" src="js/utils/geojson-area.js"></script>
+		<script type="text/javascript" src="js/plugins/GpxMng.js"></script>
+		<script type="text/javascript" src="js/plugins/PlanesMng.js"></script>
+		<script type="text/javascript" src="js/net/NetCtrl.js"></script>
+		
+		<script>
 			OEV.init();
 			
 			document.getElementById("cfg_load_ele").checked = true;

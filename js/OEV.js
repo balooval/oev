@@ -8,6 +8,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.containerOffset = undefined;
 	this.tileLoader = new THREE.TextureLoader();
 	this.earth;
+	this.evt = new Oev.Utils.Evt();
 	this.texturesToPreload = [ 'waypoint.png', 'loading.png', 'sky.png', 'building_wall_5.png', 'checker_alpha.png' ];
 	this.texturesToPreload.push( 'roof.png' );
 	this.texturesToPreload.push( 'sun2.png' );
@@ -28,6 +29,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesToPreload.push( 'waternormals.png' );
 	this.texturesToPreload.push( 'normal_cloud.png' );
 	this.texturesToPreload.push( 'tree_procedural.png' );
+	this.texturesToPreload.push( 'impostor.png' );
 	this.texturesNames = [ 'waypoint', 'checker', 'sky', 'building_wall', 'checker_alpha' ];
 	this.texturesNames.push( 'roof' );
 	this.texturesNames.push( 'sun' );
@@ -48,6 +50,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.texturesNames.push( 'waternormals' );
 	this.texturesNames.push( 'normal_foliage' );
 	this.texturesNames.push( 'tree_procedural' );
+	this.texturesNames.push( 'impostor' );
 	this.textures = {};
 	this.curTextureLoading = -1;
 	this.modelsToLoad = [ 'tree_lod_1.json', 'tree_lod_1.json', 'tree_lod_0.json', 'hydrant_lod_0.json', 'hydrant_lod_1.json', 'hydrant_lod_1.json' ];
@@ -90,7 +93,8 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.raycaster = undefined;
 	this.clock = null;
 	this.preloadQuery = [];
-	this.camCtrl = new CamCtrlGod();
+	// this.camCtrl = new CamCtrlGod();
+	this.camCtrl = null;
 	this.userMat = undefined;
 	this.waypoints = [];
 	this.plugins = [];
@@ -113,6 +117,7 @@ var OpenEarthViewer = function ( _containerId ) {
 OpenEarthViewer.plugins = {};
 
 OpenEarthViewer.prototype.init = function() {
+	
 	this.clock = new THREE.Clock();
 	document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
 	var intElemClientWidth = document.getElementById( this.htmlContainer ).clientWidth;
@@ -156,25 +161,12 @@ OpenEarthViewer.prototype.init = function() {
 		this.netCtrl = new NetCtrl();
 		this.netCtrl.init( this );
 	}
-	
-/*
-	var tmp = new Oev.DataLoader.Elevation();
-	tmp.load({
-		z : 14, 
-		x : 8365, 
-		y : 5971
-	});
-*/
-}
-
-function toto(_datas){
-	console.log('toto', _datas);
+	this.camCtrl = new CamCtrlGod();
 }
 
 OpenEarthViewer.prototype.initShadow = function() {
 	this.renderer.shadowMap.enabled = true;
 	this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
-	// this.renderer.shadowMap.type = THREE.BasicShadowMap; // default THREE.PCFShadowMap
 }
 
 OpenEarthViewer.prototype.initPlugins = function() {
@@ -205,6 +197,19 @@ OpenEarthViewer.prototype.switchDof = function() {
 }
 
 OpenEarthViewer.prototype.start = function() {
+	this.matImpostor = new THREE.ShaderMaterial({  
+		uniforms: {
+			texture: { type: 't', value: OEV.textures["impostor"] }, 
+			time: { type: "f", value: 1.0 },
+		},
+		// attributes: attributes,
+		vertexShader: document.getElementById('vertImpostor').textContent,
+		fragmentShader: document.getElementById('fragImpostor').textContent, 
+		side: THREE.DoubleSide,
+		transparent: false, 
+	});
+	
+	
 	initUi();
 	Oev.Input.Mouse.init();
 	this.fountainPartMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: ( ( this.earth.meter ) * 10 ), map: this.textures['particleWater'] });
@@ -239,6 +244,8 @@ OpenEarthViewer.prototype.start = function() {
 			
 		}
 	}
+	
+	this.evt.fireEvent('APP_START');
 }
 
 OpenEarthViewer.prototype.loadConfig = function() {
@@ -378,6 +385,9 @@ OpenEarthViewer.prototype.render = function() {
 	for( var u = 0; u < this.objToUpdate.length; u ++ ){
 		this.objToUpdate[u].update();
 	}
+	
+	// this.matImpostor.uniforms.time.value ++;
+	this.matImpostor.uniforms.time.value = Math.abs(this.camCtrl.camRotation.x);
 }
 
 OpenEarthViewer.prototype.gotoWaypoint = function( _wp ) {

@@ -6,8 +6,9 @@ Oev.DataLoader.Proxy = function(_type) {
 	var simulByType = {
 		TILE2D : 4, 
 		ELE : 4, 
-		BUILDINGS : 4, 
+		BUILDINGS : 2, 
 		NORMAL : 1, 
+		PLANE : 1, 
 	};
 	this._simulLoad = simulByType[this._type];
 	this._datasLoaded = {};
@@ -46,13 +47,15 @@ Oev.DataLoader.Proxy.prototype = {
 				loader = new Oev.DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			} else if (this._type == 'NORMAL') {
 				loader = new Oev.DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'PLANE') {
+				loader = new Oev.DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			}
 			this._loaders.push(loader);
 		}
 	}, 
 	
 	onDataLoaded : function(_data, _params) {
-		if (this._type == 'NORMAL') {
+		if (this._type == 'OPLANE') {
 			var date = new Date();
 			console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
 		}
@@ -368,6 +371,34 @@ Oev.DataLoader.Building.prototype = {
 	
 	onDataLoadSuccess : function(_data) {
 		this.myWorker.postMessage({"json" : _data, "bbox" : this.params.bbox});
+	}, 
+}
+
+
+
+
+Oev.DataLoader.Planes = function(_callback) {
+	this.isLoading = false;
+	this.callback = _callback;
+	this.params = {};
+	this.ajax = new Oev.DataLoader.Ajax();
+}
+
+Oev.DataLoader.Planes.prototype = {
+	load : function(_params) {
+		this.params = _params;
+		this.isLoading = true;
+		var loader = this;
+		this.ajax.load('libs/remoteImg.php?planes', 
+			function(_datas){
+				loader.onDataLoadSuccess(JSON.parse(_datas));
+			}
+		);
+	}, 
+	
+	onDataLoadSuccess : function(_datas) {
+		this.isLoading = false;
+		this.callback(_datas.states, this.params);
 	}, 
 }
 

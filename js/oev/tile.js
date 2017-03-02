@@ -7,6 +7,8 @@ Oev.Tile = (function(){
 	};
 		
 	api.Basic = function ( _globe, _tileX, _tileY, _zoom ) {
+		this.evt = new Oev.Utils.Evt();
+		this.meshInstance = null;
 		this.onStage = true;
 		this.globe = _globe;
 		this.parentTile = undefined;
@@ -18,7 +20,6 @@ Oev.Tile = (function(){
 		this.childsZoom = _zoom;
 		this.childTiles = [];
 		this.textureLoaded = false;
-		this.normalLoaded = false;
 		this.eleLoaded = false;
 		this.tileLoader = new THREE.TextureLoader();
 		this.remoteTex = undefined;
@@ -61,11 +62,11 @@ Oev.Tile = (function(){
 		this.distToCam = -1;
 		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
-		// this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, map: OEV.textures["checker"], shininess:10, normalMap : OEV.textures['normal_test']});
-		// this.material = Oev.Cache.getMaterial('MeshPhongMaterial');
 		this.customEle = false;
-		
-		this.elevationBuffer = new Uint16Array((32 * 32) / 4);;
+		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
+		for (var i = 0;i < this.globe.tileExtensions.length; i ++) {
+			this.globe.tileExtensions[i](this);
+		}
 	}
 
 	api.Basic.prototype = {
@@ -142,16 +143,67 @@ Oev.Tile = (function(){
 			this.mapParentTexture();
 			this.loadImage();
 			this.loadDatas();
+			
+			this.evt.fireEvent('TILE_READY');
 		}, 
 		
-
+		
+		testBillboard : function() {
+			var posCenter = OEV.earth.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
+			var faceWidth = 50;
+		
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push(new THREE.Vector3(
+				posCenter.x - faceWidth, 
+				posCenter.y - 5, 
+				posCenter.z + faceWidth
+			));
+			geometry.vertices.push(new THREE.Vector3(
+				posCenter.x + faceWidth, 
+				posCenter.y - 5, 
+				posCenter.z + faceWidth
+			));
+			geometry.vertices.push(new THREE.Vector3(
+				posCenter.x + faceWidth, 
+				posCenter.y - 5, 
+				posCenter.z - faceWidth
+			));
+			geometry.vertices.push(new THREE.Vector3(
+				posCenter.x - faceWidth, 
+				posCenter.y - 5, 
+				posCenter.z - faceWidth
+			));
+			geometry.faces.push(new THREE.Face3(
+				0, 
+				1, 
+				2
+			));
+			geometry.faces.push(new THREE.Face3(
+				2, 
+				3, 
+				0
+			));
+			geometry.faceVertexUvs[0][0] = [
+				new THREE.Vector2(0, 0), 
+				new THREE.Vector2(1, 0), 
+				new THREE.Vector2(1, 1)
+			];
+			geometry.faceVertexUvs[0][1] = [
+				new THREE.Vector2(1, 1), 
+				new THREE.Vector2(0, 1), 
+				new THREE.Vector2(0, 0)
+			];
+			var mesh = new THREE.Mesh(geometry, OEV.matImpostor);
+			OEV.scene.add(mesh);
+		}, 
+		
 		loadDatas : function() {
 			this.loadElevation();
 			this.loadBuildings();
 			this.loadModels();
 			this.loadLanduse();
 			this.loadNodes();
-			this.loadNormal();
+			this.evt.fireEvent( "LOAD_DATAS" );
 		}, 
 
 
@@ -335,6 +387,12 @@ Oev.Tile = (function(){
 				this.datasProviders[i].drawDatas();
 			}
 			this.loadNodes();
+			
+			if(this.meshInstance) {
+				OEV.scene.add(this.meshInstance);
+			}
+			
+			this.evt.fireEvent('SHOW');
 		}, 
 		
 		hide : function() {
@@ -346,13 +404,6 @@ Oev.Tile = (function(){
 			this.globe.removeMeshe(this.meshe);
 			if (!this.textureLoaded) {
 				this.globe.loaderTile2D.abort({
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY
-				});
-			}
-			if (!this.normalLoaded) {
-				this.globe.loaderNormal.abort({
 					z : this.zoom, 
 					x : this.tileX, 
 					y : this.tileY
@@ -376,6 +427,12 @@ Oev.Tile = (function(){
 				this.surfacesProviders[i].hide(true);
 			}
 			this.nodesProvider.hide(true);
+			
+			if(this.meshInstance) {
+				OEV.scene.remove(this.meshInstance);
+			}
+			
+			this.evt.fireEvent('HIDE');
 		}, 
 
 		clearChildrens : function() {
@@ -479,34 +536,9 @@ Oev.Tile = (function(){
 				}
 			}
 		}, 
-		
-		loadNormal : function() {
-			if (this.normalLoaded || this.zoom < 6 || this.zoom > 11) {
-				return false;
-			}
-			var _self = this;
-			this.globe.loaderNormal.getData(
-				{
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY, 
-					priority : this.distToCam
-				}, 
-				function(_texture) {
-					_self.setNormal(_texture);
-				}
-			);
-		}, 
-		
-		setNormal : function(_normaleMap) {
-			this.normalLoaded = true;
-			this.material.normalMap = _normaleMap;
-			this.material.needsUpdate = true;
-			OEV.MUST_RENDER = true;
-		}, 
-		
 
 		loadBuildings : function() {
+			return false;
 			if( this.globe.loadBuildings ){
 				if (this.onStage && this.zoom >= 15) {
 					if (this.tile3d == undefined) {
@@ -638,6 +670,8 @@ Oev.Tile = (function(){
 			this.eleLoaded = true;
 			this.applyElevationToGeometry();
 			// this.updateVertex();
+			
+			// this.testBillboard();
 		}, 
 		
 		applyElevationToGeometry : function() {
@@ -859,6 +893,10 @@ Oev.Tile = (function(){
 			if( this.mustUpdate ){
 				OEV.removeObjToUpdate( this );
 			}
+			if (this.meshInstance) {
+				this.meshInstance.geometry.dispose();
+			}
+			this.evt.fireEvent('DISPOSE');
 		}, 
 	}
 	

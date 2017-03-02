@@ -1,69 +1,86 @@
-// REPLACED BY Oev.Tile.Extension.Building
-Oev.Tile.Building = function (_tile, _tileX, _tileY, _zoom) {
-	this.tile = _tile;
-	this.datasLoaded = false;
-	this.zoom = _zoom;
-	this.tileX = _tileX;
-	this.tileY = _tileY;
-	this.onStage = true;
-	this.datas = undefined;
-	this.meshe = undefined;
-	this.geometry = undefined;
-}
-
-Oev.Tile.Building.exculdedId = [23762981, 
-	19441489, 
-	201247295, 
-	150335048, 
-	309413981, 
-	249003371, 
-	249003371, 
-	112452790, 
-	3504257, 
-	227662017, 
-];
-
-Oev.Tile.Building.prototype = {
-
-	load : function() {
-		if (!this.datasLoaded) {
-			
-			var bbox = { 
-				"minLon" : this.tile.startCoord.x, 
-				"maxLon" : this.tile.endCoord.x, 
-				"minLat" : this.tile.endCoord.y, 
-				"maxLat" : this.tile.startCoord.y
-			};
-			var _self = this;
-			OEV.earth.loaderBuilding.getData(
-				{
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY, 
-					priority : this.tile.distToCam, 
-					bbox : bbox, 
-				}, 
-				function(_datas) {
-					_self.setDatas(_datas);
-				}
-			);
-			
-			// OEV.earth.tilesBuildingsMng.getDatas( this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam );
-		} else {
-			// this.construct();
-			console.log('BILDING A');
-			Oev.Tile.ProcessQueue.addWaiting(this);
+Oev.Tile.Extension.Building = function(_tile) {
+	var ext = Object.create(Oev.Tile.Extension);
+	var loaderBuilding = OEV.earth.loaderBuilding;
+	
+	ext.datas = undefined;
+	ext.meshe = undefined;
+	ext.geometry = undefined;
+	
+	ext.loadDatas = function() {
+		if (!OEV.earth.loadBuildings) {
+			return false;
 		}
-	}, 
-
-	setDatas : function( _datas ) {
+		if (!this.tile.onStage || this.tile.zoom < 15) {
+			return false;
+		}
+		var bbox = { 
+			"minLon" : this.tile.startCoord.x, 
+			"maxLon" : this.tile.endCoord.x, 
+			"minLat" : this.tile.endCoord.y, 
+			"maxLat" : this.tile.startCoord.y
+		};
+		var _self = this;
+		loaderBuilding.getData(
+			{
+				z : this.tile.zoom, 
+				x : this.tile.tileX, 
+				y : this.tile.tileY, 
+				priority : this.tile.distToCam, 
+				bbox : bbox, 
+			}, 
+			function(_datas) {
+				_self.onBuildingsLoaded(_datas);
+			}
+		);
+	}
+	
+	ext.show = function() {
+		if (this.datasLoaded) {
+			if (this.meshe != undefined) {
+				this.tile.meshe.add(this.meshe);
+			}
+		} else {
+			this.loadDatas();
+		}
+	}
+	
+	ext.hide = function() {
+		if (this.datasLoaded){
+			if (this.meshe != undefined) {
+				this.tile.meshe.remove(this.meshe);
+			}
+		} else {
+			OEV.earth.loaderBuilding.abort({
+				z : this.tile.zoom, 
+				x : this.tile.tileX, 
+				y : this.tile.tileY
+			});
+		}
+	}
+	
+	ext.onBuildingsLoaded = function(_datas) {
 		this.datasLoaded = true;
 		this.datas = _datas;
-		// this.construct();
 		Oev.Tile.ProcessQueue.addWaiting(this);
-	}, 
+	}
 	
-	makeRoofPyramidal : function(_pts, _params, _roofColor) {
+	ext.dispose = function() {
+		this.hide();
+		if (!this.datasLoaded){
+			OEV.earth.loaderBuilding.abort({
+				z : this.tile.zoom, 
+				x : this.tile.tileX, 
+				y : this.tile.tileY
+			});
+		}
+		if (this.meshe != undefined) {
+			this.meshe.geometry.dispose();
+			this.meshe = undefined;
+		}
+	}
+	
+	
+	ext.makeRoofPyramidal = function(_pts, _params, _roofColor) {
 		var i;
 		var nbGeoVert = this.geometry.vertices.length;
 		var curFace;
@@ -93,9 +110,9 @@ Oev.Tile.Building.prototype = {
 			curFace.color = _roofColor;
 			this.geometry.faces.push(curFace);
 		}
-	}, 
+	}
 	
-	makeRoofDome : function(_pts, _params, _roofColor) {
+	ext.makeRoofDome = function(_pts, _params, _roofColor) {
 		var i;
 		var nbGeoVert = this.geometry.vertices.length;
 		var curFace;
@@ -176,9 +193,9 @@ Oev.Tile.Building.prototype = {
 			}
 		}
 		return heightOffset;
-	}, 
+	}
 	
-	makeRoofFlat : function(_pts, _params, _roofColor) {
+	ext.makeRoofFlat = function(_pts, _params, _roofColor) {
 		var i;
 		var nbGeoVert = this.geometry.vertices.length;
 		var curFace;
@@ -203,9 +220,9 @@ Oev.Tile.Building.prototype = {
 			curFace.color = _roofColor;
 			this.geometry.faces.push(curFace);
 		}
-	}, 
+	}
 	
-	makeRoof : function(_pts, _params) {
+	ext.makeRoof = function(_pts, _params) {
 		var i;
 		var heightOffset = 0;
 		var nbGeoVert = this.geometry.vertices.length;
@@ -234,9 +251,9 @@ Oev.Tile.Building.prototype = {
 			this.makeRoofFlat(_pts, _params, roofColor);
 		}
 		return {'heightOffset': heightOffset};
-	}, 
+	}
 
-	makeWalls : function( _pts, _params ) {
+	ext.makeWalls = function( _pts, _params ) {
 		var c;
 		var vertLonA = undefined;
 		var vertLatA = undefined;
@@ -289,140 +306,108 @@ Oev.Tile.Building.prototype = {
 				vertLatA = _pts[c]['lat'];
 			}
 		}
-	}, 
+	}
 
-	construct : function() {
-		var b;
-		if (this.onStage) {
-			this.geometry = new THREE.Geometry();
-			this.geometry.dynamic = false;
-			for (b = 0; b < this.datas.length; b ++) {
-				var curBuilding = this.datas[b];
-				var buildingParams = {
-					'minHeight' : 0, 
-					'height' : 3, 
-					'minLevels' : 0, 
-					'levels' : 1, 
-					'levelHeight' : 0, 
-					'roofShape' : 'flat', 
-					'roofHeight' : 0, 
-					'wallsColor' : '', 
-					'roofColor' : '' 
-				};
+	ext.construct = function() {
+		if (!this.tile.onStage) {
+			return false;
+		}
+		this.geometry = new THREE.Geometry();
+		this.geometry.dynamic = false;
+		for (var b = 0; b < this.datas.length; b ++) {
+			var curBuilding = this.datas[b];
+			var buildingParams = {
+				'minHeight' : 0, 
+				'height' : 3, 
+				'minLevels' : 0, 
+				'levels' : 1, 
+				'levelHeight' : 0, 
+				'roofShape' : 'flat', 
+				'roofHeight' : 0, 
+				'wallsColor' : '', 
+				'roofColor' : '' 
+			};
 
-				var curName = '';
-				var drawBuilding = true;
-				if (curBuilding['tags'] == undefined) {
-					curBuilding['tags'] = {};
-				}
-				if ('building:part' in curBuilding['tags']) {
-					if( curBuilding["tags"]["building:part"] == "no" ){
-						drawBuilding = false;
-					}
-				} else if (Oev.Tile.Building.exculdedId.indexOf( curBuilding["id"]) >= 0){
+			var curName = '';
+			var drawBuilding = true;
+			if (curBuilding['tags'] == undefined) {
+				curBuilding['tags'] = {};
+			}
+			if ('building:part' in curBuilding['tags']) {
+				if( curBuilding["tags"]["building:part"] == "no" ){
 					drawBuilding = false;
 				}
-				if ("roof:height" in curBuilding["tags"]) {
-					buildingParams['roofHeight'] = parseFloat( curBuilding["tags"]['roof:height'] );
-				}
-				if ("roof:shape" in curBuilding["tags"]) {
-					buildingParams['roofShape'] = curBuilding["tags"]["roof:shape"];
-				}
-				if ("roof:colour" in curBuilding["tags"]) {
-					buildingParams['roofColor'] = curBuilding["tags"]["roof:colour"];
-				}
-				if ("building:colour" in curBuilding["tags"]) {
-					buildingParams['wallsColor'] = curBuilding["tags"]["building:colour"];
-				}
-				if ("building:facade:colour" in curBuilding["tags"]) {
-					buildingParams['wallsColor'] = curBuilding["tags"]["building:facade:colour"];
-				}
-				if ("name" in curBuilding["tags"]) {
-					curName = curBuilding["tags"]["name"];
-				}
-				if ("min_height" in curBuilding["tags"]) {
-					buildingParams['minHeight'] = parseFloat( curBuilding["tags"]["min_height"] );
-				}
-				if ("building:levels" in curBuilding["tags"]) {
-					buildingParams['levels'] = parseInt( curBuilding["tags"]["building:levels"] );
-				}
-				if ("building:min_level" in curBuilding["tags"]) {
-					buildingParams['minLevels'] = parseInt( curBuilding["tags"]["building:min_level"] );
-					buildingParams['minHeight'] = 0;
-				}
-				if ("height" in curBuilding["tags"]) {
-					curBuilding["tags"]["height"].replace("m", "");
-					curBuilding["tags"]["height"].replace(" ", "");
-					buildingParams['height'] = parseFloat( curBuilding["tags"]["height"] );
-				}else{
-					buildingParams['height'] = buildingParams['levels'] * 3;
-				}
+			} else if (Oev.Tile.Extension.Building.exculdedId.indexOf( curBuilding["id"]) >= 0){
+				drawBuilding = false;
+			}
+			if ("roof:height" in curBuilding["tags"]) {
+				buildingParams['roofHeight'] = parseFloat( curBuilding["tags"]['roof:height'] );
+			}
+			if ("roof:shape" in curBuilding["tags"]) {
+				buildingParams['roofShape'] = curBuilding["tags"]["roof:shape"];
+			}
+			if ("roof:colour" in curBuilding["tags"]) {
+				buildingParams['roofColor'] = curBuilding["tags"]["roof:colour"];
+			}
+			if ("building:colour" in curBuilding["tags"]) {
+				buildingParams['wallsColor'] = curBuilding["tags"]["building:colour"];
+			}
+			if ("building:facade:colour" in curBuilding["tags"]) {
+				buildingParams['wallsColor'] = curBuilding["tags"]["building:facade:colour"];
+			}
+			if ("name" in curBuilding["tags"]) {
+				curName = curBuilding["tags"]["name"];
+			}
+			if ("min_height" in curBuilding["tags"]) {
+				buildingParams['minHeight'] = parseFloat( curBuilding["tags"]["min_height"] );
+			}
+			if ("building:levels" in curBuilding["tags"]) {
+				buildingParams['levels'] = parseInt( curBuilding["tags"]["building:levels"] );
+			}
+			if ("building:min_level" in curBuilding["tags"]) {
+				buildingParams['minLevels'] = parseInt( curBuilding["tags"]["building:min_level"] );
+				buildingParams['minHeight'] = 0;
+			}
+			if ("height" in curBuilding["tags"]) {
+				curBuilding["tags"]["height"].replace("m", "");
+				curBuilding["tags"]["height"].replace(" ", "");
+				buildingParams['height'] = parseFloat( curBuilding["tags"]["height"] );
+			}else{
+				buildingParams['height'] = buildingParams['levels'] * 3;
+			}
+			buildingParams['levelHeight'] = ( buildingParams['height'] - buildingParams['minHeight'] ) / buildingParams['levels'];
+			if (drawBuilding) {
+				var roofDatas = this.makeRoof(curBuilding["vertex"], buildingParams);
+				buildingParams['height'] -= roofDatas['heightOffset'];
 				buildingParams['levelHeight'] = ( buildingParams['height'] - buildingParams['minHeight'] ) / buildingParams['levels'];
-				if (drawBuilding) {
-					var roofDatas = this.makeRoof(curBuilding["vertex"], buildingParams);
-					buildingParams['height'] -= roofDatas['heightOffset'];
-					buildingParams['levelHeight'] = ( buildingParams['height'] - buildingParams['minHeight'] ) / buildingParams['levels'];
-					this.makeWalls(curBuilding["vertex"], buildingParams);
-				}
+				this.makeWalls(curBuilding["vertex"], buildingParams);
 			}
-			this.geometry.computeFaceNormals();
-			this.geometry.computeVertexNormals();
-			this.geometry.colorsNeedUpdate = true
-			this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.geometry), OEV.earth.buildingsWallMat);
-			this.geometry.dispose();
-			this.geometry = undefined;
-			this.tile.meshe.add( this.meshe );
-			this.meshe.receiveShadow = true;
-			this.meshe.castShadow = true;
-			OEV.MUST_RENDER = true;
 		}
-	},  
+		this.geometry.computeFaceNormals();
+		this.geometry.computeVertexNormals();
+		this.geometry.colorsNeedUpdate = true
+		this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.geometry), OEV.earth.buildingsWallMat);
+		this.geometry.dispose();
+		this.geometry = undefined;
+		this.tile.meshe.add( this.meshe );
+		this.meshe.receiveShadow = true;
+		this.meshe.castShadow = true;
+		OEV.MUST_RENDER = true;
+	}
+	
+	ext.init(_tile);
+	
+	return ext;
+}
 
-	hide : function( _state ) {
-		if (_state && this.onStage == true) {
-			this.onStage = false;
-			if (this.datasLoaded){
-				if (this.meshe != undefined) {
-					this.tile.meshe.remove(this.meshe);
-				}
-			}
-			OEV.earth.loaderBuilding.abort({
-				z : this.zoom, 
-				x : this.tileX, 
-				y : this.tileY
-			});
-		} else if (!_state && this.onStage == false) {
-			this.onStage = true;
-			if (this.datasLoaded) {
-				if (this.meshe != undefined) {
-					this.tile.meshe.add(this.meshe);
-				}
-			} else {
-				this.load();
-			}
-		}
-	}, 
-
-	dispose : function() {
-		this.hide(true);
-		if(!this.datasLoaded){
-			OEV.earth.tilesBuildingsMng.removeWaitingList(this.zoom + "/" + this.tileX + "/" + this.tileY);
-			OEV.earth.loaderBuilding.abort({
-				z : this.zoom, 
-				x : this.tileX, 
-				y : this.tileY
-			});
-		}
-		for (var type in this.partMeshes) {
-			if (!this.partMeshes.hasOwnProperty(type)) continue;
-			if(this.partMeshes[type] != undefined) {
-				this.partMeshes[type].geometry.dispose();
-				OEV.scene.remove(this.partMeshes[type]);
-			}
-		}
-		if (this.meshe != undefined) {
-			this.meshe.geometry.dispose();
-			this.meshe = undefined;
-		}
-	}, 
-};
+Oev.Tile.Extension.Building.exculdedId = [23762981, 
+	19441489, 
+	201247295, 
+	150335048, 
+	309413981, 
+	249003371, 
+	249003371, 
+	112452790, 
+	3504257, 
+	227662017, 
+];

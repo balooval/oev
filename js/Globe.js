@@ -55,10 +55,16 @@ var Globe = function () {
 	this.loaderEle = new Oev.DataLoader.Proxy('ELE');
 	this.loaderBuilding = new Oev.DataLoader.Proxy('BUILDINGS');
 	this.loaderNormal = new Oev.DataLoader.Proxy('NORMAL');
+	this.loaderPlane = new Oev.DataLoader.Proxy('PLANE');
 	
 	this.coastDatas = null;
 	this.coastPxlRatio = 2048 / (20037508 * 2);
 	this.loadCoastline();
+	
+	this.tileExtensions = [];
+	this.tileExtensions.push(Oev.Tile.Extension.Normal);
+	this.tileExtensions.push(Oev.Tile.Extension.Building);
+	this.tileExtensions.push(Oev.Tile.Extension.Planes);
 }
 
 Globe.prototype.isCoordOnGround = function(_lon, _lat) {
@@ -71,7 +77,7 @@ Globe.prototype.isCoordOnGround = function(_lon, _lat) {
 	var pxlY = Math.round(mercY * this.coastPxlRatio) + 1024;
 	pxlY = Math.abs(2048 - pxlY);
 	var bufferIndex = index = (pxlX * 2048 + pxlY);
-	console.log('onGround :', this.coastDatas[bufferIndex]);
+	// console.log('onGround :', this.coastDatas[bufferIndex]);
 }
 
 Globe.prototype.loadCoastline = function() {
@@ -86,7 +92,6 @@ Globe.prototype.loadCoastline = function() {
 Globe.prototype.onCoastLineLoaded = function(_img) {
 	var imgW = 2048;
 	var imgH = 2048;
-	console.warn('onCoastLineLoaded');
 	var canvas = document.createElement('canvas');
 	canvas.width = imgW;
 	canvas.height = imgH;

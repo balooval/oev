@@ -59,43 +59,48 @@ Oev.Utils = (function(){
 	};
 	
 	api.Evt.prototype = {
-		addEventListener : function(name, listener, handler) {
-			if (this.events.hasOwnProperty(name)){
-				this.events[name].push(handler);
-				this.listeners[name].push(listener);
-			}else{
-				this.events[name] = [handler];
-				this.listeners[name] = [listener];
-			}
+		addEventListener : function(_evtName, _listener, _callback) {
+			if (this.events[_evtName] === undefined) {
+                this.events[_evtName] = [];
+                this.listeners[_evtName] = [];
+            }
+            this.events[_evtName].push(_callback);
+            this.listeners[_evtName].push(_listener);
 		}, 
 		
-		removeEventListener : function(name, listener, handler) {
-			if (!this.events.hasOwnProperty(name))
-				return;
+		removeEventListener : function(_evtName, _listener, _callback) {
+			var i;
 			var index = -1;
-			for( var i = 0; i < this.listeners[name].length; i ++ ){
-				if( this.listeners[name][i] == listener && this.events[name][i] == handler ){
+			if (!this.events.hasOwnProperty(_evtName)){
+				return false;
+			}
+			for (i = 0; i < this.listeners[_evtName].length; i ++) {
+				if (this.listeners[_evtName][i] == _listener && this.events[_evtName][i] == _callback) {
 					index = i;
+                    break;
 				}
 			}
 			if (index != -1){
-				this.events[name].splice(index, 1);
-				this.listeners[name].splice(index, 1);
+				this.events[_evtName].splice(index, 1);
+				this.listeners[_evtName].splice(index, 1);
 			}else{
-				debug( "removeEventListener NOT found" );
+				console.error('removeEventListener NOT found');
 			}
 		}, 
 
-		fireEvent : function(name, args) {
-			if (!this.events.hasOwnProperty(name)) {
-				return;
+		fireEvent : function(_evtName, _args) {
+			var i;
+			if (!this.events.hasOwnProperty(_evtName)){
+				return false;
 			}
-			if (args === undefined || !args.length) {
-				args = [];
+			if (_args === undefined) {
+				_args = [];
 			}
-			var evs = this.events[name], l = evs.length;
-			for (var i = 0; i < l; i++) {
-				evs[i].apply(this.listeners[name][i], args);
+            var evs = this.events[_evtName].slice(0);
+            var lst = this.listeners[_evtName].slice(0);
+            var listenerNb = evs.length;
+			for (i = 0; i < listenerNb; i++) {
+				evs[i].call(lst[i], _args);
 			}
 		}, 
 	}

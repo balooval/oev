@@ -21,7 +21,7 @@ Oev.Input.Keyboad = (function(){
 			if (document.activeElement.type == undefined ){
 				var key = event.keyCode || event.which;
 				var keychar = String.fromCharCode(key);
-				console.log( "onKeyDown : " + key + " / " + keychar );
+				// console.log( "onKeyDown : " + key + " / " + keychar );
 				if( api.lastKeyDown != key ){
 					api.lastKeyUp = -1;
 					api.lastKeyDown = key;
@@ -71,7 +71,7 @@ Oev.Input.Keyboad = (function(){
 				}else if( key == 83 ){ // s
 					
 				}else if( key == 90 ){ // z
-				Oev.Sky.tmp(-0.00001);
+					Oev.Tile.Extension.PlanesWatcher.test();
 					
 				}else if( key == 107 ){ // +
 					
