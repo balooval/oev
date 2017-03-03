@@ -246,6 +246,8 @@ OpenEarthViewer.prototype.start = function() {
 	}
 	
 	this.evt.fireEvent('APP_START');
+	
+	Oev.Ui.listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', Oev.Ui.TilesExtension.onExtensionChange);
 }
 
 OpenEarthViewer.prototype.loadConfig = function() {
@@ -258,7 +260,7 @@ OpenEarthViewer.prototype.loadConfig = function() {
 					_params['APP'].texturesToPreload.push( _params['APP'].MODELS_CFG[model]["MARKER"] );
 					_params['APP'].texturesNames.push( 'MARKER_' + _params['APP'].MODELS_CFG[model]["NAME"] );
 				}
-				document.getElementById( "models_switch" ).innerHTML += '<input type="checkbox" class="cfg_load_models" data-model="'+_params['APP'].MODELS_CFG[model]["NAME"]+'" id="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" value="1" > <label for="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" title="zoom min : '+_params['APP'].MODELS_CFG[model]["ZOOM_MIN"]+'">'+_params['APP'].MODELS_CFG[model]["NAME"]+'</label> <a href="#" onclick="openConfigModel(\''+_params['APP'].MODELS_CFG[model]["NAME"]+'\');"><img src="img/ico_config.png" alt="config" title="config"></a><br>';
+				document.getElementById( "models_switch" ).innerHTML += '<input type="checkbox" class="cfg_load_models oev-btn-dataToLoad" data-model="'+_params['APP'].MODELS_CFG[model]["NAME"]+'" id="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" value="1" > <label for="cfg_load_'+_params['APP'].MODELS_CFG[model]["NAME"]+'" title="zoom min : '+_params['APP'].MODELS_CFG[model]["ZOOM_MIN"]+'">'+_params['APP'].MODELS_CFG[model]["NAME"]+'</label> <a href="#" onclick="openConfigModel(\''+_params['APP'].MODELS_CFG[model]["NAME"]+'\');"><img src="img/ico_config.png" alt="config" title="config"></a><br>';
 			}
 			openModal( "Loading textures..." );
 			_params['APP'].loadTextures();

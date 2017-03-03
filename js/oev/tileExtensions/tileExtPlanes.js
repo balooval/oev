@@ -1,15 +1,13 @@
 'use strict';
 
 Oev.Tile.Extension.PlanesWatcher = (function() {
+	var isLaunched = false;
 	var timeoutId = -1;
 	var updateDelay = 6000;
 	var loaderPlane = null;
 	var planesStates = null;
-	var planesPartitions = [];
-	var partsUpdates = [];
-	var planesPartitionIndex = {};
-	var partsWhoHadSomePlane = {};
-
+	var planesList = {};
+	
 	var api = {
 		evt : new Oev.Utils.Evt(), 
 		planeGeo : null, 
@@ -27,14 +25,26 @@ Oev.Tile.Extension.PlanesWatcher = (function() {
 			verticalRate : 10, 
 		}, 
 		
-		_init : function() {
-			console.warn('PlanesWatcher._init');
-			
+		init : function() {
+			if (isLaunched) {
+				return false;
+			}
+			isLaunched = true;
+			console.warn('PlanesWatcher.init');
 			api.planeMat = new THREE.MeshLambertMaterial({ color: 0xD0D0E0 });
 			api.planeGeo = OEV.modelsLib["plane"].geometry.clone();
-			console.log('planeGeo', api.planeGeo);
 			loaderPlane = OEV.earth.loaderPlane;
 			api.updatePlanes();
+		}, 
+		
+		stop : function() {
+			if (!isLaunched) {
+				return false;
+			}
+			isLaunched = false;
+			console.warn('PlanesWatcher.stop');
+			clearTimeout(timeoutId);
+			timeoutId = -1;
 		}, 
 		
 		updatePlanes : function() {
@@ -59,11 +69,6 @@ Oev.Tile.Extension.PlanesWatcher = (function() {
 			timeoutId = setTimeout(api.updatePlanes, updateDelay);
 		}, 
 		
-		getPlanesListAtCoord : function(_lon, _lat) {
-			var index = api.getPartIndexFromCoord(_lon, _lat);
-			return planesPartitions[index.i][index.j];
-		}, 
-		
 		getPartIndexFromCoord : function(_lon, _lat) {
 			var lonIndex = Math.floor(_lon) + 180;
 			var latIndex = Math.floor(_lat) + 90;
@@ -73,13 +78,13 @@ Oev.Tile.Extension.PlanesWatcher = (function() {
 	};
 	
 	
-	
-	
-	/*
 	function sortStates() {
 		var i;
 		var key;
-		var lastPlanesList = planesList.slice(0);
+		var lastPlanesList = []
+		for (key in planesList) {
+			lastPlanesList.push(key);
+		}
 		planesList = {};
 		var curPlane;
 		var len = planesStates.length;
@@ -94,114 +99,45 @@ Oev.Tile.Extension.PlanesWatcher = (function() {
 			planesList[concatIndex].push(curPlane);
 		}
 		var indexVoid = [];
-		for (key in lastPlanesList) {
-			if (planesList[key] === undefined) {
-				indexVoid.push(key);
+		for (i = 0; i < lastPlanesList.length; i ++) {
+			var index = lastPlanesList[i]
+			if (planesList[index] === undefined) {
+				indexVoid.push(index);
 			}
 		}
 		for (i = 0; i < indexVoid.length; i ++) {
+			// console.warn('PLANE_VOID_' + indexVoid[i]);
 			api.evt.fireEvent('PLANE_VOID_' + indexVoid[i]);
 1		}
 		for (key in planesList) {
-			api.evt.fireEvent('PLANE_POS_UPDATE_' + key);
-		}
-	}
-	*/
-	
-	
-	function sortStates() {
-		var i;
-		buildPlanesPartition();
-		partsUpdates = [];
-		for (var concatIndex in partsWhoHadSomePlane) {
-			partsWhoHadSomePlane[concatIndex] = false;
-		}
-		var len = planesStates.length;
-		for (i = 0; i < len; i ++) {
-			calcPlanePart(planesStates[i]);
-		}
-		fireEvents();
-	}
-	
-	function fireEvents() {
-		for (var i = 0; i < partsUpdates.length; i ++) {
-			var tmp = partsUpdates[i].split('_');
-			tmp[0] -= 180;
-			tmp[1] -= 90;
-			api.evt.fireEvent('PLANE_NEW_' + partsUpdates[i]);
-		}
-		checkPartsBecomedVoid();
-	}
-	
-	function checkPartsBecomedVoid() {
-		for (var concatIndex in partsWhoHadSomePlane) {
-			if (partsWhoHadSomePlane[concatIndex] === false) {
-				api.evt.fireEvent('PLANE_VOID_' + concatIndex);
-				delete partsWhoHadSomePlane[concatIndex];
-			} else {
-				var tmp = concatIndex.split('_');
-				api.evt.fireEvent('PLANE_POS_UPDATE_' + concatIndex, planesPartitions[tmp[0]][tmp[1]]);
-			}
+			// console.log('PLANE_POS_UPDATE_' + key);
+			api.evt.fireEvent('PLANE_POS_UPDATE_' + key, planesList[key]);
 		}
 	}
 	
-	function calcPlanePart(_plane) {
-		var index = api.getPartIndexFromCoord(_plane[api.stateInfosIndex.lon], _plane[api.stateInfosIndex.lat]);
-		var concatIndex = index.i + '_' + index.j;
-		var curPlaneId = _plane[api.stateInfosIndex.id];
-		if (planesPartitionIndex[curPlaneId] === undefined) { // new plane
-			partitionHasNewPlane(concatIndex);
-		} else if (planesPartitionIndex[curPlaneId] != concatIndex) { // knowed plane but changes index
-			partitionHasNewPlane(concatIndex);
-			planesPartitionIndex[curPlaneId] = undefined;
-		}
-		planesPartitions[index.i][index.j].push(_plane);
-		partsWhoHadSomePlane[concatIndex] = true;
-		planesPartitionIndex[curPlaneId] = concatIndex;
-	}
-	
-	function clearVoidParts() {
-		for (var concatIndex in partsWhoHadSomePlane) {
-			if (partsWhoHadSomePlane[concatIndex] === true) {
-				return false;
-			}
-			var index = concatIndex.split('_');
-			planesPartitions[index[0]][index[1]] = [];
-		}
-	}
-	
-	function partitionHasNewPlane(_partIndex) {
-		if (partsUpdates.indexOf(_partIndex) >= 0) {
-			return false;
-		}
-		partsUpdates.push(_partIndex);
-	}
-	
-	function buildPlanesPartition() {
-		var latCell;
-		planesPartitions = [];
-		for (var lon = -180; lon < 180; lon ++) {
-			latCell = [];
-			for (var lat = -90; lat < 90; lat ++) {
-				latCell.push([]);
-			}
-			planesPartitions.push(latCell);
-		}
-	}
-	
-	OEV.evt.addEventListener('APP_START', api, api._init);
-	buildPlanesPartition();
 	
 	return api;
 })();
 
 Oev.Tile.Extension.Planes = function(_tile) {
 	var ext = Object.create(Oev.Tile.Extension);
-	var loaderPlane = OEV.earth.loaderPlane;
+	
+	ext.id = 'PLANE';
+	
 	var myTileIndex;
 	// var mesh = null;
 	
 	var planes = {};
+	
+	ext.onActivate = function() {
+		Oev.Tile.Extension.PlanesWatcher.init();
+	}
+	
+	ext.onDesactivate = function() {
+		Oev.Tile.Extension.PlanesWatcher.stop();
+		// ext.onPlaneVoid();
+		ext.dispose();
+	}
 	
 	ext.loadDatas = function() {
 		if (this.tile.zoom == 8) {
@@ -225,9 +161,11 @@ Oev.Tile.Extension.Planes = function(_tile) {
 				planes[curPlaneId] = existingPlanes[curPlaneId];
 			} else { // new
 				var planeMesh = new THREE.Mesh(new THREE.Geometry().fromBufferGeometry(Oev.Tile.Extension.PlanesWatcher.planeGeo), Oev.Tile.Extension.PlanesWatcher.planeMat);
-				planeMesh.scale.x = 1;
-				planeMesh.scale.y = 1;
-				planeMesh.scale.z = 1;
+				// var planeScale = 0.15;
+				var planeScale = 10;
+				planeMesh.scale.x = planeScale;
+				planeMesh.scale.y = planeScale;
+				planeMesh.scale.z = planeScale;
 				planeMesh.rotation.x = Math.PI;
 				planeMesh.rotation.y = Oev.Math.radians(_planes[i][stateInfosIndex.heading] - 0);
 				planes[curPlaneId] = {
@@ -251,6 +189,7 @@ Oev.Tile.Extension.Planes = function(_tile) {
 	}
 	
 	ext.onPlaneVoid = function() {
+		// console.warn('onPlaneVoid');
 		OEV.MUST_RENDER = true;
 		for (var planeId in planes) {
 			OEV.earth.removeMeshe(planes[planeId].mesh);

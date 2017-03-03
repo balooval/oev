@@ -46,6 +46,56 @@ include( 'libs/init.php' );
 							<input type="text" name="search_value" id="search_value" placeholder="search place">
 						</form>
 					</div>
+					<div class="toolsBox">
+						<h3 data-content="navigation" class="activ"><div class="ico_expend activ" id="expend_navigation"></div> Navigation</h3>
+						<div class="toolsContent activ" id="toolsContent_navigation">
+							<div class="heading" id="camHeading" onclick="resetHeading();"></div>
+							<br>
+							<input type="button" value="Zoom -" onclick="zoomOut();" title="-">
+							<span id="zoom_level" style="display:inline-block;width:20px;overflow:hidden;">0</span>
+							<input type="button" value="Zoom +" onclick="zoomIn();" title="+">
+						</div>
+					</div>
+					
+					<div class="toolsBox">
+						<h3 data-content="datasToLoad" class="activ"><div class="ico_expend activ" id="expend_datasToLoad"></div> Datas to load</h3>
+						<div class="toolsContent activ" id="toolsContent_datasToLoad">
+							<input class="oev-btn-dataToLoad" type="checkbox" name="cfg_load_ele" id="cfg_load_ele" value="1"> <label for="cfg_load_ele">Elevation</label>
+							<br>
+							<input class="oev-btn-dataToLoad" data-extension="BUILDING" type="checkbox" name="cfg_load_buildings" id="cfg_load_buildings" value="1"> <label for="cfg_load_buildings">Buildings</label> <a href="#" onclick="openConfigBuildings();"><img src="img/ico_config.png" alt="config" title="config"></a>
+							<br>
+							<input id="cfg_load_planes" data-extension="PLANE" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_planes">Planes</label>
+							<br>
+							<input id="cfg_load_normal" data-extension="NORMAL" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_normal">Normals</label>
+							<br>
+							<input class="oev-btn-dataToLoad" type="checkbox" name="cfg_load_nodes" id="cfg_load_nodes" value="1"> <label for="cfg_load_nodes">Nodes</label>
+							<br>
+							<input class="oev-btn-dataToLoad" type="checkbox" name="cfg_load_landuse" id="cfg_load_landuse" value="1"> <label for="cfg_load_landuse">Landuse</label> <a href="#" onclick="openConfigLanduse();"><img src="img/ico_config.png" alt="config" title="config"></a>
+							<br>
+							<div id="models_switch"></div>
+						</div>
+					</div>	
+					
+					<div class="toolsBox">
+						<h3 data-content="waypoints" class="activ"><div class="ico_expend activ" id="expend_waypoints"></div> Waypoints</h3>
+						<br>
+						<div class="btn" onclick="showWPDialog();" title="Save current location">Add waypoint</div>
+						<div class="toolsContent activ" id="toolsContent_waypoints">
+							<div id="waypointsInfos"></div>
+						</div>
+					</div>
+					<div class="toolsBox">
+						<h3 data-content="tools" class="activ"><div class="ico_expend activ" id="expend_tools"></div> Tools</h3>
+						<div class="toolsContent activ" id="toolsContent_tools">
+							<div class="btn" id="btnPlugins" onclick="openPlugins();" title="more tools">Plugins</div>
+							<div class="btn" id="btnDof" onclick="OEV.switchDof();" title="switch depth of field">DOF</div>
+							<div class="btn" id="btnClouds" onclick="OEV.switchClouds();" title="switch clouds">Clouds</div>
+							<br>
+							Fog Near <input type="range" id="cfg_fog_near">
+							<br>
+							Fog Far <input type="range" id="cfg_fog_far">
+						</div>
+					</div>
 					<div class="toolsBox" id="config_network">
 						<h3 data-content="network" class="activ"><div class="ico_expend activ" id="expend_network"></div> Network</h3>
 						<div class="toolsContent activ" id="toolsContent_network">
@@ -71,50 +121,6 @@ include( 'libs/init.php' );
 							<input type="radio" name="cfg_tile_layer" value="tileOsm" checked="checked"> Osm Standard
 							<br>
 							<input type="radio" name="cfg_tile_layer" value="tileMapbox"> Mapbox Satellite
-						</div>
-					</div>
-					<div class="toolsBox">
-						<h3 data-content="datasToLoad" class="activ"><div class="ico_expend activ" id="expend_datasToLoad"></div> Datas to load</h3>
-						<div class="toolsContent activ" id="toolsContent_datasToLoad">
-							<input type="checkbox" name="cfg_load_ele" id="cfg_load_ele" value="1" <?php echo $cfgForm['load_ele'];?>> <label for="cfg_load_ele">Elevation</label>
-							<br>
-							<input type="checkbox" name="cfg_load_buildings" id="cfg_load_buildings" value="1" <?php echo $cfgForm['load_buildings'];?>> <label for="cfg_load_buildings">Buildings</label> <a href="#" onclick="openConfigBuildings();"><img src="img/ico_config.png" alt="config" title="config"></a>
-							<br>
-							<input type="checkbox" name="cfg_load_nodes" id="cfg_load_nodes" value="1"> <label for="cfg_load_nodes">Nodes</label>
-							<br>
-							<input type="checkbox" name="cfg_load_landuse" id="cfg_load_landuse" value="1"> <label for="cfg_load_landuse">Landuse</label> <a href="#" onclick="openConfigLanduse();"><img src="img/ico_config.png" alt="config" title="config"></a>
-							<br>
-							<div id="models_switch"></div>
-						</div>
-					</div>	
-					<div class="toolsBox">
-						<h3 data-content="tools" class="activ"><div class="ico_expend activ" id="expend_tools"></div> Tools</h3>
-						<div class="toolsContent activ" id="toolsContent_tools">
-							<div class="btn" id="btnPlugins" onclick="openPlugins();" title="more tools">Plugins</div>
-							<div class="btn" id="btnDof" onclick="OEV.switchDof();" title="switch depth of field">DOF</div>
-							<div class="btn" id="btnClouds" onclick="OEV.switchClouds();" title="switch clouds">Clouds</div>
-							<br>
-							Fog Near <input type="range" id="cfg_fog_near">
-							<br>
-							Fog Far <input type="range" id="cfg_fog_far">
-						</div>
-					</div>
-					<div class="toolsBox">
-						<h3 data-content="waypoints" class="activ"><div class="ico_expend activ" id="expend_waypoints"></div> Waypoints</h3>
-						<br>
-						<div class="btn" onclick="showWPDialog();" title="Save current location">Add waypoint</div>
-						<div class="toolsContent activ" id="toolsContent_waypoints">
-							<div id="waypointsInfos"></div>
-						</div>
-					</div>
-					<div class="toolsBox">
-						<h3 data-content="navigation" class="activ"><div class="ico_expend activ" id="expend_navigation"></div> Navigation</h3>
-						<div class="toolsContent activ" id="toolsContent_navigation">
-							<div class="heading" id="camHeading" onclick="resetHeading();"></div>
-							<br>
-							<input type="button" value="Zoom -" onclick="zoomOut();" title="-">
-							<span id="zoom_level" style="display:inline-block;width:20px;overflow:hidden;">0</span>
-							<input type="button" value="Zoom +" onclick="zoomIn();" title="+">
 						</div>
 					</div>
 				</div>
@@ -161,6 +167,7 @@ include( 'libs/init.php' );
 			
 			var OEV = new OpenEarthViewer('threeContainer');
 		</script>
+		<script type="text/javascript" src="js/oev/ui.js"></script>
 		<script type="text/javascript" src="js/oev/tile.js"></script>
 		<script type="text/javascript" src="js/oev/geo.js"></script>
 		<script type="text/javascript" src="js/oev/input.js"></script>

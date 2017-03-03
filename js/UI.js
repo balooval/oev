@@ -47,7 +47,6 @@ function initUi(){
 	}
 	document.getElementById( "contactLink" ).setAttribute('href', "mailto:val.poub@gmail.com");
 	document.getElementById( "cfg_load_ele" ).addEventListener("click", switchElevation );
-	document.getElementById( "cfg_load_buildings" ).addEventListener("click", switchBuildings );
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
 	document.getElementById( "cfg_load_landuse" ).addEventListener("click", switchLanduse );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
@@ -70,7 +69,7 @@ function initUi(){
 			for( var p = 0; p < urlParams.length; p ++ ){
 				debug( 'param ' + p + ' : ' + urlParams[p] );
 				if( urlParams[p] == 'buildings' ){
-					OEV.earth.activBuildings( true );
+					Oev.Tile.Extension.toggleExtension('BUILDINGS', true);
 					document.getElementById( "cfg_load_buildings" ).checked = true;
 				}else if( urlParams[p] == 'landuse' ){
 					OEV.earth.activLanduse( true );
@@ -187,14 +186,6 @@ function switchNodes(){
 		OEV.earth.activNodes( true );
 	}else{
 		OEV.earth.activNodes( false );
-	}
-}
-
-function switchBuildings(){
-	if( document.getElementById("cfg_load_buildings").checked ){
-		OEV.earth.activBuildings( true );
-	}else{
-		OEV.earth.activBuildings( false );
 	}
 }
 

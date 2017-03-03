@@ -8,7 +8,6 @@ var Globe = function () {
 	this.globalScale = 1;
 	this.coordDetails = new THREE.Vector2( 0, 0 );
 	this.eleActiv = false;
-	this.loadBuildings = false;
 	this.loadLanduse = false;
 	this.LOD_PLANET = 0;
 	this.LOD_STREET = 10;
@@ -61,10 +60,18 @@ var Globe = function () {
 	this.coastPxlRatio = 2048 / (20037508 * 2);
 	this.loadCoastline();
 	
+	this.tileExtensions = {};
+	this.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
+	this.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
+	this.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
+	console.log('this.tileExtensions', this.tileExtensions);
+	
+	/*
 	this.tileExtensions = [];
 	// this.tileExtensions.push(Oev.Tile.Extension.Normal);
 	this.tileExtensions.push(Oev.Tile.Extension.Building);
 	this.tileExtensions.push(Oev.Tile.Extension.Planes);
+	*/
 }
 
 Globe.prototype.isCoordOnGround = function(_lon, _lat) {
@@ -162,15 +169,6 @@ Globe.prototype.activNodes = function( _state ) {
 		this.loadNodes = true;
 	}else if( !_state && this.loadNodes ){
 		this.loadNodes = false;
-	}
-	this.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
-}
-
-Globe.prototype.activBuildings = function( _state ) {
-	if( _state && !this.loadBuildings ){
-		this.loadBuildings = true;
-	}else if( !_state && this.loadBuildings ){
-		this.loadBuildings = false;
 	}
 	this.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
 }

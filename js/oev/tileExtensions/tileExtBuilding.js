@@ -2,14 +2,13 @@ Oev.Tile.Extension.Building = function(_tile) {
 	var ext = Object.create(Oev.Tile.Extension);
 	var loaderBuilding = OEV.earth.loaderBuilding;
 	
+	ext.id = 'BUILDING';
+	
 	ext.datas = undefined;
 	ext.meshe = undefined;
 	ext.geometry = undefined;
 	
 	ext.loadDatas = function() {
-		if (!OEV.earth.loadBuildings) {
-			return false;
-		}
 		if (!this.tile.onStage || this.tile.zoom < 15) {
 			return false;
 		}
@@ -59,6 +58,9 @@ Oev.Tile.Extension.Building = function(_tile) {
 	}
 	
 	ext.onBuildingsLoaded = function(_datas) {
+		if (!this.isActiv) {
+			return false;
+		}
 		this.datasLoaded = true;
 		this.datas = _datas;
 		Oev.Tile.ProcessQueue.addWaiting(this);
@@ -77,6 +79,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 			this.meshe.geometry.dispose();
 			this.meshe = undefined;
 		}
+		OEV.MUST_RENDER = true;
 	}
 	
 	

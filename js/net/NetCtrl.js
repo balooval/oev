@@ -66,7 +66,7 @@ NetCtrl.prototype.setRemoteSun = function( _remoteSunTime ) {
 
 NetCtrl.prototype.setRemoteDatasToLoad = function( _datasToLoad ) {
 	OEV.earth.activElevation( _datasToLoad['elevation'] );
-	OEV.earth.activBuildings( _datasToLoad['buildings'] );
+	Oev.Tile.Extension.toggleExtension('BUILDINGS', true);
 	OEV.earth.activLanduse( _datasToLoad['landuses'] );
 	OEV.earth.activNodes( _datasToLoad['nodes'] );
 }
