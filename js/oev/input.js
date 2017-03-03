@@ -164,7 +164,7 @@ Oev.Input.Mouse = (function(){
 		
 		onMouseWheel : function(evt) {
 			var delta = evt.wheelDelta / 360;
-			api.evt.fireEvent('MOUSE_WHEEL', [delta]);
+			api.evt.fireEvent('MOUSE_WHEEL', delta);
 		}, 
 	};
 	
