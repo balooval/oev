@@ -71,7 +71,6 @@ Oev.Input.Keyboad = (function(){
 				}else if( key == 83 ){ // s
 					
 				}else if( key == 90 ){ // z
-					Oev.Tile.Extension.PlanesWatcher.test();
 					
 				}else if( key == 107 ){ // +
 					

@@ -62,7 +62,7 @@ var Globe = function () {
 	this.loadCoastline();
 	
 	this.tileExtensions = [];
-	this.tileExtensions.push(Oev.Tile.Extension.Normal);
+	// this.tileExtensions.push(Oev.Tile.Extension.Normal);
 	this.tileExtensions.push(Oev.Tile.Extension.Building);
 	this.tileExtensions.push(Oev.Tile.Extension.Planes);
 }

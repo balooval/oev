@@ -64,7 +64,7 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.modelsToLoad.push( 'fountain2.json' );
 	this.modelsToLoad.push( 'poubelle2.json' );
 	this.modelsToLoad.push( 'statue.json' );
-	this.modelsToLoad.push( 'plane.json' );
+	this.modelsToLoad.push( 'avion.json' );
 	this.modelsName = [ 'TREE_lod_2', 'TREE_lod_1', 'TREE_lod_0', 'HYDRANT_lod_0', 'HYDRANT_lod_1', 'HYDRANT_lod_2' ];
 	this.modelsName.push( 'LAMP_lod_0' );
 	this.modelsName.push( 'LAMP_lod_1' );
