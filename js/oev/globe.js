@@ -124,7 +124,7 @@ Oev.Globe = (function() {
 				if( curTileY > 0 ){
 					for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
 						if( curTileX > 0 ){
-							var tile = new Oev.Tile.Basic(api, curTileX - 1, curTileY - 1, zoomBase);
+							var tile = new Oev.Tile.Basic(curTileX - 1, curTileY - 1, zoomBase);
 							api.tilesBase.push(tile);
 							tile.makeFace();
 						}

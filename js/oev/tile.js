@@ -5,12 +5,11 @@ Oev.Tile = (function(){
 		workerBuilding : new Worker("js/WorkerBuildings.js"), 
 	};
 		
-	api.Basic = function ( _globe, _tileX, _tileY, _zoom ) {
+	api.Basic = function (_tileX, _tileY, _zoom) {
 		this.evt = new Oev.Utils.Evt();
 		this.isReady = false;
 		this.meshInstance = null;
 		this.onStage = true;
-		this.globe = _globe;
 		this.parentTile = undefined;
 		this.parentOffset = new THREE.Vector2( 0, 0 );
 		this.tileX = _tileX;
@@ -31,52 +30,45 @@ Oev.Tile = (function(){
 		this.endMidCoord = Oev.Utils.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
 		this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
 		this.vertCoords = [];
-		var nbTiles = Math.pow(2, this.zoom);
-		this.angleStep = (1.0 / nbTiles) * Math.PI;
-		this.angleXStart = this.tileX * (this.angleStep * 2);
-		this.angleXEnd = (this.tileX + 1) * (this.angleStep * 2);
-		this.angleYStart = this.tileY * this.angleStep;
-		this.angleYEnd = (this.tileY + 1) * this.angleStep;
 		this.surfacesProviders = [];
 		this.nodesProvider = new TileNodes(this);
 		this.distToCam = -1;
-		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
+		Oev.Globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
-		for (var key in this.globe.tileExtensions) {
-			this.globe.tileExtensions[key](this);
+		for (var key in Oev.Globe.tileExtensions) {
+			Oev.Globe.tileExtensions[key](this);
 		}
-
 	}
 
 	api.Basic.prototype = {
 		
 		makeFace : function() {
-			this.distToCam = ((this.globe.coordDetails.x - this.middleCoord.x) * (this.globe.coordDetails.x - this.middleCoord.x) + (this.globe.coordDetails.y - this.middleCoord.y) * (this.globe.coordDetails.y - this.middleCoord.y));
+			this.distToCam = ((Oev.Globe.coordDetails.x - this.middleCoord.x) * (Oev.Globe.coordDetails.x - this.middleCoord.x) + (Oev.Globe.coordDetails.y - this.middleCoord.y) * (Oev.Globe.coordDetails.y - this.middleCoord.y));
 			var geometry = new THREE.Geometry();
 			// geometry.dynamic = false;
 			geometry.faceVertexUvs[0] = [];
 			this.vertCoords = [];
-			var vertBySide = this.globe.tilesDefinition + 1;
+			var vertBySide = Oev.Globe.tilesDefinition + 1;
 			var vect;
 			var vectIndex = 0;
 			var x;
 			var y;
 			var vectX, vectY, vertZ;
-			var stepUV = 1 / this.globe.tilesDefinition;
-			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.globe.tilesDefinition, (this.endCoord.y - this.startCoord.y) / this.globe.tilesDefinition);
+			var stepUV = 1 / Oev.Globe.tilesDefinition;
+			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / Oev.Globe.tilesDefinition, (this.endCoord.y - this.startCoord.y) / Oev.Globe.tilesDefinition);
 			for( x = 0; x < vertBySide; x ++ ){
 				for (y = 0; y < vertBySide; y ++) {
 					vectX = this.startCoord.x + (stepCoord.x * x);
 					vectY = this.startCoord.y + (stepCoord.y * y);
 					vertZ = this._getVerticeElevation(vectIndex, vectX, vectY);
 					this.vertCoords.push(new THREE.Vector3(vectX, vectY, vertZ));
-					vect = this.globe.coordToXYZ(vectX, vectY, vertZ);
+					vect = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
 					geometry.vertices.push(vect);
 					vectIndex ++;
 				}
 			}
-			for (x = 0; x < this.globe.tilesDefinition; x ++) {
-				for (y = 0; y < this.globe.tilesDefinition; y ++) {
+			for (x = 0; x < Oev.Globe.tilesDefinition; x ++) {
+				for (y = 0; y < Oev.Globe.tilesDefinition; y ++) {
 					geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), y + ((x + 1) * vertBySide), y + (x * vertBySide)));
 					geometry.faceVertexUvs[0][(geometry.faces.length - 1 )] = [new THREE.Vector2((x * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - (y * stepUV)), new THREE.Vector2((x * stepUV), 1 - (y * stepUV))];
 					geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), (y + 1) + ((x + 1) * vertBySide), y + ((x + 1) * vertBySide)));
@@ -90,7 +82,7 @@ Oev.Tile = (function(){
 			this.meshe = new THREE.Mesh(geometry, this.material);
 			this.meshe.matrixAutoUpdate = false;
 			if (this.onStage) {
-				this.globe.addMeshe(this.meshe);
+				Oev.Globe.addMeshe(this.meshe);
 			}
 			this.meshe.castShadow = true;
 			this.meshe.receiveShadow = true;
@@ -102,12 +94,10 @@ Oev.Tile = (function(){
 		}, 
 		
 		loadDatas : function() {
-			this.loadModels();
 			this.loadLanduse();
 			this.loadNodes();
 			this.evt.fireEvent('LOAD_DATAS');
 		}, 
-
 
 		mapParentTexture : function() {
 			var x;
@@ -128,9 +118,9 @@ Oev.Tile = (function(){
 				if (curParent != undefined) {
 					this.material.map = curParent.material.map;
 					curFace = 0;
-					stepUV = uvReduc / this.globe.tilesDefinition;
-					for (x = 0; x < this.globe.tilesDefinition; x ++) {
-						for (y = 0; y < this.globe.tilesDefinition; y ++){
+					stepUV = uvReduc / Oev.Globe.tilesDefinition;
+					for (x = 0; x < Oev.Globe.tilesDefinition; x ++) {
+						for (y = 0; y < Oev.Globe.tilesDefinition; y ++){
 							this.meshe.geometry.faceVertexUvs[0][curFace][0].set( curOffsetX + ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV )- curOffsetY );
 							this.meshe.geometry.faceVertexUvs[0][curFace][1].set( curOffsetX + ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV )- curOffsetY );
 							this.meshe.geometry.faceVertexUvs[0][curFace][2].set( curOffsetX + ( x * stepUV ), 1 - ( y * stepUV )- curOffsetY ) ;
@@ -144,13 +134,13 @@ Oev.Tile = (function(){
 				}
 			} else if(this.textureLoaded) {
 				curFace = 0;
-				stepUV = 1 / this.globe.tilesDefinition;
+				stepUV = 1 / Oev.Globe.tilesDefinition;
 				if (this.meshe.geometry.faceVertexUvs[0].length == 0) {
 					console.warn('ERROR', this.tileX, this.tileY, this.zoom);
 					return false;
 				}
-				for (x = 0; x < this.globe.tilesDefinition; x ++) {
-					for (y = 0; y < this.globe.tilesDefinition; y ++) {
+				for (x = 0; x < Oev.Globe.tilesDefinition; x ++) {
+					for (y = 0; y < Oev.Globe.tilesDefinition; y ++) {
 						try{
 							this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
 							this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - (y * stepUV));
@@ -170,7 +160,7 @@ Oev.Tile = (function(){
 		}, 
 
 		updateVertex : function() {
-			this.globe.removeMeshe(this.meshe);
+			Oev.Globe.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 			this.makeFace();
 			for( var i = 0; i < this.childTiles.length; i ++ ){
@@ -185,7 +175,7 @@ Oev.Tile = (function(){
 			}
 			var i;
 			this.onStage = true;
-			this.globe.addMeshe(this.meshe);
+			Oev.Globe.addMeshe(this.meshe);
 			this.loadImage();
 			this.loadDatas();
 			for (i = 0; i < this.surfacesProviders.length; i ++) {
@@ -205,9 +195,9 @@ Oev.Tile = (function(){
 			}
 			var i;
 			this.onStage = false;
-			this.globe.removeMeshe(this.meshe);
+			Oev.Globe.removeMeshe(this.meshe);
 			if (!this.textureLoaded) {
-				this.globe.loaderTile2D.abort({
+				Oev.Globe.loaderTile2D.abort({
 					z : this.zoom, 
 					x : this.tileX, 
 					y : this.tileY
@@ -236,7 +226,7 @@ Oev.Tile = (function(){
 		}, 
 
 		clearTilesOverzoomed : function() {
-			if ((this.zoom + 1) > this.globe.CUR_ZOOM) {
+			if ((this.zoom + 1) > Oev.Globe.CUR_ZOOM) {
 				this.clearChildrens();
 			}
 		}, 
@@ -245,44 +235,37 @@ Oev.Tile = (function(){
 			var i;
 			var newTile;
 			var childZoom;
-			if (this.checkCameraHover(this.globe.tilesDetailsMarge)) {
-				// console.log('updateDetails', this.zoom, this.globe.CUR_ZOOM);
-				if (this.childTiles.length == 0 && this.zoom < Math.floor(this.globe.CUR_ZOOM)) {
-					// console.log('updateDetails', this.globe.CUR_ZOOM, this.zoom);
-					this.childsZoom = this.globe.CUR_ZOOM;
+			if (this.checkCameraHover(Oev.Globe.tilesDetailsMarge)) {
+				if (this.childTiles.length == 0 && this.zoom < Math.floor(Oev.Globe.CUR_ZOOM)) {
+					this.childsZoom = Oev.Globe.CUR_ZOOM;
 					childZoom = this.zoom + 1;
-					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
+					newTile = new Oev.Tile.Basic(this.tileX * 2, this.tileY * 2, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 0, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
-					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2 + 1, childZoom);
+					newTile = new Oev.Tile.Basic(this.tileX * 2, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 0, 1 );
 					newTile.makeFace();
 					this.childTiles.push( newTile );
 					newTile.updateDetails();
-					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2 + 1, this.tileY * 2, childZoom);
+					newTile = new Oev.Tile.Basic(this.tileX * 2 + 1, this.tileY * 2, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
-					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
+					newTile = new Oev.Tile.Basic(this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 1 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
 					this.hide();
-					/*
-					for (i = 0; i < this.datasProviders.length; i ++ ){
-						this.datasProviders[i].passModelsToChilds();
-					}
-					*/
 				}else{
-					if (this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM) {
+					if (this.childTiles.length > 0 && this.childsZoom > Oev.Globe.CUR_ZOOM) {
 						this.clearTilesOverzoomed();
 					}
 					for (i = 0; i < this.childTiles.length; i ++) {
@@ -291,7 +274,7 @@ Oev.Tile = (function(){
 				}
 			}else{
 				this.clearChildrens();
-				if( this.zoom + 5 < this.globe.CUR_ZOOM ){
+				if( this.zoom + 5 < Oev.Globe.CUR_ZOOM ){
 					this.hide();
 				}else{
 					this.show();	
@@ -302,23 +285,23 @@ Oev.Tile = (function(){
 		checkCameraHover : function( _marge ) {
 			var startLimit = Oev.Utils.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
 			var endLimit = Oev.Utils.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
-			if (startLimit.x > this.globe.coordDetails.x) {
+			if (startLimit.x > Oev.Globe.coordDetails.x) {
 				return false;
 			}
-			if (endLimit.x < this.globe.coordDetails.x) {
+			if (endLimit.x < Oev.Globe.coordDetails.x) {
 				return false;
 			}
-			if (startLimit.y < this.globe.coordDetails.y) {
+			if (startLimit.y < Oev.Globe.coordDetails.y) {
 				return false;
 			}
-			if (endLimit.y > this.globe.coordDetails.y) {
+			if (endLimit.y > Oev.Globe.coordDetails.y) {
 				return false;
 			}
 			return true;
 		}, 
 
 		loadLanduse : function() {
-			if( this.globe.loadLanduse ){
+			if( Oev.Globe.loadLanduse ){
 				if (this.onStage && this.zoom >= 15) {
 					var myParent = this;
 					while( myParent.zoom > 15 ){
@@ -334,7 +317,7 @@ Oev.Tile = (function(){
 						}
 					}
 				}
-			}else if( !this.globe.loadLanduse ){
+			}else if( !Oev.Globe.loadLanduse ){
 				for( var i = 0; i < this.surfacesProviders.length; i ++ ){
 					this.surfacesProviders[i].dispose();
 					this.surfacesProviders[i] = undefined;
@@ -366,7 +349,7 @@ Oev.Tile = (function(){
 		loadImage : function() {
 			if( !this.textureLoaded ){
 				var _self = this;
-				this.globe.loaderTile2D.getData(
+				Oev.Globe.loaderTile2D.getData(
 					{
 						z : this.zoom, 
 						x : this.tileX, 
@@ -389,21 +372,12 @@ Oev.Tile = (function(){
 		}, 
 
 		loadNodes : function() {
-			if( this.globe.loadNodes ){
+			if( Oev.Globe.loadNodes ){
 				this.nodesProvider.drawDatas();
 			}else{
 				this.nodesProvider.hide(true);
 			}
 		}, 
-			
-		loadModels : function() {
-			/*
-			for( var i = 0; i < this.datasProviders.length; i ++ ){
-				this.datasProviders[i].drawDatas();
-			}
-			*/
-		}, 
-		
 		
 		getElevation : function(_lon, _lat) {
 			return 0;
@@ -418,7 +392,7 @@ Oev.Tile = (function(){
 		}, 
 
 		calcBBoxCurZoom : function(_bbox) {
-			if( this.zoom == Math.round( this.globe.CUR_ZOOM ) ){
+			if( this.zoom == Math.round( Oev.Globe.CUR_ZOOM ) ){
 				if( this.startCoord.x < _bbox["left"] ){
 					_bbox["left"] = this.startCoord.x;
 				}
@@ -440,7 +414,7 @@ Oev.Tile = (function(){
 		}, 
 
 		dispose : function() {
-			this.globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
+			Oev.Globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 			this.clearChildrens();
 			this.hide();
 			this.nodesProvider.dispose();
