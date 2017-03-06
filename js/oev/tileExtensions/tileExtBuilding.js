@@ -312,7 +312,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 	}
 
 	ext.construct = function() {
-		if (!this.tile.onStage) {
+		if (!this.isActiv || !this.tile.onStage) {
 			return false;
 		}
 		this.geometry = new THREE.Geometry();
@@ -398,7 +398,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 		OEV.MUST_RENDER = true;
 	}
 	
-	ext.init(_tile);
+	ext.onInit(_tile);
 	
 	return ext;
 }

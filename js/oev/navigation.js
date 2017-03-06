@@ -1,17 +1,63 @@
 Oev.Navigation = (function(){
 	'use strict';
+	
+	var waypointMat;
+	var waypointsList = [];
+	var WpStored = [];
+	
 	var api = {
+		init : function() {
+			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+		}, 
 		
+		onAppStart : function() {
+			waypointMat = new THREE.SpriteMaterial({map:OEV.textures['waypoint'], color:0xffffff, fog:false})
+			if (localStorage.getItem("waypoints") == undefined) {
+				localStorage.setItem("waypoints", JSON.stringify(WpStored));
+			}else{
+				WpStored = JSON.parse(localStorage.getItem("waypoints"));
+				for(var w = 0; w < WpStored.length; w ++) {
+					api.saveWaypoint(WpStored[w]["lon"],WpStored[w]["lat"], WpStored[w]["zoom"], WpStored[w]["name"]);
+					
+				}
+			}
+		}, 
+		
+		getWaypointById : function(_index) {
+			return waypointsList[_index];
+		}, 
+		
+		saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore) {
+			_name = _name || "WP " + waypointsList.length;
+			_localStore = _localStore || false;
+			var wp = new Oev.Navigation.WayPoint( _lon, _lat, _zoom, _name);
+			waypointsList.push(wp);
+			updateWaypointsList(waypointsList);
+			if (_localStore) {
+				WpStored.push({name : _name, lon : _lon, lat : _lat, zoom : _zoom});
+				localStorage.setItem("waypoints", JSON.stringify(WpStored));
+			}
+			return wp;
+		}, 
+		
+		removeWaypoint : function( _wId ) {
+			for (var w = 0; w < WpStored.length; w ++) {
+				var storedWP = WpStored[w];
+				if (storedWP["lon"] == waypoints[_wId].lon && storedWP["lat"] == waypoints[_wId].lat && storedWP["zoom"] == waypoints[_wId].zoom) {
+					WpStored.splice(w, 1);
+					break;
+				}
+			}
+			localStorage.setItem("waypoints", JSON.stringify(WpStored));	
+			waypoints[_wId].dispose();
+			waypoints.splice(_wId, 1);
+			updateWaypointsList(waypoints);
+		}
 	};
 	
-	api.WayPoint = function (_lon, _lat,_zoom, _name, _textureName) {
-		_textureName = _textureName || 'default';
+	
+	api.WayPoint = function (_lon, _lat,_zoom, _name) {
 		this.showSprite = true;
-		if (_textureName == 'none'){ // don't show on the map
-			this.showSprite = false;
-		}else if (!OEV.materialWaypoints[_textureName]) {
-			_textureName = 'default';
-		}
 		this.showList = true;
 		if (_name == "none") {
 			this.showList = false;
@@ -24,7 +70,7 @@ Oev.Navigation = (function(){
 		this.sprite = undefined;
 		this.material = undefined;
 		if (this.showSprite) {
-			this.material = OEV.materialWaypoints[_textureName];
+			this.material = waypointMat;
 			this.sprite = new THREE.Sprite(this.material);
 			var ele = OEV.earth.getElevationAtCoords(this.lon, this.lat);
 			var pos = OEV.earth.coordToXYZ(_lon, _lat, ele);

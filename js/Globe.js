@@ -1,7 +1,7 @@
 var Globe = function () {
+	console.warn('Globe must be replaced by Oev.Globe');
 	this.radius = 10000;
 	this.tilesBase = [];
-	// this.tiles2dMng = undefined;
 	this.meter = this.radius / 40075017.0;
 	this.meshe = new THREE.Mesh(new THREE.Geometry());
 	this.CUR_ZOOM = 4;
@@ -64,14 +64,60 @@ var Globe = function () {
 	this.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
 	this.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
 	this.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
-	console.log('this.tileExtensions', this.tileExtensions);
+	this.tileExtensions['ELEVATION'] = Oev.Tile.Extension.Elevation;
+}
+
+Globe.prototype.init = function() {
+	this.setProjection( "PLANE" );
+	// this.setProjection( "SPHERE" );
+	// this.tiles2dMng = new DatasMng( "TILE2D" );
+	// this.tilesModelsMng = new DatasMng( "MODELS" );
+	this.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
+	this.tilesWeatherMng = new DatasMng( "WEATHER" );
+	this.tilesLandusesMng = new DatasMng( "SURFACE" );
 	
-	/*
-	this.tileExtensions = [];
-	// this.tileExtensions.push(Oev.Tile.Extension.Normal);
-	this.tileExtensions.push(Oev.Tile.Extension.Building);
-	this.tileExtensions.push(Oev.Tile.Extension.Planes);
-	*/
+	this.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
+	this.modelsMesheMat['TREE'].alphaTest = 0.9;
+	this.modelsMesheMat['TREE'].needsUpdate = true;
+	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
+	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
+	this.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
+	this.testForestMat.alphaTest = 0.1;
+	this.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['scrub'] });
+	this.testScrubMat.alphaTest = 0.1;
+	this.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['scrub'] });
+	this.forestMat.alphaTest = 0.4;
+	this.forestMat.transparent = true;
+	this.vineyardMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 1000, map: OEV.textures['vineyard'] });
+	this.vineyardMat.alphaTest = 0.4;
+	this.vineyardMat.transparent = true;
+	this.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['grass'] });
+	this.grassMat.alphaTest = 0.4;
+	this.grassMat.transparent = true;
+	
+	OEV.evt.addEventListener('APP_START', this, this.onAppStart);
+}
+
+Globe.prototype.onAppStart = function() {
+	console.log('Globe.prototype.onAppStart');
+	this.construct();
+}
+
+Globe.prototype.construct = function() {
+	var zoomBase = 4;
+	var nbTiles = Math.pow( 2, zoomBase );
+	for( var curTileY = 0; curTileY < nbTiles + 1; curTileY ++ ){
+		if( curTileY > 0 ){
+			for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
+				if( curTileX > 0 ){
+					var tile = new Oev.Tile.Basic( this, curTileX - 1, curTileY - 1, zoomBase );
+					this.tilesBase.push(tile);
+					tile.makeFace();
+				}
+			}
+		}
+	}
+	this.matWayPoints = new THREE.SpriteMaterial( { map: OEV.textures['waypoint'], color: 0xffffff, fog: false } );
 }
 
 Globe.prototype.isCoordOnGround = function(_lon, _lat) {
@@ -202,54 +248,6 @@ Globe.prototype.updateLOD = function() {
 		OEV.waypoints[w].updatePos();
 	}
 }
-
-Globe.prototype.construct = function() {
-	this.setProjection( "PLANE" );
-	// this.setProjection( "SPHERE" );
-	// this.tiles2dMng = new DatasMng( "TILE2D" );
-	// this.tilesModelsMng = new DatasMng( "MODELS" );
-	this.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
-	this.tilesWeatherMng = new DatasMng( "WEATHER" );
-	this.tilesLandusesMng = new DatasMng( "SURFACE" );
-	
-	// this.modelsMesheMat['TREE'] = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
-	this.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
-	// this.modelsMesheMat['TREE'].normalMap = OEV.textures['normal_foliage'];
-	this.modelsMesheMat['TREE'].alphaTest = 0.9;
-	this.modelsMesheMat['TREE'].needsUpdate = true;
-	
-	this.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-	this.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-	this.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['tree_side'] });
-	this.testForestMat.alphaTest = 0.1;
-	this.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide, map: OEV.textures['scrub'] });
-	this.testScrubMat.alphaTest = 0.1;
-	this.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['scrub'] });
-	this.forestMat.alphaTest = 0.4;
-	this.forestMat.transparent = true;
-	this.vineyardMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 1000, map: OEV.textures['vineyard'] });
-	this.vineyardMat.alphaTest = 0.4;
-	this.vineyardMat.transparent = true;
-	this.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: this.meter * 2000, map: OEV.textures['grass'] });
-	this.grassMat.alphaTest = 0.4;
-	this.grassMat.transparent = true;
-	// make faces
-	var zoomBase = 4;
-	var nbTiles = Math.pow( 2, zoomBase );
-	for( var curTileY = 0; curTileY < nbTiles + 1; curTileY ++ ){
-		if( curTileY > 0 ){
-			for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
-				if( curTileX > 0 ){
-					var tile = new Oev.Tile.Basic( this, curTileX - 1, curTileY - 1, zoomBase );
-					this.tilesBase.push(tile);
-					tile.makeFace();
-				}
-			}
-		}
-	}
-	this.matWayPoints = new THREE.SpriteMaterial( { map: OEV.textures['waypoint'], color: 0xffffff, fog: false } );
-}
-
 
 Globe.prototype.updateZoom = function(_value){
 	if (this.CUR_ZOOM != _value) {
@@ -455,11 +453,6 @@ Globe.prototype.zoomFromAltitudeTest = function( _altitude ) { // _altitude : me
 		z ++;
 		meterByPixel /= 2;
 	}
-	// debug( '_altitude : ' + _altitude );
-	// debug( 'z : ' + z );
-	// debug( 'meterByPixel : ' + meterByPixel );
-	// debug( '' );
-	// return z + 6;
 	return Math.min( Math.max( z + 6 ), 19 );
 }
 

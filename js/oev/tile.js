@@ -3,11 +3,11 @@ Oev.Tile = (function(){
 	
 	var api = {
 		workerBuilding : new Worker("js/WorkerBuildings.js"), 
-		// workerSurface : new Worker("js/oev/workerSurface.js"), 
 	};
 		
 	api.Basic = function ( _globe, _tileX, _tileY, _zoom ) {
 		this.evt = new Oev.Utils.Evt();
+		this.isReady = false;
 		this.meshInstance = null;
 		this.onStage = true;
 		this.globe = _globe;
@@ -16,18 +16,13 @@ Oev.Tile = (function(){
 		this.tileX = _tileX;
 		this.tileY = _tileY;
 		this.zoom = _zoom;
-		this.detailsSeg = this.globe.tilesDefinition;
 		this.childsZoom = _zoom;
 		this.childTiles = [];
 		this.textureLoaded = false;
-		this.eleLoaded = false;
 		this.tileLoader = new THREE.TextureLoader();
 		this.remoteTex = undefined;
 		this.meshe = undefined;
-		this.mesheBorder = undefined;
 		this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
-		// this.materialBorder = Oev.Cache.getMaterial('MeshBasicMaterial');
-		
 		this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
 		this.endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
 		this.startLargeCoord = Oev.Utils.tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
@@ -36,92 +31,52 @@ Oev.Tile = (function(){
 		this.endMidCoord = Oev.Utils.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
 		this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
 		this.vertCoords = [];
-		this.myLOD = 0;
-		if( this.zoom >= this.globe.LOD_STREET ){
-			this.myLOD = this.globe.LOD_STREET;
-		}else if( this.zoom >= this.globe.LOD_PLANET ){
-			this.myLOD = this.globe.LOD_PLANET;
-		}
 		var nbTiles = Math.pow(2, this.zoom);
 		this.angleStep = (1.0 / nbTiles) * Math.PI;
 		this.angleXStart = this.tileX * (this.angleStep * 2);
 		this.angleXEnd = (this.tileX + 1) * (this.angleStep * 2);
 		this.angleYStart = this.tileY * this.angleStep;
 		this.angleYEnd = (this.tileY + 1) * this.angleStep;
-		this.tile3d = undefined;
 		this.surfacesProviders = [];
-		this.datasProviders = [];
 		this.nodesProvider = new TileNodes(this);
-		for (var model in OEV.MODELS_CFG) {
-			if (OEV.MODELS_CFG[model]["ACTIV"]) {
-				if( this.zoom >= OEV.MODELS_CFG[model]["ZOOM_MIN"] ){
-					this.datasProviders.push(new DatasProvider(this, OEV.MODELS_CFG[model]["NAME"]));
-				}
-			}
-		}
 		this.distToCam = -1;
 		this.globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
-		this.customEle = false;
-		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
-		for (var i = 0;i < this.globe.tileExtensions.length; i ++) {
-			this.globe.tileExtensions[i](this);
+		for (var key in this.globe.tileExtensions) {
+			this.globe.tileExtensions[key](this);
 		}
+
 	}
 
 	api.Basic.prototype = {
-		updateDatasProviders : function( _added, _name ) {
-			for( var i = 0; i < this.childTiles.length; i ++ ){
-				this.childTiles[i].updateDatasProviders( _added, _name );
-			}
-			
-			if( _added ){
-				if( this.zoom >= OEV.MODELS_CFG[_name]["ZOOM_MIN"] ){
-					this.datasProviders.push(new DatasProvider(this, _name));
-					this.loadModels();
-				}
-			}else{
-				for( var i = 0; i < this.datasProviders.length; i ++ ){
-					if( this.datasProviders[i].name == _name ){
-						this.datasProviders[i].dispose();
-						this.datasProviders.splice( i, 1 );
-						break;
-					}
-				}
-			}
-		}, 
-
-
 		
 		makeFace : function() {
 			this.distToCam = ((this.globe.coordDetails.x - this.middleCoord.x) * (this.globe.coordDetails.x - this.middleCoord.x) + (this.globe.coordDetails.y - this.middleCoord.y) * (this.globe.coordDetails.y - this.middleCoord.y));
 			var geometry = new THREE.Geometry();
 			// geometry.dynamic = false;
 			geometry.faceVertexUvs[0] = [];
-			if (!this.eleLoaded) {
-				this.vertCoords = [];
-			}
-			var vertBySide = this.detailsSeg + 1;
+			this.vertCoords = [];
+			var vertBySide = this.globe.tilesDefinition + 1;
 			var vect;
 			var vectIndex = 0;
 			var x;
 			var y;
 			var vectX, vectY, vertZ;
-			var stepUV = 1 / this.detailsSeg;
-			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.detailsSeg, (this.endCoord.y - this.startCoord.y) / this.detailsSeg);
+			var stepUV = 1 / this.globe.tilesDefinition;
+			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.globe.tilesDefinition, (this.endCoord.y - this.startCoord.y) / this.globe.tilesDefinition);
 			for( x = 0; x < vertBySide; x ++ ){
 				for (y = 0; y < vertBySide; y ++) {
 					vectX = this.startCoord.x + (stepCoord.x * x);
 					vectY = this.startCoord.y + (stepCoord.y * y);
-					vertZ = this.getVerticeElevation(vectIndex, vectX, vectY);
+					vertZ = this._getVerticeElevation(vectIndex, vectX, vectY);
 					this.vertCoords.push(new THREE.Vector3(vectX, vectY, vertZ));
 					vect = this.globe.coordToXYZ(vectX, vectY, vertZ);
 					geometry.vertices.push(vect);
 					vectIndex ++;
 				}
 			}
-			for (x = 0; x < this.detailsSeg; x ++) {
-				for (y = 0; y < this.detailsSeg; y ++) {
+			for (x = 0; x < this.globe.tilesDefinition; x ++) {
+				for (y = 0; y < this.globe.tilesDefinition; y ++) {
 					geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), y + ((x + 1) * vertBySide), y + (x * vertBySide)));
 					geometry.faceVertexUvs[0][(geometry.faces.length - 1 )] = [new THREE.Vector2((x * stepUV), 1 - ((y + 1) * stepUV)), new THREE.Vector2(((x + 1) * stepUV), 1 - (y * stepUV)), new THREE.Vector2((x * stepUV), 1 - (y * stepUV))];
 					geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), (y + 1) + ((x + 1) * vertBySide), y + ((x + 1) * vertBySide)));
@@ -134,7 +89,6 @@ Oev.Tile = (function(){
 			geometry.computeVertexNormals();
 			this.meshe = new THREE.Mesh(geometry, this.material);
 			this.meshe.matrixAutoUpdate = false;
-			this.makeBorders();
 			if (this.onStage) {
 				this.globe.addMeshe(this.meshe);
 			}
@@ -143,67 +97,15 @@ Oev.Tile = (function(){
 			this.mapParentTexture();
 			this.loadImage();
 			this.loadDatas();
-			
+			this.isReady = true;
 			this.evt.fireEvent('TILE_READY');
 		}, 
 		
-		
-		testBillboard : function() {
-			var posCenter = OEV.earth.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
-			var faceWidth = 50;
-		
-			var geometry = new THREE.Geometry();
-			geometry.vertices.push(new THREE.Vector3(
-				posCenter.x - faceWidth, 
-				posCenter.y - 5, 
-				posCenter.z + faceWidth
-			));
-			geometry.vertices.push(new THREE.Vector3(
-				posCenter.x + faceWidth, 
-				posCenter.y - 5, 
-				posCenter.z + faceWidth
-			));
-			geometry.vertices.push(new THREE.Vector3(
-				posCenter.x + faceWidth, 
-				posCenter.y - 5, 
-				posCenter.z - faceWidth
-			));
-			geometry.vertices.push(new THREE.Vector3(
-				posCenter.x - faceWidth, 
-				posCenter.y - 5, 
-				posCenter.z - faceWidth
-			));
-			geometry.faces.push(new THREE.Face3(
-				0, 
-				1, 
-				2
-			));
-			geometry.faces.push(new THREE.Face3(
-				2, 
-				3, 
-				0
-			));
-			geometry.faceVertexUvs[0][0] = [
-				new THREE.Vector2(0, 0), 
-				new THREE.Vector2(1, 0), 
-				new THREE.Vector2(1, 1)
-			];
-			geometry.faceVertexUvs[0][1] = [
-				new THREE.Vector2(1, 1), 
-				new THREE.Vector2(0, 1), 
-				new THREE.Vector2(0, 0)
-			];
-			var mesh = new THREE.Mesh(geometry, OEV.matImpostor);
-			OEV.scene.add(mesh);
-		}, 
-		
 		loadDatas : function() {
-			this.loadElevation();
-			this.loadBuildings();
 			this.loadModels();
 			this.loadLanduse();
 			this.loadNodes();
-			this.evt.fireEvent( "LOAD_DATAS" );
+			this.evt.fireEvent('LOAD_DATAS');
 		}, 
 
 
@@ -226,9 +128,9 @@ Oev.Tile = (function(){
 				if (curParent != undefined) {
 					this.material.map = curParent.material.map;
 					curFace = 0;
-					stepUV = uvReduc / this.detailsSeg;
-					for (x = 0; x < this.detailsSeg; x ++) {
-						for (y = 0; y < this.detailsSeg; y ++){
+					stepUV = uvReduc / this.globe.tilesDefinition;
+					for (x = 0; x < this.globe.tilesDefinition; x ++) {
+						for (y = 0; y < this.globe.tilesDefinition; y ++){
 							this.meshe.geometry.faceVertexUvs[0][curFace][0].set( curOffsetX + ( x * stepUV ), 1 - ( ( y + 1 ) * stepUV )- curOffsetY );
 							this.meshe.geometry.faceVertexUvs[0][curFace][1].set( curOffsetX + ( ( x + 1 ) * stepUV ), 1 - ( y * stepUV )- curOffsetY );
 							this.meshe.geometry.faceVertexUvs[0][curFace][2].set( curOffsetX + ( x * stepUV ), 1 - ( y * stepUV )- curOffsetY ) ;
@@ -241,29 +143,25 @@ Oev.Tile = (function(){
 					}
 				}
 			} else if(this.textureLoaded) {
-				// console.warn('inutile ?', this.tileX, this.tileY, this.zoom);
-				// return false;
 				curFace = 0;
-				stepUV = 1 / this.detailsSeg;
+				stepUV = 1 / this.globe.tilesDefinition;
 				if (this.meshe.geometry.faceVertexUvs[0].length == 0) {
 					console.warn('ERROR', this.tileX, this.tileY, this.zoom);
 					return false;
 				}
-				for (x = 0; x < this.detailsSeg; x ++) {
-					for (y = 0; y < this.detailsSeg; y ++) {
+				for (x = 0; x < this.globe.tilesDefinition; x ++) {
+					for (y = 0; y < this.globe.tilesDefinition; y ++) {
 						try{
-						this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
-						this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - (y * stepUV));
-						this.meshe.geometry.faceVertexUvs[0][curFace][2].set((x * stepUV), 1 - (y * stepUV));
-						curFace ++;
-						this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
-						this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - ((y + 1) * stepUV));
-						this.meshe.geometry.faceVertexUvs[0][curFace][2].set(((x + 1) * stepUV), 1 - (y * stepUV));
-						curFace ++;
+							this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
+							this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - (y * stepUV));
+							this.meshe.geometry.faceVertexUvs[0][curFace][2].set((x * stepUV), 1 - (y * stepUV));
+							curFace ++;
+							this.meshe.geometry.faceVertexUvs[0][curFace][0].set((x * stepUV), 1 - ((y + 1) * stepUV));
+							this.meshe.geometry.faceVertexUvs[0][curFace][1].set(((x + 1) * stepUV), 1 - ((y + 1) * stepUV));
+							this.meshe.geometry.faceVertexUvs[0][curFace][2].set(((x + 1) * stepUV), 1 - (y * stepUV));
+							curFace ++;
 						} catch (e) {
 							console.log('ERROR', this.tileX, this.tileY, this.zoom);
-							// console.warn(e);
-							// debugger;
 						}
 					}
 				}
@@ -271,91 +169,7 @@ Oev.Tile = (function(){
 			}
 		}, 
 
-		makeBorders : function() {
-			var b;
-			var x;
-			var y;
-			var vect;
-			var vertEle;
-			if (!this.globe.eleActiv) {
-				return false;
-			}
-			if (this.mesheBorder != undefined) {
-				this.meshe.remove(this.mesheBorder);
-				this.mesheBorder.geometry.dispose();
-				this.mesheBorder = undefined;
-			}
-			var stepUV = 1 / this.detailsSeg;
-			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.detailsSeg, (this.endCoord.y - this.startCoord.y) / this.detailsSeg);
-			var geoBorders = new THREE.Geometry();
-			geoBorders.dynamic = false;
-			geoBorders.faceVertexUvs[0] = [];
-			var vertBorder = [];
-			var vertUvs = [];
-			var vEId;
-			for (x = 0; x < (this.detailsSeg + 1); x ++) {
-				vertUvs.push( new THREE.Vector2( x * stepUV, 0 ) );
-				vertUvs.push( new THREE.Vector2( x * stepUV, 0 ) );
-				vEId = x * ( this.detailsSeg + 1 );
-				vertEle = this.vertCoords[vEId].z;
-				vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y, vertEle );
-				vertBorder.push( vect );
-				vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * x ), this.startCoord.y, 0 );
-				vertBorder.push( vect );
-			}
-			for (y = 1; y < this.detailsSeg + 1; y ++ ){
-				vertUvs.push( new THREE.Vector2( 0, y * stepUV ) );
-				vertUvs.push( new THREE.Vector2( 0, y * stepUV ) );
-				vEId = y + ( this.detailsSeg ) * ( this.detailsSeg + 1 );
-				vertEle = this.vertCoords[vEId].z;
-				vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * this.detailsSeg ), this.startCoord.y + ( stepCoord.y * y ), vertEle );
-				vertBorder.push( vect );
-				vect = this.globe.coordToXYZ( this.startCoord.x + ( stepCoord.x * this.detailsSeg ), this.startCoord.y + ( stepCoord.y * y ), 0 );
-				vertBorder.push( vect );
-			}
-			for (x = 1; x < ( this.detailsSeg + 1 ); x ++ ){
-				vertUvs.push( new THREE.Vector2( 1 - ( x * stepUV ), 0 ) );
-				vertUvs.push( new THREE.Vector2( 1 - ( x * stepUV ), 0 ) );
-				
-				vEId = (this.detailsSeg + 0) + ( ( this.detailsSeg + 0 ) - x ) * ( this.detailsSeg + 1 );
-				vertEle = this.vertCoords[vEId].z;
-				vect = this.globe.coordToXYZ( this.endCoord.x - ( stepCoord.x * x ), this.endCoord.y, vertEle );
-				vertBorder.push( vect );
-				vect = this.globe.coordToXYZ( this.endCoord.x - ( stepCoord.x * x ), this.endCoord.y, 0 );
-				vertBorder.push( vect );
-			}
-			for (y = 1; y < ( this.detailsSeg + 1 ); y ++ ){
-				vertUvs.push( new THREE.Vector2( 1, 1 - ( y * stepUV ) ) );
-				vertUvs.push( new THREE.Vector2( 1, 1 - ( y * stepUV ) ) );
-				vEId = ( ( this.detailsSeg + 0 ) - y ) + ( 0 );
-				vertEle = this.vertCoords[vEId].z;
-				vect = this.globe.coordToXYZ( this.startCoord.x, this.endCoord.y - ( stepCoord.y * y ), vertEle );
-				vertBorder.push( vect );
-				vect = this.globe.coordToXYZ( this.startCoord.x, this.endCoord.y - ( stepCoord.y * y ), 0 );
-				vertBorder.push( vect );
-			}
-			for (b = 0; b < vertBorder.length; b ++) {
-				geoBorders.vertices.push(vertBorder[b]);
-			}
-			for (b = 0; b < vertBorder.length - 2; b += 2) {
-				geoBorders.faces.push( new THREE.Face3( b + 2, b + 1, b + 0 ) );
-				geoBorders.faceVertexUvs[0][( geoBorders.faces.length - 1 )] = [ vertUvs[b+2], vertUvs[b+1], vertUvs[b+0] ];
-				geoBorders.faces.push( new THREE.Face3( b + 1, b + 2, b + 3 ) );
-				geoBorders.faceVertexUvs[0][( geoBorders.faces.length - 1 )] = [ vertUvs[b+1], vertUvs[b+2], vertUvs[b+3] ];
-			}
-			geoBorders.uvsNeedUpdate = true;
-			geoBorders.computeFaceNormals();
-			geoBorders.mergeVertices()
-			geoBorders.computeVertexNormals();
-			this.mesheBorder = new THREE.Mesh(geoBorders, this.materialBorder);
-			this.mesheBorder.matrixAutoUpdate = false;
-			this.meshe.add(this.mesheBorder);
-		}, 
-
 		updateVertex : function() {
-			if (this.tile3d != undefined) {
-				this.tile3d.hide(true);
-			}
 			this.globe.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 			this.makeFace();
@@ -373,25 +187,15 @@ Oev.Tile = (function(){
 			this.onStage = true;
 			this.globe.addMeshe(this.meshe);
 			this.loadImage();
-			// this.loadBuildings();
-			// this.loadElevation();
 			this.loadDatas();
-			if (this.tile3d != undefined) {
-				this.tile3d.hide(false);
-			}
 			for (i = 0; i < this.surfacesProviders.length; i ++) {
 				this.surfacesProviders[i].hide(false);
 			}
 			this.nodesProvider.hide(false);
-			for (i = 0; i < this.datasProviders.length; i ++) {
-				this.datasProviders[i].drawDatas();
-			}
 			this.loadNodes();
-			
 			if(this.meshInstance) {
 				OEV.scene.add(this.meshInstance);
 			}
-			
 			this.evt.fireEvent('SHOW');
 		}, 
 		
@@ -409,29 +213,13 @@ Oev.Tile = (function(){
 					y : this.tileY
 				});
 			}
-			if (!this.eleLoaded) {
-				this.globe.loaderEle.abort({
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY
-				});
-			}
-			this.clearModels();
-			if (this.tile3d != undefined) {
-				this.tile3d.hide(true);
-			}
-			for (i = 0; i < this.datasProviders.length; i ++) {
-				this.datasProviders[i].hideDatas();
-			}
 			for (i = 0; i < this.surfacesProviders.length; i ++) {
 				this.surfacesProviders[i].hide(true);
 			}
 			this.nodesProvider.hide(true);
-			
 			if(this.meshInstance) {
 				OEV.scene.remove(this.meshInstance);
 			}
-			
 			this.evt.fireEvent('HIDE');
 		}, 
 
@@ -460,6 +248,7 @@ Oev.Tile = (function(){
 			if (this.checkCameraHover(this.globe.tilesDetailsMarge)) {
 				// console.log('updateDetails', this.zoom, this.globe.CUR_ZOOM);
 				if (this.childTiles.length == 0 && this.zoom < Math.floor(this.globe.CUR_ZOOM)) {
+					// console.log('updateDetails', this.globe.CUR_ZOOM, this.zoom);
 					this.childsZoom = this.globe.CUR_ZOOM;
 					childZoom = this.zoom + 1;
 					newTile = new Oev.Tile.Basic(this.globe, this.tileX * 2, this.tileY * 2, childZoom);
@@ -487,9 +276,11 @@ Oev.Tile = (function(){
 					this.childTiles.push(newTile);
 					newTile.updateDetails();
 					this.hide();
+					/*
 					for (i = 0; i < this.datasProviders.length; i ++ ){
 						this.datasProviders[i].passModelsToChilds();
 					}
+					*/
 				}else{
 					if (this.childTiles.length > 0 && this.childsZoom > this.globe.CUR_ZOOM) {
 						this.clearTilesOverzoomed();
@@ -525,36 +316,6 @@ Oev.Tile = (function(){
 			}
 			return true;
 		}, 
-
-
-		passDatasToProvider : function( _name, _datas ) {
-			for (var i = 0; i < this.datasProviders.length; i ++) {
-				if (this.datasProviders[i].name == _name) {
-					this.datasProviders[i].onDatasLoaded(_datas);
-					this.datasProviders[i].drawDatas();
-					break;
-				}
-			}
-		}, 
-
-		loadBuildings : function() {
-			return false;
-			if( this.globe.loadBuildings ){
-				if (this.onStage && this.zoom >= 15) {
-					if (this.tile3d == undefined) {
-						this.tile3d = new Oev.Tile.Building(this, this.tileX, this.tileY, this.zoom);
-						this.tile3d.load();
-					} else {
-						this.tile3d.hide(false);
-					}
-				}
-			} else if (!this.globe.loadBuildings && this.tile3d != undefined) {
-				this.tile3d.dispose();
-				this.tile3d = undefined;
-				OEV.MUST_RENDER = true;
-			}
-		}, 
-
 
 		loadLanduse : function() {
 			if( this.globe.loadLanduse ){
@@ -627,13 +388,6 @@ Oev.Tile = (function(){
 			OEV.MUST_RENDER = true;
 		}, 
 
-		clearModels : function() {
-			OEV.scene.remove( this.modelsMeshe );
-			for( var objName in this.modelsMesheLib ){
-				OEV.scene.remove( this.modelsMesheLib[objName] );
-			}
-		}, 
-
 		loadNodes : function() {
 			if( this.globe.loadNodes ){
 				this.nodesProvider.drawDatas();
@@ -643,198 +397,23 @@ Oev.Tile = (function(){
 		}, 
 			
 		loadModels : function() {
+			/*
 			for( var i = 0; i < this.datasProviders.length; i ++ ){
 				this.datasProviders[i].drawDatas();
 			}
+			*/
 		}, 
 		
-		loadElevation : function() {
-			if (this.globe.eleActiv && !this.eleLoaded) {
-				var _self = this;
-				this.globe.loaderEle.getData({
-						z : this.zoom, 
-						x : this.tileX, 
-						y : this.tileY, 
-						priority : this.distToCam
-					}, 
-					function(_datas) {
-						_self.onElevationLoaded(_datas);
-					}
-				);
-			}
-		}, 
-		
-		onElevationLoaded : function(_datas) {
-			var i;
-			this.elevationBuffer = _datas;
-			this.eleLoaded = true;
-			this.applyElevationToGeometry();
-			// this.updateVertex();
-			
-			// this.testBillboard();
-		}, 
-		
-		applyElevationToGeometry : function() {
-			if (!this.eleLoaded) {
-				return false;
-			}
-			var x, y;
-			var index = 0;
-			var nbVertX = this.detailsSeg + 1;
-			var nbVertY = this.detailsSeg + 1;
-			var verticePosition;
-			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / this.detailsSeg, (this.endCoord.y - this.startCoord.y) / this.detailsSeg);
-			for (x = 0; x < nbVertX; x ++) {
-				for (y = 0; y < nbVertY; y ++) {
-					var ele = this.elevationBuffer[index];
-					this.vertCoords[index].z = ele;
-					verticePosition = this.globe.coordToXYZ(this.startCoord.x + (stepCoord.x * x), this.startCoord.y + (stepCoord.y * y), ele);
-					this.meshe.geometry.vertices[index].x = verticePosition.x;
-					this.meshe.geometry.vertices[index].y = verticePosition.y;
-					this.meshe.geometry.vertices[index].z = verticePosition.z;
-					index ++;
-				}
-			}
-			this.makeBorders();
-			this.meshe.geometry.verticesNeedUpdate = true;
-			this.meshe.geometry.uvsNeedUpdate = true;
-			this.meshe.geometry.computeFaceNormals();
-			this.meshe.geometry.mergeVertices()
-			this.meshe.geometry.computeVertexNormals();
-			OEV.MUST_RENDER = true;
-		}, 
 		
 		getElevation : function(_lon, _lat) {
-			var res = -9999;
-			if( this.childTiles.length == 0 ){
-				res = this.interpolateEle( _lon, _lat );
-			}else{
-				for( var i = 0; i < this.childTiles.length; i ++ ){
-					var childEle = this.childTiles[i].getElevation( _lon, _lat );
-					if( childEle > -9999 ){
-						res = childEle;
-						break;
-					}
-				}
-			}
-			return res;
+			return 0;
 		}, 
 
-		getVerticeElevation : function(_vertIndex, _lon, _lat) {
-			if (!this.globe.eleActiv) {
-				return 0;
-			}
-			if (this.eleLoaded) {
-				this.vertCoords[_vertIndex].z;
-			}
-			if (this.parentTile != undefined) {
-				return this.parentTile.interpolateEle(_lon, _lat);
-			}
+		_getVerticeElevation : function(_vertIndex, _lon, _lat) {
+			return 0;
 		}, 
 
 		interpolateEle : function(_lon, _lat, _debug) {
-			_debug = _debug || false;
-			if( this.globe.eleActiv ){
-				var gapLeft = this.endCoord.x - this.startCoord.x;
-				var distFromLeft = _lon - this.startCoord.x;
-				var prctLeft = distFromLeft / gapLeft;
-				var gapTop = this.endCoord.y - this.startCoord.y;
-				var distFromTop = _lat - this.startCoord.y;
-				var prctTop = distFromTop / gapTop;
-				if( prctLeft < 0 || prctLeft > 1 || prctTop < 0 || prctTop > 1 ){
-					if( _debug ){
-						// console.log( "OUT interpolateEle " + prctLeft + " / " + prctTop );
-						// test
-						prctLeft = Math.min( Math.max( prctLeft, 0 ), 1 );
-						prctTop = Math.min( Math.max( prctTop, 0 ), 1 );
-					}else{
-						return -9999;
-					}
-				}
-				// get boundings vertex
-				if( prctLeft == 1 ){
-					var vertLeftTopIdX = Math.floor( this.detailsSeg * prctLeft ) - 1;
-				}else{
-					var vertLeftTopIdX = Math.floor( this.detailsSeg * prctLeft );
-				}
-				if( prctTop == 1 ){
-					var vertLeftTopIdY = Math.floor( this.detailsSeg * prctTop ) - 1;
-				}else{
-					var vertLeftTopIdY = Math.floor( this.detailsSeg * prctTop );
-				}
-				var vertLeftTopId = vertLeftTopIdY + ( vertLeftTopIdX * ( this.detailsSeg + 1 ) );
-				
-				if( prctLeft == 1 ){
-					var vertRightTopIdX = Math.floor( this.detailsSeg * prctLeft );
-				}else{
-					var vertRightTopIdX = Math.floor( this.detailsSeg * prctLeft ) + 1;
-				}
-				if( prctTop == 1 ){
-					var vertRightTopIdY = Math.floor( this.detailsSeg * prctTop ) - 1;
-				}else{
-					var vertRightTopIdY = Math.floor( this.detailsSeg * prctTop );
-				}
-				var vertRightTopId = vertRightTopIdY + ( vertRightTopIdX * ( this.detailsSeg + 1 ) );
-				
-				if( prctLeft == 1 ){
-					var vertLeftBottomIdX = Math.floor( this.detailsSeg * prctLeft ) - 1;
-				}else{
-					var vertLeftBottomIdX = Math.floor( this.detailsSeg * prctLeft );
-				}
-				if( prctTop == 1 ){
-					var vertLeftBottomIdY = Math.floor( this.detailsSeg * prctTop );
-				}else{
-					var vertLeftBottomIdY = Math.floor( this.detailsSeg * prctTop ) + 1;
-				}
-				var vertLeftBottomId = vertLeftBottomIdY + ( vertLeftBottomIdX * ( this.detailsSeg + 1 ) );
-				
-				if( prctLeft == 1 ){
-					var vertRightBottomIdX = Math.floor( this.detailsSeg * prctLeft );
-				}else{
-					var vertRightBottomIdX = Math.floor( this.detailsSeg * prctLeft ) + 1;
-				}
-				if( prctTop == 1 ){
-					var vertRightBottomIdY = Math.floor( this.detailsSeg * prctTop );
-				}else{
-					var vertRightBottomIdY = Math.floor( this.detailsSeg * prctTop ) + 1;
-				}
-				var vertRightBottomId = vertRightBottomIdY + ( vertRightBottomIdX * ( this.detailsSeg + 1 ) );
-				if( vertLeftTopId > this.vertCoords.length - 1 ){
-					console.log( "Overflow A " + vertLeftTopId + " / " + this.vertCoords.length );
-					console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
-				}
-				if( vertRightTopId > this.vertCoords.length - 1 ){
-					console.log( "Overflow B " + vertRightTopId + " / " + this.vertCoords.length );
-					console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
-				}
-				if( vertLeftBottomId > this.vertCoords.length - 1 ){
-					console.log( "Overflow C " + vertLeftBottomId + " / " + this.vertCoords.length );
-					console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
-				}
-				if( vertRightBottomId > this.vertCoords.length - 1 ){
-					console.log( "Overflow D " + vertRightBottomId + " / " + this.vertCoords.length );
-					console.log( "prctLeft : " + prctLeft + " / prctTop : " + prctTop );
-				}
-				// interpolate boundings vertex elevations
-				var ampEleTop = this.vertCoords[vertRightTopId].z - this.vertCoords[vertLeftTopId].z;
-				var ampEleBottom = this.vertCoords[vertRightBottomId].z - this.vertCoords[vertLeftBottomId].z;
-				var ampEleLeft = this.vertCoords[vertLeftBottomId].z - this.vertCoords[vertLeftTopId].z;
-				var ampEleRight = this.vertCoords[vertRightBottomId].z - this.vertCoords[vertRightTopId].z;
-				var gapVertLeft = this.vertCoords[vertRightTopId].x - this.vertCoords[vertLeftTopId].x;
-				var distFromVertLeft = _lon - this.vertCoords[vertLeftTopId].x;
-				var prctVertLeft = distFromVertLeft / gapVertLeft;
-				var gapVertTop = this.vertCoords[vertLeftBottomId].y - this.vertCoords[vertLeftTopId].y;
-				var distFromVertTop = _lat - this.vertCoords[vertLeftTopId].y;
-				var prctVertTop = distFromVertTop / gapVertTop;
-				var eleInterpolTop = this.vertCoords[vertLeftTopId].z + ( ampEleTop * prctVertLeft );
-				var eleInterpolBottom = this.vertCoords[vertLeftBottomId].z + ( ampEleTop * prctVertLeft );
-				var amplVert = eleInterpolBottom - eleInterpolTop;
-				var eleInterpolFinal = eleInterpolTop + ( amplVert * prctVertTop );
-				if( isNaN( eleInterpolFinal ) ){
-					console.log( "NaN eleInterpolFinal : " + vertLeftTopId + " / " + vertRightTopId + " / " + vertLeftBottomId + " / " + vertRightBottomId );
-				}
-				return eleInterpolFinal;
-			}
 			return 0;
 		}, 
 
@@ -863,39 +442,26 @@ Oev.Tile = (function(){
 		dispose : function() {
 			this.globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 			this.clearChildrens();
-			this.clearModels();
 			this.hide();
-			if( this.tile3d != undefined ){
-				this.tile3d.dispose();
-				this.tile3d = undefined;
-			}
 			this.nodesProvider.dispose();
 			for( var i = 0; i < this.surfacesProviders.length; i ++ ){
 				this.surfacesProviders[i].dispose();
-			}
-			for( var i = 0; i < this.datasProviders.length; i ++ ){
-				this.datasProviders[i].dispose();
 			}
 			if( this.meshe != undefined ){
 				this.meshe.geometry.dispose();
 				this.material.map.dispose();
 				this.material.dispose();
 			}
-			if( this.mesheBorder != undefined ){
-				this.mesheBorder.geometry.dispose();
-				this.materialBorder.map.dispose();
-				this.materialBorder.dispose();
-			}
-			if( this.textureLoaded ){
+			if (this.textureLoaded) {
 				this.remoteTex.dispose();
 			}
-			this.canvasOverlay = undefined;
 			if( this.mustUpdate ){
 				OEV.removeObjToUpdate( this );
 			}
 			if (this.meshInstance) {
 				this.meshInstance.geometry.dispose();
 			}
+			this.isReady = false;
 			this.evt.fireEvent('DISPOSE');
 		}, 
 	}

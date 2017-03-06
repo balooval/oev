@@ -34,7 +34,7 @@ if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
 	processHgtToImg();
 
 } else if( isset( $_GET['planes'] ) ){
-	$res = @file_get_contents('https://opensky-network.org/api/states/all');
+	$res = file_get_contents('https://air:123ourson@opensky-network.org/api/states/all');
 	echo $res;
 	
 } else if( isset( $_GET['coastLine'] ) ){

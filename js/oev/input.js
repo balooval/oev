@@ -1,13 +1,20 @@
 Oev.Input = (function(){
 	'use strict';
 	var api = {
+		init : function() {
+			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+			Oev.Input.Mouse.init();
+		}, 
 		
+		onAppStart : function() {
+			
+		}, 
 	};
 	
 	return api;
 })();
 	
-Oev.Input.Keyboad = (function(){
+Oev.Input.Keyboard = (function(){
 	'use strict';
 	var majActiv = false;
 	var ctrlActiv = false;
@@ -73,9 +80,9 @@ Oev.Input.Keyboad = (function(){
 				}else if( key == 90 ){ // z
 					
 				}else if( key == 107 ){ // +
-					
+					OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest + 1, 200 );
 				}else if( key == 109 ){ // -
-					
+					OEV.camCtrl.setZoomDest(OEV.camCtrl.zoomDest - 1, 200);
 				}else if( key == 88 ){ // x
 					
 				}

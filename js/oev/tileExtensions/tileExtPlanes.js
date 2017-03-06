@@ -129,11 +129,11 @@ Oev.Tile.Extension.Planes = function(_tile) {
 	
 	var planes = {};
 	
-	ext.onActivate = function() {
+	ext.activate = function() {
 		Oev.Tile.Extension.PlanesWatcher.init();
 	}
 	
-	ext.onDesactivate = function() {
+	ext.desactivate = function() {
 		Oev.Tile.Extension.PlanesWatcher.stop();
 		// ext.onPlaneVoid();
 		ext.dispose();
@@ -203,7 +203,7 @@ Oev.Tile.Extension.Planes = function(_tile) {
 		Oev.Tile.Extension.PlanesWatcher.evt.removeEventListener('PLANE_POS_UPDATE_' + myTileIndex, ext, ext.onPlaneUpdatePos);
 	}
 	
-	ext.init(_tile);
+	ext.onInit(_tile);
 	
 	return ext;
 }

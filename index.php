@@ -22,7 +22,7 @@ include( 'libs/init.php' );
 		
 		<script type="text/javascript" src="js/utils/water.js"></script>
 	</head>
-	<body onkeydown="Oev.Input.Keyboad.onKeyDown(event)" onkeyup="Oev.Input.Keyboad.onKeyUp(event)">
+	<body onkeydown="Oev.Input.Keyboard.onKeyDown(event)" onkeyup="Oev.Input.Keyboard.onKeyUp(event)">
 		<div id="modalContainer">
 			<div id="modalWindow">
 				<a href="#" onclick="closeModal();"><img src="img/ico_close.png" alt="close" title="close"></a>
@@ -41,11 +41,6 @@ include( 'libs/init.php' );
 				<div id="tools">
 					<a href="standby.php">STOP</a>
 					<div id="debugBox"></div>
-					<div class="toolsBox" id="search_box">
-						<form onsubmit="return querySearch();" action="#top">
-							<input type="text" name="search_value" id="search_value" placeholder="search place">
-						</form>
-					</div>
 					<div class="toolsBox">
 						<h3 data-content="navigation" class="activ"><div class="ico_expend activ" id="expend_navigation"></div> Navigation</h3>
 						<div class="toolsContent activ" id="toolsContent_navigation">
@@ -61,12 +56,6 @@ include( 'libs/init.php' );
 						<h3 data-content="datasToLoad" class="activ"><div class="ico_expend activ" id="expend_datasToLoad"></div> Datas to load</h3>
 						<div class="toolsContent activ" id="toolsContent_datasToLoad">
 							<input class="oev-btn-dataToLoad" type="checkbox" name="cfg_load_ele" id="cfg_load_ele" value="1"> <label for="cfg_load_ele">Elevation</label>
-							<br>
-							<input class="oev-btn-dataToLoad" data-extension="BUILDING" type="checkbox" name="cfg_load_buildings" id="cfg_load_buildings" value="1"> <label for="cfg_load_buildings">Buildings</label> <a href="#" onclick="openConfigBuildings();"><img src="img/ico_config.png" alt="config" title="config"></a>
-							<br>
-							<input id="cfg_load_planes" data-extension="PLANE" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_planes">Planes</label>
-							<br>
-							<input id="cfg_load_normal" data-extension="NORMAL" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_normal">Normals</label>
 							<br>
 							<input class="oev-btn-dataToLoad" type="checkbox" name="cfg_load_nodes" id="cfg_load_nodes" value="1"> <label for="cfg_load_nodes">Nodes</label>
 							<br>
@@ -168,6 +157,10 @@ include( 'libs/init.php' );
 			var OEV = new OpenEarthViewer('threeContainer');
 		</script>
 		<script type="text/javascript" src="js/oev/ui.js"></script>
+		<script type="text/javascript" src="js/oev/net/Net.js"></script>
+		<script type="text/javascript" src="js/oev/net/NetTextures.js"></script>
+		<script type="text/javascript" src="js/oev/net/NetModels.js"></script>
+		<script type="text/javascript" src="js/oev/globe.js"></script>
 		<script type="text/javascript" src="js/oev/tile.js"></script>
 		<script type="text/javascript" src="js/oev/geo.js"></script>
 		<script type="text/javascript" src="js/oev/input.js"></script>
@@ -186,6 +179,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/oev/tileExtensions/tileExtNormal.js"></script>
 		<script type="text/javascript" src="js/oev/tileExtensions/tileExtBuilding.js"></script>
 		<script type="text/javascript" src="js/oev/tileExtensions/tileExtPlanes.js"></script>
+		<script type="text/javascript" src="js/oev/tileExtensions/tileExtElevation.js"></script>
 		<script type="text/javascript" src="js/UI.js"></script>
 		<script type="text/javascript" src="js/CamCtrl.js"></script>
 		
@@ -194,7 +188,7 @@ include( 'libs/init.php' );
 		<script type="text/javascript" src="js/TileNodes.js"></script>
 		<script type="text/javascript" src="js/Globe.js"></script>
 		<script type="text/javascript" src="js/DatasMng.js"></script>
-		<script type="text/javascript" src="js/DatasProvider.js"></script>
+		
 		<script type="text/javascript" src="js/Earcut.js"></script>
 		<script type="text/javascript" src="js/utils/lineclip.js"></script>
 		<script type="text/javascript" src="js/utils/geojson-area.js"></script>

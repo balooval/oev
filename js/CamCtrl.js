@@ -30,11 +30,15 @@ var CamCtrlGod = function () {
 	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 	Oev.Input.Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 	this.MUST_UPDATE = false;
+	OEV.evt.addEventListener('APP_START', this, this.onAppStart);
 }
 
-CamCtrlGod.prototype.init = function( _cam, _planet ) {
+CamCtrlGod.prototype.init = function(_cam, _planet) {
 	this.camera = _cam;
 	this.planet = _planet;
+}
+
+CamCtrlGod.prototype.onAppStart = function() {
 	this.camera.up.set( 0, -1, 0 );
 	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
 	OEV.scene.add( this.pointer );
@@ -42,9 +46,6 @@ CamCtrlGod.prototype.init = function( _cam, _planet ) {
 	OEV.scene.add( this.clicPointer );
 	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
 	OEV.scene.add( this.debugPointer );
-	
-
-	
 	if( location.hash != '' ){
 		var urlParamsLoc = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
 		this.zoomCur = parseFloat( urlParamsLoc[0] );
@@ -56,6 +57,7 @@ CamCtrlGod.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
+	this.updateCamera();
 }
 
 CamCtrlGod.prototype.setZoomDest = function( _zoom, _duration ) {
@@ -464,13 +466,13 @@ CamCtrlFps.prototype.checkKeyMovement = function() {
 }
 
 CamCtrlFps.prototype.onKeyDown = function() {
-	if (Oev.Input.Keyboad.lastKeyDown == 37) { // LEFT
+	if (Oev.Input.Keyboard.lastKeyDown == 37) { // LEFT
 		this.keyMoveX.x = -1;
-	}else if (Oev.Input.Keyboad.lastKeyDown == 39) { // RIGHT
+	}else if (Oev.Input.Keyboard.lastKeyDown == 39) { // RIGHT
 		this.keyMoveX.y = 1;
-	}else if (Oev.Input.Keyboad.lastKeyDown == 38) { // TOP
+	}else if (Oev.Input.Keyboard.lastKeyDown == 38) { // TOP
 		this.keyMoveY.x = -1;
-	}else if (Oev.Input.Keyboad.lastKeyDown == 40) { // BOTTOM
+	}else if (Oev.Input.Keyboard.lastKeyDown == 40) { // BOTTOM
 		this.keyMoveY.y = 1;
 	}
 	
@@ -478,13 +480,13 @@ CamCtrlFps.prototype.onKeyDown = function() {
 }
 
 CamCtrlFps.prototype.onKeyUp = function() {
-	if (Oev.Input.Keyboad.lastKeyUp == 37) { // LEFT
+	if (Oev.Input.Keyboard.lastKeyUp == 37) { // LEFT
 		this.keyMoveX.x = 0;
-	}else if (Oev.Input.Keyboad.lastKeyUp == 39) { // RIGHT
+	}else if (Oev.Input.Keyboard.lastKeyUp == 39) { // RIGHT
 		this.keyMoveX.y = 0;
-	}else if (Oev.Input.Keyboad.lastKeyUp == 38) { // TOP
+	}else if (Oev.Input.Keyboard.lastKeyUp == 38) { // TOP
 		this.keyMoveY.x = 0;
-	}else if (Oev.Input.Keyboad.lastKeyUp == 40) { // BOTTOM
+	}else if (Oev.Input.Keyboard.lastKeyUp == 40) { // BOTTOM
 		this.keyMoveY.y = 0;
 	}
 	
@@ -513,8 +515,8 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 		this.planet.updateZoom( this.zoomCur );
 		this.MUST_UPDATE = true;
 	}
-	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
-	Oev.Input.Keyboad.evt.addEventListener("ON_KEY_UP", this, this.onKeyUp);
+	Oev.Input.Keyboard.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
+	Oev.Input.Keyboard.evt.addEventListener("ON_KEY_UP", this, this.onKeyUp);
 }
 
 

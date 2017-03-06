@@ -170,7 +170,12 @@ Oev.Tile.Surface.prototype = {
 			this.partMeshes[type] = new THREE.Points(partGeom[type], mat);
 			OEV.scene.add(this.partMeshes[type]);
 			
+			this.twoSideGeos[type].computeFaceNormals();
+			this.twoSideGeos[type].computeVertexNormals();
+			
 			this.twoSideMeshes[type] = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeos[type]), matTwoSide);
+			this.twoSideMeshes[type].receiveShadow = true;
+			this.twoSideMeshes[type].castShadow = true;
 			OEV.scene.add(this.twoSideMeshes[type]);
 		}
 		OEV.MUST_RENDER = true;

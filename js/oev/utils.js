@@ -80,12 +80,12 @@ Oev.Utils = (function(){
                     break;
 				}
 			}
-			if (index != -1){
-				this.events[_evtName].splice(index, 1);
-				this.listeners[_evtName].splice(index, 1);
-			}else{
+			if (index < 0){
 				console.error('removeEventListener NOT found');
+				return false;
 			}
+			this.events[_evtName].splice(index, 1);
+			this.listeners[_evtName].splice(index, 1);
 		}, 
 
 		fireEvent : function(_evtName, _args) {

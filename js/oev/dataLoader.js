@@ -24,6 +24,9 @@ Oev.DataLoader.Proxy.prototype = {
 		_params.priority = _params.priority || 1;
 		_params.key = _params.z + '-' + _params.x + '-' + _params.y;
 		_params.callback = _callback;
+		if (this._type == 'OELE') {
+			console.log('getData', _params.key);
+		}
 		if (this._sendCachedData(_params) === true) {
 			return true;
 		}

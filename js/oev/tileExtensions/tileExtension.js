@@ -6,48 +6,47 @@ Oev.Tile.Extension = {
 		
 		evt : new Oev.Utils.Evt(), 
 		
-		toggleExtension : function(_extensionId, _state) {
-			console.log('toggle', _extensionId, _state);
-			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_TOGGLE_' + _extensionId, _state);
-		}, 
-	
-		init : function(_tile) {
-			this.tile = _tile;
-			this.isActiv = false;
-			Oev.Tile.Extension.evt.addEventListener('TILE_EXTENSION_TOGGLE_' + this.id, this, this._onToggle);
+		activateExtension : function(_extensionId) {
+			console.log('activateExtension', _extensionId);
+			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 		}, 
 		
-		_activate : function() {
-			this.isActiv = true;
+		desactivateExtension : function(_extensionId) {
+			console.log('desactivateExtension', _extensionId);
+			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
+		}, 
+	
+		onInit : function(_tile) {
+			this.tile = _tile;
+			if (Oev.Tile.Extension['ACTIV_' + this.id] === undefined) {
+				Oev.Tile.Extension['ACTIV_' + this.id] = false;
+			}
+			Oev.Tile.Extension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
+			Oev.Tile.Extension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this.id, this, this.onDesactivate);
+			if (Oev.Tile.Extension['ACTIV_' + this.id]) {
+				this.onActivate();
+			}
+			this.init();
+		}, 
+		
+		onActivate : function() {
+			Oev.Tile.Extension['ACTIV_' + this.id] = true;
 			this.dataLoaded = false;
 			this.tile.evt.addEventListener('TILE_READY', this, this.onLoadDatas);
 			this.tile.evt.addEventListener('SHOW', this, this.onShow);
 			this.tile.evt.addEventListener('HIDE', this, this.onHide);
 			this.tile.evt.addEventListener('DISPOSE', this, this.onDispose);
-			this.onActivate();
-			this.onLoadDatas();
+			this.activate();
+			if (this.tile.isReady) {
+				this.onLoadDatas();
+			}
 		}, 
 		
-		_desactivate : function() {
-			this.tile.evt.removeEventListener('TILE_READY', this, this.onLoadDatas);
-			this.tile.evt.removeEventListener('SHOW', this, this.onShow);
-			this.tile.evt.removeEventListener('HIDE', this, this.onHide);
-			this.tile.evt.removeEventListener('DISPOSE', this, this.onDispose);
-			this.onDesactivate();
-			this.dispose();
-		}, 
-		
-		_onToggle : function(_state) {
-			if (_state !== undefined) {
-				this.isActiv = _state;
-			} else {
-				this.isActiv = !this.isActiv;
-			}
-			if (this.isActiv) {
-				this._activate();
-			} else {
-				this._desactivate();
-			}
+		onDesactivate : function() {
+			Oev.Tile.Extension['ACTIV_' + this.id] = false;
+			this.onHide();
+			this.onDispose();
+			this.desactivate();
 		}, 
 		
 		onLoadDatas : function(_evt) {
@@ -66,7 +65,7 @@ Oev.Tile.Extension = {
 		}, 
 		
 		onDispose : function() {
-			this.tile.evt.removeEventListener('LOAD_DATAS', this, this.onLoadDatas);
+			this.tile.evt.removeEventListener('TILE_READY', this, this.onLoadDatas);
 			this.tile.evt.removeEventListener('SHOW', this, this.onShow);
 			this.tile.evt.removeEventListener('HIDE', this, this.onHide);
 			this.tile.evt.removeEventListener('DISPOSE', this, this.onDispose);
@@ -75,11 +74,15 @@ Oev.Tile.Extension = {
 		
 		/*		TO OVERRIDE	*/
 		
-		onActivate : function() {
+		init : function() {
 			
 		}, 
 		
-		onDesactivate : function() {
+		activate : function() {
+			
+		}, 
+		
+		desactivate : function() {
 			
 		}, 
 		
@@ -99,3 +102,6 @@ Oev.Tile.Extension = {
 			
 		}, 
 };
+
+
+// Oev.Tile.Extension['ACTIV_ELEVATION'] = true;

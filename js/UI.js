@@ -41,10 +41,7 @@ function initUi(){
 	for( var i = 0; i < elem.length; i ++ ){
 		elem[i].addEventListener("click", changeTilesLayer );
 	}
-	var elem = document.getElementsByClassName( "cfg_load_models" );
-	for( var i = 0; i < elem.length; i ++ ){
-		elem[i].addEventListener("click", switchModelsToLoad );
-	}
+
 	document.getElementById( "contactLink" ).setAttribute('href', "mailto:val.poub@gmail.com");
 	document.getElementById( "cfg_load_ele" ).addEventListener("click", switchElevation );
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
@@ -69,7 +66,7 @@ function initUi(){
 			for( var p = 0; p < urlParams.length; p ++ ){
 				debug( 'param ' + p + ' : ' + urlParams[p] );
 				if( urlParams[p] == 'buildings' ){
-					Oev.Tile.Extension.toggleExtension('BUILDINGS', true);
+					Oev.Tile.Extension.activateExtension('BUILDINGS');
 					document.getElementById( "cfg_load_buildings" ).checked = true;
 				}else if( urlParams[p] == 'landuse' ){
 					OEV.earth.activLanduse( true );
@@ -77,10 +74,6 @@ function initUi(){
 				}else if( urlParams[p] == 'elevation' ){
 					OEV.earth.activElevation( true );
 					document.getElementById( "cfg_load_ele" ).checked = true;
-				}else if( urlParams[p] == 'tree' ){
-					OEV.MODELS_CFG['TREE']["ACTIV"] = true;
-					OEV.earth.updateTilesModelProvider( true, OEV.MODELS_CFG['TREE']["NAME"] );
-					document.getElementById( "cfg_load_TREE" ).checked = true;
 				}
 			}
 		}
@@ -157,16 +150,6 @@ function onFogFarChanged(){
 		OEV.scene.fog.near = OEV.scene.fog.far;
 	}
 	OEV.MUST_RENDER = true;
-}
-
-function switchModelsToLoad(){
-	if( this.checked ){
-		OEV.MODELS_CFG[this.dataset.model]["ACTIV"] = true;
-		OEV.earth.updateTilesModelProvider( true, OEV.MODELS_CFG[this.dataset.model]["NAME"] );
-	}else{
-		OEV.MODELS_CFG[this.dataset.model]["ACTIV"] = false;
-		OEV.earth.updateTilesModelProvider( false, OEV.MODELS_CFG[this.dataset.model]["NAME"] );
-	}
 }
 
 function changeTilesLayer(){
@@ -249,14 +232,14 @@ function saveNewWP( _name ){
 	if( _name == '' ){
 		_name = 'New WP';
 	}
-	OEV.saveWaypoint( OEV.camCtrl.coordLookat.x, OEV.camCtrl.coordLookat.y, OEV.earth.CUR_ZOOM, _name, 'default', true );
+	Oev.Navigation.saveWaypoint( OEV.camCtrl.coordLookat.x, OEV.camCtrl.coordLookat.y, OEV.earth.CUR_ZOOM, _name, 'default', true );
 }
 
 function updateWaypointsList( _waysPts ){
 	document.getElementById( "waypointsInfos" ).innerHTML = "";
 	for( var w = 0; w < _waysPts.length; w ++ ){
 		if( _waysPts[w].showList ){
-			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="OEV.removeWaypoint('+w+')">X</span> ' + ( w + 1 ) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint('+w+');" title=" '+ ( Math.round( _waysPts[w].lon * 1000 ) / 1000 ) + " / " + ( Math.round( _waysPts[w].lat * 1000 ) / 1000 ) +'">'+_waysPts[w].name + '</span><br>';
+			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint('+w+')">X</span> ' + ( w + 1 ) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint('+w+');" title=" '+ ( Math.round( _waysPts[w].lon * 1000 ) / 1000 ) + " / " + ( Math.round( _waysPts[w].lat * 1000 ) / 1000 ) +'">'+_waysPts[w].name + '</span><br>';
 		}
 	}
 }
@@ -284,9 +267,9 @@ function updateLoadingDatas( _datasMng ){
 function zoomOut( _value ){
 	_value = _value || 1;
 	if( OEV.camCtrl.name == 'FPS' ){
-		OEV.camCtrl.modAltitude( 50 );
+		OEV.camCtrl.modAltitude(50);
 	}else{
-		OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest - _value, 200 );
+		OEV.camCtrl.setZoomDest(OEV.camCtrl.zoomDest - _value, 200);
 	}
 }
 
@@ -297,24 +280,6 @@ function zoomIn( _value ){
 	}else{
 		OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest + _value, 200 );
 	}
-}
-
-function querySearch(){
-	var searchValue = document.getElementById( "search_value" ).value;
-	debug( "searchValue: " + searchValue );
-	var bbox = OEV.earth.getCurrentBBox();
-	var url = "libs/remoteImg.php?nominatim=1&searchValue="+searchValue+"&left="+bbox["left"]+"&top="+bbox["top"]+"&right="+bbox["right"]+"&bottom="+bbox["bottom"]+"";
-	var ajaxMng = new AjaxMng( url, { "searchValue" : searchValue }, function( res, _params ){
-		var results = JSON.parse( res );
-		if( results.length > 0 ){
-			debug( "Found" );
-			OEV.earth.saveWayPoints( parseFloat( results[0]["lon"] ), parseFloat( results[0]["lat"] ), 10, _params["searchValue"] );
-			OEV.gotoWaypoint( OEV.earth.wayPoints.length - 1 );
-		}else{
-			debug( "No results" );
-		}
-	});
-	return false;
 }
 
 function debug( _msg, _inHtml ){
@@ -333,17 +298,6 @@ function openConfigLanduse(){
 		checked = 'checked="checked"';
 	}
 	content += 'Use cache : <input type="checkbox" onclick="TileSurface.prototype.useCache=!TileSurface.prototype.useCache;" '+checked+'><br>';
-	openModal( content );
-}
-
-function openConfigBuildings(){
-	var content = '<h3>Buildings</h3><br>';
-	content += '<img src="img/ico_buildings.png" alt="buildings"><br>';
-	var checked = '';
-	if( Tile3d.prototype.useCache == true ){
-		checked = 'checked="checked"';
-	}
-	content += 'Use cache : <input type="checkbox" onclick="Tile3d.prototype.useCache=!Tile3d.prototype.useCache;" '+checked+'><br>';
 	openModal( content );
 }
 

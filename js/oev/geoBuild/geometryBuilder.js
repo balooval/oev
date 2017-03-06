@@ -6,26 +6,37 @@ Oev.GeometryBuilder = (function(){
 	
 	var api = {
 		cylinder : function(_geometry, _params) {
+			
+			nbSections = _params.nbSections || 8;
+			angleStep = Math.PI * 2 / nbSections;
+			
 			var i;
 			var j;
 			var vertBefore = _geometry.vertices.length;
 			var vertId = 0;
 			var halfRadius;
 			var curAlt;
+			var curAngle;
+			var cos;
+			var sin;
+			var curRadius;
+			var altVariation;
+			var tmp;
 			var slicesPos = [];
-			for (i = 0; i < _params.scales.length; i ++) {
+			for (i = 0; i < _params.radius.length; i ++) {
 				curAlt = _params.altitude + _params.height * _params.alts[i];
-				halfRadius = (_params.scales[i] / 2);
-				var tmp = [];
-				for (var a = 0; a < nbSections; a ++) {
-					var curAngle = a * angleStep;
-					var cos = Math.cos(curAngle);
-					var sin = Math.sin(curAngle);
-					var altVariation = 0;
-					if (i > 0 && i < _params.scales.length - 1) {
-						altVariation = Math.random() * (_params.height / 10);
-					}
-					var curRadius = halfRadius + halfRadius * (Math.random() * _params.radiusVariations[i]);
+				halfRadius = (_params.radius[i] / 2);
+				tmp = [];
+				for (j = 0; j < nbSections; j ++) {
+					curAngle = j * angleStep;
+					cos = Math.cos(curAngle);
+					sin = Math.sin(curAngle);
+					altVariation = 0;
+					// if (i > 0 && i < _params.radius.length - 1) {
+						// altVariation = Math.random() * (_params.height / 5);
+					// }
+					// curRadius = halfRadius + halfRadius * (Math.random() * _params.radiusVariations[i]);
+					curRadius = halfRadius;
 					tmp.push(OEV.earth.coordToXYZ(_params.lon + curRadius * cos, _params.lat + curRadius * sin, curAlt + altVariation));
 				}
 				slicesPos.push(tmp);
@@ -51,16 +62,21 @@ Oev.GeometryBuilder = (function(){
 						vertBefore + vertId
 					));
 					
+					
+					var uvHorStep = (_params.texTile[i].endX - _params.texTile[i].startX) / slicesPos[i].length;
+					var uvHorA = _params.texTile[i].startX + (uvHorStep * j);
+					var uvHorB = uvHorA + uvHorStep;
+					
 					_geometry.faceVertexUvs[0][nbFaces] = [
-						new THREE.Vector2(_params.texTile[i].endX, _params.texTile[i].startY), 
-						new THREE.Vector2(_params.texTile[i].startX, _params.texTile[i].startY), 
-						new THREE.Vector2(_params.texTile[i].startX, _params.texTile[i].endY), 
+						new THREE.Vector2(uvHorA, _params.texTile[i].startY), 
+						new THREE.Vector2(uvHorB, _params.texTile[i].startY), 
+						new THREE.Vector2(uvHorB, _params.texTile[i].endY), 
 					];
 					nbFaces ++;
 					_geometry.faceVertexUvs[0][nbFaces] = [
-						new THREE.Vector2(_params.texTile[i].startX, _params.texTile[i].endY), 
-						new THREE.Vector2(_params.texTile[i].endX, _params.texTile[i].endY), 
-						new THREE.Vector2(_params.texTile[i].endX, _params.texTile[i].startY), 
+						new THREE.Vector2(uvHorB, _params.texTile[i].endY), 
+						new THREE.Vector2(uvHorA, _params.texTile[i].endY), 
+						new THREE.Vector2(uvHorA, _params.texTile[i].startY), 
 					];
 					nbFaces ++;
 					vertId += 1;

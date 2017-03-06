@@ -12,7 +12,6 @@ Oev.Sky = (function(){
 	var colorsGradient = undefined;
 	var fogActive = true;
 	var hemiIntensity = 0.35;
-	// var sunPoint = undefined;
 	var stars = null;
 	var starsMat = null;
 	var snowEmiter = undefined;
@@ -20,8 +19,6 @@ Oev.Sky = (function(){
 	var destTimeSpeed = 0.01;
 	var rainEnabled = false;
 	var weatherEnabled = false;
-	
-	
 	var lightSun;
 	
 	var api = {
@@ -32,15 +29,15 @@ Oev.Sky = (function(){
 		posCenter : new THREE.Vector3( 0, 0, 0 ), 
 		
 		init : function() {
+			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+		}, 
+		
+		onAppStart : function() {
 			destTime = api.normalizedTime;
 			if( fogActive ){
 				OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 			}
 			colorsGradient = getImageData(OEV.textures['sky_gradient'].image);	
-			// sunPoint = new THREE.PointLight(0xffffff, 1.0, OEV.earth.radius);
-			// OEV.scene.add(sunPoint);
-			
-			
 			lightSun = new THREE.DirectionalLight(0xffffff, 1);
 			OEV.scene.add(lightSun);
 

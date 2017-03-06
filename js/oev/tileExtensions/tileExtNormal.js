@@ -43,6 +43,7 @@ Oev.Tile.Extension.Normal = function(_tile) {
 	}
 	
 	ext.dispose = function() {
+		this.hide();
 		this.tile.material.normalMap = null;
 		this.tile.material.needsUpdate = true;
 		OEV.MUST_RENDER = true;

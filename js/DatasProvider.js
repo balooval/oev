@@ -104,7 +104,7 @@ DatasProvider.prototype.drawDatas = function() {
 				}
 				if (this.name == 'TREE') {
 					var treeTags = this.datasContent["elements"][t].tags || {};
-					Oev.Model.Tree.generate(bigGeosTab, lon, lat, ele, treeTags);
+					Oev.Model.Tree.build(bigGeosTab, {lon:lon, lat:lat, alt:ele}, treeTags);
 				}
 			}
 			if (this.name == 'TREE') {
