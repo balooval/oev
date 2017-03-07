@@ -67,10 +67,11 @@ Oev.Globe = (function() {
 			api.loaderNormal = new Oev.DataLoader.Proxy('NORMAL');
 			api.loaderPlane = new Oev.DataLoader.Proxy('PLANE');
 			
-			api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
-			api.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
-			api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
-			api.tileExtensions['ELEVATION'] = Oev.Tile.Extension.Elevation;
+			// api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
+			// api.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
+			// api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
+			// api.tileExtensions['ELEVATION'] = Oev.Tile.Extension.Elevation;
+			api.tileExtensions['LIFE'] = Oev.Tile.Extension.Life;
 			
 			api.setProjection( "PLANE" );
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
@@ -134,16 +135,33 @@ Oev.Globe = (function() {
 			api.matWayPoints = new THREE.SpriteMaterial( { map: OEV.textures['waypoint'], color: 0xffffff, fog: false } );
 		}, 
 
-		isCoordOnGround : function(_lon, _lat) {
+		isCoordOnGround : function(_lon, _lat, _marge) {
 			if (coastDatas === null) {
-				return true;
+				return false;
 			}
+			_marge = _marge || 0;
+			// console.log('_marge', _marge);
 			var mercX = Oev.Geo.mercatorLonToX(_lon);
 			var mercY = Oev.Geo.mercatorLatToY(_lat);
 			var pxlX = Math.round(mercX * coastPxlRatio) + 1024;
 			var pxlY = Math.round(mercY * coastPxlRatio) + 1024;
 			pxlY = Math.abs(2048 - pxlY);
-			var bufferIndex = (pxlX * 2048 + pxlY);
+			
+			
+			var bufferIndex;
+			for (var i = 0; i < _marge * 2; i ++) {
+				for (var j = 0; j < _marge * 2; j ++) {
+					bufferIndex = ((pxlX - _marge + i) * 2048 + (pxlY - _marge + j));
+					// console.log('bufferIndex', bufferIndex);
+					if (coastDatas[bufferIndex] == 1) {
+						// console.log('--');
+						return 1;
+					}
+				}
+			}
+			bufferIndex = (pxlX * 2048 + pxlY);
+			
+			// console.log('isCoordOnGround', coastDatas[bufferIndex]);
 			return coastDatas[bufferIndex];
 		}, 
 

@@ -15,7 +15,10 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.tile.interpolateEle = ext.interpolateEle;
 	}
 	
-	ext.loadDatas = function() {
+	ext.tileReady = function() {
+		if (this.dataLoaded) {
+			return false;
+		}
 		loaderEle.getData(
 			{
 				z : this.tile.zoom, 
@@ -33,7 +36,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (this.datasLoaded) {
 			return false;
 		}
-		this.loadDatas();
+		this.tileReady();
 	}
 	
 	ext.hide = function() {
@@ -166,7 +169,6 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.tile.meshe.add(this.mesheBorder);
 	}
 	
-	
 	ext.getElevation = function(_lon, _lat) {
 		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
 			return 0;
@@ -197,6 +199,9 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	
 	ext.interpolateEle = function(_lon, _lat) {
 		if (ext.dataLoaded === false) {
+			if (ext.tile.parentTile != undefined) {
+				return ext.tile.parentTile.interpolateEle(_lon, _lat);
+			}
 			return 0;
 		}
 		var gapLeft = ext.tile.endCoord.x - ext.tile.startCoord.x;

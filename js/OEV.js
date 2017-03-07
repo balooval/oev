@@ -165,6 +165,7 @@ OpenEarthViewer.prototype.loadModels = function() {
 	Oev.Net.Models.addToList(modelList, 'poubelle', 'poubelle2.json');
 	Oev.Net.Models.addToList(modelList, 'statue', 'statue.json');
 	Oev.Net.Models.addToList(modelList, 'plane', 'avion.json');
+	Oev.Net.Models.addToList(modelList, 'whale', 'whale.json');
 	Oev.Net.Models.loadBatch(modelList, onOevModelsLoaded);
 }
 

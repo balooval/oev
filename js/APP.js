@@ -12,12 +12,7 @@ var APP = APP || {};
 APP = (function(api){
     var appSrc = null;
     
-    var subModules = [
-        'DpiApi', 
-        'DpiApiCache', 
-        'DpiUi', 
-        'DpiUtil', 
-    ];
+    var subModules = [];
     
     api.app = null;
     api.api = null;

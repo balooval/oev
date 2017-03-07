@@ -32,13 +32,13 @@ Oev.Tile.Extension = {
 		onActivate : function() {
 			Oev.Tile.Extension['ACTIV_' + this.id] = true;
 			this.dataLoaded = false;
-			this.tile.evt.addEventListener('TILE_READY', this, this.onLoadDatas);
+			this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 			this.tile.evt.addEventListener('SHOW', this, this.onShow);
 			this.tile.evt.addEventListener('HIDE', this, this.onHide);
 			this.tile.evt.addEventListener('DISPOSE', this, this.onDispose);
 			this.activate();
 			if (this.tile.isReady) {
-				this.onLoadDatas();
+				this.onTileReady();
 			}
 		}, 
 		
@@ -49,11 +49,8 @@ Oev.Tile.Extension = {
 			this.desactivate();
 		}, 
 		
-		onLoadDatas : function(_evt) {
-			if (this.dataLoaded) {
-				return false;
-			}
-			this.loadDatas();
+		onTileReady : function(_evt) {
+			this.tileReady();
 		}, 
 		
 		onShow : function() {
@@ -65,7 +62,7 @@ Oev.Tile.Extension = {
 		}, 
 		
 		onDispose : function() {
-			this.tile.evt.removeEventListener('TILE_READY', this, this.onLoadDatas);
+			this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 			this.tile.evt.removeEventListener('SHOW', this, this.onShow);
 			this.tile.evt.removeEventListener('HIDE', this, this.onHide);
 			this.tile.evt.removeEventListener('DISPOSE', this, this.onDispose);
@@ -78,15 +75,15 @@ Oev.Tile.Extension = {
 			
 		}, 
 		
+		tileReady : function() {
+			
+		}, 
+		
 		activate : function() {
 			
 		}, 
 		
 		desactivate : function() {
-			
-		}, 
-		
-		loadDatas : function() {
 			
 		}, 
 		

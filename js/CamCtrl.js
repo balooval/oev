@@ -284,7 +284,7 @@ CamCtrlGod.prototype.updateCamera = function() {
 		Oev.Sky.updateSun();
 	}
 	
-	OEV.earth.isCoordOnGround(this.coordLookat.x, this.coordLookat.y);
+	// console.log('Camera on ground ?', OEV.earth.isCoordOnGround(this.coordLookat.x, this.coordLookat.y, 1));
 }
 
 

@@ -35,8 +35,12 @@ Oev.Tile = (function(){
 		this.distToCam = -1;
 		Oev.Globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		
+		this.extensions = [];
+		
 		for (var key in Oev.Globe.tileExtensions) {
-			Oev.Globe.tileExtensions[key](this);
+			var ext = new Oev.Globe.tileExtensions[key](this);
+			this.extensions.push(ext);
 		}
 	}
 
@@ -435,6 +439,7 @@ Oev.Tile = (function(){
 			if (this.meshInstance) {
 				this.meshInstance.geometry.dispose();
 			}
+			this.extensions = [];
 			this.isReady = false;
 			this.evt.fireEvent('DISPOSE');
 		}, 

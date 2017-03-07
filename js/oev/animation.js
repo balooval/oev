@@ -13,7 +13,6 @@ Oev.Animation = (function(){
 		this.timeEnd = -1;
 		this.timeTotal = -1;
 		this.running = false;
-		
 		this.evt = new Oev.Utils.Evt();
 	};
 	
@@ -47,7 +46,6 @@ Oev.Animation = (function(){
 			this.timeEnd = -1;
 			this.timeTotal = -1;
 			this.running = false;
-			
 			this.evt.fireEvent( "END" );
 		}, 
 	};
