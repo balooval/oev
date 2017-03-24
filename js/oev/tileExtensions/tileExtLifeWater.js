@@ -1,12 +1,9 @@
 Oev.Tile.Extension.LifeWater = function(_tile) {
 	'use strict';
 
-	var whaleMesh = null;
-	var tweenWhaleX;
-	var tweenWhaleY;
-	var tweenWhaleZ;
-	var tweenWhaleRot;
-	var lastWhaleDestCoord;
+	var myWhales = [];
+	var water;
+	var mirrorMesh;
 	
 	var ext = Object.create(Oev.Tile.Extension);
 	ext.id = 'LIFE';
@@ -15,95 +12,80 @@ Oev.Tile.Extension.LifeWater = function(_tile) {
 		
 	}
 	
-	ext.aba = 'COUCOU';
-	
 	ext.tileReady = function() {
-		if (this.tile.zoom == 14) {
-			whaleMesh = Oev.Tile.Extension.Life.getMeshLife();
-			var whaleCoord = Oev.Globe.coordToXYZ(this.tile.middleCoord.x, this.tile.middleCoord.y, 0);
-			whaleMesh.position.x = whaleCoord.x;
-			whaleMesh.position.y = whaleCoord.y;
-			whaleMesh.position.z = whaleCoord.z;
-			// whaleMesh.rotation.x = Math.PI;
-			whaleMesh.rotation.z = Math.PI;
-			whaleMesh.castShadow = true;
-			whaleMesh.receiveShadow = true;
-			Oev.Globe.addMeshe(whaleMesh);
-			
-			tweenWhaleX = new Oev.Animation.TweenValue(whaleMesh.position.x);
-			tweenWhaleY = new Oev.Animation.TweenValue(whaleMesh.position.y);
-			tweenWhaleZ = new Oev.Animation.TweenValue(whaleMesh.position.z);
-			tweenWhaleRot = new Oev.Animation.TweenValue(0);
-			
-			tweenWhaleX.evt.addEventListener('END', this, this.onWHaleReachDest);
-			
-			lastWhaleDestCoord = new THREE.Vector2(0, 0);			
-			// var whalePosDest = Oev.Globe.coordToXYZ(this.tile.startCoord.x, this.tile.startCoord.y, 0);
-			// tweenWhaleX.setTargetValue(whalePosDest.x, 5000);
-			// tweenWhaleY.setTargetValue(whalePosDest.y, 5000);
-			// tweenWhaleZ.setTargetValue(whalePosDest.z, 5000);
-			this.getWhaleDest();
-			
+		if (this.tile.zoom > 10) {
+			this.tile.material.envMap = OEV.textures['skydome'];
+			// this.tile.material.map = OEV.textures['sea'];
+			this.tile.material.normalMap = OEV.textures['waternormals'];
+			this.tile.material.displacementMap = OEV.textures['waternormals'];
+			this.tile.material.displacementScale = 10;
+			// this.tile.material.map = OEV.textures['water_color'];
+			ext.tile.material.map.needsUpdate = true;
+			// ext.tile.setTexture = function() {};
 			OEV.addObjToUpdate(this);
+		}
+		if (this.tile.zoom == 14) {
+			// this.tile.material.shininess = 50;
+			// this.tile.material.opacity = 0.8;
+			// this.tile.material.transparent = true;
+			// this.tile.material.normalMap = OEV.textures['waternormals'];
+			// this.tile.material.needsUpdate = true;
+			/*
+			var light = new THREE.PointLight(0xffffff, 1, 1000);
+			light.position.z = 50;
+			light.position.y = 50;
+			light.position.x = 0;
+			Oev.Globe.addMeshe(light);
+			*/
 			
-			OEV.MUST_RENDER = true;
+			// console.log(this.tile.material);
+			if (Math.random() > 0.7) {
+				var nb = Math.round(Math.random() * 4);
+				for (var i = 0; i < nb; i ++) {
+					myWhales.push(new Oev.Tile.Extension.Whale(this.tile));
+				}
+			}
+			
 		}
 	}
-	
-	ext.getWhaleDest = function() {
-		var destCoord = new THREE.Vector3();
-		destCoord.x = this.tile.startCoord.x + (this.tile.endCoord.x - this.tile.startCoord.x) * Math.random();
-		destCoord.y = this.tile.startCoord.y + (this.tile.endCoord.y - this.tile.startCoord.y) * Math.random();
-		destCoord.z = Math.random() * 80 - 80;
-		// destCoord.z = 20;
-		var whalePosDest = Oev.Globe.coordToXYZ(destCoord.x, destCoord.y, destCoord.z);
-		
-		var speed = 3000 + Math.random() * 10000;
-		
-		tweenWhaleX.setTargetValue(whalePosDest.x, speed);
-		tweenWhaleY.setTargetValue(whalePosDest.y, speed);
-		tweenWhaleZ.setTargetValue(whalePosDest.z, speed);
-		
-		var angle = Math.atan2(lastWhaleDestCoord.y - destCoord.y, lastWhaleDestCoord.x - destCoord.x);
-		tweenWhaleRot.setTargetValue(angle - Math.PI * 2, 1000);
-		
-		lastWhaleDestCoord.x = destCoord.x;
-		lastWhaleDestCoord.y = destCoord.y;
-		
-		return whalePosDest;
-	}
-	
-	ext.onWHaleReachDest = function() {
-		this.getWhaleDest();
-	}
+
 	
 	ext.update = function() {
-		
-		var d = new Date();
-		var curTime = d.getTime();
-		whaleMesh.position.x = tweenWhaleX.getValueAtTime(curTime);
-		whaleMesh.position.y = tweenWhaleY.getValueAtTime(curTime);
-		whaleMesh.position.z = tweenWhaleZ.getValueAtTime(curTime);
-		whaleMesh.rotation.y = tweenWhaleRot.getValueAtTime(curTime);
-		
+		// ext.tile.material.map = OEV.textures['sea'];
+		// ext.tile.material.map.wrapS = THREE.RepeatWrapping;
+		// ext.tile.material.map.wrapT = THREE.RepeatWrapping;
+		// ext.tile.material.map.repeat.y = 1;
+		ext.tile.material.map.offset.y += 0.0001;
+		// ext.tile.material.map.needsUpdate = true;
 		OEV.MUST_RENDER = true;
+		// ext.tile.material.normalMap.offset.x += 0.01;
+		// ext.tile.material.normalMap.needsUpdate = true;
 	}
 	
-	ext.show = function() {
-		
-	}
-	
-	ext.hide = function() {
-		
+	ext.desactivate = function() {
+		this.dispose();
 	}
 	
 	ext.dispose = function() {
-		if (whaleMesh !== null) {
-			Oev.Globe.removeMeshe(whaleMesh);
-			whaleMesh.geometry.dispose();
-			whaleMesh = null;
+		if (this.isInstancied === false) {
+			return false;
+		}
+		if (this.tile.zoom > 10) {
 			OEV.removeObjToUpdate(this);
 		}
+		// this.tile.material.envMap = null;
+		if (this.tile.zoom == 14) {
+			// this.tile.material.shininess = 0;
+			// this.tile.material.normalMap = null;
+			
+			// this.tile.material.opacity = 1;
+			// this.tile.material.transparent = false;
+			// this.tile.material.needsUpdate = true;
+		}
+		for (var i = 0; i < myWhales.length; i ++) {
+			myWhales[i].dispose();
+		}
+		myWhales = [];
 	}
 	
 	

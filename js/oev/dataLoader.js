@@ -9,6 +9,7 @@ Oev.DataLoader.Proxy = function(_type) {
 		BUILDINGS : 2, 
 		NORMAL : 1, 
 		PLANE : 1, 
+		OVERPASS : 1, 
 	};
 	this._simulLoad = simulByType[this._type];
 	this._datasLoaded = {};
@@ -22,7 +23,8 @@ Oev.DataLoader.Proxy.prototype = {
 	
 	getData : function(_params, _callback) {
 		_params.priority = _params.priority || 1;
-		_params.key = _params.z + '-' + _params.x + '-' + _params.y;
+		// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
+		_params.key = this._genKey(_params);
 		_params.callback = _callback;
 		if (this._type == 'OELE') {
 			console.log('getData', _params.key);
@@ -35,6 +37,11 @@ Oev.DataLoader.Proxy.prototype = {
 		}
 		this._addSorted(_params);
 		this._checkForNextLoad();
+	}, 
+	
+	_genKey : function(_params) {
+		_params.keyOpt = _params.keyOpt || '';
+		return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
 	}, 
 	
 	_initLoaders : function() {
@@ -52,15 +59,18 @@ Oev.DataLoader.Proxy.prototype = {
 				loader = new Oev.DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			} else if (this._type == 'PLANE') {
 				loader = new Oev.DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'OVERPASS') {
+				loader = new Oev.DataLoader.Overpass(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			}
 			this._loaders.push(loader);
 		}
 	}, 
 	
 	onDataLoaded : function(_data, _params) {
-		if (this._type == 'OPLANE') {
-			var date = new Date();
-			console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
+		if (this._type == 'OVERPASS0') {
+			console.log('_params', _params.key);
+			// var date = new Date();
+			// console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
 		}
 		var i;
 		if (_data === null) {
@@ -101,7 +111,8 @@ Oev.DataLoader.Proxy.prototype = {
 	
 	abort : function(_params) {
 		if (_params.key === undefined) {
-			_params.key = _params.z + '-' + _params.x + '-' + _params.y;
+			// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
+			_params.key = this._genKey(_params);
 		}
 		var i;
 		for (i = 0; i < this._datasWaiting.length; i ++) {
@@ -405,3 +416,31 @@ Oev.DataLoader.Planes.prototype = {
 	}, 
 }
 
+
+
+
+
+Oev.DataLoader.Overpass = function(_callback) {
+	this.isLoading = false;
+	this.callback = _callback;
+	this.params = {};
+	this.ajax = new Oev.DataLoader.Ajax();
+}
+
+Oev.DataLoader.Overpass.prototype = {
+	load : function(_params) {
+		this.params = _params;
+		this.isLoading = true;
+		var loader = this;
+		this.ajax.load('libs/remoteImg.php?overpassClient=1&type=pylone&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
+			function(_datas){
+				loader.onDataLoadSuccess(_datas);
+			}
+		);
+	}, 
+	
+	onDataLoadSuccess : function(_data) {
+		this.isLoading = false;
+		this.callback(_data, this.params);
+	}, 
+}

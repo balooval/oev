@@ -7,6 +7,7 @@ Oev.Globe = (function() {
 	var coastPxlRatio = 2048 / (20037508 * 2);
 	
 	var api = {
+		equirectMaterial : null, 
 		evt : null, 
 		tilesBase : [], 
 		CUR_ZOOM : 4, 
@@ -62,16 +63,22 @@ Oev.Globe = (function() {
 			api.meter = api.radius / 40075017.0;
 			Oev.DataLoader.Elevation.definition = api.tilesDefinition;
 			api.loaderTile2D = new Oev.DataLoader.Proxy('TILE2D');
+			
 			api.loaderEle = new Oev.DataLoader.Proxy('ELE');
 			api.loaderBuilding = new Oev.DataLoader.Proxy('BUILDINGS');
 			api.loaderNormal = new Oev.DataLoader.Proxy('NORMAL');
 			api.loaderPlane = new Oev.DataLoader.Proxy('PLANE');
+			api.loaderOverpass = new Oev.DataLoader.Proxy('OVERPASS');
 			
 			// api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
-			// api.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
 			// api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
-			// api.tileExtensions['ELEVATION'] = Oev.Tile.Extension.Elevation;
+			
+			api.tileExtensions['ELEVATION'] = Oev.Tile.Extension.Elevation;
+			api.tileExtensions['OVERPASS'] = Oev.Tile.Extension.Overpass;
+			api.tileExtensions['LANDUSE'] = Oev.Tile.Extension.Landuse;
+			api.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
 			api.tileExtensions['LIFE'] = Oev.Tile.Extension.Life;
+			// api.tileExtensions['DUMMY'] = Oev.Tile.Extension.Dummy;
 			
 			api.setProjection( "PLANE" );
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
@@ -80,11 +87,11 @@ Oev.Globe = (function() {
 			api.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
 			api.modelsMesheMat['TREE'].alphaTest = 0.9;
 			api.modelsMesheMat['TREE'].needsUpdate = true;
-			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xFFFFFF, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
-			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide});
+			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
+			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
+			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testForestMat.alphaTest = 0.1;
-			api.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xFFFFFF, side: THREE.DoubleSide});
+			api.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testScrubMat.alphaTest = 0.1;
 			api.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
 			api.forestMat.alphaTest = 0.4;
@@ -112,8 +119,6 @@ Oev.Globe = (function() {
 			api.vineyardMat.needsUpdate = true;
 			api.grassMat.map = OEV.textures['grass'];
 			api.grassMat.needsUpdate = true;
-			
-			
 			loadCoastline();
 			api.construct();
 		}, 
@@ -222,7 +227,7 @@ Oev.Globe = (function() {
 			api.tilesProvider = _provider;
 		}, 
 
-		activLanduse : function( _state ) {
+		activLanduse : function(_state) {
 			if (_state && !api.loadLanduse) {
 				api.loadLanduse = true;
 			}else if( !_state && api.loadLanduse ){
@@ -360,7 +365,7 @@ Oev.Globe = (function() {
 		checkLOD : function(){
 			if (api.CUR_ZOOM >= api.LOD_STREET) {
 				if (api.curLOD != api.LOD_STREET) {
-					debug( "SET TO LOD_STREET" );
+					console.log( "SET TO LOD_STREET" );
 					curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
 					api.globalScale = 10;
 					api.curLOD = api.LOD_STREET;
@@ -380,7 +385,7 @@ Oev.Globe = (function() {
 				}
 			} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
 				if (api.curLOD != api.LOD_PLANET) {
-					debug( "SET TO LOD_PLANET" );
+					console.log( "SET TO LOD_PLANET" );
 					curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 					api.globalScale = 1;
 					api.curLOD = api.LOD_PLANET;
@@ -415,13 +420,24 @@ Oev.Globe = (function() {
 						}else{
 							return ele * (api.meter * api.eleFactor);
 						}
-						// break;
 					}
 				}
 			}
 			return 0;
 		}, 
-
+		
+		getCurTile : function() {
+			var tileZoom = 0;
+			for (var i = 0; i < api.tilesBase.length; i ++) {
+				var tile = api.tilesBase[i];
+				var res = tile.searchMainTile();
+				if (res !== false) {
+					return res;
+				}
+			}
+			return null;
+		}, 
+		
 		onCurTileChange : function( _newTile ){
 			curTile = _newTile;
 			for (var i = 0; i < api.tilesBase.length; i ++) {
@@ -435,7 +451,7 @@ Oev.Globe = (function() {
 			api.coordDetails.y = _coordY;
 			var newTile = Oev.Geo.coordsToTile(api.coordDetails.x, api.coordDetails.y, api.CUR_ZOOM);
 			if( newTile.x != curTile.x || newTile.y != curTile.y || newTile.z != curTile.z ){
-				api.onCurTileChange( newTile );
+				api.onCurTileChange(newTile);
 			}
 			curTile = newTile;
 		}, 

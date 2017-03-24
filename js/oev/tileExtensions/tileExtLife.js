@@ -12,7 +12,6 @@ Oev.Tile.Extension.Life = (function() {
 		return ext;
 	}
 		
-		
 	var geometry = new THREE.SphereGeometry(5, 32, 32);
 	var material = new THREE.MeshPhongMaterial( {color: 0x96a0a3} );
 

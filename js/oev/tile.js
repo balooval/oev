@@ -35,6 +35,7 @@ Oev.Tile = (function(){
 		this.distToCam = -1;
 		Oev.Globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		// this.material = new THREE.MeshPhongMaterial({envMap: OEV.textures['skydome'], color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
 		
 		this.extensions = [];
 		
@@ -285,6 +286,21 @@ Oev.Tile = (function(){
 				}
 			}
 		}, 
+		
+		searchMainTile : function() {
+			if (this.checkCameraHover(1)) {
+				if (this.childTiles.length == 0) {
+					return this;
+				}
+				for (var i = 0; i < this.childTiles.length; i ++) {
+					var childRes = this.childTiles[i].searchMainTile();
+					if (childRes !== false) {
+						return childRes;
+					}
+				}
+			}
+			return false;
+		}, 
 
 		checkCameraHover : function( _marge ) {
 			var startLimit = Oev.Utils.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
@@ -305,24 +321,24 @@ Oev.Tile = (function(){
 		}, 
 
 		loadLanduse : function() {
-			if( Oev.Globe.loadLanduse ){
+			if (Oev.Globe.loadLanduse) {
 				if (this.onStage && this.zoom >= 15) {
 					var myParent = this;
-					while( myParent.zoom > 15 ){
+					while (myParent.zoom > 15) {
 						myParent = myParent.parentTile;
 					}
-					if( this.surfacesProviders.length == 0 ){
-						var surfA = new Oev.Tile.Surface( this, myParent.tileX, myParent.tileY, myParent.zoom );
-						this.surfacesProviders.push( surfA );
+					if (this.surfacesProviders.length == 0) {
+						var surfA = new Oev.Tile.Surface(this, myParent.tileX, myParent.tileY, myParent.zoom);
+						this.surfacesProviders.push(surfA);
 						surfA.load();
-					}else{
-						for( var i = 0; i < this.surfacesProviders.length; i ++ ){
+					} else {
+						for (var i = 0; i < this.surfacesProviders.length; i ++) {
 							this.surfacesProviders[i].hide(false);
 						}
 					}
 				}
-			}else if( !Oev.Globe.loadLanduse ){
-				for( var i = 0; i < this.surfacesProviders.length; i ++ ){
+			} else if (!Oev.Globe.loadLanduse) {
+				for (var i = 0; i < this.surfacesProviders.length; i ++) {
 					this.surfacesProviders[i].dispose();
 					this.surfacesProviders[i] = undefined;
 				}

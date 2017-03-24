@@ -14,6 +14,35 @@ if( isset( $_GET['url'] ) ){
 // pk.eyJ1IjoiYmFsb292YWwiLCJhIjoiY2lrMmF2d2FrMDJ6eHhia295MWFub3dsMiJ9._K2WzZ0dEZk0CyxvJCUfLQ
 
 
+if( isset( $_GET['overpassClient'] ) ){
+	$response = array(
+		'success' => false, 
+		'error' => 'no data available', 
+		'type' => $_GET['type']
+	);
+	$tileInfos = array(
+		'x' => $_GET['x'], 
+		'y' => $_GET['y'], 
+		'z' => $_GET['z'], 
+	);
+	$result = getOverpassResult($_GET['type'], $tileInfos);
+	if ($result !== null) {
+		$response['success'] = true;
+		$response['error'] = '';
+		$response['result'] = json_decode($result, true);
+	}
+	
+	echo json_encode($response);
+	
+} else if( isset( $_GET['sendOverpass'] ) ){
+	$payload = file_get_contents('php://input');
+	$datas = json_decode($payload, true);
+	saveOverpassResult($datas['type'], $datas['tile'], $datas['response']);
+	$response = array(
+		'success' => true
+	);
+	echo json_encode($response);
+}
 
 
 $NO_CACHE = false;
@@ -163,6 +192,9 @@ if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
 		$url = $curServer.'/interpreter?data=[out:json];'.$requete.'out;';
 		// exit( $url );
 		$response = file_get_contents( $url );
+		// if (strpos($response, 'Error') >= 0) {
+			// $response 
+		// }
 		file_put_contents( $fullPath.'/ways.json', $response );
 	}
 	$cache = file_get_contents( $fullPath.'/ways.json' );

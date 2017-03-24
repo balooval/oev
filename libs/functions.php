@@ -4,6 +4,29 @@ define( 'NORMAL_FILE_PREFIX', 'test_7' );
 // define( 'NORMAL_FILE_PREFIX', 'opti' );
 
 
+
+function saveOverpassResult($_queryType, $_tileInfos, $_result) {
+	$dirName = 'clientOverpass';
+	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_tileInfos['z'].'/'.$_tileInfos['x'] . '/' . $_tileInfos['y'];
+	makDirCache( array( CACHE_BASE_PATH, $dirName, $_tileInfos['z'], $_tileInfos['x'], $_tileInfos['y'] ) );
+	file_put_contents( $fullPath.'/'.$_queryType.'.json', json_encode($_result));
+}
+
+function getOverpassResult($_queryType, $_tileInfos) {
+	$dirName = 'clientOverpass';
+	$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$_tileInfos['z'].'/'.$_tileInfos['x'] . '/' . $_tileInfos['y'].'/'.$_queryType.'.json';
+	// echo $fullPath . ' ';
+	// var_dump(is_file($fullPath));
+	// exit();
+	if (is_file($fullPath)) {
+		// echo 'OK ' . $fullPath . '/';
+		return file_get_contents($fullPath);
+	}
+	// echo 'NO FILE ' . $fullPath  .'/';
+	return null;
+}
+
+
 function makDirCache( $_folders ){
 	$path = dirname( __FILE__ ).'/..';
 	foreach( $_folders as $folder ){

@@ -41,13 +41,13 @@ var DatasMng = function(_type) {
 
 DatasMng.prototype.clearOldDatas = function() {
 	if (this.datasLastAccess.length > this.maxRamNb) {
-		debug(this.type + " A clearOldDatas " + this.datasLastAccess.length);
+		console.log(this.type + " A clearOldDatas " + this.datasLastAccess.length);
 		while(this.datasLastAccess.length > this.maxRamNb / 2) {
 			var keyToDel = this.datasLastAccess.pop();
 			this.datasLoaded[keyToDel] = null;
 			delete this.datasLoaded[keyToDel];
 		}
-		debug( this.type + " B clearOldDatas " + this.datasLastAccess.length );
+		console.log( this.type + " B clearOldDatas " + this.datasLastAccess.length );
 	}
 }
 
@@ -319,7 +319,7 @@ DatasMng.prototype.loadTile2d = function( _loadInfos ) {
 			function ( xhr ) {
 			},
 			function ( xhr ) {
-				debug( 'getTile .An error happened ' + _loadInfos["key"] );
+				console.log( 'getTile .An error happened ' + _loadInfos["key"] );
 				// console.log( xhr );
 				mng.removeLoadingList( _loadInfos["key"] );
 				mng.checkForNextLoad();

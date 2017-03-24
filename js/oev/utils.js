@@ -81,7 +81,7 @@ Oev.Utils = (function(){
 				}
 			}
 			if (index < 0){
-				console.error('removeEventListener NOT found');
+				console.error('removeEventListener "' + _evtName + '" NOT found');
 				return false;
 			}
 			this.events[_evtName].splice(index, 1);

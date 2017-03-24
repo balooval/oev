@@ -1,6 +1,6 @@
 OpenEarthViewer.gpx = {
 	init : function(){
-		debug( "Plugin GPX loaded" );
+		console.log( "Plugin GPX loaded" );
 		this.label = 'Gpx';
 		this.fileName = '20140723';
 		this.json = undefined;
@@ -33,11 +33,11 @@ OpenEarthViewer.gpx = {
 	load : function(){
 		if( this.json == undefined ){
 			OEV.camCtrl.evt.addEventListener( "DEST_REACH", this, this.playNextPt );
-			debug( "Loading gpx ..." );
+			console.log( "Loading gpx ..." );
 			var url = "libs/remoteImg.php?gpx=1&name="+this.fileName+"";
 			var _gpx = this;
 			var ajaxMng = new AjaxMng( url, {'gpx':_gpx}, function( res, _params ){
-				debug( "Gpx loaded" );
+				console.log( "Gpx loaded" );
 				_params['gpx'].draw( JSON.parse( res ) );
 			});
 		}else{

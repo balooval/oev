@@ -147,7 +147,7 @@ Tile3d.prototype.construct = function() {
 					}
 					var buildingHeight = 3 * buildingLevels; // meters
 					if( "minHeight" in feature["properties"] ){
-						// debug( "minHeight : " + feature["properties"]["minHeight"] );
+						// console.log( "minHeight : " + feature["properties"]["minHeight"] );
 					}
 					if( "height" in feature["properties"] ){
 						buildingHeight = feature["properties"]["height"];

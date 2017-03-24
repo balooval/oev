@@ -13,7 +13,6 @@ var OpenEarthViewer = function ( _containerId ) {
 	this.modelsLib = {};
 	this.geoDebug = undefined;
 	this.postprocessing = {};
-	this.dofActiv = false;
 	this.materialPOILine;
 	this.ctrlActiv = false;
 	this.bokehPass;
@@ -40,6 +39,8 @@ var OpenEarthViewer = function ( _containerId ) {
 			value: 0.1
 		}
 	};
+	
+	this.shaders = {};
 }
 
 OpenEarthViewer.plugins = {};
@@ -71,6 +72,7 @@ OpenEarthViewer.prototype.init = function() {
 	this.camera.position.y = 0;
 	this.camera.position.z = 500;	
 	// DOF
+	/*
 	var renderPass = new THREE.RenderPass( this.scene, this.camera );
 	this.bokehPass = new THREE.BokehPass( this.scene, this.camera, {
 		focus: 		1.0,
@@ -85,6 +87,7 @@ OpenEarthViewer.prototype.init = function() {
 	composer.addPass( this.bokehPass );
 	this.postprocessing.composer = composer;
 	this.postprocessing.bokeh = this.bokehPass;
+	*/
 	this.renderer.setClearColor( 0x101020, 1 );
 	if (this.shadowsEnabled) {
 		this.renderer.shadowMap.enabled = true;
@@ -120,9 +123,21 @@ OpenEarthViewer.prototype.start = function() {
 	render();
 }
 
+OpenEarthViewer.prototype.loadShader = function() {
+	Oev.Shader.build('ocean', onShaderLoader, {map:OEV.textures['sea'], normalMap:OEV.textures['waternormals']});
+}
+
+function onShaderLoader(_name, _material) {
+	console.log('Shader "' + _name + '" loaded');
+	OEV.shaders[_name] = _material;
+}
+
 OpenEarthViewer.prototype.loadTextures = function() {
 	openModal( "Loading textures" );
 	var textList = [];
+	Oev.Net.Textures.addToList(textList, 'skydome', 'skydome.jpg');
+	Oev.Net.Textures.addToList(textList, 'pylone', 'pylone.png');
+	Oev.Net.Textures.addToList(textList, 'water_color', 'water_color.jpg');
 	Oev.Net.Textures.addToList(textList, 'roof', 'roof.png');
 	Oev.Net.Textures.addToList(textList, 'god', 'god_2.png');
 	Oev.Net.Textures.addToList(textList, 'waternormals', 'waternormals.png');
@@ -147,6 +162,11 @@ OpenEarthViewer.prototype.loadTextures = function() {
 function onOevTexturesLoaded() {
 	console.log('All default textures loaded');
 	OEV.textures = Oev.Net.Textures.tmpGetTextures();
+	
+	// OEV.textures['skydome'].mapping = THREE.SphericalReflectionMapping;
+	OEV.textures['skydome'].mapping = THREE.EquirectangularReflectionMapping;
+	
+	OEV.loadShader();
 	OEV.loadModels();
 }
 
@@ -154,6 +174,7 @@ function onOevTexturesLoaded() {
 OpenEarthViewer.prototype.loadModels = function() {
 	openModal( "Loading models" );
 	var modelList = [];
+	Oev.Net.Models.addToList(modelList, 'pylone', 'pylone.json');
 	Oev.Net.Models.addToList(modelList, 'tree_lod_1', 'hydrant_lod_0.json');
 	Oev.Net.Models.addToList(modelList, 'HYDRANT_lod_1', 'hydrant_lod_1.json');
 	Oev.Net.Models.addToList(modelList, 'HYDRANT_lod_2', 'hydrant_lod_1.json');
@@ -187,16 +208,6 @@ OpenEarthViewer.prototype.switchClouds = function() {
 	}
 }
 
-OpenEarthViewer.prototype.switchDof = function() {
-	this.dofActiv = !this.dofActiv;
-	if( this.dofActiv ){
-		setElementActiv( document.getElementById( "btnDof" ), true );
-	}else{
-		setElementActiv( document.getElementById( "btnDof" ), false );
-	}
-	this.MUST_RENDER = true;
-}
-
 OpenEarthViewer.prototype.checkMouseWorldPos = function() {
 	var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
 	var mY = -( ( Oev.Input.Mouse.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
@@ -222,7 +233,7 @@ OpenEarthViewer.prototype.addObjToUpdate = function( _obj ) {
 OpenEarthViewer.prototype.removeObjToUpdate = function( _obj ) {
 	var index = this.objToUpdate.indexOf( _obj );
 	if( index < 0 ){
-		debug( 'OEV.removeObjToUpdate NOT FOUND !' );
+		console.warn( 'OEV.removeObjToUpdate NOT FOUND !' );
 	}else{
 		this.objToUpdate.splice( index, 1 );
 	}
@@ -240,11 +251,8 @@ OpenEarthViewer.prototype.render = function() {
 		var d = new Date();
 		this.globalTime = d.getTime();
 		showUICoords();
-		if( this.dofActiv ){
-			this.postprocessing.composer.render( 0.0 );
-		}else{
-			this.renderer.render( this.scene, this.camera );
-		}
+		// this.postprocessing.composer.render( 0.0 );
+		this.renderer.render( this.scene, this.camera );
 		this.MUST_RENDER = false;
 	}
 	this.camCtrl.update();
@@ -259,13 +267,16 @@ OpenEarthViewer.prototype.render = function() {
 				rendererInfos += "info " + key + " / " + prop + " / " + this.renderer.info[key][prop] + '<br>';
 			}
 		}
-		debug(rendererInfos, true);
+		console.log(rendererInfos, true);
 	}
 	this.earth.update();
 	Oev.Sky.update();
 	
 	for( var u = 0; u < this.objToUpdate.length; u ++ ){
 		this.objToUpdate[u].update();
+	}
+	if (OEV.shaders['ocean'] !== undefined) {
+		OEV.shaders['ocean'].uniforms.time.value += 0.01;
 	}
 }
 

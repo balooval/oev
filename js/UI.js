@@ -41,11 +41,9 @@ function initUi(){
 	for( var i = 0; i < elem.length; i ++ ){
 		elem[i].addEventListener("click", changeTilesLayer );
 	}
-
 	document.getElementById( "contactLink" ).setAttribute('href', "mailto:val.poub@gmail.com");
 	document.getElementById( "cfg_load_ele" ).addEventListener("click", switchElevation );
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
-	document.getElementById( "cfg_load_landuse" ).addEventListener("click", switchLanduse );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
 	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.Mouse.onMouseDown,false);
@@ -64,7 +62,7 @@ function initUi(){
 		if( urlParams[3] ){
 			urlParams = urlParams[3].split( ',' );
 			for( var p = 0; p < urlParams.length; p ++ ){
-				debug( 'param ' + p + ' : ' + urlParams[p] );
+				console.log( 'param ' + p + ' : ' + urlParams[p] );
 				if( urlParams[p] == 'buildings' ){
 					Oev.Tile.Extension.activateExtension('BUILDINGS');
 					document.getElementById( "cfg_load_buildings" ).checked = true;
@@ -117,7 +115,7 @@ function setElementActiv( _elm, _state ){
 function onHemilightChanged(){
 	Oev.Sky.hemiIntensity = ( this.value / 100 ) * 0.35
 	Oev.Sky.updateSun();
-	debug( "sky.hemiIntensity : " + Oev.Sky.hemiIntensity );
+	console.log( "sky.hemiIntensity : " + Oev.Sky.hemiIntensity );
 	OEV.MUST_RENDER = true;	
 }
 
@@ -125,9 +123,9 @@ function onBokehChanged(){
 	OEV.bokehPass.uniforms.aperture.value = document.getElementById( "cfg_bokeh_aperture" ).value * 0.001;
 	OEV.bokehPass.uniforms.maxblur.value = document.getElementById( "cfg_bokeh_maxblur" ).value * 0.0005;
 	OEV.bokehPass.uniforms.focus.value = 0.9 + document.getElementById( "cfg_bokeh_focus" ).value * 0.002;
-	debug( OEV.bokehPass.uniforms.aperture.value );
-	debug( OEV.bokehPass.uniforms.maxblur.value );
-	debug( OEV.bokehPass.uniforms.focus.value );
+	console.log( OEV.bokehPass.uniforms.aperture.value );
+	console.log( OEV.bokehPass.uniforms.maxblur.value );
+	console.log( OEV.bokehPass.uniforms.focus.value );
 	OEV.MUST_RENDER = true;	
 }
 
@@ -157,6 +155,7 @@ function changeTilesLayer(){
 }
 
 function switchLanduse(){
+	console.log('switchLanduse');
 	if( this.checked ){
 		OEV.earth.activLanduse( true );
 	}else{

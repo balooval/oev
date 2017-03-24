@@ -37,7 +37,7 @@ TileNodes.prototype.drawDatas = function() {
 			
 			for( var t = 0; t < this.datasContent["elements"].length; t ++ ){
 				
-				// debug( 'amenity : ' + this.datasContent["elements"][t]['tags']['amenity'] );
+				// console.log( 'amenity : ' + this.datasContent["elements"][t]['tags']['amenity'] );
 				var tmpBuffGeo;
 				var curNodeType = 'none';
 				

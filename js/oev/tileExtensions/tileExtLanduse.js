@@ -1,20 +1,55 @@
-'use strict';
+Oev.Tile.Extension.LanduseMeshes = (function() {
+	var meshZoom = {};
+	var geoListZoom = {};
+	var geoMergeZoom = {};
+	
+	var api = {
+		addTrees : function(_zoom, _mesh) {
+			if (meshZoom[_zoom] === undefined) {
+				meshZoom[_zoom] = new THREE.Mesh(new THREE.Geometry(), OEV.earth.testForestMat);
+				geoListZoom[_zoom] = [];
+				geoMergeZoom[_zoom] = new THREE.Geometry();
+				OEV.scene.add(meshZoom[_zoom]);
+			}
+			var geo = _mesh.geometry;
+			_mesh.updateMatrix();
+			geoListZoom[_zoom].push(geo);
+			meshZoom[_zoom].geometry.merge(geo, _mesh.matrix);
+			// geoMergeZoom[_zoom].merge(_geo);
+			// meshZoom[_zoom].geometry = geoMergeZoom[_zoom];
+			console.log('B', meshZoom[_zoom].geometry.vertices.length);
+		}, 
+		
+		removeTrees : function(_zoom, _mesh) {
+			var geo = _mesh.geometry;
+			geoListZoom[_zoom].splice(geoListZoom[_zoom].indexOf(geo), 1);
+			if (geoListZoom[_zoom].length == 0) {
+				OEV.scene.remove(meshZoom[_zoom]);
+				return false;
+			}
+			geoMergeZoom[_zoom] = new THREE.Geometry();
+			for (var i = 0; i < geoListZoom[_zoom].length; i ++) {
+				geoMergeZoom[_zoom].merge(geoListZoom[_zoom][i]);
+			}
+			meshZoom[_zoom].geometry = geoMergeZoom[_zoom];
+		}, 
+	};
+	
+	return api;
+})();
 
-Oev.Tile.Surface = function (_tile, _tileX, _tileY, _zoom) {
-	this.tile = _tile;
-	this.datasLoaded = false;
-	this.zoom = _zoom;
-	this.tileX = _tileX;
-	this.tileY = _tileY;
-	this.onStage = true;
-	this.datas = undefined;
-	this.partMeshes = {
+Oev.Tile.Extension.Landuse = function(_tile) {
+	var ext = Object.create(Oev.Tile.Extension);
+	
+	ext.id = 'LANDUSE';
+	
+	ext.partMeshes = {
 		'vineyard' : undefined, 
 		'forest' : undefined, 
 		'scrub' : undefined, 
 	};
 	
-	this.twoSideProps = {
+	ext.twoSideProps = {
 		'forest' : {
 			width : 0.0001, 
 			depth : 0.0001, 
@@ -26,41 +61,38 @@ Oev.Tile.Surface = function (_tile, _tileX, _tileY, _zoom) {
 			height : 7, 
 		}, 
 	};
-	this.twoSideMeshes = {
+	ext.twoSideMeshes = {
 		'vineyard' : undefined, 
 		'forest' : undefined, 
 		'scrub' : undefined, 
 	};
-	this.twoSideGeos = {
+	ext.twoSideGeos = {
 		'vineyard' : new THREE.Geometry(), 
 		'forest' : new THREE.Geometry(), 
 		'scrub' : new THREE.Geometry(), 
 	};
-	this.twoSideMesh = undefined;
-	this.twoSideGeo = new THREE.Geometry();
-	this.halfRot = Math.PI / 2;
-}
-
-Oev.Tile.Surface.prototype = {
-
-	useCache : true, 
-
-	load : function() {
-		if( !this.datasLoaded ){
-			OEV.earth.tilesLandusesMng.getDatas(this, this.zoom+'/'+this.tileX+'/'+this.tileY, this.tileX, this.tileY, this.zoom, this.tile.distToCam);
+	ext.halfRot = Math.PI / 2;
+	
+	
+	ext.tileReady = function() {
+		if (!this.tile.onStage || this.tile.zoom < 15) {
+			return false;
+		}
+		if (!this.dataLoaded) {
+			OEV.earth.tilesLandusesMng.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
 		}else{
 			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
-	}, 
-
-	setDatas : function( _datas ) {
-		this.datasLoaded = true;
+	}
+	
+	ext.setDatas = function(_datas) {
+		this.dataLoaded = true;
 		this.datas = _datas;
 		Oev.Tile.ProcessQueue.addWaiting(this);
-	}, 
-
-	construct : function() {
-		if (!this.onStage) {
+	}
+	
+	ext.construct = function() {
+		if (!this.tile.onStage) {
 			return false;
 		}
 		var partGeom = {
@@ -140,6 +172,7 @@ Oev.Tile.Surface.prototype = {
 					"coordinates": [res]
 				};
 				var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 100);
+				// var curArea = 10;
 				var nbPartIn = 0;
 				var coordLon, coordLat;
 				while (nbPartIn < curArea) {
@@ -169,36 +202,42 @@ Oev.Tile.Surface.prototype = {
 			}
 			this.partMeshes[type] = new THREE.Points(partGeom[type], mat);
 			OEV.scene.add(this.partMeshes[type]);
-			
 			this.twoSideGeos[type].computeFaceNormals();
 			this.twoSideGeos[type].computeVertexNormals();
-			
 			this.twoSideMeshes[type] = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeos[type]), matTwoSide);
 			this.twoSideMeshes[type].receiveShadow = true;
 			this.twoSideMeshes[type].castShadow = true;
-			OEV.scene.add(this.twoSideMeshes[type]);
+			// if (type == 'forest') {
+				// Oev.Tile.Extension.LanduseMeshes.addTrees(this.tile.zoom, this.twoSideMeshes[type]);
+			// } else {
+				OEV.scene.add(this.twoSideMeshes[type]);
+			// }
 		}
 		OEV.MUST_RENDER = true;
-		/*
-		this.twoSideMesh = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeo), OEV.earth.testForestMat);
-		this.twoSideMesh.receiveShadow = true;
-		this.twoSideMesh.castShadow = true;
-		OEV.scene.add(this.twoSideMesh);
-		*/
-	}, 
+	} 
 	
-	buildTwoSideElmt : function(_lon, _lat, _alt, _type) {
+	
+	ext.buildTwoSideElmt = function(_lon, _lat, _alt, _type) {
+		var angle = Math.random() * 3.14;
 		_alt -= 0.5;
 		var treeSize = 0.7 + Math.random() * 0.5;
 		var elmtWidth = this.twoSideProps[_type].width * treeSize;
 		var elmtDepth = this.twoSideProps[_type].depth * treeSize;
 		var elmtHeight = this.twoSideProps[_type].height * treeSize;
+		
+		var elmtWidthRot = elmtWidth * Math.cos(angle);
+		var elmtDepthRot = elmtDepth * Math.sin(angle);
+		
 		var textTile = Math.random() > 0.7 ? 0 : 0.5;
-		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidth, depth: 0, height: elmtHeight, type:_type, textTile:textTile});
-		this.buildElmtSide(_lon, _lat, _alt, {width: 0, depth: elmtDepth, height: elmtHeight, type:_type, textTile:textTile});
-	}, 
+		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidthRot, depth: elmtDepthRot, height: elmtHeight, type:_type, textTile:textTile});
+		
+		elmtWidthRot = elmtWidth * Math.cos(angle + Math.PI / 2);
+		elmtDepthRot = elmtDepth * Math.sin(angle + Math.PI / 2);
+		
+		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidthRot, depth: elmtDepthRot, height: elmtHeight, type:_type, textTile:textTile});
+	}
 	
-	buildElmtSide : function(_lon, _lat, _alt, props) {
+	ext.buildElmtSide = function(_lon, _lat, _alt, props) {
 		var vertId = (this.twoSideGeos[props.type].faces.length / 2) * 6;
 		var nbFaces = this.twoSideGeos[props.type].faces.length;
 		var posA = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt);
@@ -225,9 +264,9 @@ Oev.Tile.Surface.prototype = {
 			new THREE.Vector2(props.textTile + 0.5, 1), 
 			new THREE.Vector2(props.textTile + 0.5, 0)
 		];
-	},
+	}
 	
-	isIn : function( _polygon, _lon, _lat ) {
+	ext.isIn = function( _polygon, _lon, _lat ) {
 			var angle = 0;
 			var ptA;
 			var ptB;
@@ -241,54 +280,72 @@ Oev.Tile.Surface.prototype = {
 				return false;
 			}
 			return true;
-	}, 
-
-	hide : function( _state ) {
-		if( _state && this.onStage == true ){
-			this.onStage = false;
-			if( this.datasLoaded ){
-				for( var type in this.partMeshes ){
-					if( !this.partMeshes.hasOwnProperty( type ) ) continue;
-					if( this.partMeshes[type] != undefined ){
-						OEV.scene.remove( this.partMeshes[type] );
-					}
-					if( this.twoSideMeshes != undefined ){
-						OEV.scene.remove(this.twoSideMeshes[type]);
-					}
+	}
+	
+	ext.show = function() {
+		if (this.dataLoaded) {
+			for (var type in this.partMeshes) {
+				if (this.partMeshes[type] != undefined) {
+					OEV.scene.add(this.partMeshes[type]);
+				}
+				if (this.twoSideMeshes[type] != undefined) {
+					// OEV.scene.add(this.twoSideMeshes[type]);
+					
+					// if (type == 'forest') {
+						// Oev.Tile.Extension.LanduseMeshes.addTrees(this.tile.zoom, this.twoSideMeshes[type].geometry);
+					// } else {
+						OEV.scene.add(this.twoSideMeshes[type]);
+					// }
 				}
 			}
-		}else if( !_state && this.onStage == false ){
-			this.onStage = true;
-			if( this.datasLoaded ){
-				for( var type in this.partMeshes ){
-					if( !this.partMeshes.hasOwnProperty( type ) ) continue;
-					if( this.partMeshes[type] != undefined ){
-						OEV.scene.add( this.partMeshes[type] );
-					}
-					if( this.twoSideMeshes != undefined ){
-						OEV.scene.remove(this.twoSideMeshes[type]);
-					}
+		}else{
+			this.tileReady();
+		}
+	}
+	
+	ext.hide = function() {
+		if (this.dataLoaded) {
+			for (var type in this.partMeshes) {
+				if (!this.partMeshes.hasOwnProperty(type)) {
+					continue;
 				}
-			}else{
-				this.load();
+				if (this.partMeshes[type] != undefined) {
+					OEV.scene.remove(this.partMeshes[type]);
+				}
+				if (this.twoSideMeshes[type] != undefined) {
+					// OEV.scene.remove(this.twoSideMeshes[type]);
+					
+					
+					// if (type == 'forest') {
+						// Oev.Tile.Extension.LanduseMeshes.removeTrees(this.tile.zoom, this.twoSideMeshes[type]);
+					// } else {
+						OEV.scene.remove(this.twoSideMeshes[type]);
+					// }
+					
+				}
 			}
+			OEV.MUST_RENDER = true;
 		}
-	}, 
-
-	dispose : function() {
-		this.hide(true);
-		if( !this.datasLoaded ){
-			OEV.earth.tilesLandusesMng.removeWaitingList( this.zoom + "/" + this.tileX + "/" + this.tileY );
+	}
+	
+	ext.dispose = function() {
+		this.hide();
+		if( !this.dataLoaded ){
+			OEV.earth.tilesLandusesMng.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
 		}
-		for( var type in this.partMeshes ){
-			if( !this.partMeshes.hasOwnProperty( type ) ) continue;
-			if( this.partMeshes[type] != undefined ){
+		for (var type in this.partMeshes) {
+			if (!this.partMeshes.hasOwnProperty(type)) continue;
+			if (this.partMeshes[type] != undefined) {
 				this.partMeshes[type].geometry.dispose();
-				OEV.scene.remove( this.partMeshes[type] );
+				OEV.scene.remove(this.partMeshes[type]);
 			}
-			if( this.twoSideMeshes[type] != undefined ){
+			if (this.twoSideMeshes[type] != undefined) {
 				this.twoSideMeshes[type].geometry.dispose();
 			}
 		}
-	}, 
+	}
+	
+	ext.onInit(_tile);
+	
+	return ext;
 }

@@ -1,6 +1,6 @@
 OpenEarthViewer.planes = {
 	init : function(){
-		debug( "Plugin PLANES loaded" );
+		console.log( "Plugin PLANES loaded" );
 		this.label = 'Planes';
 		this.planes = [];
 		this.followedPlane = -1;
@@ -18,7 +18,7 @@ OpenEarthViewer.planes = {
 			this.planes[p].update();
 		}
 		if( this.followedPlane >= 0 ){
-			debug( "camera follow me" );
+			console.log( "camera follow me" );
 			OEV.camCtrl.setLookAt( this.planes[this.followedPlane].tweenLon.value, this.planes[this.followedPlane].tweenLat.value );
 		}
 	}, 
@@ -92,7 +92,7 @@ OpenEarthViewer.planes = {
 	removePlane : function( _plane ) {
 		var pId = this.planes.indexOf( _plane );
 		if( pId < 0 ){
-			debug( "OpenEarthViewer.planes ERR : plane not found !" );
+			console.log( "OpenEarthViewer.planes ERR : plane not found !" );
 		}
 		this.planes.splice( pId, 1 );
 		_plane.dispose();
@@ -119,7 +119,7 @@ var Plane = function ( _start, _end ) {
 	var posTmp = OEV.earth.coordToXYZ( this.tweenLon.value, this.tweenLat.value, this.altitude );
 	this.zoom = Math.floor( OEV.earth.zoomFromAltitude( Math.abs( posTmp.y ) ) );
 	this.tile = Oev.Geo.coordsToTile( this.tweenLon.value, this.tweenLat.value, this.zoom );
-	debug( "Plane.this.zoom : " + this.zoom );
+	console.log( "Plane.this.zoom : " + this.zoom );
 
 	var distance = Oev.Utils.coordDistance( _start.x, _start.y, _end.x, _end.y );
 	_duration = distance / 1;

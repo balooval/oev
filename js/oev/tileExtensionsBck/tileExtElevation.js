@@ -1,4 +1,3 @@
-
 Oev.Tile.Extension.Elevation = function(_tile) {
 	'use strict';
 
@@ -16,10 +15,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.tile.interpolateEle = ext.interpolateEle;
 	}
 	
-	ext.tileReady = function() {
-		if (this.dataLoaded) {
-			return false;
-		}
+	ext.loadDatas = function() {
 		loaderEle.getData(
 			{
 				z : this.tile.zoom, 
@@ -37,7 +33,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (this.datasLoaded) {
 			return false;
 		}
-		this.tileReady();
+		this.loadDatas();
 	}
 	
 	ext.hide = function() {
@@ -49,10 +45,6 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	}
 	
 	ext._onElevationLoaded = function(_datas) {
-		// if (this.tile.zoom == 15) {
-			// console.log('_onElevationLoaded', this.tile.tileX, this.tile.tileY);
-		// }
-		// if (!Oev.Tile.Extension['ACTIV_' + this.id] || this.tile.onStage === false) {
 		if (!Oev.Tile.Extension['ACTIV_' + this.id]) {
 			return false;
 		}
@@ -178,19 +170,11 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
 			return 0;
 		}
-		
-		if (_lon < this.startCoord.x || _lon > this.endCoord.x) {
-			return -9999;
+		if (ext.tile.childTiles.length == 0) {
+			return ext.tile.interpolateEle(_lon, _lat);
 		}
-		if (_lat > this.startCoord.y || _lat < this.endCoord.y) {
-			return -9999;
-		}
-		
-		if (this.childTiles.length == 0) {
-			return this.interpolateEle(_lon, _lat);
-		}
-		for (var i = 0; i < this.childTiles.length; i ++) {
-			var childEle = this.childTiles[i].getElevation(_lon, _lat);
+		for (var i = 0; i < ext.tile.childTiles.length; i ++) {
+			var childEle = ext.tile.childTiles[i].getElevation(_lon, _lat);
 			if (childEle > -9999) {
 				return childEle;
 			}
@@ -205,26 +189,26 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (ext.dataLoaded === true) {
 			return ext.elevationBuffer[_vertIndex];
 		}
-		if (this.parentTile != undefined) {
-			return this.parentTile.interpolateEle(_lon, _lat);
+		if (ext.tile.parentTile != undefined) {
+			return ext.tile.parentTile.interpolateEle(_lon, _lat);
 		}
 	}
 	
 	ext.interpolateEle = function(_lon, _lat) {
-		var gapLeft = this.endCoord.x - this.startCoord.x;
-		var distFromLeft = _lon - this.startCoord.x;
+		if (ext.dataLoaded === false) {
+			if (ext.tile.parentTile != undefined) {
+				return ext.tile.parentTile.interpolateEle(_lon, _lat);
+			}
+			return 0;
+		}
+		var gapLeft = ext.tile.endCoord.x - ext.tile.startCoord.x;
+		var distFromLeft = _lon - ext.tile.startCoord.x;
 		var prctLeft = distFromLeft / gapLeft;
-		var gapTop = this.endCoord.y - this.startCoord.y;
-		var distFromTop = _lat - this.startCoord.y;
+		var gapTop = ext.tile.endCoord.y - ext.tile.startCoord.y;
+		var distFromTop = _lat - ext.tile.startCoord.y;
 		var prctTop = distFromTop / gapTop;
 		if (prctLeft < 0 || prctLeft > 1 || prctTop < 0 || prctTop > 1) {
 			return -9999;
-		}
-		if (ext.dataLoaded === false) {
-			if (this.parentTile === undefined) {
-				return 0;
-			}
-			return this.parentTile.interpolateEle(_lon, _lat);
 		}
 		if (prctLeft == 1) {
 			var vertLeftTopIdX = Math.floor(Oev.Globe.tilesDefinition * prctLeft) - 1;
@@ -248,6 +232,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 			var vertRightTopIdY = Math.floor(Oev.Globe.tilesDefinition * prctTop);
 		}
 		var vertRightTopId = vertRightTopIdY + (vertRightTopIdX * (Oev.Globe.tilesDefinition + 1));
+		
 		if (prctLeft == 1) {
 			var vertLeftBottomIdX = Math.floor(Oev.Globe.tilesDefinition * prctLeft) - 1;
 		}else{
@@ -291,11 +276,11 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		var ampEleBottom = ext.elevationBuffer[vertRightBottomId] - ext.elevationBuffer[vertLeftBottomId];
 		var ampEleLeft = ext.elevationBuffer[vertLeftBottomId] - ext.elevationBuffer[vertLeftTopId];
 		var ampEleRight = ext.elevationBuffer[vertRightBottomId] - ext.elevationBuffer[vertRightTopId];
-		var gapVertLeft = this.vertCoords[vertRightTopId].x - this.vertCoords[vertLeftTopId].x;
-		var distFromVertLeft = _lon - this.vertCoords[vertLeftTopId].x;
+		var gapVertLeft = ext.tile.vertCoords[vertRightTopId].x - ext.tile.vertCoords[vertLeftTopId].x;
+		var distFromVertLeft = _lon - ext.tile.vertCoords[vertLeftTopId].x;
 		var prctVertLeft = distFromVertLeft / gapVertLeft;
-		var gapVertTop = this.vertCoords[vertLeftBottomId].y - this.vertCoords[vertLeftTopId].y;
-		var distFromVertTop = _lat - this.vertCoords[vertLeftTopId].y;
+		var gapVertTop = ext.tile.vertCoords[vertLeftBottomId].y - ext.tile.vertCoords[vertLeftTopId].y;
+		var distFromVertTop = _lat - ext.tile.vertCoords[vertLeftTopId].y;
 		var prctVertTop = distFromVertTop / gapVertTop;
 		var eleInterpolTop = ext.elevationBuffer[vertLeftTopId] + (ampEleTop * prctVertLeft);
 		var eleInterpolBottom = ext.elevationBuffer[vertLeftBottomId] + (ampEleTop * prctVertLeft);
@@ -315,10 +300,8 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 			this.tile.meshe.remove(this.mesheBorder);
 			this.mesheBorder.geometry.dispose();
 			this.mesheBorder = undefined;
+			this.materialBorder.dispose();
 		}
-		this.materialBorder.dispose();
-		// this.materialBorder = null;
-		this.elevationBuffer = null;
 		OEV.MUST_RENDER = true;
 	}
 	

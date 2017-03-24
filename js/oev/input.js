@@ -13,6 +13,8 @@ Oev.Input = (function(){
 	
 	return api;
 })();
+
+var tmp = false;
 	
 Oev.Input.Keyboard = (function(){
 	'use strict';
@@ -76,13 +78,18 @@ Oev.Input.Keyboard = (function(){
 				}else if( key == 82 ){ // r
 					
 				}else if( key == 83 ){ // s
-					
+					tmp = !tmp;
+					console.log('tmp', tmp);
 				}else if( key == 90 ){ // z
-					
+					// Oev.Net.Overpass.load(Oev.Globe.getCurTile());
 				}else if( key == 107 ){ // +
-					OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest + 1, 200 );
+					// OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest + 1, 200 );
+					Oev.Tile.Extension.WhaleRot += 0.2;
+					console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
 				}else if( key == 109 ){ // -
-					OEV.camCtrl.setZoomDest(OEV.camCtrl.zoomDest - 1, 200);
+					// OEV.camCtrl.setZoomDest(OEV.camCtrl.zoomDest - 1, 200);
+					Oev.Tile.Extension.WhaleRot -= 0.2;
+					console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
 				}else if( key == 88 ){ // x
 					
 				}

@@ -20,6 +20,7 @@ Oev.Sky = (function(){
 	var rainEnabled = false;
 	var weatherEnabled = false;
 	var lightSun;
+	var tmpLight;
 	
 	var api = {
 		evt : new Oev.Utils.Evt(), 
@@ -28,6 +29,9 @@ Oev.Sky = (function(){
 		normalizedTime : 0.5, 
 		posCenter : new THREE.Vector3( 0, 0, 0 ), 
 		
+		getLight : function() {
+			return lightSun;
+		}, 
 		init : function() {
 			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 		}, 
@@ -38,6 +42,8 @@ Oev.Sky = (function(){
 				OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 			}
 			colorsGradient = getImageData(OEV.textures['sky_gradient'].image);	
+			tmpLight = new THREE.PointLight(0xffffff, 1);
+			OEV.scene.add(tmpLight);
 			lightSun = new THREE.DirectionalLight(0xffffff, 1);
 			OEV.scene.add(lightSun);
 
@@ -103,7 +109,7 @@ Oev.Sky = (function(){
 				api.updateSun();
 				
 				if (destTime == api.normalizedTime) {
-					debug( "sunTime END" );
+					console.log( "sunTime END" );
 					OEV.earth.walkRecorder.endCmdStep( "sunTime" );
 				}
 			}

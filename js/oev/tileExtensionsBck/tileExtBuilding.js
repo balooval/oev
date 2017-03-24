@@ -8,7 +8,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 	ext.meshe = undefined;
 	ext.geometry = undefined;
 	
-	ext.tileReady = function() {
+	ext.loadDatas = function() {
 		if (!this.tile.onStage || this.tile.zoom < 15) {
 			return false;
 		}
@@ -34,17 +34,17 @@ Oev.Tile.Extension.Building = function(_tile) {
 	}
 	
 	ext.show = function() {
-		if (this.dataLoaded) {
+		if (this.datasLoaded) {
 			if (this.meshe != undefined) {
 				this.tile.meshe.add(this.meshe);
 			}
 		} else {
-			this.tileReady();
+			this.loadDatas();
 		}
 	}
 	
 	ext.hide = function() {
-		if (this.dataLoaded){
+		if (this.datasLoaded){
 			if (this.meshe != undefined) {
 				this.tile.meshe.remove(this.meshe);
 			}
@@ -58,17 +58,17 @@ Oev.Tile.Extension.Building = function(_tile) {
 	}
 	
 	ext.onBuildingsLoaded = function(_datas) {
-		if (!Oev.Tile.Extension['ACTIV_' + ext.id]) {
+		if (!this.isActiv) {
 			return false;
 		}
-		ext.dataLoaded = true;
-		ext.datas = _datas;
-		Oev.Tile.ProcessQueue.addWaiting(ext);
+		this.datasLoaded = true;
+		this.datas = _datas;
+		Oev.Tile.ProcessQueue.addWaiting(this);
 	}
 	
 	ext.dispose = function() {
 		this.hide();
-		if (!this.dataLoaded){
+		if (!this.datasLoaded){
 			OEV.earth.loaderBuilding.abort({
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -312,7 +312,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 	}
 
 	ext.construct = function() {
-		if (!Oev.Tile.Extension['ACTIV_' + ext.id] || !this.tile.onStage) {
+		if (!this.isActiv || !this.tile.onStage) {
 			return false;
 		}
 		this.geometry = new THREE.Geometry();
