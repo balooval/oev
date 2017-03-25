@@ -135,6 +135,7 @@ function onShaderLoader(_name, _material) {
 OpenEarthViewer.prototype.loadTextures = function() {
 	openModal( "Loading textures" );
 	var textList = [];
+	Oev.Net.Textures.addToList(textList, 'tree_top', 'tree_top.png');
 	Oev.Net.Textures.addToList(textList, 'skydome', 'skydome.jpg');
 	Oev.Net.Textures.addToList(textList, 'pylone', 'pylone.png');
 	Oev.Net.Textures.addToList(textList, 'water_color', 'water_color.jpg');
@@ -174,6 +175,7 @@ function onOevTexturesLoaded() {
 OpenEarthViewer.prototype.loadModels = function() {
 	openModal( "Loading models" );
 	var modelList = [];
+	Oev.Net.Models.addToList(modelList, 'eolienne', 'eolienne.json');
 	Oev.Net.Models.addToList(modelList, 'pylone', 'pylone.json');
 	Oev.Net.Models.addToList(modelList, 'tree_lod_1', 'hydrant_lod_0.json');
 	Oev.Net.Models.addToList(modelList, 'HYDRANT_lod_1', 'hydrant_lod_1.json');

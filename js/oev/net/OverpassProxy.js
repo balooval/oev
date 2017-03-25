@@ -1,33 +1,48 @@
-Oev.Net.Overpass = (function(){
+Oev.Net.OverpassProxy = (function(){
 	'use strict';
 	
-	var nodeType = 'pylone';
+	var waitings = [];
+	
+	var isLoading = false;
 	
 	var servers = [
 		'http://www.overpass-api.de/api', 
 		'http://api.openstreetmap.fr/oapi/interpreter/'
 	];
 	
-	
-	var waitings = [];
-	var isLoading = false;
+	var typeSearchs = {
+		pylone : ['"power"="tower"'], 
+		tree : ['"natural"="tree"'], 
+		eolienne : ['"power"="generator"', '"generator:source"="wind"'], 
+	};
 	
 	var api = {
-		send : function(_tile, _datas) {
+		abort : function(_tile, _nodeType) {
+			for (var i = 1; i < waitings.length; i ++) { // start at 1 : 0 is loading
+				if (waitings[i].tile == _tile && waitings[i].nodeType == _nodeType) {
+					waitings.splice(i, 1);
+					return true;
+				}
+			}
+			return false;
+		}, 
+		
+		send : function(_tile, _datas, _nodesType) {
 			var xhr = new XMLHttpRequest();
 			xhr.open("POST", 'libs/remoteImg.php?sendOverpass', true);
 			xhr.setRequestHeader('Content-Type', 'application/json');
 			xhr.onreadystatechange = function() {
 				if(xhr.readyState == 4) {
 					if (xhr.status == 200) {
-						console.log('send response', xhr.responseText);
+						var responseJson = JSON.parse(xhr.response);
+						console.log('Cache upload :', responseJson.success);
 					} else {
-						console.log('send error', xhr.responseText);
+						console.log('Cache upload error :', xhr.responseText);
 					}
 				}
 			}
 			xhr.send(JSON.stringify({
-				type : nodeType, 
+				type : _nodesType, 
 				tile : {
 					x : _tile.tileX, 
 					y : _tile.tileY, 
@@ -37,12 +52,12 @@ Oev.Net.Overpass = (function(){
 			}));
 		}, 
 		
-		load : function(_tile, _callback) {
+		load : function(_tile, _callback, _nodeType) {
 			waitings.push({
 				tile : _tile, 
 				callback : _callback, 
+				nodeType : _nodeType, 
 			});
-			// console.log('waitings', waitings.length);
 			loadNext();
 		}
 	};
@@ -55,15 +70,13 @@ Oev.Net.Overpass = (function(){
 			return false;
 		}
 		isLoading = true;
-		var coords = extractCoords(waitings[0].tile);
-		var coordStr = coords.south + ','+ coords.east + ',' + coords.north + ',' + coords.west;
-		var query = buildQuery(coordStr);
+		var query = buildQuery(waitings[0]);
 		fetch(query)
 		.then(function(response) {
 			return response.json();
 		})
 		.then(function(json) {
-			console.log('loaded', json.elements.length);
+			console.log('loaded', json.elements.length, ' nodes');
 			var loaded = waitings.shift();
 			loaded.callback(json.elements);
 			isLoading = false;
@@ -81,11 +94,18 @@ Oev.Net.Overpass = (function(){
 		return coords;
 	}
 	
-	function buildQuery(_coordStr) {
-		var query = getServer() + '/interpreter?data=[out:json];(node(' + _coordStr + ')["power"="tower"];);out;';
+	function buildQuery(_waiting) {
+		var coords = extractCoords(_waiting.tile);
+		var coordStr = coords.south + ','+ coords.east + ',' + coords.north + ',' + coords.west;
+		var subQuery = '';
+		var search = typeSearchs[_waiting.nodeType];
+		for (var i = 0; i < search.length; i ++) {
+			subQuery += 'node(' + coordStr + ')[' + search[i] + '];';
+		}
+		var query = getServer() + '/interpreter?data=[out:json];(' + subQuery + ');out;';
 		return query;
 	}
-	
+
 	function getServer() {
 		var id = Math.floor(Math.random() * servers.length);
 		return servers[id];

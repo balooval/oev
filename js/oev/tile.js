@@ -466,28 +466,28 @@ Oev.Tile = (function(){
 
 
 Oev.Tile.ProcessQueue = (function(){
-	var waitingTiles = [];
+	var waitingsObj = [];
 	
 	var api = {
-		addWaiting : function(_tile) {
-			waitingTiles.push(_tile);
+		addWaiting : function(_caller) {
+			waitingsObj.push(_caller);
 			OEV.addObjToUpdate(api);
 		}, 
 		
 		processNext : function() {
-			if (waitingTiles.length == 0) {
+			if (waitingsObj.length == 0) {
 				OEV.removeObjToUpdate(api);
 				return null;
 			}
-			return waitingTiles.shift();
+			return waitingsObj.shift();
 		}, 
 		
 		update : function() {
-			var tile = api.processNext();
-			if (tile === null) {
+			var caller = api.processNext();
+			if (caller === null) {
 				return false;
 			}
-			tile.construct();
+			caller.construct();
 		}, 
 	};
 	

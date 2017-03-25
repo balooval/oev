@@ -43,7 +43,7 @@ Oev.Globe = (function() {
 		tilesDefinition : 16, 
 		grassMat : undefined, 
 		modelsMesheMat : {
-			"TREE":new THREE.MeshPhongMaterial({color: 0xffffff, shininess: 0}), 
+			"TREE":new THREE.MeshPhongMaterial({color: 0xa0a0a0, shininess: 0}), 
 			"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
 			"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
 			"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
@@ -51,7 +51,8 @@ Oev.Globe = (function() {
 			"fountain" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
 			"statue" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
 			"poubelle" : new THREE.MeshLambertMaterial({color: 0x9fc091 }), 
-			'recycling' : new THREE.MeshLambertMaterial({color: 0x546e10 })
+			'recycling' : new THREE.MeshLambertMaterial({color: 0x546e10 }), 
+			'pylone' : new THREE.MeshPhongMaterial({color: 0x909090, transparent:true})
 		}, 
 		
 		init : function() {
@@ -68,7 +69,7 @@ Oev.Globe = (function() {
 			api.loaderBuilding = new Oev.DataLoader.Proxy('BUILDINGS');
 			api.loaderNormal = new Oev.DataLoader.Proxy('NORMAL');
 			api.loaderPlane = new Oev.DataLoader.Proxy('PLANE');
-			api.loaderOverpass = new Oev.DataLoader.Proxy('OVERPASS');
+			api.loaderOverpassCache = new Oev.DataLoader.Proxy('OVERPASS_CACHE');
 			
 			// api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
 			// api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
@@ -84,9 +85,6 @@ Oev.Globe = (function() {
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 			api.tilesWeatherMng = new DatasMng( "WEATHER" );
 			api.tilesLandusesMng = new DatasMng( "SURFACE" );
-			api.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
-			api.modelsMesheMat['TREE'].alphaTest = 0.9;
-			api.modelsMesheMat['TREE'].needsUpdate = true;
 			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
@@ -106,8 +104,12 @@ Oev.Globe = (function() {
 		}, 
 		
 		onAppStart : function() {
-			api.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
+			api.modelsMesheMat['pylone'].map = OEV.textures['pylone'];
+			api.modelsMesheMat['pylone'].needsUpdate = true;
+			// api.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
+			api.modelsMesheMat['TREE'].map = OEV.textures['tree_top'];
 			api.modelsMesheMat['TREE'].alphaTest = 0.9;
+			api.modelsMesheMat['TREE'].side = THREE.DoubleSide;
 			api.modelsMesheMat['TREE'].needsUpdate = true;
 			api.testForestMat.map = OEV.textures['tree_side'];
 			api.testForestMat.needsUpdate = true;

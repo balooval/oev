@@ -9,7 +9,7 @@ Oev.DataLoader.Proxy = function(_type) {
 		BUILDINGS : 2, 
 		NORMAL : 1, 
 		PLANE : 1, 
-		OVERPASS : 1, 
+		OVERPASS_CACHE : 1, 
 	};
 	this._simulLoad = simulByType[this._type];
 	this._datasLoaded = {};
@@ -59,15 +59,15 @@ Oev.DataLoader.Proxy.prototype = {
 				loader = new Oev.DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			} else if (this._type == 'PLANE') {
 				loader = new Oev.DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'OVERPASS') {
-				loader = new Oev.DataLoader.Overpass(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'OVERPASS_CACHE') {
+				loader = new Oev.DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			}
 			this._loaders.push(loader);
 		}
 	}, 
 	
 	onDataLoaded : function(_data, _params) {
-		if (this._type == 'OVERPASS0') {
+		if (this._type == 'OVERPASS_CACHE0') {
 			console.log('_params', _params.key);
 			// var date = new Date();
 			// console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
@@ -84,7 +84,9 @@ Oev.DataLoader.Proxy.prototype = {
 			}
 		}
 		_params.callback(_data);
-		this._datasLoaded[_params.key] = _data;
+		if (_params.dropDatas === undefined || _params.dropDatas == false) {
+			this._datasLoaded[_params.key] = _data;
+		}
 		this._checkForNextLoad();
 	}, 
 	
@@ -205,7 +207,7 @@ Oev.DataLoader.Ajax.prototype = {
 
 	stateChange : function(object) {
 		if (this.request.readyState==4){
-			this.callback(this.request.responseText);
+			this.callback(this.request.responseText, this.request);
 		}
 	}, 
 }
@@ -420,27 +422,30 @@ Oev.DataLoader.Planes.prototype = {
 
 
 
-Oev.DataLoader.Overpass = function(_callback) {
+Oev.DataLoader.OverpassCache = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
 	this.ajax = new Oev.DataLoader.Ajax();
 }
 
-Oev.DataLoader.Overpass.prototype = {
+Oev.DataLoader.OverpassCache.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load('libs/remoteImg.php?overpassClient=1&type=pylone&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
-			function(_datas){
-				loader.onDataLoadSuccess(_datas);
+		this.ajax.load('libs/remoteImg.php?overpassClient=1&type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
+			function(_datas, _xhr){
+				loader.onDataLoadSuccess(_datas, _xhr);
 			}
 		);
 	}, 
 	
-	onDataLoadSuccess : function(_data) {
+	onDataLoadSuccess : function(_data, _xhr) {
 		this.isLoading = false;
+		if (_xhr.status == 206) {
+			this.params.dropDatas = true;
+		}
 		this.callback(_data, this.params);
 	}, 
 }

@@ -30,6 +30,8 @@ if( isset( $_GET['overpassClient'] ) ){
 		$response['success'] = true;
 		$response['error'] = '';
 		$response['result'] = json_decode($result, true);
+	} else {
+		http_response_code(206);
 	}
 	
 	echo json_encode($response);
