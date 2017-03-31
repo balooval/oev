@@ -80,16 +80,27 @@ Oev.Input.Keyboard = (function(){
 				}else if( key == 83 ){ // s
 					tmp = !tmp;
 					console.log('tmp', tmp);
+					
+					// var resAlt = Oev.Globe.posFromAltitude(100);
+					// console.log('resAlt', resAlt);
+					var testA = Oev.Globe.coordToXYZ(0, 0, 10);
+					var testB = Oev.Globe.coordToXYZ(10, 10, 10);
+					testB.x -= testA.x;
+					testB.z -= testA.z;
+					console.log('test', testB);
+					
 				}else if( key == 90 ){ // z
 					// Oev.Net.Overpass.load(Oev.Globe.getCurTile());
 				}else if( key == 107 ){ // +
 					// OEV.camCtrl.setZoomDest( OEV.camCtrl.zoomDest + 1, 200 );
-					Oev.Tile.Extension.WhaleRot += 0.2;
-					console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
+					// Oev.Tile.Extension.WhaleRot += 0.2;
+					// console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
+					zoomIn();
 				}else if( key == 109 ){ // -
 					// OEV.camCtrl.setZoomDest(OEV.camCtrl.zoomDest - 1, 200);
-					Oev.Tile.Extension.WhaleRot -= 0.2;
-					console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
+					// Oev.Tile.Extension.WhaleRot -= 0.2;
+					// console.log('Oev.Tile.Extension.WhaleRot', Oev.Tile.Extension.WhaleRot);
+					zoomOut()
 				}else if( key == 88 ){ // x
 					
 				}

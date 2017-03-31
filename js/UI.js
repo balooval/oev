@@ -244,7 +244,7 @@ function updateWaypointsList( _waysPts ){
 }
 
 function showUICoords(){
-	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ "m<br>Ele. factor : " + OEV.earth.eleFactor+'<br>SunTime: ' + Math.round( Oev.Sky.normalizedTime * 24 )+'H';
+	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ 'm<br>SunTime: ' + Math.round( Oev.Sky.normalizedTime * 24 )+'H';
 }
 
 function onPostChatMsg( evt ){

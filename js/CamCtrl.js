@@ -39,76 +39,71 @@ CamCtrlGod.prototype.init = function(_cam, _planet) {
 }
 
 CamCtrlGod.prototype.onAppStart = function() {
-	this.camera.up.set( 0, -1, 0 );
-	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
-	OEV.scene.add( this.pointer );
-	this.clicPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x0000ff }) );
-	OEV.scene.add( this.clicPointer );
-	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
-	OEV.scene.add( this.debugPointer );
-	if( location.hash != '' ){
-		var urlParamsLoc = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
-		this.zoomCur = parseFloat( urlParamsLoc[0] );
+	this.camera.up.set(0, -1, 0);
+	this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+	OEV.scene.add(this.pointer);
+	this.clicPointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0x0000ff}));
+	OEV.scene.add(this.clicPointer);
+	this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
+	OEV.scene.add(this.debugPointer);
+	if (location.hash != '') {
+		var urlParamsLoc = location.hash.substr(location.hash.search('=') + 1).split('/');
+		this.zoomCur = parseFloat(urlParamsLoc[0]);
 		this.zoomDest = this.zoomCur;
 		this.tweenZoom.value = this.zoomCur;
-		this.setLookAt( parseFloat( urlParamsLoc[1] ), parseFloat( urlParamsLoc[2] ) );
+		this.setLookAt( parseFloat(urlParamsLoc[1]), parseFloat(urlParamsLoc[2]));
 		this.tweenLon.value = this.coordLookat.x;
 		this.tweenLat.value = this.coordLookat.y;
-		this.planet.updateZoom( this.zoomCur );
+		this.planet.updateCurTile(this.coordLookat.x, this.coordLookat.y);
+		this.planet.updateZoom(this.zoomCur);
 		this.MUST_UPDATE = true;
 	}
 	this.updateCamera();
 }
 
-CamCtrlGod.prototype.setZoomDest = function( _zoom, _duration ) {
-	this.zoomDest = Math.min( Math.max( _zoom, 4 ), 19 );
-	if( this.zoomDest != this.zoomCur ){
-		this.tweenZoom.setTargetValue( this.zoomDest, _duration );
+CamCtrlGod.prototype.setZoomDest = function(_zoom, _duration) {
+	this.zoomDest = Math.min( Math.max(_zoom, 4), 19);
+	if (this.zoomDest != this.zoomCur) {
+		this.tweenZoom.setTargetValue(this.zoomDest, _duration);
 	}
 }
 
 
 CamCtrlGod.prototype.update = function() {
-	if( this.dragging ){
+	if (this.dragging) {
 		this.drag();
 	}
-	if( this.rotating ){
+	if (this.rotating) {
 		this.rotate();
 	}
-	if( this.tweenZoom.running ){
+	if (this.tweenZoom.running) {
 		this.zoom();
 	}
 	this.checkDestination();
-	
-	if( this.MUST_UPDATE ){
+	if (this.MUST_UPDATE) {
 		this.updateCamera();
 		this.MUST_UPDATE = false;
 	}
-	
 	this.mouseLastPos.x = Oev.Input.Mouse.curMouseX;
 	this.mouseLastPos.y = Oev.Input.Mouse.curMouseY;
 }
 
 CamCtrlGod.prototype.setDestination = function( _lon, _lat, _duration ) {
-	if( _duration == undefined ){
-		var distance = Oev.Utils.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
-		_duration = Math.min( 5000, distance / 10 );
-		// debug( "_duration undefined, set to " + _duration + ' (' + distance + ')' );
+	if (_duration == undefined) {
+		var distance = Oev.Utils.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
+		_duration = Math.min(5000, distance / 10);
 	}	
-	// _duration = _duration || 3000;
 	this.tweenLon.value = this.coordLookat.x;
 	this.tweenLat.value = this.coordLookat.y;
-	this.tweenLon.setTargetValue( _lon, _duration );
-	this.tweenLat.setTargetValue( _lat, _duration );
-	
-	this.tweenLon.evt.removeEventListener( "END", this, this.onDestReach );
-	this.tweenLon.evt.addEventListener( "END", this, this.onDestReach );
+	this.tweenLon.setTargetValue(_lon, _duration);
+	this.tweenLat.setTargetValue(_lat, _duration);
+	this.tweenLon.evt.removeEventListener('END', this, this.onDestReach);
+	this.tweenLon.evt.addEventListener('END', this, this.onDestReach);
 }
 
 CamCtrlGod.prototype.onDestReach = function() {
-	// debug( "onDestReach" );
-	this.tweenLon.evt.removeEventListener( "END", this, this.onDestReach );
-	this.evt.fireEvent( "DEST_REACH" );
+	this.tweenLon.evt.removeEventListener("END", this, this.onDestReach);
+	this.evt.fireEvent('DEST_REACH');
 }
 
 CamCtrlGod.prototype.checkDestination = function() {
@@ -129,29 +124,13 @@ CamCtrlGod.prototype.zoom = function() {
 
 CamCtrlGod.prototype.setCurZoom = function( _value ) {
 	this.zoomCur = _value;
-	this.planet.updateZoom( this.zoomCur );
-	
+	this.planet.updateZoom(this.zoomCur);
 	var wpScale = ( this.coordCam.z / this.planet.radius ) * 1000;
 	for( var w = 0; w < OEV.waypoints.length; w ++ ){
 		OEV.waypoints[w].resize( wpScale );
 	}
-	
 	this.MUST_UPDATE = true;
 }
-
-CamCtrlGod.prototype.zoomOk = function() {
-	var d = new Date();
-	this.zoomCur = this.tweenZoom.getValueAtTime( d.getTime() );
-	this.planet.updateZoom( this.zoomCur );
-	
-	var wpScale = ( this.coordCam.z / this.planet.radius ) * 1000;
-	for( var w = 0; w < OEV.waypoints.length; w ++ ){
-		OEV.waypoints[w].resize( wpScale );
-	}
-	
-	this.MUST_UPDATE = true;
-}
-
 
 CamCtrlGod.prototype.drag = function() {
 	var depX = ( Oev.Input.Mouse.curMouseX - this.mouseLastPos.x ) / Math.pow( 2.0, this.zoomCur );
@@ -170,7 +149,6 @@ CamCtrlGod.prototype.setLookAt = function( _lon, _lat ) {
 		this.coordLookat.x = this.coordLookat.x + 360;
 	}
 	this.coordLookat.y = Math.min( Math.max( this.coordLookat.y, -85 ), 85 );
-	
 	this.MUST_UPDATE = true;
 }
 
@@ -189,84 +167,71 @@ CamCtrlGod.prototype.rotate = function() {
 	this.MUST_UPDATE = true;
 }
 
-
-
 CamCtrlGod.prototype.updateCamera = function() {
-	var urlLon = Math.round( this.coordLookat.x * 10000 ) / 10000;
-	var urlLat = Math.round( this.coordLookat.y * 10000 ) / 10000;
-	var urlZoom = Math.round( this.zoomDest * 10000 ) / 10000;
-	// history.replaceState( 'toto', "Title", "#location="+urlZoom+"/"+urlLon+"/"+urlLat+"/"+urlParams.join(',') );
-	history.replaceState( 'toto', "Title", "#location="+urlZoom+"/"+urlLon+"/"+urlLat );
-	
-	this.coordLookat.z = this.planet.getElevationAtCoords( this.coordLookat.x, this.coordLookat.y, true );
-	this.posLookat = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordLookat.z );
-	this.coordCam.z = this.planet.altitude( this.zoomCur );
-	this.planet.zoomFromAltitudeTest( this.coordCam.z );
-	
-	if( this.planet.projection == "SPHERE" ){
-		var radLon = Oev.Math.radians( this.coordLookat.x );
-		var radLat = Oev.Math.radians( this.coordLookat.y );
+	var urlLon = Math.round(this.coordLookat.x * 10000) / 10000;
+	var urlLat = Math.round(this.coordLookat.y * 10000) / 10000;
+	var urlZoom = Math.round(this.zoomDest * 10000) / 10000;
+	history.replaceState('toto', "Title", "#location="+urlZoom+"/"+urlLon+"/"+urlLat);
+	this.coordLookat.z = this.planet.getElevationAtCoords( this.coordLookat.x, this.coordLookat.y, true);
+	this.posLookat = this.planet.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
+	this.coordCam.z = this.planet.altitude(this.zoomCur);
+	this.planet.zoomFromAltitudeTest(this.coordCam.z);
+	if (this.planet.projection == "SPHERE") {
+		var radLon = Oev.Math.radians(this.coordLookat.x);
+		var radLat = Oev.Math.radians(this.coordLookat.y);
 		var matGlob = new THREE.Matrix4();
 		var matZ = new THREE.Matrix4();
 		var matY = new THREE.Matrix4();
 		var matX = new THREE.Matrix4();
-		
-		matX.makeRotationX( 0 );
-		matY.makeRotationY( radLon );
-		matZ.makeRotationZ( radLat );
-		matGlob.multiplyMatrices( matY, matZ );
-		matGlob.multiply( matX );
-		var tmpG = new THREE.Vector3( this.planet.radius / this.planet.globalScale, 0, 0 );
-		tmpG.applyMatrix4( matGlob );
-		
-		
+		matX.makeRotationX(0);
+		matY.makeRotationY(radLon);
+		matZ.makeRotationZ(radLat);
+		matGlob.multiplyMatrices(matY, matZ);
+		matGlob.multiply(matX);
+		var tmpG = new THREE.Vector3(this.planet.radius / this.planet.globalScale, 0, 0);
+		tmpG.applyMatrix4(matGlob);
 		// rotation locale
 		var matLoc = new THREE.Matrix4();
 		var matLocX = new THREE.Matrix4();
 		var matLocY = new THREE.Matrix4();
 		var matLocZ = new THREE.Matrix4();
-		matLocX.makeRotationX( this.camRotation.x * -1 );
-		matLocY.makeRotationY( 0 ); // this.camRotation.x
-		matLocZ.makeRotationZ( this.camRotation.y * 1 ); // ok
-		matGlob.multiply( matLocX );
-		matGlob.multiply( matLocZ );
-		var tmpL = new THREE.Vector3( this.coordCam.z / this.planet.globalScale, 0, 0 );
-		tmpL.applyMatrix4( matGlob );
-		
+		matLocX.makeRotationX(this.camRotation.x * -1);
+		matLocY.makeRotationY(0); // this.camRotation.x
+		matLocZ.makeRotationZ(this.camRotation.y * 1); // ok
+		matGlob.multiply(matLocX);
+		matGlob.multiply(matLocZ);
+		var tmpL = new THREE.Vector3(this.coordCam.z / this.planet.globalScale, 0, 0);
+		tmpL.applyMatrix4(matGlob);
 		tmpG.x += tmpL.x;
 		tmpG.y += tmpL.y;
 		tmpG.z += tmpL.z;
-		
 		this.posCam.x = -tmpG.x;
 		this.posCam.y = tmpG.y;
 		this.posCam.z = -tmpG.z;
-		
 		var vX = new THREE.Vector3();
 		var vY = new THREE.Vector3();
 		var vZ = new THREE.Vector3();
-		matGlob.extractBasis( vX, vY, vZ);
-		
-		this.camera.up.set( -Math.cos( radLat * -1 ) * Math.cos( radLon ), -Math.sin( radLat * -1 ), Math.cos( radLat * -1 ) * Math.sin( radLon ) );
-		
+		matGlob.extractBasis(vX, vY, vZ);
+		this.camera.up.set(-Math.cos(radLat * -1) * Math.cos(radLon), -Math.sin(radLat * -1), Math.cos(radLat * -1) * Math.sin(radLon));
 	}else{
 		this.coordCam.z *= this.planet.globalScale;
-		var orbitRadius = Math.sin( this.camRotation.y ) * ( this.coordCam.z );
-		this.posCam.x = this.posLookat.x + Math.sin( this.camRotation.x ) * orbitRadius;
-		this.posCam.z = this.posLookat.z + Math.cos( this.camRotation.x ) * orbitRadius;
-		this.posCam.y = this.posLookat.y - Math.cos( this.camRotation.y ) * ( this.coordCam.z );
-		this.camera.up.set( 0, -1, 0 );
+		var orbitRadius = Math.sin(this.camRotation.y) * this.coordCam.z;
+		this.posCam.x = this.posLookat.x + Math.sin(this.camRotation.x) * orbitRadius;
+		this.posCam.z = this.posLookat.z + Math.cos(this.camRotation.x) * orbitRadius;
+		this.posCam.y = this.posLookat.y - Math.cos(this.camRotation.y) * (this.coordCam.z);
+		this.camera.up.set(0, -1, 0);
 	}
 	this.camera.position.x = this.posCam.x;
 	this.camera.position.y = this.posCam.y;
 	this.camera.position.z = this.posCam.z;
-	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
+	var tmpCoords = this.planet.coordFromPos(this.posCam.x, this.posCam.z);
 	this.coordCam.x = tmpCoords.x;
 	this.coordCam.y = tmpCoords.y;
 	this.camera.lookAt(this.posLookat);
-	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
+	this.planet.updateCurTile(this.coordLookat.x, this.coordLookat.y);
 	this.planet.zoomDetails = this.zoomCur;
 	this.planet.checkLOD();
-	var wpScale = ( this.coordCam.z / this.planet.radius ) * 500;
+	var wpScale = (this.coordCam.z / this.planet.radius) * 500;
 	this.pointer.scale.x = wpScale;
 	this.pointer.scale.y = wpScale;
 	this.pointer.scale.z = wpScale;
@@ -277,131 +242,54 @@ CamCtrlGod.prototype.updateCamera = function() {
 	this.debugPointer.scale.y = wpScale;
 	this.debugPointer.scale.z = wpScale;
 	OEV.MUST_RENDER = true;
-	this.evt.fireEvent( "CAM_UPDATED" );
+	this.evt.fireEvent('CAM_UPDATED');
 	if (Oev.Sky != undefined) {
 		Oev.Sky.posCenter = this.posLookat;
 		Oev.Sky.globalScale = this.planet.globalScale;
 		Oev.Sky.updateSun();
 	}
-	
 	// console.log('Camera on ground ?', OEV.earth.isCoordOnGround(this.coordLookat.x, this.coordLookat.y, 1));
 }
 
 
-
-CamCtrlGod.prototype.updateCameraOk = function() {
-	this.coordLookat.z = this.planet.getElevationAtCoords( this.coordLookat.x, this.coordLookat.y, true );
-	this.posLookat = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordLookat.z );
-	this.coordCam.z = this.planet.altitude( this.zoomCur );
-
-	if( this.planet.projection == "SPHERE" ){
-		this.posCam = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordCam.z / this.planet.meter );
-		this.camera.up.set( 0, 1, 0 );
-	}else{
-		this.coordCam.z *= this.planet.globalScale;
-		var orbitRadius = Math.sin( this.camRotation.y ) * ( this.coordCam.z );
-		this.posCam.x = this.posLookat.x + Math.sin( this.camRotation.x ) * orbitRadius;
-		this.posCam.z = this.posLookat.z + Math.cos( this.camRotation.x ) * orbitRadius;
-		this.posCam.y = this.posLookat.y - Math.cos( this.camRotation.y ) * ( this.coordCam.z );
-		this.camera.up.set( 0, -1, 0 );
-	}
-	
-	this.camera.position.x = this.posCam.x;
-	this.camera.position.y = this.posCam.y;
-	this.camera.position.z = this.posCam.z;
-	
-	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
-	this.coordCam.x = tmpCoords.x;
-	this.coordCam.y = tmpCoords.y;
-	this.camera.lookAt( this.posLookat );
-	
-	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
-	this.planet.zoomDetails = this.zoomCur;
-	this.planet.checkLOD();
-	
-	var wpScale = ( this.coordCam.z / this.planet.radius ) * 500;
-	this.pointer.scale.x = wpScale;
-	this.pointer.scale.y = wpScale;
-	this.pointer.scale.z = wpScale;
-	this.pointer.position.x = this.posLookat.x;
-	this.pointer.position.y = this.posLookat.y;
-	this.pointer.position.z = this.posLookat.z;
-	
-	this.debugPointer.scale.x = wpScale;
-	this.debugPointer.scale.y = wpScale;
-	this.debugPointer.scale.z = wpScale;
-	
-	OEV.MUST_RENDER = true;
-	
-	
-	if (Oev.Sky != undefined) {
-		Oev.Sky.posCenter = this.posLookat;
-		Oev.Sky.globalScale = this.planet.globalScale;
-		Oev.Sky.updateSun();
-	}
+CamCtrlGod.prototype.onMouseWheel = function(_delta) {
+	this.setZoomDest(this.zoomDest + _delta, 200);
 }
 
-
-
-CamCtrlGod.prototype.onMouseWheel = function(_delta){
-	this.setZoomDest( this.zoomDest + _delta, 200);
-}
-
-CamCtrlGod.prototype.onMouseDownLeft = function(){
+CamCtrlGod.prototype.onMouseDownLeft = function() {
 	this.coordOnGround = OEV.checkMouseWorldPos();
-	if( this.coordOnGround != undefined ){
-		
+	if (this.coordOnGround != undefined) {
 		this.coordStartDrag.x = this.coordLookat.x;
 		this.coordStartDrag.y = this.coordLookat.y;
-		// debug( 'OEV.mouseScreenClick : ' + OEV.mouseScreenClick.x + ' / ' + OEV.mouseScreenClick.y );
-		// debug( 'this.coordOnGround : ' + this.coordOnGround.x + ' / ' + this.coordOnGround.y );
-		
-		var wpScale = ( this.coordCam.z / this.planet.radius ) * 500;
+		var wpScale = (this.coordCam.z / this.planet.radius) * 500;
 		this.clicPointer.scale.x = wpScale;
 		this.clicPointer.scale.y = wpScale;
 		this.clicPointer.scale.z = wpScale;
-		var pos = this.planet.coordToXYZ( this.coordOnGround.x, this.coordOnGround.y, this.coordOnGround.z );
+		var pos = this.planet.coordToXYZ(this.coordOnGround.x, this.coordOnGround.y, this.coordOnGround.z);
 		this.clicPointer.position.x = pos.x;
 		this.clicPointer.position.y = pos.y;
 		this.clicPointer.position.z = pos.z;
-	
 		this.dragging = true;
 	}
 }
 
-CamCtrlGod.prototype.onMouseUpLeft = function(){
+CamCtrlGod.prototype.onMouseUpLeft = function() {
 	this.dragging = false;
-	this.evt.fireEvent( "STOP_DRAG" );
+	this.evt.fireEvent('STOP_DRAG');
 }
 
-CamCtrlGod.prototype.onMouseDownRight = function(){
+CamCtrlGod.prototype.onMouseDownRight = function() {
 	this.rotating = true;
 }
 
-CamCtrlGod.prototype.onMouseUpRight = function(){
+CamCtrlGod.prototype.onMouseUpRight = function() {
 	this.rotating = false;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
-
-
-
 
 
 
@@ -512,7 +400,7 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 		this.setLookAt( parseFloat( urlParamsLoc[1] ), parseFloat( urlParamsLoc[2] ) );
 		this.tweenLon.value = this.coordLookat.x;
 		this.tweenLat.value = this.coordLookat.y;
-		this.planet.updateZoom( this.zoomCur );
+		this.planet.updateZoom(this.zoomCur);
 		this.MUST_UPDATE = true;
 	}
 	Oev.Input.Keyboard.evt.addEventListener("ON_KEY_DOWN", this, this.onKeyDown);
@@ -798,61 +686,6 @@ CamCtrlFps.prototype.updateCamera = function() {
 	}
 	
 }
-
-
-
-CamCtrlFps.prototype.updateCameraOk = function() {
-	this.coordLookat.z = this.planet.getElevationAtCoords( this.coordLookat.x, this.coordLookat.y, true );
-	this.posLookat = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordLookat.z );
-	this.coordCam.z = this.planet.altitude( this.zoomCur );
-
-	if( this.planet.projection == "SPHERE" ){
-		this.posCam = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordCam.z / this.planet.meter );
-		this.camera.up.set( 0, 1, 0 );
-	}else{
-		this.coordCam.z *= this.planet.globalScale;
-		var orbitRadius = Math.sin( this.camRotation.y ) * ( this.coordCam.z );
-		this.posCam.x = this.posLookat.x + Math.sin( this.camRotation.x ) * orbitRadius;
-		this.posCam.z = this.posLookat.z + Math.cos( this.camRotation.x ) * orbitRadius;
-		this.posCam.y = this.posLookat.y - Math.cos( this.camRotation.y ) * ( this.coordCam.z );
-		this.camera.up.set( 0, -1, 0 );
-	}
-	
-	this.camera.position.x = this.posCam.x;
-	this.camera.position.y = this.posCam.y;
-	this.camera.position.z = this.posCam.z;
-	
-	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
-	this.coordCam.x = tmpCoords.x;
-	this.coordCam.y = tmpCoords.y;
-	this.camera.lookAt( this.posLookat );
-	
-	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
-	this.planet.zoomDetails = this.zoomCur;
-	this.planet.checkLOD();
-	
-	var wpScale = ( this.coordCam.z / this.planet.radius ) * 500;
-	this.pointer.scale.x = wpScale;
-	this.pointer.scale.y = wpScale;
-	this.pointer.scale.z = wpScale;
-	this.pointer.position.x = this.posLookat.x;
-	this.pointer.position.y = this.posLookat.y;
-	this.pointer.position.z = this.posLookat.z;
-	
-	this.debugPointer.scale.x = wpScale;
-	this.debugPointer.scale.y = wpScale;
-	this.debugPointer.scale.z = wpScale;
-	
-	OEV.MUST_RENDER = true;
-	
-	
-	if( Oev.Sky != undefined ){
-		Oev.Sky.posCenter = this.posLookat;
-		Oev.Sky.globalScale = this.planet.globalScale;
-		Oev.Sky.updateSun();
-	}
-}
-
 
 
 CamCtrlFps.prototype.onMouseDownLeft = function(){

@@ -57,9 +57,11 @@ Oev.Sky = (function(){
 			lightAmbiant = new THREE.AmbientLight(0x25282d);
 			OEV.scene.add(lightAmbiant);
 			if (OEV.shadowsEnabled) {
-				var factor = 0.002;
+				
 				// var factor = 1;
 				lightSun.castShadow = true;
+				updateShadow();
+				/*
 				lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
 				lightSun.shadow.camera.near = 1;
 				lightSun.shadow.mapSize.width = 2048;
@@ -69,6 +71,7 @@ Oev.Sky = (function(){
 				lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
 				lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;
 				lightSun.shadow.camera.bottom = lightSun.shadow.camera.far * factor * -1;
+				*/
 				
 			}
 			api.initSunPos();
@@ -81,10 +84,10 @@ Oev.Sky = (function(){
 			
 			OEV.earth.evt.addEventListener( 'CURTILE_CHANGED', api, api.onCurTileChanged );
 			
-			if (rainEnabled) {
+			// if (rainEnabled) {
 				OEV.earth.evt.addEventListener( 'LOD_CHANGED', api, api.onLodChanged );
 				api.onLodChanged();
-			}
+			// }
 		}, 
 		
 		tmp : function(_value) {
@@ -209,6 +212,8 @@ Oev.Sky = (function(){
 		},
 		
 		activAtmosphere : function(_state) {
+			// console.warn('activAtmosphere not working : no shader');
+			return false;
 			if (_state) {
 				if (atmosphereMeshe == undefined) {
 					var skyGeo = new THREE.SphereGeometry( OEV.earth.radius * 1.5, 32, 15 );
@@ -368,14 +373,31 @@ Oev.Sky = (function(){
 		}, 
 		
 		onLodChanged : function() {
-			if (OEV.earth.curLOD == OEV.earth.LOD_STREET) {
+			/*
+			if (OEV.earth.curLOD == OEV.earth.LOD_CITY) {
 				snowEmiter = new RainEmiter(api);
 			}else if (snowEmiter != undefined) {
 				snowEmiter.dispose();
 				snowEmiter = undefined;
 			}
+			*/
+			// updateShadow();
 		}, 
 	};
+	
+	function updateShadow() {
+		console.log('updateShadow');
+		var factor = 0.002;
+		lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
+		lightSun.shadow.camera.near = 1;
+		lightSun.shadow.mapSize.width = 2048;
+		lightSun.shadow.mapSize.height = 2048;
+		
+		lightSun.shadow.camera.left = lightSun.shadow.camera.far * factor * -1;
+		lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
+		lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;
+		lightSun.shadow.camera.bottom = lightSun.shadow.camera.far * factor * -1;
+	}
 	
 	
 	function updateStarsPos() {
