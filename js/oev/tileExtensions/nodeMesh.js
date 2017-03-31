@@ -66,14 +66,16 @@ Oev.Tile.Extension.Node.prototype = {
 		}
 		var geoModel = this.meshBuilder.getGeometry(_node.tags);
 		var meshModel = new THREE.Mesh(geoModel);
-		var alt = this.tile.interpolateEle(_node.lon, _node.lat, true);
+		// var alt = this.tile.interpolateEle(_node.lon, _node.lat, true);
+		var alt = Oev.Globe.getElevationAtCoords(_node.lon, _node.lat, true);
 		var pos = Oev.Globe.coordToXYZ(_node.lon, _node.lat, alt);
 		meshModel.position.x = pos.x;
 		meshModel.position.y = pos.y;
 		meshModel.position.z = pos.z;
-		// meshModel.rotation.y = Math.random() * 3;
+		meshModel.rotation.y = Math.random() * 3;
 		meshModel.rotation.z = Math.PI;
-		var scale = 0.2;
+		// var scale = 0.2;
+		var scale = Oev.Globe.globalScale / 50;
 		meshModel.scale.x = scale;
 		meshModel.scale.y = scale;
 		meshModel.scale.z = scale;
@@ -159,6 +161,8 @@ Oev.Tile.Extension.NodeGeoTree.prototype = {
 				endY : 1, 
 			}, 
 		];
+		treeProps.diameter_crown = _tags.diameter_crown;
+		treeProps.circumference = _tags.circumference;
 		treeProps.radius = [
 			_tags.circumference * 1.5, 
 			_tags.circumference, 
@@ -166,6 +170,7 @@ Oev.Tile.Extension.NodeGeoTree.prototype = {
 			_tags.diameter_crown_top, 
 			0, 
 		];
+		treeProps.trunkHeight = trunkHeight;
 		treeProps.alts = [
 			0, 
 			trunkHeight, 
@@ -213,7 +218,55 @@ Oev.Tile.Extension.NodeGeoTree.prototype = {
 		treeProps.scale = 1;
 		var geometry = new THREE.Geometry();
 		// Oev.GeometryBuilder.cylinder(geometry, treeProps);
-		Oev.GeometryBuilder.foliage(geometry);
+		var foliageProps = {
+			alt : (treeProps.height * 0.5) * 0.2, 
+			height : (treeProps.height * 0.5) * 0.2, 
+			radius : treeProps.diameter_crown * 0.2, 
+			slices : 5, 
+		};
+		if (treeTags.height <= 5) {
+			foliageProps.slope = -0.1;
+		}
+		Oev.GeometryBuilder.foliage(geometry, foliageProps);
+		// Oev.GeometryBuilder.branch(geometry, foliageProps);
+		
+		var trunkUvWidth = 0.25 / 4;
+		// var tileVariant = 0.75;// + (Math.floor(Math.random() * 4) / 16)
+		var tileVariant = Math.floor(Math.random() * 4);
+		tileVariant = 0.75 + tileVariant / 16;
+		var trunkProp = {
+			nbSections : 4, 
+			height : (treeProps.height * 0.8) * 0.2, 
+			radius : [
+				treeProps.circumference * 0.35, 
+				treeProps.circumference * 0.2, 
+				treeProps.circumference * 0.1, 
+			], 
+			alts : [
+				0, 
+				0.07, 
+				1, 
+			], 
+			texTile : [
+				{
+					startX : tileVariant, 
+					endX : tileVariant + trunkUvWidth, 
+					startY : 1, 
+					endY : 0.95, 
+				}, 
+				{
+					startX : tileVariant, 
+					endX : tileVariant + trunkUvWidth, 
+					startY : 0.95, 
+					endY : 0.5, 
+				}, 
+
+			]
+		};
+		if (treeTags.height > 5) {
+			Oev.GeometryBuilder.cylinder(geometry, trunkProp);
+		}
+		
 		geometry.computeFaceNormals();
 		geometry.computeVertexNormals();
 		geometry.uvsNeedUpdate = true;
