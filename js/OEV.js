@@ -128,13 +128,19 @@ OpenEarthViewer.prototype.loadShader = function() {
 }
 
 function onShaderLoader(_name, _material) {
-	console.log('Shader "' + _name + '" loaded');
+	// console.log('Shader "' + _name + '" loaded');
 	OEV.shaders[_name] = _material;
 }
 
 OpenEarthViewer.prototype.loadTextures = function() {
 	openModal( "Loading textures" );
 	var textList = [];
+	Oev.Net.Textures.addToList(textList, 'normal_flat', 'normal_flat.png');
+	Oev.Net.Textures.addToList(textList, 'normal_vineyard', 'normal_vineyard.png');
+	Oev.Net.Textures.addToList(textList, 'normal_forest', 'normal_forest.png');
+	Oev.Net.Textures.addToList(textList, 'landuse_vineyard', 'landuse_vineyard.png');
+	Oev.Net.Textures.addToList(textList, 'landuse_scrub', 'landuse_scrub.png');
+	Oev.Net.Textures.addToList(textList, 'landuse_forest', 'landuse_forest.png');
 	Oev.Net.Textures.addToList(textList, 'tree_top', 'tree_top.png');
 	Oev.Net.Textures.addToList(textList, 'skydome', 'skydome.jpg');
 	Oev.Net.Textures.addToList(textList, 'pylone', 'pylone.png');
