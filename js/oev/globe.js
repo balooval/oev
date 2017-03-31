@@ -5,6 +5,7 @@ Oev.Globe = (function() {
 	var curTile = new THREE.Vector2( 0, 0, 0 );
 	var coastDatas = null;
 	var coastPxlRatio = 2048 / (20037508 * 2);
+	var eleFactor = 1;
 	
 	var api = {
 		equirectMaterial : null, 
@@ -12,12 +13,12 @@ Oev.Globe = (function() {
 		tilesBase : [], 
 		CUR_ZOOM : 4, 
 		LOD_PLANET : 0, 
-		LOD_STREET : 10, 
+		LOD_CITY : 10, 
+		LOD_STREET : 17, 
 		curLOD : 0, 
 		tilesDetailsMarge : 2, 
 		loaderTile2D : null, 
 		loaderEle : null, 
-		eleFactor : 1, 
 		coordDetails : new THREE.Vector2( 0, 0 ), 
 		tileExtensions : {}, 
 		radius : 10000, 
@@ -85,12 +86,14 @@ Oev.Globe = (function() {
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 			api.tilesWeatherMng = new DatasMng( "WEATHER" );
 			api.tilesLandusesMng = new DatasMng( "SURFACE" );
-			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
+			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testForestMat.alphaTest = 0.1;
 			api.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testScrubMat.alphaTest = 0.1;
+			api.testVineyardMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
+			api.testVineyardMat.alphaTest = 0.1;
 			api.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
 			api.forestMat.alphaTest = 0.4;
 			api.forestMat.transparent = true;
@@ -115,6 +118,8 @@ Oev.Globe = (function() {
 			api.testForestMat.needsUpdate = true;
 			api.testScrubMat.map = OEV.textures['scrub'];
 			api.testScrubMat.needsUpdate = true;
+			api.testVineyardMat.map = OEV.textures['vineyard'];
+			api.testVineyardMat.needsUpdate = true;
 			api.forestMat.map = OEV.textures['scrub'];
 			api.forestMat.needsUpdate = true;
 			api.vineyardMat.map = OEV.textures['vineyard'];
@@ -286,15 +291,15 @@ Oev.Globe = (function() {
 
 		setProjection : function( _mode ){
 			if( _mode == "PLANE" ){
-				Oev.Sky.activAtmosphere( false );
-				Oev.Sky.activSky( true );
+				Oev.Sky.activAtmosphere(false);
+				Oev.Sky.activSky(true);
 				api.coordToXYZ = api.coordToXYZPlane;
-				OEV.camera.up.set( 0, 0, 1 );
-			}else if( _mode == "SPHERE" ){
-				Oev.Sky.activAtmosphere( true );
-				Oev.Sky.activSky( false );
+				OEV.camera.up.set(0, 0, 1);
+			} else if (_mode == "SPHERE") {
+				Oev.Sky.activAtmosphere(true);
+				Oev.Sky.activSky(false);
 				api.coordToXYZ = api.coordToXYZSphere;
-				OEV.camera.up.set( 0, 1, 0 );
+				OEV.camera.up.set(0, 1, 0);
 			}
 			api.projection = _mode;
 			for (var i = 0; i < api.tilesBase.length; i ++) {
@@ -302,22 +307,18 @@ Oev.Globe = (function() {
 			}
 		}, 
 
-		coordToXYZPlane : function( _lon, _lat, _elevation ){
-			var pos = new THREE.Vector3( 0, 0, 0 );
-			pos.x = api.radius * ( _lon / 60 );
+		coordToXYZPlane : function(_lon, _lat, _elevation){
+			var pos = new THREE.Vector3(0, 0, 0);
+			pos.x = api.radius * (_lon / 60);
 			pos.y = api.posFromAltitude(_elevation);
-
-			var tmpZ = Math.log( Math.tan( ( 90 + _lat ) * Math.PI / 360.0 ) ) / ( Math.PI / 180.0 );
-			pos.z = ( tmpZ * ( 2 * Math.PI * api.radius / 2.0 ) / 180.0 );
-			
-			if (api.curLOD == api.LOD_STREET) {
-				pos.x -= curLodOrigine.x;
-				pos.z -= curLodOrigine.z;
-				pos.x *= api.globalScale;
-				pos.y *= api.globalScale;
-				pos.z *= api.globalScale;
-			}
-
+			var tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
+			pos.z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
+			pos.x *= api.globalScale;
+			// pos.y *= api.globalScale;
+			pos.y *= 10;
+			pos.z *= api.globalScale;
+			pos.x -= curLodOrigine.x;
+			pos.z -= curLodOrigine.z;
 			return pos;
 		}, 
 
@@ -330,11 +331,10 @@ Oev.Globe = (function() {
 			pos.x = Math.cos( radY ) * ( ( _elevation ) * Math.cos( radX ) );
 			pos.y = Math.sin( radX ) * _elevation * -1;
 			pos.z = Math.sin( radY ) * ( _elevation * Math.cos( radX ) );
-			if (api.curLOD == api.LOD_STREET) {
+			if (api.curLOD == api.LOD_CITY) {
 				pos.x -= curLodOrigine.x;
 				pos.y -= curLodOrigine.y;
 				pos.z -= curLodOrigine.z;
-				
 				pos.x *= api.globalScale;
 				pos.y *= api.globalScale;
 				pos.z *= api.globalScale;
@@ -342,12 +342,12 @@ Oev.Globe = (function() {
 			return pos;
 		}, 
 
-		posFromAltitude : function( _altitude ) {
-			return 0 - (_altitude * (api.meter * api.eleFactor));
+		posFromAltitude : function(_altitude) {
+			return 0 - (_altitude * (api.meter * eleFactor));
 		}, 
 
-		altitudeFromPos : function( _pos ) {
-			return ((_pos / api.globalScale) / (api.meter * api.eleFactor)) * -1;
+		altitudeFromPos : function(_pos) {
+			return ((_pos / api.globalScale) / (api.meter * eleFactor)) * -1;
 		}, 
 
 		coordFromPos : function( _x, _y ) {
@@ -367,47 +367,71 @@ Oev.Globe = (function() {
 		checkLOD : function(){
 			if (api.CUR_ZOOM >= api.LOD_STREET) {
 				if (api.curLOD != api.LOD_STREET) {
-					console.log( "SET TO LOD_STREET" );
+					console.log("SET TO LOD_STREET");
+					api.globalScale = 100;
+					api._updateMeter();
 					curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
-					api.globalScale = 10;
+					console.log('curLodOrigine', curLodOrigine);
 					api.curLOD = api.LOD_STREET;
 					api.updateLOD();
-					api.setProjection( "PLANE" );
+					api.setProjection("PLANE");
+					OEV.camera.far = api.radius * api.globalScale;
+					OEV.camera.near = (api.radius * api.globalScale) / 10000000;
+					OEV.camera.updateProjectionMatrix();
+					Oev.Sky.initSunPos();
+					if (OEV.scene.fog) {
+						OEV.scene.fog.near = api.radius * (0.01 * api.globalScale);
+						OEV.scene.fog.far = api.radius * (0.9 * api.globalScale);
+					}
+					Oev.Sky.updateCloudsPos();
+					api.evt.fireEvent("LOD_CHANGED");
+				}
+			} else if (api.CUR_ZOOM >= api.LOD_CITY) {
+				if (api.curLOD != api.LOD_CITY) {
+					console.log("SET TO LOD_CITY");
+					api.globalScale = 10;
+					api._updateMeter();
+					curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
+					api.curLOD = api.LOD_CITY;
+					api.updateLOD();
+					api.setProjection("PLANE");
 					OEV.camera.far = api.radius * api.globalScale;
 					OEV.camera.near = (api.radius * api.globalScale ) / 1000000;
 					OEV.camera.updateProjectionMatrix();
 					Oev.Sky.initSunPos();
-					if( OEV.scene.fog ){
+					if (OEV.scene.fog) {
 						OEV.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
 						OEV.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
 					}
-					api.evt.fireEvent( "LOD_CHANGED" );
 					Oev.Sky.updateCloudsPos();
-					return true;
+					api.evt.fireEvent( "LOD_CHANGED" );
 				}
 			} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
 				if (api.curLOD != api.LOD_PLANET) {
-					console.log( "SET TO LOD_PLANET" );
+					console.log("SET TO LOD_PLANET");
 					curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 					api.globalScale = 1;
+					api._updateMeter();
 					api.curLOD = api.LOD_PLANET;
 					api.updateLOD();
-					api.setProjection( "SPHERE" );
+					api.setProjection("SPHERE");
 					OEV.camera.far = (api.radius * 2 ) * api.globalScale;
 					OEV.camera.near = (api.radius * api.globalScale) / 1000000;
 					OEV.camera.updateProjectionMatrix();
 					Oev.Sky.initSunPos();
-					if( OEV.scene.fog ){
+					if (OEV.scene.fog) {
 						OEV.scene.fog.near = api.radius * (0.01 * api.globalScale);
 						OEV.scene.fog.far = api.radius * (0.9 * api.globalScale);
 					}
-					api.evt.fireEvent( "LOD_CHANGED" );
 					Oev.Sky.updateCloudsPos();
-					return true;
+					api.evt.fireEvent("LOD_CHANGED");
 				}
 			}
+		}, 
+		
+		_updateMeter : function() {
 			api.meter = (api.radius / 40075017.0) * api.globalScale;
-			return false;
+			console.log('_updateMeter, api.meter', api.meter);
 		}, 
 
 		getElevationAtCoords : function( _lon, _lat, _inMeters ){
@@ -420,7 +444,7 @@ Oev.Globe = (function() {
 						if( _inMeters ){
 							return ele;
 						}else{
-							return ele * (api.meter * api.eleFactor);
+							return ele * (api.meter * eleFactor);
 						}
 					}
 				}
@@ -440,10 +464,21 @@ Oev.Globe = (function() {
 			return null;
 		}, 
 		
-		onCurTileChange : function( _newTile ){
+		onCurTileChange : function(_newTile){
+			minX = 999999999;
+			maxX = -999999999;
+			minY = 999999999;
+			maxY = -999999999;
 			curTile = _newTile;
 			for (var i = 0; i < api.tilesBase.length; i ++) {
 				api.tilesBase[i].updateDetails();
+			}
+			if (api.curLOD == api.LOD_STREET) {
+				console.log('');
+				console.log('minX', minX);
+				console.log('maxX', maxX);
+				console.log('minY', minY);
+				console.log('maxY', maxY);
 			}
 			api.evt.fireEvent( "CURTILE_CHANGED" );
 		}, 

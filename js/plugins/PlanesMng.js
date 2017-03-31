@@ -71,7 +71,7 @@ OpenEarthViewer.planes = {
 	}, 
 	
 	addPlane : function( _start, _end ){
-		if( OEV.earth.curLOD == OEV.earth.LOD_STREET ){
+		if( OEV.earth.curLOD == OEV.earth.LOD_CITY ){
 			_start = _start || OEV.camCtrl.coordLookat;
 			
 			
@@ -85,7 +85,7 @@ OpenEarthViewer.planes = {
 			
 			this.updatePlanesList();
 		}else{
-			showNotification( 'You can add a plane only if zoom level > ' + OEV.earth.LOD_STREET, 'warning' );
+			showNotification( 'You can add a plane only if zoom level > ' + OEV.earth.LOD_CITY, 'warning' );
 		}
 	}, 
 	
@@ -217,7 +217,7 @@ Plane.prototype.checkIfTileContainMe = function( _tile ) {
 }
 
 Plane.prototype.update = function() {
-	if( OEV.earth.curLOD == OEV.earth.LOD_STREET ){
+	if( OEV.earth.curLOD == OEV.earth.LOD_CITY ){
 		if( this.tweenLon.running ){
 			var d = new Date();
 			var curTime = d.getTime();
