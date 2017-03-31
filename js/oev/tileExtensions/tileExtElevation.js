@@ -49,10 +49,6 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	}
 	
 	ext._onElevationLoaded = function(_datas) {
-		// if (this.tile.zoom == 15) {
-			// console.log('_onElevationLoaded', this.tile.tileX, this.tile.tileY);
-		// }
-		// if (!Oev.Tile.Extension['ACTIV_' + this.id] || this.tile.onStage === false) {
 		if (!Oev.Tile.Extension['ACTIV_' + this.id]) {
 			return false;
 		}
@@ -64,7 +60,6 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	
 	ext.applyElevationToGeometry = function() {
 		if (!this.dataLoaded) {
-			// console.warn('A', this.tile.zoom, this.tile.isReady);
 			return false;
 		}
 		var x, y;
@@ -76,7 +71,6 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		for (x = 0; x < nbVertX; x ++) {
 			for (y = 0; y < nbVertY; y ++) {
 				var ele = this.elevationBuffer[index];
-				// this.tile.vertCoords[index].z = ele;
 				verticePosition = Oev.Globe.coordToXYZ(this.tile.startCoord.x + (stepCoord.x * x), this.tile.startCoord.y + (stepCoord.y * y), ele);
 				this.tile.meshe.geometry.vertices[index].x = verticePosition.x;
 				this.tile.meshe.geometry.vertices[index].y = verticePosition.y;
@@ -178,14 +172,12 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
 			return 0;
 		}
-		
 		if (_lon < this.startCoord.x || _lon > this.endCoord.x) {
 			return -9999;
 		}
 		if (_lat > this.startCoord.y || _lat < this.endCoord.y) {
 			return -9999;
 		}
-		
 		if (this.childTiles.length == 0) {
 			return this.interpolateEle(_lon, _lat);
 		}

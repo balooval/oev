@@ -15,7 +15,7 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 	ext.nodesMesh = null;
 	
 	ext.tileReady = function() {
-		if (!this.tile.onStage || this.tile.zoom < 16) {
+		if (!this.tile.onStage || this.tile.zoom < 15) {
 			return false;
 		}
 		// var meshBuilder = new Oev.Tile.Extension.NodeGeoLib('eolienne', new THREE.MeshPhongMaterial({color:0x909090}));
