@@ -1,7 +1,10 @@
 
 var Rtt = (function(){
 	'use strict';
+	var textureDepth;
 	var bufferTexture;
+	var curTexture;
+	
 	var bufferScene;
 	var camera;
 	var renderer;
@@ -11,12 +14,17 @@ var Rtt = (function(){
 	var barPrct;
 	var materialDepth;
 	
-	var textureW = 1024;
-	var textureH = 1024;
+	var meshTree = null;
+	var meshGround = null;
+	
+	var textureW = 2048;
+	var textureH = 2048;
+	
+	var useDepthMat = false;
 	
 	var api = {
-		tilesX : 8, 
-		tilesY : 8, 
+		tilesX : 4, 
+		tilesY : 4, 
 		
 		setTilesNb : function(_x, _y) {
 			api.tilesX = _x;
@@ -38,22 +46,37 @@ var Rtt = (function(){
 				magFilter: THREE.LinearFilter, 
 				anisotropy: renderer.getMaxAnisotropy(), 
 			});
+			textureDepth = new THREE.WebGLRenderTarget(textureW, textureH, {
+				minFilter: THREE.LinearFilter, 
+				magFilter: THREE.LinearFilter, 
+				anisotropy: renderer.getMaxAnisotropy(), 
+			});
 			camera = new THREE.PerspectiveCamera( 70, textureW/textureH, 1, 10000 );
 			camera.position.y = 30;
 			camera.position.z = 50;
-			materialDepth = new THREE.MeshDepthMaterial();
 			
+			materialDepth = new THREE.ShaderMaterial({  
+				uniforms: {
+					
+				},
+				vertexShader: document.getElementById('vertexDepth').textContent,
+				fragmentShader: document.getElementById('fragmentDepth').textContent, 
+			});
+
 			var light = new THREE.PointLight(0xffffff, 1, 1000);
 			light.castShadow = true;
-			light.position.set( 20, 100, -50 );
-			/*
-			light.shadow.camera.far = 1000;
-			light.shadow.camera.near = 1;
-			*/
-			light.shadow.mapSize.width = 2048;
-			light.shadow.mapSize.height = 2048;
-			
+			light.position.set( 20, 50, -30 );
+			light.shadow.mapSize.width = 1024;
+			light.shadow.mapSize.height = 1024;
 			bufferScene.add(light);
+			
+			var backLight = new THREE.PointLight(0x505060, 1, 1000);
+			backLight.castShadow = true;
+			backLight.position.set( -10, 5, 30 );
+			backLight.shadow.mapSize.width = 512;
+			backLight.shadow.mapSize.height = 512;
+			bufferScene.add(backLight);
+			
 			var lightAmbiant = new THREE.AmbientLight(0x303030);
 			bufferScene.add(lightAmbiant);
 			
@@ -64,32 +87,48 @@ var Rtt = (function(){
 			cube.receiveShadow = true;
 			bufferScene.add(cube);
 			
-			
-			
-			
 			// api.buildGround();
-			
-			api.buildTree();
+			// api.buildTree();
 
 			camera.lookAt(cube.position);
 		}, 
 		
 		buildGround : function() {
+			if (meshGround !== null) {
+				bufferScene.remove(meshGround);
+			}
+			var matGround = new THREE.MeshPhongMaterial( { color: 0xffffff});
+			if (useDepthMat) {
+				matGround = materialDepth;
+			}
 			var geoGround = new THREE.BoxGeometry( 100, 1, 100 );
-			var ground = new THREE.Mesh(geoGround, material);
-			cube.add(ground);
+			meshGround = new THREE.Mesh(geoGround, matGround);
+			bufferScene.add(meshGround);
 		}, 
 		
 		buildTree : function() {
+			
+			if (meshTree !== null) {
+				bufferScene.remove(meshTree);
+			}
+			meshTree = new THREE.Mesh();
+			bufferScene.add(meshTree);
+			
 			var materialTrunk = new THREE.MeshPhongMaterial( { color: 0x806020});
+			var materialLeaf = new THREE.MeshPhongMaterial( { color: 0x528721, side: THREE.DoubleSide,});
+			if (useDepthMat) {
+				materialTrunk = materialDepth;
+				materialLeaf = materialDepth;
+			}
 			var geoTrunk = new THREE.BoxGeometry( 5, 20, 5 );
 			var trunkMesh = new THREE.Mesh(geoTrunk, materialTrunk);
 			trunkMesh.position.y = 10;
 			trunkMesh.castShadow = true;
 			trunkMesh.receiveShadow = true;
-			bufferScene.add(trunkMesh);
+			meshTree.add(trunkMesh);
 			
-			var materialLeaf = new THREE.MeshPhongMaterial( { color: 0xa2e504, side: THREE.DoubleSide,});
+			// var materialLeaf = new THREE.MeshPhongMaterial( { color: 0x528721, side: THREE.DoubleSide,});
+			// var materialLeaf = new THREE.MeshNormalMaterial();
 			var leafSize = 3;
 			var leafStartY = 6;
 			var leafDistribution = 20;
@@ -105,26 +144,40 @@ var Rtt = (function(){
 				branch.scale.multiplyScalar(leafScale * (0.7 + Math.random() * 0.9));
 				branch.castShadow = true;
 				branch.receiveShadow = true;
-				bufferScene.add(branch);
+				meshTree.add(branch);
 			}
 		}, 
 		
 		
 		crop : function(_x, _y, _w, _h, _col, _alpha) {
-			// renderer.setClearColor( _col, 0.8 );
-			renderer.setClearColor( _col, 0 );
-			bufferTexture.scissorTest = true;
-			bufferTexture.scissor.x = _x;
-			bufferTexture.scissor.z = _w;
-			bufferTexture.scissor.y = _y;
-			bufferTexture.scissor.w = _h;
-			bufferTexture.viewport.x = _x;
-			bufferTexture.viewport.z = _w;
-			bufferTexture.viewport.y = _y;
-			bufferTexture.viewport.w = _h;
+			// renderer.setClearColor( 0x506090, 0.0 );
+				renderer.setClearColor( _col, 0.6 );
+			if (useDepthMat) {
+				// renderer.setClearColor( _col, 0 );
+				// renderer.setClearColor( 0x303030, 1.0 );
+				// renderer.setClearColor( 0xffffff, 1.0 );
+			}
+			curTexture.scissorTest = true;
+			curTexture.scissor.x = _x;
+			curTexture.scissor.z = _w;
+			curTexture.scissor.y = _y;
+			curTexture.scissor.w = _h;
+			curTexture.viewport.x = _x;
+			curTexture.viewport.z = _w;
+			curTexture.viewport.y = _y;
+			curTexture.viewport.w = _h;
 		}, 
 		
-		render : function() {
+		render : function(_mode) {
+			useDepthMat = false;
+			curTexture = bufferTexture;
+			if (_mode == 'DEPTH') {
+				useDepthMat = true;
+				curTexture = textureDepth;
+			}
+			console.log('useDepthMat', useDepthMat);
+			// api.buildGround();
+			api.buildTree();
 			renderer.setClearColor( 0x208080, 0.0 );
 			var nbTileW = api.tilesX;
 			var nbTileH = api.tilesY;
@@ -148,7 +201,7 @@ var Rtt = (function(){
 					camera.lookAt(camTarget);
 					curAngle += stepAngle;
 					api.crop(i * tileW, j * tileH, tileW, tileH, cols[i%4], alphas[j%4]);
-					renderer.render(bufferScene, camera, bufferTexture, false);
+					renderer.render(bufferScene, camera, curTexture, false);
 				}
 			}
 			renderer.setClearColor( 0x606060, 1 );
@@ -156,6 +209,10 @@ var Rtt = (function(){
 		
 		getTexture : function() {
 			return bufferTexture.texture;
+		}, 
+		
+		getTextureDepth : function() {
+			return textureDepth.texture;
 		}, 
 	}
 	
