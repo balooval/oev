@@ -1,42 +1,45 @@
-Oev.Tile.Extension.LanduseMeshes = (function() {
-	var meshZoom = {};
-	var geoListZoom = {};
-	var geoMergeZoom = {};
-	
+Oev.Tile.Extension.LanduseTexture = (function() {
+	var canvas = document.createElement('canvas');
+	canvas.width = '256';
+	canvas.height = '256';
+	var context = canvas.getContext('2d');
+
+	var texturesDiffuse = {
+		forest : 'landuse_forest', 
+		scrub : 'landuse_scrub', 
+		vineyard : 'landuse_vineyard', 
+		water : 'water_color', 
+	};
+	var texturesNormal = {
+		forest : 'normal_forest', 
+		scrub : 'normal_forest', 
+		vineyard : 'normal_vineyard', 
+		water : 'waternormals', 
+	};
+
 	var api = {
-		addTrees : function(_zoom, _mesh) {
-			if (meshZoom[_zoom] === undefined) {
-				meshZoom[_zoom] = new THREE.Mesh(new THREE.Geometry(), OEV.earth.testForestMat);
-				geoListZoom[_zoom] = [];
-				geoMergeZoom[_zoom] = new THREE.Geometry();
-				OEV.scene.add(meshZoom[_zoom]);
+		drawPolygon : function(_image, _polygon, _type, _normal) {
+			var textDef = _normal ? texturesNormal : texturesDiffuse;
+			context.drawImage(_image, 0, 0);
+			context.save();
+			context.beginPath();
+			context.moveTo(_polygon[0][0], _polygon[0][1]);
+			for (var i = 1; i < _polygon.length; i ++) {
+				context.lineTo(_polygon[i][0], _polygon[i][1]);
 			}
-			var geo = _mesh.geometry;
-			_mesh.updateMatrix();
-			geoListZoom[_zoom].push(geo);
-			meshZoom[_zoom].geometry.merge(geo, _mesh.matrix);
-			// geoMergeZoom[_zoom].merge(_geo);
-			// meshZoom[_zoom].geometry = geoMergeZoom[_zoom];
-			console.log('B', meshZoom[_zoom].geometry.vertices.length);
-		}, 
-		
-		removeTrees : function(_zoom, _mesh) {
-			var geo = _mesh.geometry;
-			geoListZoom[_zoom].splice(geoListZoom[_zoom].indexOf(geo), 1);
-			if (geoListZoom[_zoom].length == 0) {
-				OEV.scene.remove(meshZoom[_zoom]);
-				return false;
-			}
-			geoMergeZoom[_zoom] = new THREE.Geometry();
-			for (var i = 0; i < geoListZoom[_zoom].length; i ++) {
-				geoMergeZoom[_zoom].merge(geoListZoom[_zoom][i]);
-			}
-			meshZoom[_zoom].geometry = geoMergeZoom[_zoom];
-		}, 
+			context.closePath();
+			context.clip();
+			context.drawImage(OEV.textures[textDef[_type]].image, 0, 0);
+			context.restore();
+			var image = new Image();
+			image.src = canvas.toDataURL();
+			return new THREE.Texture(image);
+		}
 	};
 	
 	return api;
 })();
+
 
 Oev.Tile.Extension.Landuse = function(_tile) {
 	var ext = Object.create(Oev.Tile.Extension);
@@ -59,6 +62,11 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			width : 0.00003, 
 			depth : 0.00003, 
 			height : 7, 
+		}, 
+		'vineyard' : {
+			width : 0.00005, 
+			depth : 0.00005, 
+			height : 6, 
 		}, 
 	};
 	ext.twoSideMeshes = {
@@ -91,14 +99,37 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		Oev.Tile.ProcessQueue.addWaiting(this);
 	}
 	
+	ext.drawTexture = function(_surfPolygon, _type) {
+		var coordW = Math.abs(this.tile.endCoord.x - this.tile.startCoord.x);
+		var coordH = Math.abs(this.tile.startCoord.y - this.tile.endCoord.y);
+		var i;
+		var ptNorm;
+		var normalisedPoly = [];
+		for (i = 0; i < _surfPolygon.length; i ++) {
+			ptNorm = [
+				Math.abs((((this.tile.endCoord.x - _surfPolygon[i][0]) / coordW) * 256) - 256), 
+				((this.tile.startCoord.y - _surfPolygon[i][1]) / coordH) * 256, 
+			]
+			normalisedPoly.push(ptNorm);
+		}
+		this.tile.material.map = Oev.Tile.Extension.LanduseTexture.drawPolygon(this.tile.material.map.image, normalisedPoly, _type, false);
+		this.tile.material.normalMap = Oev.Tile.Extension.LanduseTexture.drawPolygon(this.tile.material.normalMap.image, normalisedPoly, _type, true);
+		this.tile.material.needsUpdate = true;
+		this.tile.material.map.needsUpdate = true;
+		this.tile.material.normalMap.needsUpdate = true;
+	}
+	
 	ext.construct = function() {
+		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
+			return false;
+		}
 		if (!this.tile.onStage) {
 			return false;
 		}
 		var partGeom = {
-			'vineyard' : undefined, 
-			'forest' : undefined, 
-			'scrub' : undefined, 
+			vineyard : undefined, 
+			forest : undefined, 
+			scrub : undefined, 
 		};
 		var surfacesTypes = [];
 		var surfaces = [];
@@ -118,7 +149,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 				var curType = 'none';
 				if ("landuse" in this.datas['elements'][i]['tags']) {
 					if (this.datas['elements'][i]['tags']['landuse'] == 'vineyard') {
-						// curType = 'vineyard';
+						curType = 'vineyard';
 					} else if (this.datas['elements'][i]['tags']['landuse'] == 'forest') {
 						curType = 'forest';
 					}
@@ -144,6 +175,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 				}
 			}
 		}
+		this.tile.material.normalMap = OEV.textures['normal_flat'];
 		var nbVert = 0;
 		var bbox = [this.tile.startCoord.x, this.tile.endCoord.y, this.tile.endCoord.x, this.tile.startCoord.y];
 		for (var s = 0; s < surfaces.length; s ++) {
@@ -155,32 +187,34 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			if (res.length > 0) {
 				res.push(res[0]);
 			}
+			this.drawTexture(res, surfacesTypes[s]);
 			if (surfacesTypes[s] == 'vineyard') {
 				for (var coordLon = this.tile.startCoord.x; coordLon < this.tile.endCoord.x; coordLon += tileW / 40) {
 					for (var coordLat = this.tile.endCoord.y; coordLat < this.tile.startCoord.y; coordLat += tileH / 80) {
-						if(this.isIn(res, coordLon, coordLat)) {
-							var altP = this.tile.interpolateEle(coordLon, coordLat, true);
-							var pos = OEV.earth.coordToXYZ(coordLon + ((tileW / 100) * Math.random()), coordLat + ((tileH / 120) * Math.random()), altP + 1 - (Math.random() * 0.5));
-							var particle = new THREE.Vector3(pos.x, pos.y, pos.z);
-							partGeom[surfacesTypes[s]].vertices.push(particle);
+						if(Oev.Math.ptIsInPolygon(res, coordLon, coordLat)) {
+							var altP = Oev.Globe.getElevationAtCoords(coordLon, coordLat, true);
+							this.buildTwoSideElmt(coordLon + ((tileW / 100) * Math.random()), coordLat + ((tileH / 120) * Math.random()), altP, surfacesTypes[s]);
 						}
 					}
 				}
 			} else if (surfacesTypes[s] == 'scrub' || surfacesTypes[s] == 'forest') {
 				var surGeoJson = {
-					"type": "Polygon",
-					"coordinates": [res]
+					type : "Polygon",
+					coordinates : [res]
 				};
 				var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 100);
+				if (surfacesTypes[s] == 'scrub') {
+					curArea *= 2;
+				}
 				// var curArea = 10;
 				var nbPartIn = 0;
 				var coordLon, coordLat;
 				while (nbPartIn < curArea) {
 					coordLon = this.tile.startCoord.x + (tileW * Math.random());
 					coordLat = this.tile.endCoord.y + (tileH * Math.random());
-					if (this.isIn( res, coordLon, coordLat)) {
+					if (Oev.Math.ptIsInPolygon( res, coordLon, coordLat)) {
 						nbPartIn ++;
-						var altP = this.tile.interpolateEle(coordLon, coordLat, true);
+						var altP = Oev.Globe.getElevationAtCoords(coordLon, coordLat, true);
 						this.buildTwoSideElmt(coordLon, coordLat, altP, surfacesTypes[s]);
 					}
 				}
@@ -193,6 +227,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			if (partGeom[type] === undefined) continue;
 			if( type == 'vineyard' ){
 				mat = OEV.earth.vineyardMat;
+				matTwoSide = OEV.earth.testVineyardMat;
 			} else if (type == 'scrub') {
 				mat = OEV.earth.vineyardMat;
 				matTwoSide = OEV.earth.testScrubMat;
@@ -207,11 +242,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			this.twoSideMeshes[type] = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeos[type]), matTwoSide);
 			this.twoSideMeshes[type].receiveShadow = true;
 			this.twoSideMeshes[type].castShadow = true;
-			// if (type == 'forest') {
-				// Oev.Tile.Extension.LanduseMeshes.addTrees(this.tile.zoom, this.twoSideMeshes[type]);
-			// } else {
-				OEV.scene.add(this.twoSideMeshes[type]);
-			// }
+			OEV.scene.add(this.twoSideMeshes[type]);
 		}
 		OEV.MUST_RENDER = true;
 	} 
@@ -220,66 +251,52 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.buildTwoSideElmt = function(_lon, _lat, _alt, _type) {
 		var angle = Math.random() * 3.14;
 		_alt -= 0.5;
-		var treeSize = 0.7 + Math.random() * 0.5;
-		var elmtWidth = this.twoSideProps[_type].width * treeSize;
-		var elmtDepth = this.twoSideProps[_type].depth * treeSize;
-		var elmtHeight = this.twoSideProps[_type].height * treeSize;
-		
+		var sizeVar = 0.7 + Math.random() * 0.5;
+		var typeProps = this.twoSideProps[_type];
+		var elmtWidth = typeProps.width * sizeVar;
+		var elmtDepth = typeProps.depth * sizeVar;
+		var elmtHeight = typeProps.height * sizeVar;
 		var elmtWidthRot = elmtWidth * Math.cos(angle);
 		var elmtDepthRot = elmtDepth * Math.sin(angle);
-		
 		var textTile = Math.random() > 0.7 ? 0 : 0.5;
-		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidthRot, depth: elmtDepthRot, height: elmtHeight, type:_type, textTile:textTile});
-		
-		elmtWidthRot = elmtWidth * Math.cos(angle + Math.PI / 2);
-		elmtDepthRot = elmtDepth * Math.sin(angle + Math.PI / 2);
-		
-		this.buildElmtSide(_lon, _lat, _alt, {width: elmtWidthRot, depth: elmtDepthRot, height: elmtHeight, type:_type, textTile:textTile});
+		this.buildElmtSide(_lon, _lat, _alt, [elmtWidthRot, elmtDepthRot, elmtHeight, _type, textTile]);
+		elmtWidthRot = elmtWidth * Math.cos(angle + ext.halfRot);
+		elmtDepthRot = elmtDepth * Math.sin(angle + ext.halfRot);
+		this.buildElmtSide(_lon, _lat, _alt, [elmtWidthRot, elmtDepthRot, elmtHeight, _type, textTile]);
 	}
 	
 	ext.buildElmtSide = function(_lon, _lat, _alt, props) {
-		var vertId = (this.twoSideGeos[props.type].faces.length / 2) * 6;
-		var nbFaces = this.twoSideGeos[props.type].faces.length;
-		var posA = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt);
-		var posB = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt);
-		var posC = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt + props.height);
-		var posD = OEV.earth.coordToXYZ(_lon - props.width, _lat - props.depth, _alt + props.height);
-		var posE = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt + props.height);
-		var posF = OEV.earth.coordToXYZ(_lon + props.width, _lat + props.depth, _alt);
-		this.twoSideGeos[props.type].vertices.push(posA);
-		this.twoSideGeos[props.type].vertices.push(posB);
-		this.twoSideGeos[props.type].vertices.push(posC);
-		this.twoSideGeos[props.type].vertices.push(posD);
-		this.twoSideGeos[props.type].vertices.push(posE);
-		this.twoSideGeos[props.type].vertices.push(posF);
-		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
-		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces] = [
-			new THREE.Vector2(props.textTile + 0.5, 0), 
-			new THREE.Vector2(props.textTile, 0), 
-			new THREE.Vector2(props.textTile, 1)
+		var propWidth = props[0];
+		var propDepth = props[1];
+		var propHeight = props[2];
+		var propType = props[3];
+		var propTexTile = props[4];
+		var vertId = (this.twoSideGeos[propType].faces.length / 2) * 6;
+		var nbFaces = this.twoSideGeos[propType].faces.length;
+		var posA = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt);
+		this.twoSideGeos[propType].vertices.push(posA);
+		var posB = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt);
+		this.twoSideGeos[propType].vertices.push(posB);
+		var posC = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt + propHeight);
+		this.twoSideGeos[propType].vertices.push(posC);
+		var posD = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt + propHeight);
+		this.twoSideGeos[propType].vertices.push(posD);
+		var posE = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt + propHeight);
+		this.twoSideGeos[propType].vertices.push(posE);
+		var posF = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt);
+		this.twoSideGeos[propType].vertices.push(posF);
+		this.twoSideGeos[propType].faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
+		this.twoSideGeos[propType].faceVertexUvs[0][nbFaces] = [
+			new THREE.Vector2(propTexTile + 0.5, 0), 
+			new THREE.Vector2(propTexTile, 0), 
+			new THREE.Vector2(propTexTile, 1)
 		];
-		this.twoSideGeos[props.type].faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
-		this.twoSideGeos[props.type].faceVertexUvs[0][nbFaces + 1] = [
-			new THREE.Vector2(props.textTile, 1), 
-			new THREE.Vector2(props.textTile + 0.5, 1), 
-			new THREE.Vector2(props.textTile + 0.5, 0)
+		this.twoSideGeos[propType].faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
+		this.twoSideGeos[propType].faceVertexUvs[0][nbFaces + 1] = [
+			new THREE.Vector2(propTexTile, 1), 
+			new THREE.Vector2(propTexTile + 0.5, 1), 
+			new THREE.Vector2(propTexTile + 0.5, 0)
 		];
-	}
-	
-	ext.isIn = function( _polygon, _lon, _lat ) {
-			var angle = 0;
-			var ptA;
-			var ptB;
-			var segNb = _polygon.length - 1;
-			for( var i = 0; i < segNb; i++ ){
-				ptA = _polygon[i];
-				ptB = _polygon[i+1];
-				angle += Oev.Math.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
-			}
-			if( Math.abs( angle ) < Math.PI ){
-				return false;
-			}
-			return true;
 	}
 	
 	ext.show = function() {
@@ -289,13 +306,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 					OEV.scene.add(this.partMeshes[type]);
 				}
 				if (this.twoSideMeshes[type] != undefined) {
-					// OEV.scene.add(this.twoSideMeshes[type]);
-					
-					// if (type == 'forest') {
-						// Oev.Tile.Extension.LanduseMeshes.addTrees(this.tile.zoom, this.twoSideMeshes[type].geometry);
-					// } else {
-						OEV.scene.add(this.twoSideMeshes[type]);
-					// }
+					OEV.scene.add(this.twoSideMeshes[type]);
 				}
 			}
 		}else{
@@ -313,15 +324,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 					OEV.scene.remove(this.partMeshes[type]);
 				}
 				if (this.twoSideMeshes[type] != undefined) {
-					// OEV.scene.remove(this.twoSideMeshes[type]);
-					
-					
-					// if (type == 'forest') {
-						// Oev.Tile.Extension.LanduseMeshes.removeTrees(this.tile.zoom, this.twoSideMeshes[type]);
-					// } else {
-						OEV.scene.remove(this.twoSideMeshes[type]);
-					// }
-					
+					OEV.scene.remove(this.twoSideMeshes[type]);
 				}
 			}
 			OEV.MUST_RENDER = true;
