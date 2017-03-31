@@ -6,16 +6,8 @@ Oev.GeometryBuilder = (function(){
 	
 	var api = {
 		
-		foliage : function(_geometry) {
-			var i;
-			var plansNb = 4;
-			var planScale = 0.8;
-			var vert;
-			var vertNb = 0;
-			var faceNb = 0;
-			var altBase = 0.2;
-			// var slope = -4;
-			var slope = 0.1;
+		branch : function(_geometry, _props) {
+			// _props.height *= 2;
 			var angleStep = Math.PI / 2;
 			var vertAngles = [
 				0, 
@@ -23,24 +15,81 @@ Oev.GeometryBuilder = (function(){
 				angleStep * 2, 
 				angleStep * 3
 			];
-			var tile = Math.floor(Math.random() * 2) / 2;
-			console.log('tile', tile);
+			var vertNb = _geometry.vertices.length;
+			var faceNb = _geometry.faces.length;
+			var vert;
+			for (var i = 0; i < vertAngles.length; i ++) {
+				vert = new THREE.Vector3(0, _props.alt, 0);
+				_geometry.vertices.push(vert);
+				vert = new THREE.Vector3(0, _props.alt + _props.height, 0);
+				_geometry.vertices.push(vert);
+				vert = new THREE.Vector3(Math.cos(vertAngles[i]) * _props.radius, _props.alt + _props.height, Math.sin(vertAngles[i]) * _props.radius);
+				_geometry.vertices.push(vert);
+				vert = new THREE.Vector3(Math.cos(vertAngles[i]) * _props.radius, _props.alt, Math.sin(vertAngles[i]) * _props.radius);
+				_geometry.vertices.push(vert);
+				
+				_geometry.faces.push(new THREE.Face3(
+					vertNb + 0, 
+					vertNb + 2, 
+					vertNb + 1
+				));
+				_geometry.faces.push(new THREE.Face3(
+					vertNb + 0, 
+					vertNb + 3, 
+					vertNb + 2
+				));
+				vertNb += 4;
+				
+				_geometry.faceVertexUvs[0][faceNb] = [
+					new THREE.Vector2(0, 0),
+					new THREE.Vector2(0.25, 0.5),
+					new THREE.Vector2(0, 0.5)
+				];
+				_geometry.faceVertexUvs[0][faceNb + 1] = [
+					new THREE.Vector2(0, 0),
+					new THREE.Vector2(0.25, 0),
+					new THREE.Vector2(0.25, 0.5)
+				];
+				faceNb += 2;
+			}
+		}, 
+		
+		foliage : function(_geometry, _props) {
+			_props.alt = _props.alt || 0.2;
+			_props.radius = _props.radius || 0.8;
+			_props.slices = _props.slices || 4;
+			_props.height = _props.height || 1;
+			_props.slope = _props.slope || (_props.alt + _props.height);
+			var i;
+			var vert;
+			var vertNb = _geometry.vertices.length;
+			var faceNb = _geometry.faces.length;
+			var sliceHeight = _props.height / _props.slices;
+			var angleStep = Math.PI / 2;
+			var vertAngles = [
+				0, 
+				angleStep, 
+				angleStep * 2, 
+				angleStep * 3
+			];
+			var curTileStep = Math.floor(Math.random() * 3) / 4;
+			var tileStep = 0.25;
 			
-			for (i = 0; i < plansNb; i ++) {
+			for (i = 0; i < _props.slices; i ++) {
 				var faceRot = Math.random() * Math.PI * 2;
-				var altOffset = altBase + (0.3 * i);
-				var altSlope = altBase + (slope * i);
+				var altOffset = _props.alt + (sliceHeight * i);
+				// var altSlope = _props.alt + (_props.height / 2);
 				
-				vert = new THREE.Vector3(0, altSlope, 0);
+				vert = new THREE.Vector3(0, _props.slope, 0);
 				_geometry.vertices.push(vert);
 				
-				vert = new THREE.Vector3(Math.cos(vertAngles[0] + faceRot) * planScale, altOffset, Math.sin(vertAngles[0] + faceRot) * planScale);
+				vert = new THREE.Vector3(Math.cos(vertAngles[0] + faceRot) * _props.radius, altOffset, Math.sin(vertAngles[0] + faceRot) * _props.radius);
 				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(Math.cos(vertAngles[1] + faceRot) * planScale, altOffset, Math.sin(vertAngles[1] + faceRot) * planScale);
+				vert = new THREE.Vector3(Math.cos(vertAngles[1] + faceRot) * _props.radius, altOffset, Math.sin(vertAngles[1] + faceRot) * _props.radius);
 				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(Math.cos(vertAngles[2] + faceRot) * planScale, altOffset, Math.sin(vertAngles[2] + faceRot) * planScale);
+				vert = new THREE.Vector3(Math.cos(vertAngles[2] + faceRot) * _props.radius, altOffset, Math.sin(vertAngles[2] + faceRot) * _props.radius);
 				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(Math.cos(vertAngles[3] + faceRot) * planScale, altOffset, Math.sin(vertAngles[3] + faceRot) * planScale);
+				vert = new THREE.Vector3(Math.cos(vertAngles[3] + faceRot) * _props.radius, altOffset, Math.sin(vertAngles[3] + faceRot) * _props.radius);
 				_geometry.vertices.push(vert);
 				
 				_geometry.faces.push(new THREE.Face3(
@@ -66,64 +115,28 @@ Oev.GeometryBuilder = (function(){
 				vertNb += 5;
 				
 				_geometry.faceVertexUvs[0][faceNb] = [
-					new THREE.Vector2(0.5, 0.5),
-					new THREE.Vector2(1, 0),
-					new THREE.Vector2(0, 0)
+					new THREE.Vector2((tileStep * 0.5) + curTileStep, 0.75),
+					new THREE.Vector2((tileStep * 1) + curTileStep, 1),
+					new THREE.Vector2(curTileStep, 1)
 				];
 				_geometry.faceVertexUvs[0][faceNb + 1] = [
-					new THREE.Vector2(0.5, 0.5),
-					new THREE.Vector2(1, 1),
-					new THREE.Vector2(1, 0)
+					new THREE.Vector2((tileStep * 0.5) + curTileStep, 0.75),
+					new THREE.Vector2((tileStep * 1) + curTileStep, 0.5),
+					new THREE.Vector2((tileStep * 1) + curTileStep, 1)
 				];
 				_geometry.faceVertexUvs[0][faceNb + 2] = [
-					new THREE.Vector2(0.5, 0.5),
-					new THREE.Vector2(0, 1),
-					new THREE.Vector2(1, 1)
+					new THREE.Vector2((tileStep * 0.5) + curTileStep, 0.75),
+					new THREE.Vector2(curTileStep, 0.5),
+					new THREE.Vector2((tileStep * 1) + curTileStep, 0.5)
 				];
 				_geometry.faceVertexUvs[0][faceNb + 3] = [
-					new THREE.Vector2(0.5, 0.5),
-					new THREE.Vector2(0, 0),
-					new THREE.Vector2(0, 1)
+					new THREE.Vector2((tileStep * 0.5) + curTileStep, 0.75),
+					new THREE.Vector2(curTileStep, 1),
+					new THREE.Vector2(curTileStep, 0.5)
 				];
 				
 				faceNb += 4;
-				
-				
-				
-				/*
-				vert = new THREE.Vector3(-1 * planScale, altOffset, -1 * planScale);
-				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(1 * planScale, altOffset, -1 * planScale);
-				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(1 * planScale, altOffset, 1 * planScale);
-				_geometry.vertices.push(vert);
-				vert = new THREE.Vector3(-1 * planScale, altOffset, 1 * planScale);
-				_geometry.vertices.push(vert);
-				_geometry.faces.push(new THREE.Face3(
-					vertNb + 2, 
-					vertNb + 1, 
-					vertNb + 0
-				));
-				_geometry.faces.push(new THREE.Face3(
-					vertNb + 0, 
-					vertNb + 3, 
-					vertNb + 2 
-				));
-				vertNb += 4;
-				
-				_geometry.faceVertexUvs[0][faceNb] = [
-					new THREE.Vector2(0, 0),
-					new THREE.Vector2(1, 0),
-					new THREE.Vector2(1, 1)
-				];
-				_geometry.faceVertexUvs[0][faceNb + 1] = [
-					new THREE.Vector2(1, 1),
-					new THREE.Vector2(0, 1),
-					new THREE.Vector2(0, 0)
-				];
-				faceNb += 2;
-				*/
-				planScale *= 0.8;
+				_props.radius *= 0.8;
 			}
 		}, 
 		
