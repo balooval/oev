@@ -63,6 +63,12 @@ Oev.Tile.Extension.Building = function(_tile) {
 		}
 		ext.dataLoaded = true;
 		ext.datas = _datas;
+		
+		
+		this.geometry = new THREE.Geometry();
+		this.geometry.dynamic = false;
+		
+		
 		Oev.Tile.ProcessQueue.addWaiting(ext);
 	}
 	
@@ -95,12 +101,14 @@ Oev.Tile.Extension.Building = function(_tile) {
 		var pos;
 		for (i = 0; i < _pts.length; i ++) {
 			roofVertShape.push( [_pts[i]['lon'], _pts[i]['lat']] );
-			elevation = this.tile.interpolateEle(_pts[i]['lon'], _pts[i]['lat'], true);
+			// elevation = this.tile.interpolateEle(_pts[i]['lon'], _pts[i]['lat'], true);
+			elevation = Oev.Globe.getElevationAtCoords(_pts[i]['lon'], _pts[i]['lat'], true);
 			pos = OEV.earth.coordToXYZ(_pts[i]['lon'], _pts[i]['lat'], elevation + _params['height']);
 			this.geometry.vertices.push(pos);
 		}
 		var centroid = Oev.Math.findCentroid(roofVertShape);
-		elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
+		// elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
+		elevation = Oev.Globe.getElevationAtCoords(centroid.lon, centroid.lat, true);
 		var cenroidPos = OEV.earth.coordToXYZ(centroid.lon, centroid.lat, elevation + _params['height'] + _params['roofHeight']);
 		this.geometry.vertices.push( cenroidPos );
 		var lastVertId = this.geometry.vertices.length - 1;
@@ -147,7 +155,8 @@ Oev.Tile.Extension.Building = function(_tile) {
 		var highestPos = cenroidPos.y - distMax;
 		heightOffset = OEV.earth.altitudeFromPos(highestPos);
 		heightOffset -= _params['height']
-		elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
+		// elevation = this.tile.interpolateEle(centroid.lon, centroid.lat, true);
+		elevation = Oev.Globe.getElevationAtCoords(centroid.lon, centroid.lat, true);
 		cenroidPos = OEV.earth.coordToXYZ(centroid.lon, centroid.lat, elevation + _params['height'] - heightOffset);
 		var vertexPos;
 		var rs;
@@ -207,7 +216,8 @@ Oev.Tile.Extension.Building = function(_tile) {
 		var roofVert = [];
 		var ptsLen = _pts.length;
 		for (i = 0; i < ptsLen; i ++) {
-			elevation = this.tile.interpolateEle( _pts[i]['lon'], _pts[i]['lat'], true );
+			// elevation = this.tile.interpolateEle( _pts[i]['lon'], _pts[i]['lat'], true );
+			elevation = Oev.Globe.getElevationAtCoords( _pts[i]['lon'], _pts[i]['lat'], true );
 			pos = OEV.earth.coordToXYZ(_pts[i]['lon'], _pts[i]['lat'], elevation + _params['height']);
 			roofVert.push(pos.x, pos.z, pos.y);
 			this.geometry.vertices.push(pos);
@@ -281,18 +291,21 @@ Oev.Tile.Extension.Building = function(_tile) {
 				wallColor = new THREE.Color("rgb("+color[0]+", "+color[1]+", "+color[2]+")");
 			}
 		}
+		// console.log('wallColor', wallColor);
 		var nbVert = this.geometry.vertices.length;
 		for (curLevel = _params['minLevels']; curLevel < _params['levels']; curLevel ++) {
 			for (c = 0; c < _pts.length; c ++) {
 				if (vertLonA != undefined) {
-					elevation = this.tile.interpolateEle(vertLonA, vertLatA, true);
+					// elevation = this.tile.interpolateEle(vertLonA, vertLatA, true);
+					elevation = Oev.Globe.getElevationAtCoords(vertLonA, vertLatA, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonA, vertLatA, elevation + (curLevel * _params['levelHeight']) + _params['minHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonA, vertLatA, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] + _params['levelHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					vertLonB = _pts[c]['lon'];
 					vertLatB = _pts[c]['lat'];
-					elevation = this.tile.interpolateEle(vertLonB, vertLatB, true);
+					// elevation = this.tile.interpolateEle(vertLonB, vertLatB, true);
+					elevation = Oev.Globe.getElevationAtCoords(vertLonB, vertLatB, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonB, vertLatB, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] + _params['levelHeight']);
 					this.geometry.vertices.push(coordsWorld);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonB, vertLatB, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] );
@@ -315,10 +328,17 @@ Oev.Tile.Extension.Building = function(_tile) {
 		if (!Oev.Tile.Extension['ACTIV_' + ext.id] || !this.tile.onStage) {
 			return false;
 		}
-		this.geometry = new THREE.Geometry();
-		this.geometry.dynamic = false;
-		for (var b = 0; b < this.datas.length; b ++) {
-			var curBuilding = this.datas[b];
+		
+		
+		// this.geometry = new THREE.Geometry();
+		// this.geometry.dynamic = false;
+		var maxNb = Math.min(this.datas.length, 100);
+		
+		
+		// for (var b = 0; b < this.datas.length; b ++) {
+		for (var b = 0; b < maxNb; b ++) {
+			// var curBuilding = this.datas[b];
+			var curBuilding = this.datas.pop();
 			var buildingParams = {
 				'minHeight' : 0, 
 				'height' : 3, 
@@ -377,8 +397,14 @@ Oev.Tile.Extension.Building = function(_tile) {
 				buildingParams['height'] = parseFloat( curBuilding["tags"]["height"] );
 			}else{
 				buildingParams['height'] = buildingParams['levels'] * 3;
+				if (buildingParams['levels'] == 1) {
+					buildingParams['height'] = 5;
+				}
 			}
 			buildingParams['levelHeight'] = ( buildingParams['height'] - buildingParams['minHeight'] ) / buildingParams['levels'];
+			
+			// console.log('wallColor C "', buildingParams['roofColor'], '"');
+			
 			if (drawBuilding) {
 				var roofDatas = this.makeRoof(curBuilding["vertex"], buildingParams);
 				buildingParams['height'] -= roofDatas['heightOffset'];
@@ -386,15 +412,19 @@ Oev.Tile.Extension.Building = function(_tile) {
 				this.makeWalls(curBuilding["vertex"], buildingParams);
 			}
 		}
-		this.geometry.computeFaceNormals();
-		this.geometry.computeVertexNormals();
-		this.geometry.colorsNeedUpdate = true
-		this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.geometry), OEV.earth.buildingsWallMat);
-		this.geometry.dispose();
-		this.geometry = undefined;
-		this.tile.meshe.add( this.meshe );
-		this.meshe.receiveShadow = true;
-		this.meshe.castShadow = true;
+		if (this.datas.length == 0) {
+			this.geometry.computeFaceNormals();
+			this.geometry.computeVertexNormals();
+			this.geometry.colorsNeedUpdate = true
+			this.meshe = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.geometry), OEV.earth.buildingsWallMat);
+			this.geometry.dispose();
+			this.geometry = undefined;
+			this.tile.meshe.add( this.meshe );
+			this.meshe.receiveShadow = true;
+			this.meshe.castShadow = true;
+		} else {
+			Oev.Tile.ProcessQueue.addWaiting(ext);
+		}
 		OEV.MUST_RENDER = true;
 	}
 	
