@@ -23,7 +23,6 @@ Oev.DataLoader.Proxy.prototype = {
 	
 	getData : function(_params, _callback) {
 		_params.priority = _params.priority || 1;
-		// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
 		_params.key = this._genKey(_params);
 		_params.callback = _callback;
 		if (this._type == 'OELE') {
@@ -295,7 +294,15 @@ Oev.DataLoader.Tile2D.prototype = {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.tileLoader.load('libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_params.z+'&x='+_params.x+'&y='+_params.y+'', 
+		
+		var cache = '';
+		// if (Math.random() > 0.5 && _params.z < 19) {
+		if (tmpNoCache) {
+			cache = '&nocache=1';
+			console.warn('reload tile2D');
+		}
+		
+		this.tileLoader.load('libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_params.z+'&x='+_params.x+'&y='+_params.y+cache, 
 			function(_texture){
 				loader.onDataLoadSuccess(_texture);
 			}, 

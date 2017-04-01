@@ -292,7 +292,15 @@ if (isset($_GET['genRgbAlt'])) { // générer les altitudes en RGB
 		$dirName = 'cache2dOsm';
 		$fullPath = dirname( __FILE__ ).'/../'.CACHE_BASE_PATH.'/'.$dirName.'/'.$z.'/'.$x;
 		makDirCache( array( CACHE_BASE_PATH, $dirName, $z, $x ) );
-		if( !is_file( $fullPath.'/'.$y.'.png' ) || filesize( $fullPath.'/'.$y.'.png' ) == 0 ){
+		
+		if ($NO_CACHE && is_file($fullPath.'/'.$y.'.png')) {
+			$fileTime = filemtime($fullPath.'/'.$y.'.png');
+			if (time() - $fileTime < (3600 * 24)) { // if file is less than 24h, use cache
+				$NO_CACHE = false;
+			}
+		}
+		
+		if ($NO_CACHE || !is_file($fullPath.'/'.$y.'.png') || filesize( $fullPath.'/'.$y.'.png' ) == 0) {
 			$url = 'http://c.tile.openstreetmap.org/'.$z.'/'.$x.'/'.$y.'.png';
 			$image = file_get_contents( $url );
 			file_put_contents( $fullPath.'/'.$y.'.png', $image);
