@@ -15,6 +15,7 @@ Oev.Input = (function(){
 })();
 
 var tmp = false;
+var tmpNoCache = false;
 	
 Oev.Input.Keyboard = (function(){
 	'use strict';
@@ -62,7 +63,8 @@ Oev.Input.Keyboard = (function(){
 				}else if( key == 66 ){ // b
 					
 				}else if( key == 67 ){ // c
-					
+					tmpNoCache = !tmpNoCache;
+					console.warn('Use cache : ', tmpNoCache);
 				}else if( key == 68 ){ // d
 					
 				}else if( key == 69 ){ // e
