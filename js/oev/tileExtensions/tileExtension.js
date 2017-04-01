@@ -18,6 +18,11 @@ Oev.Tile.Extension = {
 		desactivateExtension : function(_extensionId) {
 			console.log('desactivateExtension', _extensionId);
 			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
+			
+			if (_extensionId == 'LANDUSE') {
+				console.warn('CLEAR tilesLandusesMng');
+				OEV.earth.tilesLandusesMng.clearAll();
+			}
 		}, 
 	
 		onInit : function(_tile) {
