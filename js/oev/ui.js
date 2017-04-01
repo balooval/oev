@@ -15,6 +15,10 @@ Oev.Ui = (function(){
 			}, false);
 		}, 
 		
+		setQueueNb : function(_nb) {
+			document.getElementById('computingQueue').innerHTML = 'compute waiting : ' + _nb;
+		}, 
+		
 	};
 	
 	return api;
