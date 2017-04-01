@@ -17,6 +17,7 @@ Oev.Globe = (function() {
 		LOD_STREET : 17, 
 		curLOD : 0, 
 		tilesDetailsMarge : 2, 
+		// tilesDetailsMarge : 1, 
 		loaderTile2D : null, 
 		loaderEle : null, 
 		coordDetails : new THREE.Vector2( 0, 0 ), 
@@ -431,7 +432,6 @@ Oev.Globe = (function() {
 		
 		_updateMeter : function() {
 			api.meter = (api.radius / 40075017.0) * api.globalScale;
-			console.log('_updateMeter, api.meter', api.meter);
 		}, 
 
 		getElevationAtCoords : function( _lon, _lat, _inMeters ){

@@ -296,7 +296,6 @@ Oev.Tile.Extension.Building = function(_tile) {
 		for (curLevel = _params['minLevels']; curLevel < _params['levels']; curLevel ++) {
 			for (c = 0; c < _pts.length; c ++) {
 				if (vertLonA != undefined) {
-					// elevation = this.tile.interpolateEle(vertLonA, vertLatA, true);
 					elevation = Oev.Globe.getElevationAtCoords(vertLonA, vertLatA, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonA, vertLatA, elevation + (curLevel * _params['levelHeight']) + _params['minHeight']);
 					this.geometry.vertices.push(coordsWorld);
@@ -304,7 +303,6 @@ Oev.Tile.Extension.Building = function(_tile) {
 					this.geometry.vertices.push(coordsWorld);
 					vertLonB = _pts[c]['lon'];
 					vertLatB = _pts[c]['lat'];
-					// elevation = this.tile.interpolateEle(vertLonB, vertLatB, true);
 					elevation = Oev.Globe.getElevationAtCoords(vertLonB, vertLatB, true);
 					coordsWorld = OEV.earth.coordToXYZ(vertLonB, vertLatB, elevation + (curLevel * _params['levelHeight']) + _params['minHeight'] + _params['levelHeight']);
 					this.geometry.vertices.push(coordsWorld);
@@ -328,9 +326,6 @@ Oev.Tile.Extension.Building = function(_tile) {
 		if (!Oev.Tile.Extension['ACTIV_' + ext.id] || !this.tile.onStage) {
 			return false;
 		}
-		
-		
-		// this.geometry = new THREE.Geometry();
 		// this.geometry.dynamic = false;
 		var maxNb = Math.min(this.datas.length, 100);
 		
@@ -402,9 +397,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 				}
 			}
 			buildingParams['levelHeight'] = ( buildingParams['height'] - buildingParams['minHeight'] ) / buildingParams['levels'];
-			
 			// console.log('wallColor C "', buildingParams['roofColor'], '"');
-			
 			if (drawBuilding) {
 				var roofDatas = this.makeRoof(curBuilding["vertex"], buildingParams);
 				buildingParams['height'] -= roofDatas['heightOffset'];

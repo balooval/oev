@@ -1,3 +1,9 @@
+var minX = 999999999;
+var maxX = -999999999;
+var minY = 999999999;
+var maxY = -999999999;
+
+
 Oev.Tile = (function(){
 	'use strict';
 	
@@ -34,8 +40,7 @@ Oev.Tile = (function(){
 		this.nodesProvider = new TileNodes(this);
 		this.distToCam = -1;
 		Oev.Globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
-		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
-		// this.material = new THREE.MeshPhongMaterial({envMap: OEV.textures['skydome'], color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: OEV.textures["checker"]});
 		
 		this.extensions = [];
 		
@@ -72,6 +77,7 @@ Oev.Tile = (function(){
 					vectIndex ++;
 				}
 			}
+			
 			for (x = 0; x < Oev.Globe.tilesDefinition; x ++) {
 				for (y = 0; y < Oev.Globe.tilesDefinition; y ++) {
 					geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), y + ((x + 1) * vertBySide), y + (x * vertBySide)));
@@ -285,6 +291,13 @@ Oev.Tile = (function(){
 					this.show();	
 				}
 			}
+			if (this.onStage) {
+				var pos = Oev.Globe.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
+				minX = Math.min(pos.x, minX);
+				maxX = Math.max(pos.x, maxX);
+				minY = Math.min(pos.z, minY);
+				maxY = Math.max(pos.z, maxY);
+			}
 		}, 
 		
 		searchMainTile : function() {
@@ -302,7 +315,7 @@ Oev.Tile = (function(){
 			return false;
 		}, 
 
-		checkCameraHover : function( _marge ) {
+		checkCameraHover : function(_marge) {
 			var startLimit = Oev.Utils.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
 			var endLimit = Oev.Utils.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
 			if (startLimit.x > Oev.Globe.coordDetails.x) {
@@ -410,29 +423,7 @@ Oev.Tile = (function(){
 		interpolateEle : function(_lon, _lat, _debug) {
 			return 0;
 		}, 
-
-		calcBBoxCurZoom : function(_bbox) {
-			if( this.zoom == Math.round( Oev.Globe.CUR_ZOOM ) ){
-				if( this.startCoord.x < _bbox["left"] ){
-					_bbox["left"] = this.startCoord.x;
-				}
-				if( this.endCoord.x > _bbox["right"] ){
-					_bbox["right"] = this.endCoord.x;
-				}
-				if( this.startCoord.y > _bbox["top"] ){
-					_bbox["top"] = this.startCoord.y;
-				}
-				if( this.endCoord.y < _bbox["bottom"] ){
-					_bbox["bottom"] = this.endCoord.y;
-				}
-			}else{
-				for( var i = 0; i < this.childTiles.length; i ++ ){
-					_bbox = this.childTiles[i].calcBBoxCurZoom( _bbox );
-				}
-			}
-			return _bbox;
-		}, 
-
+		
 		dispose : function() {
 			Oev.Globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 			this.clearChildrens();
@@ -472,11 +463,13 @@ Oev.Tile.ProcessQueue = (function(){
 		addWaiting : function(_caller) {
 			waitingsObj.push(_caller);
 			OEV.addObjToUpdate(api);
+			Oev.Ui.setQueueNb(waitingsObj.length);
 		}, 
 		
 		processNext : function() {
 			if (waitingsObj.length == 0) {
 				OEV.removeObjToUpdate(api);
+				Oev.Ui.setQueueNb('0');
 				return null;
 			}
 			return waitingsObj.shift();
@@ -488,34 +481,6 @@ Oev.Tile.ProcessQueue = (function(){
 				return false;
 			}
 			caller.construct();
-		}, 
-	};
-	
-	return api;
-})();
-
-
-Oev.Cache = (function(){
-	var materials = {
-		'MeshPhongMaterial' : [], 
-		'MeshBasicMaterial' : [], 
-	};
-	
-	
-	var api = {
-		getMaterial : function(_type) {
-			if (materials[_type].length == 0) {
-				if (_type == 'MeshPhongMaterial') {
-					materials[_type].push(new THREE.MeshPhongMaterial( { shininess: 0, color: 0xffffff, map: OEV.textures["checker"]}));
-				} else if (_type == 'MeshBasicMaterial') {
-					materials[_type].push(new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]}));
-				}
-			}
-			return materials[_type].pop();
-		}, 
-		
-		freeMaterial : function(_type, _material) {
-			materials[_type].push(_material);
 		}, 
 	};
 	
