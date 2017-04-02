@@ -244,7 +244,7 @@ CamCtrlGod.prototype.updateCamera = function() {
 	OEV.MUST_RENDER = true;
 	this.evt.fireEvent('CAM_UPDATED');
 	if (Oev.Sky != undefined) {
-		Oev.Sky.posCenter = this.posLookat;
+		Oev.Sky.updateCameraLookat(this.posLookat);
 		Oev.Sky.globalScale = this.planet.globalScale;
 		Oev.Sky.updateSun();
 	}
