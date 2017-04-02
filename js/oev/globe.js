@@ -11,7 +11,7 @@ Oev.Globe = (function() {
 		equirectMaterial : null, 
 		evt : null, 
 		tilesBase : [], 
-		CUR_ZOOM : 4, 
+		CUR_ZOOM : 14, 
 		LOD_PLANET : 0, 
 		LOD_CITY : 10, 
 		LOD_STREET : 17, 
@@ -290,7 +290,7 @@ Oev.Globe = (function() {
 			}
 		}, 
 
-		setProjection : function( _mode ){
+		setProjection : function(_mode) {
 			if (_mode == "PLANE") {
 				Oev.Sky.activAtmosphere(false);
 				Oev.Sky.activSky(true);
