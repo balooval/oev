@@ -83,9 +83,9 @@ OpenEarthViewer.prototype.init = function() {
 		height: this.sceneHeight
 	} );
 	this.bokehPass.renderToScreen = true;
-	var composer = new THREE.EffectComposer( this.renderer );
-	composer.addPass( renderPass );
-	composer.addPass( this.bokehPass );
+	var composer = new THREE.EffectComposer(this.renderer);
+	composer.addPass(renderPass);
+	composer.addPass(this.bokehPass);
 	this.postprocessing.composer = composer;
 	this.postprocessing.bokeh = this.bokehPass;
 	*/
@@ -137,6 +137,7 @@ function onShaderLoader(_name, _material) {
 OpenEarthViewer.prototype.loadTextures = function() {
 	openModal( "Loading textures" );
 	var textList = [];
+	Oev.Net.Textures.addToList(textList, 'landuse_sprites', 'landuse_sprites.png');
 	Oev.Net.Textures.addToList(textList, 'normal_flat', 'normal_flat.png');
 	Oev.Net.Textures.addToList(textList, 'normal_scrub', 'normal_scrub.png');
 	Oev.Net.Textures.addToList(textList, 'normal_vineyard', 'normal_vineyard.png');
@@ -263,7 +264,7 @@ OpenEarthViewer.prototype.render = function() {
 		var d = new Date();
 		this.globalTime = d.getTime();
 		showUICoords();
-		// this.postprocessing.composer.render( 0.0 );
+		// this.postprocessing.composer.render(0.0);
 		this.renderer.render( this.scene, this.camera );
 		this.MUST_RENDER = false;
 	}
