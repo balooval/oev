@@ -291,7 +291,7 @@ Oev.Globe = (function() {
 		}, 
 
 		setProjection : function( _mode ){
-			if( _mode == "PLANE" ){
+			if (_mode == "PLANE") {
 				Oev.Sky.activAtmosphere(false);
 				Oev.Sky.activSky(true);
 				api.coordToXYZ = api.coordToXYZPlane;

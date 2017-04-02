@@ -27,7 +27,7 @@ Oev.Tile = (function(){
 		this.tileLoader = new THREE.TextureLoader();
 		this.remoteTex = undefined;
 		this.meshe = undefined;
-		this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
+		// this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
 		this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
 		this.endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
 		this.startLargeCoord = Oev.Utils.tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
@@ -374,7 +374,7 @@ Oev.Tile = (function(){
 			this.remoteTex = _texture;
 			this.material.map = this.remoteTex;
 			this.material.map.anisotropy = 8;
-			this.materialBorder.map = this.remoteTex;
+			// this.materialBorder.map = this.remoteTex;
 			this.mapParentTexture();
 			OEV.MUST_RENDER = true;
 		}, 

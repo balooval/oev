@@ -128,7 +128,7 @@ OpenEarthViewer.prototype.loadShader = function() {
 }
 
 function onShaderLoader(_name, _material) {
-	// console.log('Shader "' + _name + '" loaded');
+	console.log('Shader "' + _name + '" loaded');
 	OEV.shaders[_name] = _material;
 }
 
