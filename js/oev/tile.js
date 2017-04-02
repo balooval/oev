@@ -43,14 +43,64 @@ Oev.Tile = (function(){
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: OEV.textures["checker"]});
 		
 		this.extensions = [];
-		
+		for (var i = 0; i < Oev.Tile.Extension.activated.length; i ++) {
+			console.log('Tile init, add extension', Oev.Tile.Extension.activated[i]);
+			this.addExtension(Oev.Tile.Extension.activated[i]);
+		}
+		/*
 		for (var key in Oev.Globe.tileExtensions) {
 			var ext = new Oev.Globe.tileExtensions[key](this);
 			this.extensions.push(ext);
 		}
+		*/
+		Oev.Tile.Extension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 	}
 
 	api.Basic.prototype = {
+		
+		onExtensionActivation : function(_extensionId) {
+			this.addExtension(_extensionId);
+		}, 
+		
+		addExtension : function(_extensionId) {
+			if (this.ownExtension(_extensionId)) {
+				return false;
+			}
+			var ext = new Oev.Globe.tileExtensions[_extensionId](this);
+			this.extensions.push(ext);
+			for (var i = 0; i < this.childTiles.length; i ++) {
+				this.childTiles[i].addExtension(_extensionId);
+			}
+			return true;
+		}, 
+		
+		ownExtension : function(_id) {
+			for (var i = 0; i < this.extensions.length; i ++) {
+				if (this.extensions[i].id == _id) {
+					return true;
+				}
+			}
+			return false;
+		}, 
+		
+		removeExtension : function(_id) {
+			var found = false;
+			for (var i = 0; i < this.extensions.length; i ++) {
+				if (this.extensions[i].id == _id) {
+					this.extensions.splice(i, 1);
+					found = true;
+					break;
+				}
+			}
+			for (i = 0; i < this.childTiles.length; i ++) {
+				this.childTiles[i].removeExtension(_id);
+			}
+			if (found === true) {
+				return true;
+			}
+			console.warn('Tile.removeExtension, not found :', _id);
+			return false;
+		}, 
 		
 		makeFace : function() {
 			this.distToCam = ((Oev.Globe.coordDetails.x - this.middleCoord.x) * (Oev.Globe.coordDetails.x - this.middleCoord.x) + (Oev.Globe.coordDetails.y - this.middleCoord.y) * (Oev.Globe.coordDetails.y - this.middleCoord.y));
@@ -425,6 +475,7 @@ Oev.Tile = (function(){
 		}, 
 		
 		dispose : function() {
+			Oev.Tile.Extension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 			Oev.Globe.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 			this.clearChildrens();
 			this.hide();

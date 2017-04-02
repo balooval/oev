@@ -4,6 +4,8 @@ Oev.Tile.Extension = {
 	
 		id : '', 
 		
+		activated : [], 
+		
 		isInit : false, 
 		
 		isInstancied : false, 
@@ -12,16 +14,38 @@ Oev.Tile.Extension = {
 		
 		activateExtension : function(_extensionId) {
 			console.log('activateExtension', _extensionId);
+			
+			Oev.Tile.Extension.activated.push(_extensionId);
+			
 			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
+			for (var i = 0; i < Oev.Globe.tilesBase.length; i ++) {
+				Oev.Globe.tilesBase[i].addExtension(_extensionId);
+			}
+			
+			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE', _extensionId);
 		}, 
 		
 		desactivateExtension : function(_extensionId) {
 			console.log('desactivateExtension', _extensionId);
+			
+			for (var i = 0; i < Oev.Tile.Extension.activated.length; i ++) {
+				if (Oev.Tile.Extension.activated[i] == _extensionId) {
+					Oev.Tile.Extension.activated.splice(i, 1);
+					console.log('Ok remove from activated');
+					break;
+				}
+			}
+			
+			
 			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
 			
 			if (_extensionId == 'LANDUSE') {
 				console.warn('CLEAR tilesLandusesMng');
 				OEV.earth.tilesLandusesMng.clearAll();
+			}
+			
+			for (var i = 0; i < Oev.Globe.tilesBase.length; i ++) {
+				Oev.Globe.tilesBase[i].removeExtension(_extensionId);
 			}
 		}, 
 	
