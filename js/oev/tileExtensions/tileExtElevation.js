@@ -8,7 +8,8 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	ext.id = 'ELEVATION';
 	ext.elevationBuffer = new Uint16Array((32 * 32) / 4);
 	ext.mesheBorder = undefined;
-	ext.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
+	// ext.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
+	ext.materialBorder = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
 	
 	ext.init = function() {
 		this.tile.getElevation = ext.getElevation;
