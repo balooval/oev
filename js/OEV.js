@@ -1,4 +1,5 @@
 var OpenEarthViewer = function ( _containerId ) {
+	this.appStarted = false;
 	this.htmlContainer = _containerId;
 	this.sceneWidth = 400;
 	this.sceneHeight = 300;
@@ -118,6 +119,7 @@ OpenEarthViewer.prototype.start = function() {
 	Oev.Navigation.saveWaypoint(4.231021, 43.795594, 13);
 	Oev.Navigation.saveWaypoint(3.854188, 43.958125, 13);
 	Oev.Navigation.saveWaypoint(2.383138,48.880945, 13);
+	this.appStarted = true;
 	console.log('OEV.START');
 	this.evt.fireEvent('APP_START');
 	render();
@@ -155,7 +157,7 @@ OpenEarthViewer.prototype.loadTextures = function() {
 	Oev.Net.Textures.addToList(textList, 'sky', 'sky.png');
 	Oev.Net.Textures.addToList(textList, 'checker_alpha', 'checker_alpha.png');
 	Oev.Net.Textures.addToList(textList, 'sun', 'sun2.png');
-	Oev.Net.Textures.addToList(textList, 'cloud', 'cloud_3.png');
+	Oev.Net.Textures.addToList(textList, 'cloud', 'cloud.png');
 	Oev.Net.Textures.addToList(textList, 'sky_gradient', 'sky_gradient.png');
 	Oev.Net.Textures.addToList(textList, 'grass', 'grass.png');
 	Oev.Net.Textures.addToList(textList, 'vineyard', 'vineyard.png');
@@ -268,7 +270,7 @@ OpenEarthViewer.prototype.render = function() {
 	this.camCtrl.update();
 	if( dragSun ){
 		var mX = ( ( Oev.Input.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth );
-		Oev.Sky.setSunTime( mX );
+		Oev.Sky.setSunTime(mX);
 	}
 	if( this.showRendererInfos ){
 		var rendererInfos = '';
