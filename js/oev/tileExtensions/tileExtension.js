@@ -17,12 +17,12 @@ Oev.Tile.Extension = {
 			
 			Oev.Tile.Extension.activated.push(_extensionId);
 			
-			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 			for (var i = 0; i < Oev.Globe.tilesBase.length; i ++) {
 				Oev.Globe.tilesBase[i].addExtension(_extensionId);
 			}
-			
 			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE', _extensionId);
+			
+			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 		}, 
 		
 		desactivateExtension : function(_extensionId) {
