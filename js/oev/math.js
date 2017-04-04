@@ -19,7 +19,14 @@ Oev.Math = (function(){
 			return dtheta;
 		}, 
 		
-		ptIsInPolygon : function(_polygon, _lon, _lat) {
+		ptIsInPolygon : function(poly,  _lon, _lat) {
+			for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
+        ((poly[i][1] <= _lat && _lat < poly[j][1]) || (poly[j][1] <= _lat && _lat < poly[i][1]))
+        && (_lon < (poly[j][0] - poly[i][0]) * (_lat - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0])
+        && (c = !c);
+    return c;
+		}, 
+		ptIsInPolygonOk : function(_polygon, _lon, _lat) {
 			var angle = 0;
 			var ptA;
 			var ptB;
