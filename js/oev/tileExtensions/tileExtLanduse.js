@@ -1,3 +1,6 @@
+Oev.Tile.Extension.LanduseRoot = {};
+var tmpId = 0;
+
 Oev.Tile.Extension.Landuse = function(_tile) {
 	var ext = Object.create(Oev.Tile.Extension);
 	
@@ -45,8 +48,36 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.surfacesClipped = [];
 	ext.constructStep = 'JSON';
 	
+	ext.tileIndex;
+	ext.myRoot;
+	ext.childrens;
+	ext.tmpId = 0;
+	
 	
 	ext.tileReady = function() {
+		if (this.tile.zoom < 15) {
+			return false;
+		}
+		this.tmpId = tmpId;
+		tmpId ++;
+		
+		this.tileIndex = Oev.Geo.coordsToTile(this.tile.middleCoord.x, this.tile.middleCoord.y, 15);
+		if (this.tile.zoom == 15) {
+			Oev.Tile.Extension.LanduseRoot[this.tileIndex.x + '_' + this.tileIndex.y] = this;
+			this.childrens = [];
+			if (!this.dataLoaded) {
+				OEV.earth.tilesLandusesMng.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
+			}else{
+				Oev.Tile.ProcessQueue.addWaiting(this);
+			}
+			
+		} else if (this.tile.onStage) {
+			this.myRoot = Oev.Tile.Extension.LanduseRoot[this.tileIndex.x + '_' + this.tileIndex.y];
+			this.myRoot.askForDatas(this);
+		}
+		
+		
+		/*
 		if (!this.tile.onStage || this.tile.zoom < 15) {
 			return false;
 		}
@@ -55,10 +86,30 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		}else{
 			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
+		*/
+	}
+	
+	ext.askForDatas = function(_childExt) {
+		if (ext.dataLoaded) {
+			_childExt.setDatas(ext.datas);
+			return true;
+		}
+		ext.childrens.push(_childExt);
+		return false;
 	}
 	
 	ext.setDatas = function(_datas) {
+		// console.log('A', this);
+		if (this.tile.zoom == 15) {
+			// console.log('B');
+			for (var i = 0; i < this.childrens.length; i ++) {
+				this.childrens.setDatas(_datas);
+			}
+			this.childrens = [];
+		}
+
 		this.dataLoaded = true;
+		// console.log('setDatas', this.tmpId);
 		this.datas = _datas;
 		Oev.Tile.ProcessQueue.addWaiting(this);
 	}
@@ -122,8 +173,8 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			res = lineclip.polygon(curPoly, bbox);
 			if (res.length > 0) {
 				res.push(res[0]);
-			}
 			this.surfacesClipped.push(res);
+			}
 		}
 	}
 	
@@ -160,13 +211,17 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		contextDiffuse.drawImage(this.tile.material.map.image, 0, 0);
 		contextNormal.drawImage(this.tile.material.normalMap.image, 0, 0);
 		for (var  s = 0; s < this.surfacesClipped.length; s ++) {
+			if (this.surfacesClipped[s].length == 0) {
+				console.log('vide, passe');
+				continue;
+			}
 			type = this.surfacesTypes[s];
 			normalisedPoly = [];
 			for (i = 0; i < this.surfacesClipped[s].length; i ++) {
 				ptNorm = [
 					Math.round(Math.abs((((this.tile.endCoord.x - this.surfacesClipped[s][i][0]) / coordW) * canvasSize) - canvasSize)), 
 					Math.round(((this.tile.startCoord.y - this.surfacesClipped[s][i][1]) / coordH) * canvasSize), 
-				]
+				];
 				normalisedPoly.push(ptNorm);
 			}
 			contextDiffuse.save();
@@ -613,6 +668,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			canvasNormal.getContext('2d').clearRect(0, 0, canvasNormal.width, canvasNormal.height);
 			canvasNormal = null;
 		}
+		
 	}
 	
 	ext.onInit(_tile);
