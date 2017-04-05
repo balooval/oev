@@ -53,6 +53,8 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.childrens;
 	ext.tmpId = 0;
 	
+	ext.worker = null;
+	
 	
 	ext.tileReady = function() {
 		if (this.tile.zoom < 15) {
@@ -60,6 +62,16 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		}
 		this.tmpId = tmpId;
 		tmpId ++;
+		
+		this.worker = new Worker('js/oev/workers/tileExtLanduse.js');
+		this.worker.onmessage = function(_res) {
+			// console.log('worker response', ext.tmpId, _res.data);
+			ext.nodesPositions = _res.data;
+			ext.worker.terminate();
+			// console.log('ext.worker', ext.worker);
+			ext.constructStep = 'GEOMETRY';
+			ext.construct();
+		}
 		
 		this.tileIndex = Oev.Geo.coordsToTile(this.tile.middleCoord.x, this.tile.middleCoord.y, 15);
 		if (this.tile.zoom == 15) {
@@ -280,46 +292,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			surfBBox.push(curBBox);
 		}
-		
-		var meter = 1/100000;
-		for (var s = 0; s < this.surfacesClipped.length; s ++) {
-			var surfWidth = surfBBox[s][1] - surfBBox[s][0];
-			var surfHeight = surfBBox[s][3] - surfBBox[s][2];
-			if (this.surfacesTypes[s] == 'vineyard') {
-				for (coordLon = surfBBox[s][0]; coordLon < surfBBox[s][1]; coordLon += meter * 20) {
-					for (coordLat = surfBBox[s][2]; coordLat < surfBBox[s][3]; coordLat += meter * 5) {
-						if(Oev.Math.ptIsInPolygon(this.surfacesClipped[s], coordLon, coordLat)) {
-							altP = Oev.Globe.getElevationAtCoords(coordLon, coordLat, true);
-							// this.buildTwoSideElmt(coordLon, coordLat, altP, this.surfacesTypes[s]);
-							this.nodesPositions.push(this.surfacesTypes[s], coordLon, coordLat, altP);
-						}
-					}
-				}
-			} else if (this.surfacesTypes[s] == 'scrub' || this.surfacesTypes[s] == 'forest') {
-				surGeoJson.coordinates = [this.surfacesClipped[s]];
-				var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 100);
-				if (this.surfacesTypes[s] == 'scrub') {
-					curArea *= 2;
-				}
-				nbPartIn = 0;
-				var tests = 0;
-				while (nbPartIn < curArea) {
-					tests ++;
-					if (tests > 100000) {
-						console.warn('Exit while loop');
-						break;
-					}
-					coordLon = surfBBox[s][0] + (surfWidth * Math.random());
-					coordLat = surfBBox[s][2] + (surfHeight * Math.random());
-					if (Oev.Math.ptIsInPolygon(this.surfacesClipped[s], coordLon, coordLat)) {
-						nbPartIn ++;
-						altP = Oev.Globe.getElevationAtCoords(coordLon, coordLat, true);
-						// this.buildTwoSideElmt(coordLon, coordLat, altP, this.surfacesTypes[s]);
-						this.nodesPositions.push(this.surfacesTypes[s], coordLon, coordLat, altP);
-					}
-				}
-			}
-		}
+		this.worker.postMessage([this.surfacesClipped, surfBBox, this.surfacesTypes]);
 	}
 	
 	ext.buildNodesGeometry = function() {
@@ -348,15 +321,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		var faceUvId = 0;
 		
 		for (var i = 0; i < nodesNb * 4; i += 4) {
-			/*
-			this.buildTwoSideElmt(
-				this.nodesPositions[i+1], 
-				this.nodesPositions[i+2], 
-				this.nodesPositions[i+3], 
-				this.nodesPositions[i]
-			);
-			*/
-			
 			angle = Math.random() * 3.14;
 			sizeVar = 0.7 + Math.random() * 0.5;
 			typeProps = this.twoSideProps[this.nodesPositions[i]];
@@ -368,7 +332,9 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			textTile = Math.random() > 0.7 ? 0 : 0.5;
 			lon = this.nodesPositions[i+1];
 			lat = this.nodesPositions[i+2];
-			alt = this.nodesPositions[i+3] - 0.5;
+			// alt = this.nodesPositions[i+3] - 0.5;
+			
+			alt = Oev.Globe.getElevationAtCoords(lon, lat, true) - 0.5;
 			
 			var tileVariation = Math.random() > 0.5 ? 0 : 0.5;
 			var tileType = ext.twoSideUvs[this.nodesPositions[i]];
@@ -547,8 +513,8 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			this.buildSurfacesTexture();
 			this.constructStep = 'POSITIONS';
 		} else if (this.constructStep == 'POSITIONS') {
+			this.constructStep = 'WAITING';
 			this.searchNodesPositions();
-			this.constructStep = 'GEOMETRY';
 		} else if (this.constructStep == 'GEOMETRY') {
 			this.buildNodesGeometry();
 			this.constructStep = 'MESH';
@@ -562,7 +528,8 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			ext.surfacesClipped = [];
 			
 			OEV.MUST_RENDER = true;
-		} else {
+		// } else {
+		} else if (this.constructStep != 'WAITING') {
 			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
 	} 
