@@ -4,6 +4,8 @@ var minY = 999999999;
 var maxY = -999999999;
 
 
+var tmpTile = 0;
+
 Oev.Tile = (function(){
 	'use strict';
 	
@@ -41,6 +43,7 @@ Oev.Tile = (function(){
 		this.distToCam = -1;
 		Oev.Globe.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: OEV.textures["checker"]});
+		
 		
 		this.extensions = [];
 		for (var i = 0; i < Oev.Tile.Extension.activated.length; i ++) {
@@ -105,6 +108,7 @@ Oev.Tile = (function(){
 		}, 
 		
 		mapParentTextureBuffer : function() {
+			// return false;
 			var stepUV;
 			var curParent = this.parentTile;
 			if (this.textureLoaded || curParent === undefined) {
@@ -123,26 +127,16 @@ Oev.Tile = (function(){
 				return false;
 			}
 			var def = Oev.Globe.tilesDefinition;
-			var nbFaces = (def * def) * 2;
-			var curFace = 0;
-			var bufferUvs = new Float32Array(nbFaces * 6);
+			var vertBySide = def + 1;
+			var nbVertices = vertBySide * vertBySide;
+			var bufferUvs = new Float32Array(nbVertices * 2);
 			stepUV = uvReduc / def;
-			var faceUvId = 0;
-			for (var x = 0; x < def; x ++) {
-				for (var y = 0; y < def; y ++) {
-					bufferUvs[faceUvId + 0] = curOffsetX + (stepUV * x);
-					bufferUvs[faceUvId + 1] = 1 - (stepUV * y)- curOffsetY;
-					bufferUvs[faceUvId + 2] = curOffsetX + (stepUV * x);
-					bufferUvs[faceUvId + 3] = 1 - (stepUV * y + stepUV)- curOffsetY;
-					bufferUvs[faceUvId + 4] = curOffsetX + (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 5] = 1 - (stepUV * y + stepUV)- curOffsetY;
-					bufferUvs[faceUvId + 6] = curOffsetX + (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 7] = 1 - (stepUV * y + stepUV)- curOffsetY;
-					bufferUvs[faceUvId + 8] = curOffsetX + (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 9] = 1 - (stepUV * y)- curOffsetY;
-					bufferUvs[faceUvId + 10] = curOffsetX + (stepUV * x);
-					bufferUvs[faceUvId + 11] = 1 - (stepUV * y)- curOffsetY;
-					faceUvId += 12;
+			var uvIndex = 0;
+			for (var x = 0; x < vertBySide; x ++) {
+				for (var y = 0; y < vertBySide; y ++) {
+					uvIndex = (x * vertBySide) + y;
+					bufferUvs[uvIndex * 2] = curOffsetX + (stepUV * x);
+					bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y)- curOffsetY;
 				}
 			}
 			this.material.map = curParent.material.map;
@@ -153,25 +147,18 @@ Oev.Tile = (function(){
 		
 		mapSelfTexture : function() {
 			var def = Oev.Globe.tilesDefinition;
+			var vertBySide = def + 1;
 			var stepUV = 1 / def;
-			var nbFaces = (def * def) * 2;
-			var bufferUvs = new Float32Array(nbFaces * 6);
-			var faceUvId = 0;
-			for (var x = 0; x < def; x ++) {
-				for (var y = 0; y < def; y ++) {
-					bufferUvs[faceUvId + 0] = (stepUV * x);
-					bufferUvs[faceUvId + 1] = 1 - (stepUV * y);
-					bufferUvs[faceUvId + 2] = (stepUV * x);
-					bufferUvs[faceUvId + 3] = 1 - (stepUV * y + stepUV);
-					bufferUvs[faceUvId + 4] = (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 5] = 1 - (stepUV * y + stepUV);
-					bufferUvs[faceUvId + 6] = (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 7] = 1 - (stepUV * y + stepUV);
-					bufferUvs[faceUvId + 8] = (stepUV * x + stepUV);
-					bufferUvs[faceUvId + 9] = 1 - (stepUV * y);
-					bufferUvs[faceUvId + 10] = (stepUV * x);
-					bufferUvs[faceUvId + 11] = 1 - (stepUV * y);
-					faceUvId += 12;
+			var nbVertices = vertBySide * vertBySide;
+			var bufferUvs = new Float32Array(nbVertices * 2);
+			var uvIndex = 0;
+			var vertId = 0;
+			for (var x = 0; x < vertBySide; x ++) {
+				for (var y = 0; y < vertBySide; y ++) {
+					uvIndex = (x * vertBySide) + y;
+					bufferUvs[uvIndex * 2] = stepUV * x;
+					bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y);
+					
 				}
 			}
 			this.meshe.geometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
@@ -180,16 +167,16 @@ Oev.Tile = (function(){
 		
 		makeFaceBuffer : function() {
 			this.distToCam = ((Oev.Globe.coordDetails.x - this.middleCoord.x) * (Oev.Globe.coordDetails.x - this.middleCoord.x) + (Oev.Globe.coordDetails.y - this.middleCoord.y) * (Oev.Globe.coordDetails.y - this.middleCoord.y));
-			
+			this.vertCoords = [];
 			var def = Oev.Globe.tilesDefinition;
 			var vertBySide = def + 1;
 			var nbFaces = (def * def) * 2;
-			var nbVertices = nbFaces * 3;
+			var nbVertices = vertBySide * vertBySide;
 			var bufferVertices = new Float32Array(nbVertices * 3);
 			var bufferFaces = new Uint32Array(nbFaces * 3);
 			var faceVertId = 0;
 			var curVertId = 0;
-			var curVertPosId = 0;
+			var curVertAltId = 0;
 			var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / def, (this.endCoord.y - this.startCoord.y) / def);
 			var vectX;
 			var vectY;
@@ -197,86 +184,13 @@ Oev.Tile = (function(){
 			var vertPos;
 			var startLon = this.startCoord.x;
 			var startLat = this.startCoord.y;
-			for (var x = 0; x < def; x ++) {
-				for (var y = 0; y < def; y ++) {
-					bufferFaces[faceVertId + 0] = faceVertId + 0;
-					bufferFaces[faceVertId + 1] = faceVertId + 1;
-					bufferFaces[faceVertId + 2] = faceVertId + 2;
-					bufferFaces[faceVertId + 3] = faceVertId + 3;
-					bufferFaces[faceVertId + 4] = faceVertId + 4;
-					bufferFaces[faceVertId + 5] = faceVertId + 5;
-					faceVertId += 6;
-					
+			for (var x = 0; x < vertBySide; x ++) {
+				for (var y = 0; y < vertBySide; y ++) {
+					curVertAltId = y + x * vertBySide;
 					vectX = startLon + (stepCoord.x * x);
 					vectY = startLat + (stepCoord.y * y);
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
-					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
-					bufferVertices[curVertId] = vertPos.x;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.y;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.z;
-					curVertId ++;
-					
-					vectX = startLon + (stepCoord.x * x);
-					vectY = startLat + (stepCoord.y * (y + 1));
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
-					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
-					bufferVertices[curVertId] = vertPos.x;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.y;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.z;
-					curVertId ++;
-					
-					vectX = startLon + (stepCoord.x * (x + 1));
-					vectY = startLat + (stepCoord.y * (y + 1));
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
-					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
-					bufferVertices[curVertId] = vertPos.x;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.y;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.z;
-					curVertId ++;
-					
-					vectX = startLon + (stepCoord.x * (x + 1));
-					vectY = startLat + (stepCoord.y * (y + 1));
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
-					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
-					bufferVertices[curVertId] = vertPos.x;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.y;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.z;
-					curVertId ++;
-					
-					vectX = startLon + (stepCoord.x * (x + 1));
-					vectY = startLat + (stepCoord.y * (y + 0));
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
-					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
-					bufferVertices[curVertId] = vertPos.x;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.y;
-					curVertId ++;
-					bufferVertices[curVertId] = vertPos.z;
-					curVertId ++;
-					
-					vectX = startLon + (stepCoord.x * (x + 0));
-					vectY = startLat + (stepCoord.y * (y + 0));
-					vertZ = this._getVerticeElevation(curVertPosId, vectX, vectY);
-					// vertZ = 0;
-					curVertPosId ++;
+					vertZ = this._getVerticeElevation(curVertAltId, vectX, vectY);
+					this.vertCoords.push(new THREE.Vector3(vectX, vectY, vertZ));
 					vertPos = Oev.Globe.coordToXYZ(vectX, vectY, vertZ);
 					bufferVertices[curVertId] = vertPos.x;
 					curVertId ++;
@@ -286,18 +200,37 @@ Oev.Tile = (function(){
 					curVertId ++;
 				}
 			}
+			var faceId = 0;
+			for (var x = 0; x < def; x ++) {
+				for (var y = 0; y < def; y ++) {
+					bufferFaces[faceId + 0] = (x * vertBySide) + y;
+					bufferFaces[faceId + 1] = (x * vertBySide) + y + 1;
+					bufferFaces[faceId + 2] = ((x + 1) * vertBySide) + y + 1;
+					bufferFaces[faceId + 3] = ((x + 1) * vertBySide) + y + 1;
+					bufferFaces[faceId + 4] = ((x + 1) * vertBySide) + y;
+					bufferFaces[faceId + 5] = (x * vertBySide) + y;
+					faceId += 6;
+				}
+			}
 			var geoBuffer = new THREE.BufferGeometry();
 			geoBuffer.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
 			// geoBuffer.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 			geoBuffer.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 			geoBuffer.computeFaceNormals();
 			geoBuffer.computeVertexNormals();
+			if (this.meshe !== undefined) {
+				Oev.Globe.removeMeshe(this.meshe);
+				this.meshe.geometry.dispose();
+				this.meshe = undefined;
+			}
 			this.meshe = new THREE.Mesh(geoBuffer, this.material);
 			
 			
 			if (this.onStage) {
 				Oev.Globe.addMeshe(this.meshe);
 			}
+			this.meshe.castShadow = true;
+			this.meshe.receiveShadow = true;
 			if (this.mapParentTextureBuffer() === false) {
 				this.mapSelfTexture();
 			}

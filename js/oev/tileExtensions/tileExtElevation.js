@@ -58,8 +58,65 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.applyElevationToGeometry();
 	}
 	
-	
+	/*
+	ext.applyElevationToGeometryBuffer = function() {
+		if (!this.dataLoaded) {
+			return false;
+		}
+		
+		var x, y;
+		var index = 0;
+		var nbVertX = Oev.Globe.tilesDefinition + 1;
+		var nbVertY = Oev.Globe.tilesDefinition + 1;
+		var verticePosition;
+		var stepCoord = new THREE.Vector2((this.tile.endCoord.x - this.tile.startCoord.x) / Oev.Globe.tilesDefinition, (this.tile.endCoord.y - this.tile.startCoord.y) / Oev.Globe.tilesDefinition);
+		var ele;
+		
+		var def = Oev.Globe.tilesDefinition;
+		var vertBySide = def + 1;
+		var nbFaces = (def * def) * 2;
+		var nbVertices = nbFaces * 3;
+		var bufferVertices = new Float32Array(nbVertices * 3);
+		var curVertId = 0;
+		var startLon = this.tile.startCoord.x;
+		var startLat = this.tile.startCoord.y;
+		
+		for (var x = 0; x < def; x ++) {
+			for (var y = 0; y < def; y ++) {
+				ele = this.elevationBuffer[index];
+				verticePosition = Oev.Globe.coordToXYZ(startLon + (stepCoord.x * x), startLat + (stepCoord.y * y), ele);
+				bufferVertices[curVertId] = verticePosition.x;
+				curVertId ++;
+				bufferVertices[curVertId] = verticePosition.y;
+				curVertId ++;
+				bufferVertices[curVertId] = verticePosition.z;
+				curVertId ++;
+			}
+		}
+		
+		for (x = 0; x < nbVertX; x ++) {
+			for (y = 0; y < nbVertY; y ++) {
+				var ele = this.elevationBuffer[index];
+				verticePosition = Oev.Globe.coordToXYZ(this.tile.startCoord.x + (stepCoord.x * x), this.tile.startCoord.y + (stepCoord.y * y), ele);
+				this.tile.meshe.geometry.vertices[index].x = verticePosition.x;
+				this.tile.meshe.geometry.vertices[index].y = verticePosition.y;
+				this.tile.meshe.geometry.vertices[index].z = verticePosition.z;
+				index ++;
+			}
+		}
+		this.makeBorders();
+		this.tile.meshe.geometry.verticesNeedUpdate = true;
+		this.tile.meshe.geometry.uvsNeedUpdate = true;
+		this.tile.meshe.geometry.computeFaceNormals();
+		this.tile.meshe.geometry.mergeVertices()
+		this.tile.meshe.geometry.computeVertexNormals();
+		OEV.MUST_RENDER = true;
+		
+	} 
+	*/
 	ext.applyElevationToGeometry = function() {
+		this.tile.makeFaceBuffer();
+		return false;
 		if (!this.dataLoaded) {
 			return false;
 		}
@@ -89,6 +146,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 	} 
 	
 	ext.makeBorders = function() {
+		return false;
 		var b;
 		var x;
 		var y;
