@@ -146,6 +146,9 @@ Oev.Tile = (function(){
 		}, 
 		
 		mapSelfTexture : function() {
+			if (this.meshe === undefined) {
+				return false;
+			}
 			var def = Oev.Globe.tilesDefinition;
 			var vertBySide = def + 1;
 			var stepUV = 1 / def;
@@ -631,6 +634,7 @@ Oev.Tile = (function(){
 				this.meshe.geometry.dispose();
 				this.material.map.dispose();
 				this.material.dispose();
+				this.meshe = undefined;
 			}
 			if (this.textureLoaded) {
 				this.remoteTex.dispose();
