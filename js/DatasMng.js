@@ -80,7 +80,7 @@ DatasMng.prototype.setDatas = function(_tile, _datas) {
 	}
 }
 
-DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority ) {
+DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority) {
 	_priority = _priority || -1;
 	var i;
 	var key = _key;
@@ -126,7 +126,7 @@ DatasMng.prototype.getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _prio
 
 
 DatasMng.prototype.checkForNextLoad = function() {
-	updateLoadingDatas( this );
+	updateLoadingDatas(this.type, this.datasWaiting.length);
 	if (this.datasLoading.length < this.simulLoad) {
 		this.loadNext();
 	}
@@ -139,7 +139,7 @@ DatasMng.prototype.removeWaitingList = function( _key ) {
 			break;
 		}
 	}
-	updateLoadingDatas(this);
+	updateLoadingDatas(this.type, this.datasWaiting.length);
 }
 
 DatasMng.prototype.removeLoadingList = function(_key) {

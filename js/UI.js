@@ -255,11 +255,15 @@ function onPostChatMsg( evt ){
 	return false;
 }
 
-function updateLoadingDatas( _datasMng ){
+function updateLoadingDatas(_type, _nb){
 	var curTime = OEV.clock.getElapsedTime();
 	if (curTime - lastTimeLoadingUpdated > 1) {
 		lastTimeLoadingUpdated = curTime;
-		htmlElmtLoadingDatas['loading_' + _datasMng.type].innerHTML = _datasMng.datasWaiting.length + " " + _datasMng.type + " to load";
+		if (htmlElmtLoadingDatas['loading_' + _type] === undefined) {
+			console.log('not ', _type);
+			return false;
+		}
+		htmlElmtLoadingDatas['loading_' + _type].innerHTML = _nb + " " + _type + " to load";
 	}
 }
 

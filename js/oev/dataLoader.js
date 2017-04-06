@@ -149,6 +149,9 @@ Oev.DataLoader.Proxy.prototype = {
 		}
 		var currentLoadingParams = this._datasWaiting.shift();
 		this._datasLoading.push(currentLoadingParams);
+		
+		updateLoadingDatas(this._type, this._datasWaiting.length);
+		
 		freeLoader.load(currentLoadingParams);
 	}, 
 	
