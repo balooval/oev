@@ -6,12 +6,17 @@ var Oev = (function(){
 Oev.Utils = (function(){
 	'use strict';
 	var api = {
-		tileToCoords : function(_tile_x, _tile_y, _zoom){
-			var p = new THREE.Vector2( 0, 0 );
-			var n = Math.PI - ( (2.0 * Math.PI * _tile_y ) / Math.pow( 2.0, _zoom ) );
-			p.x = ( ( _tile_x / Math.pow( 2.0, _zoom ) * 360.0 ) - 180.0 );
-			p.y = (180.0 / Math.PI * Math.atan(Math.sinh( n ) ) );
+		tileToCoords : function(_tile_x, _tile_y, _zoom) {
+			var p = [];
+			var n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
+			p[0] = ((_tile_x / Math.pow(2.0, _zoom) * 360.0) - 180.0);
+			p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
 			return p;
+		}, 
+		
+		tileToCoordsVect : function(_tile_x, _tile_y, _zoom){
+			var res = Oev.Utils.tileToCoords(_tile_x, _tile_y, _zoom);
+			return new THREE.Vector2(res[0], res[1]);
 		}, 
 
 		rgbToHex : function(r, g, b) {
