@@ -30,12 +30,12 @@ Oev.Tile = (function(){
 		this.remoteTex = undefined;
 		this.meshe = undefined;
 		// this.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
-		this.startCoord = Oev.Utils.tileToCoords( this.tileX, this.tileY, this.zoom );
-		this.endCoord = Oev.Utils.tileToCoords( this.tileX + 1, this.tileY + 1, this.zoom );
-		this.startLargeCoord = Oev.Utils.tileToCoords( this.tileX - 1, this.tileY - 1, this.zoom );
-		this.endLargeCoord = Oev.Utils.tileToCoords( this.tileX + 2, this.tileY + 2, this.zoom );
-		this.startMidCoord = Oev.Utils.tileToCoords( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
-		this.endMidCoord = Oev.Utils.tileToCoords( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
+		this.startCoord = Oev.Utils.tileToCoordsVect( this.tileX, this.tileY, this.zoom );
+		this.endCoord = Oev.Utils.tileToCoordsVect( this.tileX + 1, this.tileY + 1, this.zoom );
+		this.startLargeCoord = Oev.Utils.tileToCoordsVect( this.tileX - 1, this.tileY - 1, this.zoom );
+		this.endLargeCoord = Oev.Utils.tileToCoordsVect( this.tileX + 2, this.tileY + 2, this.zoom );
+		this.startMidCoord = Oev.Utils.tileToCoordsVect( this.tileX - 0.5, this.tileY - 0.5, this.zoom );
+		this.endMidCoord = Oev.Utils.tileToCoordsVect( this.tileX + 1.5, this.tileY + 1.5, this.zoom );
 		this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
 		this.vertCoords = [];
 		this.surfacesProviders = [];
@@ -438,11 +438,11 @@ Oev.Tile = (function(){
 			}
 		}, 
 
-		updateDetails : function() {
+		updateDetails : function(_coords) {
 			var i;
 			var newTile;
 			var childZoom;
-			if (this.checkCameraHover(Oev.Globe.tilesDetailsMarge)) {
+			if (this.checkCameraHover(_coords, Oev.Globe.tilesDetailsMarge)) {
 				if (this.childTiles.length == 0 && this.zoom < Math.floor(Oev.Globe.CUR_ZOOM)) {
 					this.childsZoom = Oev.Globe.CUR_ZOOM;
 					childZoom = this.zoom + 1;
@@ -451,32 +451,32 @@ Oev.Tile = (function(){
 					newTile.parentOffset = new THREE.Vector2( 0, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
-					newTile.updateDetails();
+					newTile.updateDetails(_coords);
 					newTile = new Oev.Tile.Basic(this.tileX * 2, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 0, 1 );
 					newTile.makeFace();
 					this.childTiles.push( newTile );
-					newTile.updateDetails();
+					newTile.updateDetails(_coords);
 					newTile = new Oev.Tile.Basic(this.tileX * 2 + 1, this.tileY * 2, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 0 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
-					newTile.updateDetails();
+					newTile.updateDetails(_coords);
 					newTile = new Oev.Tile.Basic(this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
 					newTile.parentTile = this;
 					newTile.parentOffset = new THREE.Vector2( 1, 1 );
 					newTile.makeFace();
 					this.childTiles.push(newTile);
-					newTile.updateDetails();
+					newTile.updateDetails(_coords);
 					this.hide();
 				}else{
 					if (this.childTiles.length > 0 && this.childsZoom > Oev.Globe.CUR_ZOOM) {
 						this.clearTilesOverzoomed();
 					}
 					for (i = 0; i < this.childTiles.length; i ++) {
-						this.childTiles[i].updateDetails();
+						this.childTiles[i].updateDetails(_coords);
 					}
 				}
 			}else{
@@ -496,13 +496,13 @@ Oev.Tile = (function(){
 			}
 		}, 
 		
-		searchMainTile : function() {
-			if (this.checkCameraHover(1)) {
+		searchMainTile : function(_coords) {
+			if (this.checkCameraHover(_coords, 1)) {
 				if (this.childTiles.length == 0) {
 					return this;
 				}
 				for (var i = 0; i < this.childTiles.length; i ++) {
-					var childRes = this.childTiles[i].searchMainTile();
+					var childRes = this.childTiles[i].searchMainTile(_coords);
 					if (childRes !== false) {
 						return childRes;
 					}
@@ -511,19 +511,19 @@ Oev.Tile = (function(){
 			return false;
 		}, 
 
-		checkCameraHover : function(_marge) {
+		checkCameraHover : function(_coords, _marge) {
 			var startLimit = Oev.Utils.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
 			var endLimit = Oev.Utils.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
-			if (startLimit.x > Oev.Globe.coordDetails.x) {
+			if (startLimit[0] > _coords.x) {
 				return false;
 			}
-			if (endLimit.x < Oev.Globe.coordDetails.x) {
+			if (endLimit[0] < _coords.x) {
 				return false;
 			}
-			if (startLimit.y < Oev.Globe.coordDetails.y) {
+			if (startLimit[1] < _coords.y) {
 				return false;
 			}
-			if (endLimit.y > Oev.Globe.coordDetails.y) {
+			if (endLimit[1] > _coords.y) {
 				return false;
 			}
 			return true;

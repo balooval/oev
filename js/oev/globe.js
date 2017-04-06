@@ -438,14 +438,14 @@ Oev.Globe = (function() {
 			api.meter = (api.radius / 40075017.0) * api.globalScale;
 		}, 
 
-		getElevationAtCoords : function( _lon, _lat, _inMeters ){
+		getElevationAtCoords : function(_lon, _lat, _inMeters) {
 			_inMeters = _inMeters || false;
-			if(api.eleActiv) {
+			if (api.eleActiv) {
 				for (var i = 0; i < api.tilesBase.length; i ++) {
 					var tile = api.tilesBase[i];
-					if (tile.checkCameraHover(1)) {
-						var ele = tile.getElevation( _lon, _lat );
-						if( _inMeters ){
+					if (tile.checkCameraHover(api.coordDetails, 1)) {
+						var ele = tile.getElevation(_lon, _lat);
+						if (_inMeters) {
 							return ele;
 						}else{
 							return ele * (api.meter * eleFactor);
@@ -460,7 +460,7 @@ Oev.Globe = (function() {
 			var tileZoom = 0;
 			for (var i = 0; i < api.tilesBase.length; i ++) {
 				var tile = api.tilesBase[i];
-				var res = tile.searchMainTile();
+				var res = tile.searchMainTile(api.coordDetails);
 				if (res !== false) {
 					return res;
 				}
@@ -475,7 +475,7 @@ Oev.Globe = (function() {
 			maxY = -999999999;
 			curTile = _newTile;
 			for (var i = 0; i < api.tilesBase.length; i ++) {
-				api.tilesBase[i].updateDetails();
+				api.tilesBase[i].updateDetails(api.coordDetails);
 			}
 			if (api.curLOD == api.LOD_STREET) {
 				console.log('');
