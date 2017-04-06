@@ -120,6 +120,9 @@ OpenEarthViewer.prototype.start = function() {
 	Oev.Navigation.saveWaypoint(3.854188, 43.958125, 13);
 	Oev.Navigation.saveWaypoint(2.383138,48.880945, 13);
 	this.appStarted = true;
+	
+	Oev.Tile.Extension.LanduseWorker.init();
+	
 	console.log('OEV.START');
 	this.evt.fireEvent('APP_START');
 	render();

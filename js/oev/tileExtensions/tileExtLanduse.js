@@ -1,3 +1,28 @@
+Oev.Tile.Extension.LanduseWorker = (function() {
+	var worker = new Worker('js/oev/workers/tileExtLanduse.js');
+	
+	var api = {
+		evt : null, 
+		
+		init : function() {
+			api.evt = new Oev.Utils.Evt();
+		}, 
+		
+		compute : function(_extId, _datas) {
+			worker.postMessage([_extId, _datas]);
+		}, 
+		
+		onWorkerMessage : function(_res) {
+			api.evt.fireEvent('WORKER_RESPONSE_' + _res.data[0], _res.data[1]);
+		}, 
+	};
+	
+	worker.onmessage = api.onWorkerMessage;
+	
+	return api;
+})();
+
+
 Oev.Tile.Extension.LanduseRoot = {};
 var tmpId = 0;
 
@@ -53,7 +78,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.childrens;
 	ext.tmpId = 0;
 	
-	ext.worker = null;
+	// ext.worker = null;
 	
 	
 	ext.tileReady = function() {
@@ -62,17 +87,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		}
 		this.tmpId = tmpId;
 		tmpId ++;
-		
-		this.worker = new Worker('js/oev/workers/tileExtLanduse.js');
-		this.worker.onmessage = function(_res) {
-			// console.log('worker response', ext.tmpId, _res.data);
-			ext.nodesPositions = _res.data;
-			ext.worker.terminate();
-			// console.log('ext.worker', ext.worker);
-			ext.constructStep = 'GEOMETRY';
-			ext.construct();
-		}
-		
 		this.tileIndex = Oev.Geo.coordsToTile(this.tile.middleCoord.x, this.tile.middleCoord.y, 15);
 		if (this.tile.zoom == 15) {
 			Oev.Tile.Extension.LanduseRoot[this.tileIndex.x + '_' + this.tileIndex.y] = this;
@@ -87,18 +101,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			this.myRoot = Oev.Tile.Extension.LanduseRoot[this.tileIndex.x + '_' + this.tileIndex.y];
 			this.myRoot.askForDatas(this);
 		}
-		
-		
-		/*
-		if (!this.tile.onStage || this.tile.zoom < 15) {
-			return false;
-		}
-		if (!this.dataLoaded) {
-			OEV.earth.tilesLandusesMng.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
-		}else{
-			Oev.Tile.ProcessQueue.addWaiting(this);
-		}
-		*/
 	}
 	
 	ext.askForDatas = function(_childExt) {
@@ -111,17 +113,13 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	}
 	
 	ext.setDatas = function(_datas) {
-		// console.log('A', this);
 		if (this.tile.zoom == 15) {
-			// console.log('B');
 			for (var i = 0; i < this.childrens.length; i ++) {
 				this.childrens.setDatas(_datas);
 			}
 			this.childrens = [];
 		}
-
 		this.dataLoaded = true;
-		// console.log('setDatas', this.tmpId);
 		this.datas = _datas;
 		Oev.Tile.ProcessQueue.addWaiting(this);
 	}
@@ -130,11 +128,13 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		var curSurface;
 		var n;
 		var o;
+		var myNodeId;
+		var curType;
 		for (i = 0; i < this.datas['elements'].length; i ++) {
 			if (this.datas['elements'][i]['type'] == 'way') {
 				curSurface = [];
 				for (n = 0; n < this.datas['elements'][i]['nodes'].length; n ++) {
-					var myNodeId = this.datas['elements'][i]['nodes'][n];
+					myNodeId = this.datas['elements'][i]['nodes'][n];
 					for (o = 0; o < this.datas['elements'].length; o ++) {
 						if (this.datas['elements'][o]['type'] == 'node' && this.datas['elements'][o]['id'] == myNodeId) {
 							curSurface.push([
@@ -144,7 +144,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 						}
 					}
 				}
-				var curType = 'none';
+				curType = 'none';
 				if ("landuse" in this.datas['elements'][i]['tags']) {
 					if (this.datas['elements'][i]['tags']['landuse'] == 'vineyard') {
 						curType = 'vineyard';
@@ -292,15 +292,27 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			surfBBox.push(curBBox);
 		}
-		this.worker.postMessage([this.surfacesClipped, surfBBox, this.surfacesTypes]);
+		// this.worker.postMessage([this.surfacesClipped, surfBBox, this.surfacesTypes]);
+		
+		
+		Oev.Tile.Extension.LanduseWorker.evt.addEventListener('WORKER_RESPONSE_' + this.tmpId, this, this.onWorkerResponse);
+		Oev.Tile.Extension.LanduseWorker.compute(this.tmpId, [this.surfacesClipped, surfBBox, this.surfacesTypes]);
 	}
+	
+	ext.onWorkerResponse = function(_res) {
+		Oev.Tile.Extension.LanduseWorker.evt.removeEventListener('WORKER_RESPONSE_' + this.tmpId, this, this.onWorkerResponse);
+		ext.nodesPositions = _res;
+		// ext.worker.terminate();
+		ext.constructStep = 'GEOMETRY';
+		ext.construct();
+	}
+	
 	
 	ext.buildNodesGeometry = function() {
 		var nodesNb = this.nodesPositions.length / 4;
 		var bufferVertices = new Float32Array(nodesNb * 36);
 		var bufferFaces = new Uint32Array(nodesNb * 12);
 		var bufferUvs = new Float32Array(nodesNb * 24);
-		
 		var vertPos;
 		var angle;
 		var sizeVar;
@@ -315,10 +327,11 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		var lon;
 		var lat;
 		var alt;
-		
 		var curVertId = 0;
 		var faceVertId = 0;
 		var faceUvId = 0;
+		var tileVariation;
+		var tileType;
 		
 		for (var i = 0; i < nodesNb * 4; i += 4) {
 			angle = Math.random() * 3.14;
@@ -332,12 +345,12 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			textTile = Math.random() > 0.7 ? 0 : 0.5;
 			lon = this.nodesPositions[i+1];
 			lat = this.nodesPositions[i+2];
-			// alt = this.nodesPositions[i+3] - 0.5;
 			
-			alt = Oev.Globe.getElevationAtCoords(lon, lat, true) - 0.5;
+			// alt = Oev.Globe.getElevationAtCoords(lon, lat, true) - 0.5;
+			alt = this.tile.getElevation(lon, lat) - 0.5;
 			
-			var tileVariation = Math.random() > 0.5 ? 0 : 0.5;
-			var tileType = ext.twoSideUvs[this.nodesPositions[i]];
+			tileVariation = Math.random() > 0.5 ? 0 : 0.5;
+			tileType = ext.twoSideUvs[this.nodesPositions[i]];
 			
 			bufferUvs[faceUvId + 4] = tileVariation;
 			bufferUvs[faceUvId + 5] = tileType + 0.25;
@@ -477,8 +490,8 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		this.bufferGeometry.computeFaceNormals();
         this.bufferGeometry.computeVertexNormals();
 		
-		this.bufferMesh = new THREE.Mesh(this.bufferGeometry, new THREE.MeshLambertMaterial( { color: 0xffffff, map: OEV.textures['landuse_sprites'], side : THREE.DoubleSide, transparent:true}));
-		// this.bufferMesh = new THREE.Mesh(this.bufferGeometry, OEV.landuseSpritesMat);
+		// this.bufferMesh = new THREE.Mesh(this.bufferGeometry, new THREE.MeshLambertMaterial( { color: 0xffffff, map: OEV.textures['landuse_sprites'], side : THREE.DoubleSide, transparent:true}));
+		this.bufferMesh = new THREE.Mesh(this.bufferGeometry, Oev.Globe.landuseSpritesMat);
 		this.bufferMesh.receiveShadow = true;
 		this.bufferMesh.castShadow = true;
 		OEV.scene.add(this.bufferMesh);
@@ -616,7 +629,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	
 	ext.dispose = function() {
 		this.hide();
-		if( !this.dataLoaded ){
+		if (!this.dataLoaded) {
 			OEV.earth.tilesLandusesMng.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
 		}
 		if (this.bufferMesh != undefined) {

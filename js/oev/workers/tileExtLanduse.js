@@ -2,8 +2,9 @@ importScripts('../../utils/geojson-area.js');
 
 onmessage = function(e) {
 	// console.log('Worker Landuse.onmessage', e.data);
-	var result = placeNodes(e.data[0], e.data[1], e.data[2]);
-	postMessage(result);
+	var tmpId = e.data[0];
+	var result = placeNodes(e.data[1][0], e.data[1][1], e.data[1][2]);
+	postMessage([tmpId, result]);
 }
 
 
