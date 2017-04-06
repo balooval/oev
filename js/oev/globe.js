@@ -14,7 +14,7 @@ Oev.Globe = (function() {
 		CUR_ZOOM : 14, 
 		LOD_PLANET : 0, 
 		LOD_CITY : 10, 
-		LOD_STREET : 17, 
+		LOD_STREET : 19, 
 		curLOD : 0, 
 		tilesDetailsMarge : 2, 
 		// tilesDetailsMarge : 1, 
@@ -87,6 +87,7 @@ Oev.Globe = (function() {
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 			api.tilesWeatherMng = new DatasMng( "WEATHER" );
 			api.tilesLandusesMng = new DatasMng( "SURFACE" );
+			api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, side: THREE.DoubleSide});
 			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
@@ -365,7 +366,7 @@ Oev.Globe = (function() {
 			var coordX = -180 + ( prctW * 360 );
 			var coordY = ( prctH * 180 );
 			coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
-			var ele = api.getElevationAtCoords( coordX, coordY, true );
+			var ele = api.getElevationAtCoords(coordX, coordY, true);
 			return new THREE.Vector3( coordX, coordY, ele );
 		}, 
 
