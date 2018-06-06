@@ -6,8 +6,8 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 	ext.id = 'OVERPASS';
 	
 	var meshNodes;
-	// var nodesType = 'pylone';
-	var nodesType = 'tree';
+	var nodesType = 'pylone';
+	// var nodesType = 'tree';
 	// var nodesType = 'eolienne';
 	
 	ext.nodesList = [];
@@ -19,13 +19,13 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 			return false;
 		}
 		// var meshBuilder = new Oev.Tile.Extension.NodeGeoLib('eolienne', new THREE.MeshPhongMaterial({color:0x909090}));
-		// var meshBuilder = new Oev.Tile.Extension.NodeGeoLib('pylone', Oev.Globe.modelsMesheMat['pylone']);
-		var meshBuilder = new Oev.Tile.Extension.NodeGeoTree(Oev.Globe.modelsMesheMat['TREE']);
+		var meshBuilder = new Oev.Tile.Extension.NodeGeoLib('pylone', Oev.Globe.modelsMesheMat['pylone']);
+		// var meshBuilder = new Oev.Tile.Extension.NodeGeoTree(Oev.Globe.modelsMesheMat['TREE']);
 		ext.nodesMesh = new Oev.Tile.Extension.Node(
 			this.tile, 
 			{
-				// power : 'tower'
-				natural : 'tree'
+				power : 'tower'
+				// natural : 'tree'
 				// power : 'generator', 
 				// 'generator:source' : 'wind'
 			}, 

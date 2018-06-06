@@ -31,10 +31,12 @@ function placeNodes(_surfaces, _surfBBox, _surfTypes) {
 					}
 				}
 			}
-		} else if (_surfTypes[s] == 'scrub' || _surfTypes[s] == 'forest') {
+		} else if (_surfTypes[s] == 'grass' || _surfTypes[s] == 'scrub' || _surfTypes[s] == 'forest') {
 			surGeoJson.coordinates = [_surfaces[s]];
-			var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 100);
+			var curArea = Math.round(geojsonArea.geometry(surGeoJson) / 10);
 			if (_surfTypes[s] == 'scrub') {
+				curArea *= 2;
+			} else if (_surfTypes[s] == 'grass') {
 				curArea *= 2;
 			}
 			nbPartIn = 0;

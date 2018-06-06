@@ -25,7 +25,7 @@ Oev.DataLoader.Proxy.prototype = {
 		_params.priority = _params.priority || 1;
 		_params.key = this._genKey(_params);
 		_params.callback = _callback;
-		if (this._type == 'OELE') {
+		if (this._type == 'BUILDINGO') {
 			console.log('getData', _params.key);
 		}
 		if (this._sendCachedData(_params) === true) {
@@ -369,18 +369,33 @@ Oev.DataLoader.Normal.prototype = {
 }
 
 
+Oev.DataLoader.BuildingWorker = (function() {
+	var worker = new Worker('js/oev/workers/buildingJson.js');
+	var loaders = [];
+	
+	var api = {
+		
+		compute : function(_loader, _datas) {
+			loaders.push(_loader);
+			worker.postMessage(_datas);
+		}, 
+		
+		onWorkerMessage : function(_res) {
+			var loader = loaders.shift();
+			loader.datasReady(_res.data);
+		}, 
+	};
+	
+	worker.onmessage = api.onWorkerMessage;
+	
+	return api;
+})();
+
 Oev.DataLoader.Building = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
 	this.ajax = new Oev.DataLoader.Ajax();
-	this.myWorker = Oev.Tile.workerBuilding;
-	
-	var _self = this;
-	this.myWorker.onmessage = function(evt) {
-		_self.isLoading = false;
-		_self.callback(evt.data, _self.params);
-	}
 }
 
 Oev.DataLoader.Building.prototype = {
@@ -396,7 +411,12 @@ Oev.DataLoader.Building.prototype = {
 	}, 
 	
 	onDataLoadSuccess : function(_data) {
-		this.myWorker.postMessage({"json" : _data, "bbox" : this.params.bbox});
+		Oev.DataLoader.BuildingWorker.compute(this, {"json" : _data, "bbox" : this.params.bbox});
+	}, 
+	
+	datasReady : function(_datas) {
+		this.isLoading = false;
+		this.callback(_datas, this.params);
 	}, 
 }
 

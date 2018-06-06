@@ -163,7 +163,7 @@ OpenEarthViewer.prototype.loadTextures = function() {
 	Oev.Net.Textures.addToList(textList, 'sun', 'sun2.png');
 	Oev.Net.Textures.addToList(textList, 'cloud', 'cloud.png');
 	Oev.Net.Textures.addToList(textList, 'sky_gradient', 'sky_gradient.png');
-	Oev.Net.Textures.addToList(textList, 'grass', 'grass.png');
+	Oev.Net.Textures.addToList(textList, 'grass', 'grass2.png');
 	Oev.Net.Textures.addToList(textList, 'vineyard', 'vineyard.png');
 	Oev.Net.Textures.addToList(textList, 'natural_tree', 'natural_tree.png');
 	Oev.Net.Textures.addToList(textList, 'tree_side', 'tree_tiles.png');

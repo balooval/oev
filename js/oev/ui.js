@@ -4,6 +4,18 @@ Oev.Ui = (function(){
 		
 		init : function() {
 			Oev.Ui.TilesExtension.init();
+			
+			document.getElementById('cfg_sun_time').addEventListener('input', function() {
+				Oev.Sky.setSunTime(this.value / 100);
+			});
+			
+			document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
+				Oev.Sky.testLuminosity(this.value / 50);
+				// skyParamsNew.sunLuminosity
+			});
+			
+			
+			
 		}, 
 		
 		listenOnChildsClass : function(_parentId, _event, _childsClass, _callback) {

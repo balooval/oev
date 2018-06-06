@@ -25,24 +25,6 @@ Oev.Utils = (function(){
 			return ((r << 16) | (g << 8) | b).toString(16);
 		}, 
 		
-		getPolygonCentroid : function(pts) {
-			var first = pts[0], last = pts[pts.length-1];
-			if (first.lon != last.lon || first.lat != last.lat) pts.push(first);
-			var twicearea=0,
-			lon=0, lat=0,
-			nPts = pts.length,
-			p1, p2, f;
-			for ( var i=0, j=nPts-1 ; i<nPts ; j=i++ ) {
-				p1 = pts[i]; p2 = pts[j];
-				f = p1.lon*p2.lat - p2.lon*p1.lat;
-				twicearea += f;          
-				lon += ( p1.lon + p2.lon ) * f;
-				lat += ( p1.lat + p2.lat ) * f;
-			}
-			f = twicearea * 3;
-			return { lon:lon/f, lat:lat/f };
-		}, 
-		
 		coordDistance : function(_startLon, _startLat, _endLon, _endLat){
 			var R = 6371000; // metres
 			var sigma1 = Oev.Math.radians( _startLat );

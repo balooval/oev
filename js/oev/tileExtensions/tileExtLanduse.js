@@ -26,6 +26,7 @@ Oev.Tile.Extension.LanduseWorker = (function() {
 Oev.Tile.Extension.LanduseRoot = {};
 var tmpId = 0;
 
+
 Oev.Tile.Extension.Landuse = function(_tile) {
 	var ext = Object.create(Oev.Tile.Extension);
 	
@@ -39,35 +40,46 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			width : 0.0001, 
 			depth : 0.0001, 
 			height : 15, 
+			// uv : 0.75, 
+			uv : 0.0, 
+			mapDiffuse : 'landuse_forest', 
+			mapNormal : 'normal_forest', 
 		}, 
 		scrub : {
 			width : 0.00006, 
 			depth : 0.00006, 
 			height : 7, 
+			uv : 0.25, 
+			mapDiffuse : 'landuse_scrub', 
+			mapNormal : 'normal_scrub', 
 		}, 
 		vineyard : {
 			width : 0.00005, 
 			depth : 0.00005, 
 			height : 6, 
+			uv : 0.5, 
+			mapDiffuse : 'landuse_vineyard', 
+			mapNormal : 'normal_vineyard', 
+		}, 
+		
+		grass : {
+			width : 0.00030, 
+			depth : 0.00010, 
+			height : 15, 
+			uv : 0.25, 
+			mapDiffuse : 'landuse_forest', 
+			mapNormal : 'normal_flat', 
+		}, 
+		water : {
+			mapDiffuse : 'sea', 
+			mapNormal : 'waternormals', 
 		}, 
 	};
 	
 	ext.bufferMesh;
-	ext.bufferGeometry = new THREE.BufferGeometry();
 	ext.nodesPositions = [];
 	
-	
-	ext.allTypesGeo = new THREE.Geometry();
-	ext.allTypesMesh = undefined;
-	
-	
-	ext.twoSideUvs = {
-		vineyard : 0.5, 
-		forest : 0.75, 
-		scrub : 0.25, 
-	};
 	ext.halfRot = Math.PI / 2;
-	
 	ext.surfacesCoords = [];
 	ext.surfacesTypes = [];
 	ext.surfacesClipped = [];
@@ -77,9 +89,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.myRoot;
 	ext.childrens;
 	ext.tmpId = 0;
-	
-	// ext.worker = null;
-	
 	
 	ext.tileReady = function() {
 		if (this.tile.zoom < 15) {
@@ -167,6 +176,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 				if (curType != 'none') {
 					this.surfacesCoords.push(curSurface);
 					this.surfacesTypes.push(curType);
+					// this.surfacesTypes.push('grass');
 				}
 			}
 		}
@@ -185,7 +195,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			res = lineclip.polygon(curPoly, bbox);
 			if (res.length > 0) {
 				res.push(res[0]);
-			this.surfacesClipped.push(res);
+				this.surfacesClipped.push(res);
 			}
 		}
 	}
@@ -199,19 +209,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		var type;
 		var normalisedPoly;
 		var canvasSize = 256;
-		
-		var texturesDiffuse = {
-			forest : 'landuse_forest', 
-			scrub : 'landuse_scrub', 
-			vineyard : 'landuse_vineyard', 
-			water : 'sea', 
-		};
-		var texturesNormal = {
-			forest : 'normal_forest', 
-			scrub : 'normal_scrub', 
-			vineyard : 'normal_vineyard', 
-			water : 'waternormals', 
-		};
 		canvasDiffuse = document.createElement('canvas');
 		canvasNormal = document.createElement('canvas');
 		canvasDiffuse.width = canvasSize;
@@ -244,7 +241,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			contextDiffuse.closePath();
 			contextDiffuse.clip();
-			contextDiffuse.drawImage(OEV.textures[texturesDiffuse[type]].image, 0, 0);
+			contextDiffuse.drawImage(OEV.textures[this.twoSideProps[type].mapDiffuse].image, 0, 0);
 			contextDiffuse.restore();
 			contextNormal.save();
 			contextNormal.beginPath();
@@ -254,7 +251,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			contextNormal.closePath();
 			contextNormal.clip();
-			contextNormal.drawImage(OEV.textures[texturesNormal[type]].image, 0, 0);
+			contextNormal.drawImage(OEV.textures[this.twoSideProps[type].mapNormal].image, 0, 0);
 			contextNormal.restore();
 		}
 		this.tile.material.map = new THREE.Texture(canvasDiffuse)
@@ -292,9 +289,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			surfBBox.push(curBBox);
 		}
-		// this.worker.postMessage([this.surfacesClipped, surfBBox, this.surfacesTypes]);
-		
-		
 		Oev.Tile.Extension.LanduseWorker.evt.addEventListener('WORKER_RESPONSE_' + this.tmpId, this, this.onWorkerResponse);
 		Oev.Tile.Extension.LanduseWorker.compute(this.tmpId, [this.surfacesClipped, surfBBox, this.surfacesTypes]);
 	}
@@ -302,17 +296,16 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.onWorkerResponse = function(_res) {
 		Oev.Tile.Extension.LanduseWorker.evt.removeEventListener('WORKER_RESPONSE_' + this.tmpId, this, this.onWorkerResponse);
 		ext.nodesPositions = _res;
-		// ext.worker.terminate();
 		ext.constructStep = 'GEOMETRY';
 		ext.construct();
 	}
 	
 	
-	ext.buildNodesGeometry = function() {
+	ext.buildGrass = function() {
 		var nodesNb = this.nodesPositions.length / 4;
-		var bufferVertices = new Float32Array(nodesNb * 36);
-		var bufferFaces = new Uint32Array(nodesNb * 12);
-		var bufferUvs = new Float32Array(nodesNb * 24);
+		var bufferVertices = new Float32Array(nodesNb * 12);
+		var bufferFaces = new Uint32Array(nodesNb * 6);
+		var bufferUvs = new Float32Array(nodesNb * 8);
 		var vertPos;
 		var angle;
 		var sizeVar;
@@ -331,7 +324,113 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		var faceVertId = 0;
 		var faceUvId = 0;
 		var tileVariation;
-		var tileType;
+		var faceVertIndex = 0;
+		
+		for (var i = 0; i < nodesNb * 4; i += 4) {
+			angle = Math.random() * 3.14;
+			// angle = 0;
+			sizeVar = 0.7 + Math.random() * 0.5;
+			typeProps = this.twoSideProps[this.nodesPositions[i]];
+			elmtWidth = typeProps.width * sizeVar;
+			elmtDepth = typeProps.depth * sizeVar;
+			elmtHeight = typeProps.height * sizeVar;
+			elmtWidthRot = elmtWidth * Math.cos(angle);
+			elmtDepthRot = elmtDepth * Math.sin(angle);
+			textTile = Math.random() > 0.7 ? 0 : 0.5;
+			lon = this.nodesPositions[i+1];
+			lat = this.nodesPositions[i+2];
+			alt = this.tile.getElevation(lon, lat) - 0.5;
+			// tileVariation = Math.random() > 0.5 ? 0 : 0.5;
+			bufferUvs[faceUvId + 0] = 0;
+			bufferUvs[faceUvId + 1] = 0;
+			bufferUvs[faceUvId + 2] = 2;
+			bufferUvs[faceUvId + 3] = 0;
+			bufferUvs[faceUvId + 4] = 2;
+			bufferUvs[faceUvId + 5] = 1;
+			bufferUvs[faceUvId + 6] = 0;
+			bufferUvs[faceUvId + 7] = 1;
+			faceUvId += 8;
+			
+			
+			bufferFaces[faceVertId + 0] = faceVertIndex + 0;
+			bufferFaces[faceVertId + 1] = faceVertIndex + 1;
+			bufferFaces[faceVertId + 2] = faceVertIndex + 2;
+			bufferFaces[faceVertId + 3] = faceVertIndex + 2;
+			bufferFaces[faceVertId + 4] = faceVertIndex + 3;
+			bufferFaces[faceVertId + 5] = faceVertIndex + 0;
+			faceVertId += 6;
+			faceVertIndex += 4;
+			
+			vertPos = OEV.earth.coordToXYZ(lon - elmtWidthRot, lat - elmtDepthRot, alt);
+			bufferVertices[curVertId] = vertPos.x;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.y;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.z;
+			curVertId ++;
+			
+			vertPos = OEV.earth.coordToXYZ(lon + elmtWidthRot, lat + elmtDepthRot, alt);
+			bufferVertices[curVertId] = vertPos.x;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.y;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.z;
+			curVertId ++;
+			
+			vertPos = OEV.earth.coordToXYZ(lon + elmtWidthRot, lat + elmtDepthRot, alt + elmtHeight);
+			bufferVertices[curVertId] = vertPos.x;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.y;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.z;
+			curVertId ++;
+			
+			vertPos = OEV.earth.coordToXYZ(lon - elmtWidthRot, lat - elmtDepthRot, alt + elmtHeight);
+			bufferVertices[curVertId] = vertPos.x;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.y;
+			curVertId ++;
+			bufferVertices[curVertId] = vertPos.z;
+			curVertId ++;
+		}
+		this.nodesPositions = [];
+		var bufferGeometry = new THREE.BufferGeometry();
+		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+		bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+		bufferGeometry.computeFaceNormals();
+        bufferGeometry.computeVertexNormals();
+		this.bufferMesh = new THREE.Mesh(bufferGeometry, Oev.Globe.grassMat);
+		this.bufferMesh.receiveShadow = true;
+		this.bufferMesh.castShadow = true;
+		OEV.scene.add(this.bufferMesh);
+	}
+	
+	ext.buildNodesGeometry = function() {
+		var nodesNb = this.nodesPositions.length / 4;
+		var bufferVertices = new Float32Array(nodesNb * 36);
+		var bufferFaces = new Uint32Array(nodesNb * 12);
+		var bufferUvs = new Float32Array(nodesNb * 24);
+		var bufferNormals = new Float32Array(nodesNb * 12 * 3);
+		var normalsIndex = 0;
+		var vertPos;
+		var angle;
+		var sizeVar;
+		var typeProps;
+		var elmtWidth;
+		var elmtDepth;
+		var elmtHeight;
+		var elmtWidthRot;
+		var elmtDepthRot;
+		var textTile;
+		var textTile;
+		var lon;
+		var lat;
+		var alt;
+		var curVertId = 0;
+		var faceVertId = 0;
+		var faceUvId = 0;
+		var tileVariation;
 		
 		for (var i = 0; i < nodesNb * 4; i += 4) {
 			angle = Math.random() * 3.14;
@@ -345,38 +444,33 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			textTile = Math.random() > 0.7 ? 0 : 0.5;
 			lon = this.nodesPositions[i+1];
 			lat = this.nodesPositions[i+2];
-			
-			// alt = Oev.Globe.getElevationAtCoords(lon, lat, true) - 0.5;
 			alt = this.tile.getElevation(lon, lat) - 0.5;
-			
 			tileVariation = Math.random() > 0.5 ? 0 : 0.5;
-			tileType = ext.twoSideUvs[this.nodesPositions[i]];
-			
 			bufferUvs[faceUvId + 4] = tileVariation;
-			bufferUvs[faceUvId + 5] = tileType + 0.25;
+			bufferUvs[faceUvId + 5] = typeProps.uv + 0.25;
 			bufferUvs[faceUvId + 2] = tileVariation;
-			bufferUvs[faceUvId + 3] = tileType;
+			bufferUvs[faceUvId + 3] = typeProps.uv;
 			bufferUvs[faceUvId + 0] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 1] = tileType;
+			bufferUvs[faceUvId + 1] = typeProps.uv;
 			bufferUvs[faceUvId + 10] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 11] = tileType;
+			bufferUvs[faceUvId + 11] = typeProps.uv;
 			bufferUvs[faceUvId + 8] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 9] = tileType + 0.25;
+			bufferUvs[faceUvId + 9] = typeProps.uv + 0.25;
 			bufferUvs[faceUvId + 6] = tileVariation;
-			bufferUvs[faceUvId + 7] = tileType + 0.25;
+			bufferUvs[faceUvId + 7] = typeProps.uv + 0.25;
 			faceUvId += 12;
 			bufferUvs[faceUvId + 4] = tileVariation;
-			bufferUvs[faceUvId + 5] = tileType + 0.25;
+			bufferUvs[faceUvId + 5] = typeProps.uv + 0.25;
 			bufferUvs[faceUvId + 2] = tileVariation;
-			bufferUvs[faceUvId + 3] = tileType;
+			bufferUvs[faceUvId + 3] = typeProps.uv;
 			bufferUvs[faceUvId + 0] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 1] = tileType;
+			bufferUvs[faceUvId + 1] = typeProps.uv;
 			bufferUvs[faceUvId + 10] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 11] = tileType;
+			bufferUvs[faceUvId + 11] = typeProps.uv;
 			bufferUvs[faceUvId + 8] = tileVariation + 0.5;
-			bufferUvs[faceUvId + 9] = tileType + 0.25;
+			bufferUvs[faceUvId + 9] = typeProps.uv + 0.25;
 			bufferUvs[faceUvId + 6] = tileVariation;
-			bufferUvs[faceUvId + 7] = tileType + 0.25;
+			bufferUvs[faceUvId + 7] = typeProps.uv + 0.25;
 			faceUvId += 12;
 			
 			bufferFaces[faceVertId + 0] = faceVertId + 2;
@@ -393,6 +487,24 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			bufferFaces[faceVertId + 4] = faceVertId + 4;
 			bufferFaces[faceVertId + 5] = faceVertId + 3;
 			faceVertId += 6;
+			
+			
+			bufferNormals[normalsIndex + 0] = 0;
+			bufferNormals[normalsIndex + 1] = 1;
+			bufferNormals[normalsIndex + 2] = 0;
+			normalsIndex += 3;
+			bufferNormals[normalsIndex + 0] = 0;
+			bufferNormals[normalsIndex + 1] = 1;
+			bufferNormals[normalsIndex + 2] = 0;
+			normalsIndex += 3;
+			bufferNormals[normalsIndex + 0] = 0;
+			bufferNormals[normalsIndex + 1] = 1;
+			bufferNormals[normalsIndex + 2] = 0;
+			normalsIndex += 3;
+			bufferNormals[normalsIndex + 0] = 0;
+			bufferNormals[normalsIndex + 1] = 1;
+			bufferNormals[normalsIndex + 2] = 0;
+			normalsIndex += 3;
 			
 			vertPos = OEV.earth.coordToXYZ(lon + elmtWidthRot, lat + elmtDepthRot, alt);
 			bufferVertices[curVertId] = vertPos.x;
@@ -483,32 +595,19 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			curVertId ++;
 		}
 		this.nodesPositions = [];
-		this.bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		this.bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
-		this.bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
-		
-		this.bufferGeometry.computeFaceNormals();
-        this.bufferGeometry.computeVertexNormals();
-		
-		// this.bufferMesh = new THREE.Mesh(this.bufferGeometry, new THREE.MeshLambertMaterial( { color: 0xffffff, map: OEV.textures['landuse_sprites'], side : THREE.DoubleSide, transparent:true}));
-		this.bufferMesh = new THREE.Mesh(this.bufferGeometry, Oev.Globe.landuseSpritesMat);
-		this.bufferMesh.receiveShadow = true;
-		this.bufferMesh.castShadow = true;
+		var bufferGeometry = new THREE.BufferGeometry();
+		bufferGeometry.addAttribute('normal', new THREE.BufferAttribute(bufferNormals, 3));
+		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+		bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+		// bufferGeometry.computeFaceNormals();
+        // bufferGeometry.computeVertexNormals();
+		this.bufferMesh = new THREE.Mesh(bufferGeometry, Oev.Globe.landuseSpritesMat);
+		// this.bufferMesh.receiveShadow = true;
+		// this.bufferMesh.castShadow = true;
 		OEV.scene.add(this.bufferMesh);
 	}
-	
-	ext.buildSurfacesMesh = function() {
-		var mat;
-		var matTwoSide;
-		matTwoSide = OEV.earth.landuseSpritesMat;
-		this.allTypesGeo.computeFaceNormals();
-		this.allTypesGeo.computeVertexNormals();
-		this.allTypesMesh = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.allTypesGeo), matTwoSide);
-		this.allTypesMesh.receiveShadow = true;
-		this.allTypesMesh.castShadow = true;
-		OEV.scene.add(this.allTypesMesh);
-	}
-	
+
 	ext.construct = function() {
 		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
 			return false;
@@ -530,80 +629,21 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			this.searchNodesPositions();
 		} else if (this.constructStep == 'GEOMETRY') {
 			this.buildNodesGeometry();
-			this.constructStep = 'MESH';
-		} else if (this.constructStep == 'MESH') {
-			// this.buildSurfacesMesh();
+			// this.buildGrass();
 			this.constructStep = 'NONE';
 		} 
 		if (this.constructStep == 'NONE') {
 			ext.surfacesCoords = [];
 			ext.surfacesTypes = [];
 			ext.surfacesClipped = [];
-			
 			OEV.MUST_RENDER = true;
-		// } else {
 		} else if (this.constructStep != 'WAITING') {
 			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
 	} 
 	
-	
-	ext.buildTwoSideElmt = function(_lon, _lat, _alt, _type) {
-		var angle = Math.random() * 3.14;
-		_alt -= 0.5;
-		var sizeVar = 0.7 + Math.random() * 0.5;
-		var typeProps = this.twoSideProps[_type];
-		var elmtWidth = typeProps.width * sizeVar;
-		var elmtDepth = typeProps.depth * sizeVar;
-		var elmtHeight = typeProps.height * sizeVar;
-		var elmtWidthRot = elmtWidth * Math.cos(angle);
-		var elmtDepthRot = elmtDepth * Math.sin(angle);
-		var textTile = Math.random() > 0.7 ? 0 : 0.5;
-		this.buildElmtSide(_lon, _lat, _alt, [elmtWidthRot, elmtDepthRot, elmtHeight, _type, textTile]);
-		elmtWidthRot = elmtWidth * Math.cos(angle + ext.halfRot);
-		elmtDepthRot = elmtDepth * Math.sin(angle + ext.halfRot);
-		this.buildElmtSide(_lon, _lat, _alt, [elmtWidthRot, elmtDepthRot, elmtHeight, _type, textTile]);
-	}
-	
-	ext.buildElmtSide = function(_lon, _lat, _alt, props) {
-		var propWidth = props[0];
-		var propDepth = props[1];
-		var propHeight = props[2];
-		var propType = props[3];
-		var propTexTile = props[4];
-		var vertId = (this.allTypesGeo.faces.length / 2) * 6;
-		var nbFaces = this.allTypesGeo.faces.length;
-		var posA = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt);
-		this.allTypesGeo.vertices.push(posA);
-		var posB = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt);
-		this.allTypesGeo.vertices.push(posB);
-		var posC = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt + propHeight);
-		this.allTypesGeo.vertices.push(posC);
-		var posD = OEV.earth.coordToXYZ(_lon - propWidth, _lat - propDepth, _alt + propHeight);
-		this.allTypesGeo.vertices.push(posD);
-		var posE = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt + propHeight);
-		this.allTypesGeo.vertices.push(posE);
-		var posF = OEV.earth.coordToXYZ(_lon + propWidth, _lat + propDepth, _alt);
-		this.allTypesGeo.vertices.push(posF);
-		this.allTypesGeo.faces.push(new THREE.Face3(vertId, vertId + 1, vertId + 2));
-		this.allTypesGeo.faceVertexUvs[0][nbFaces] = [
-			new THREE.Vector2(propTexTile + 0.5, ext.twoSideUvs[propType]), 
-			new THREE.Vector2(propTexTile, ext.twoSideUvs[propType]), 
-			new THREE.Vector2(propTexTile, ext.twoSideUvs[propType] + 0.25)
-		];
-		this.allTypesGeo.faces.push(new THREE.Face3(vertId + 3, vertId + 4, vertId + 5));
-		this.allTypesGeo.faceVertexUvs[0][nbFaces + 1] = [
-			new THREE.Vector2(propTexTile, ext.twoSideUvs[propType] + 0.25), 
-			new THREE.Vector2(propTexTile + 0.5, ext.twoSideUvs[propType] + 0.25), 
-			new THREE.Vector2(propTexTile + 0.5, ext.twoSideUvs[propType])
-		];
-	}
-	
 	ext.show = function() {
 		if (this.dataLoaded) {
-			if (this.allTypesMesh != undefined) {
-				OEV.scene.add(this.allTypesMesh);
-			}
 			if (this.bufferMesh != undefined) {
 				OEV.scene.add(this.bufferMesh);
 			}
@@ -614,9 +654,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	
 	ext.hide = function() {
 		if (this.dataLoaded) {
-			if (this.allTypesMesh != undefined) {
-				OEV.scene.remove(this.allTypesMesh);
-			}
 			if (this.bufferMesh != undefined) {
 				OEV.scene.remove(this.bufferMesh);
 			}
@@ -635,10 +672,6 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		if (this.bufferMesh != undefined) {
 			this.bufferMesh.geometry.dispose();
 			this.bufferMesh = undefined;
-		}
-		if (this.allTypesMesh != undefined) {
-			this.allTypesMesh.geometry.dispose();
-			this.allTypesMesh = undefined;
 		}
 		if (canvasDiffuse !== null) {
 			canvasDiffuse.getContext('2d').clearRect(0, 0, canvasDiffuse.width, canvasDiffuse.height);

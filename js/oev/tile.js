@@ -10,7 +10,7 @@ Oev.Tile = (function(){
 	'use strict';
 	
 	var api = {
-		workerBuilding : new Worker("js/WorkerBuildings.js"), 
+		
 	};
 		
 	api.Basic = function (_tileX, _tileY, _zoom) {

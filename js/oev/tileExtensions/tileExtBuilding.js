@@ -6,13 +6,10 @@ Oev.Tile.Extension.Building = function(_tile) {
 	var loaderBuilding = OEV.earth.loaderBuilding;
 	
 	ext.id = 'BUILDING';
-	
 	ext.datas = undefined;
-	// ext.meshe = undefined;
-	// ext.geometry = undefined;
 	ext.bufferMesh = undefined;
-	
 	ext.tmpId = 0;
+	ext.waiting = false;
 	
 	ext.tileReady = function() {
 		if (!this.tile.onStage || this.tile.zoom < 15) {
@@ -21,11 +18,15 @@ Oev.Tile.Extension.Building = function(_tile) {
 		this.tmpId = buildId;
 		buildId ++;
 		var bbox = { 
-			"minLon" : this.tile.startCoord.x, 
-			"maxLon" : this.tile.endCoord.x, 
-			"minLat" : this.tile.endCoord.y, 
-			"maxLat" : this.tile.startCoord.y
+			minLon : this.tile.startCoord.x, 
+			maxLon : this.tile.endCoord.x, 
+			minLat : this.tile.endCoord.y, 
+			maxLat : this.tile.startCoord.y
 		};
+		this.waiting = true;
+		OEV.evt.addEventListener('DEBUG', this, this.debug);
+		
+		
 		var _self = this;
 		loaderBuilding.getData(
 			{
@@ -36,9 +37,16 @@ Oev.Tile.Extension.Building = function(_tile) {
 				bbox : bbox, 
 			}, 
 			function(_datas) {
+				_self.waiting = false;
 				_self.onBuildingsLoaded(_datas);
 			}
 		);
+	}
+	
+	ext.debug = function() {
+		if (this.waiting) {
+			console.log('waiting', this.tile.tileX, this.tile.tileY);
+		}
 	}
 	
 	ext.show = function() {
@@ -54,11 +62,6 @@ Oev.Tile.Extension.Building = function(_tile) {
 			if (this.bufferMesh != undefined) {
 				OEV.scene.remove(this.bufferMesh);
 			}
-			/*
-			if (this.meshe != undefined) {
-				OEV.scene.remove(this.meshe);
-			}
-			*/
 			OEV.MUST_RENDER = true;
 		} else {
 			OEV.earth.loaderBuilding.abort({
@@ -74,10 +77,7 @@ Oev.Tile.Extension.Building = function(_tile) {
 			return false;
 		}
 		ext.dataLoaded = true;
-		// console.log(_datas);
 		ext.datas = _datas;
-		// ext.geometry = new THREE.Geometry();
-		// ext.geometry.dynamic = false;
 		Oev.Tile.ProcessQueue.addWaiting(ext);
 	}
 	
@@ -94,13 +94,11 @@ Oev.Tile.Extension.Building = function(_tile) {
 			this.bufferMesh.geometry.dispose();
 			this.bufferMesh = undefined;
 		}
-		/*
-		if (this.meshe != undefined) {
-			this.meshe.geometry.dispose();
-			this.meshe = undefined;
-		}
-		*/
 		OEV.MUST_RENDER = true;
+	}
+	
+	ext.buildRoof = function(_vertex) {
+		
 	}
 
 	ext.construct = function() {
@@ -115,67 +113,48 @@ Oev.Tile.Extension.Building = function(_tile) {
 			return false;
 		}
 		var curBuilding;
-		var nbCoords = 0;
-		var nbVert = 0;
-		var nbFaces = 0;
 		var b;
 		var c;
 		var f;
-		var floorHeight = 4;
-		var tagFloorsNb;
+		var minAlt;
+		var floorHeight;
 		var tagFloorsStart;
-		var tagFloorsMinHeight;
-		var debugLimit = Math.min(50000, this.datas.length);
-		// for (b = 0; b < this.datas.length; b ++) {
+		var debugLimit = Math.min(500000, this.datas.length);
+		var floorsNb = 1;
+		var buildingCoordNb;
+		var nbCoords = 0;
+		var nbVert = 0;
+		var nbFaces = 0;
 		for (b = 0; b < debugLimit; b ++) {
 			curBuilding = this.datas[b];
-			tagFloorsNb = 1;
-			tagFloorsMinHeight = 0;
-			tagFloorsStart = 0;
-			if ('building:levels' in curBuilding['tags']) {
-				tagFloorsNb = parseInt( curBuilding["tags"]["building:levels"] );
-			}
-			if ('building:minHeight' in curBuilding['tags']) {
-				tagFloorsMinHeight = parseInt(curBuilding["tags"]["building:minHeight"]);
-			}
-			if ('building:min_level' in curBuilding['tags']) {
-				tagFloorsStart = parseInt(curBuilding["tags"]["building:min_level"]);
-				tagFloorsMinHeight = tagFloorsStart * floorHeight;
-			}
-			curBuilding['tags']['building:levels'] = tagFloorsNb - tagFloorsStart;
-			curBuilding['tags']['building:minHeight'] = tagFloorsMinHeight;
-			curBuilding['tags']['building:min_level'] = tagFloorsStart;
-			nbCoords += curBuilding.vertex.length;
-			nbVert += curBuilding.vertex.length * (tagFloorsNb + 1);
-			nbFaces += (curBuilding.vertex.length * 2) * tagFloorsNb;
+			buildingCoordNb = curBuilding.bufferVertex.length / 2;
+			floorsNb = curBuilding.props.floorsNb;
+			nbCoords += buildingCoordNb;
+			nbVert += buildingCoordNb * (floorsNb + 1);
+			nbFaces += (buildingCoordNb * 2) * floorsNb;
 		}
-		var nbFloors = 1;
-		// var bufferVertices = new Float32Array(nbCoords * (nbFloors + 1) * 3);
 		var bufferVertices = new Float32Array(nbVert * 3);
-		// var bufferFaces = new Uint32Array((nbCoords * 2) * nbFloors * 3);
 		var bufferFaces = new Uint32Array(nbFaces * 3);
-		
 		var bufferVertIndex = 0;
 		var bufferFaceIndex = 0;
-		var vertCoord;
+		var vertCoordLon;
+		var vertCoordLat;
 		var vertPos;
-		var buildingCoordNb;
 		var faceTopLeft;
 		var faceBottomLeft;
 		var faceBottomRight;
 		var faceTopRight;
-		
 		var pastFaceNb = 0;
-		
-		// for (b = 0; b < this.datas.length; b ++) {
+		var fondationsLat;
 		for (b = 0; b < debugLimit; b ++) {
 			curBuilding = this.datas[b];
-			buildingCoordNb = curBuilding.vertex.length;
-			// console.log('buildingCoordNb', buildingCoordNb);
-			nbFloors = curBuilding['tags']['building:levels'];
-			// console.log('nbFloors', nbFloors);
-			for (f = 0; f < nbFloors + 1; f ++) {
-				// console.log('floor', f);
+			buildingCoordNb = curBuilding.bufferVertex.length / 2;
+			var alt = Oev.Globe.getElevationAtCoords(curBuilding.centroid[0], curBuilding.centroid[1], true);
+			fondationsLat = -10;
+			floorsNb = curBuilding.props.floorsNb;
+			floorHeight = curBuilding.props.floorHeight;
+			minAlt = curBuilding.props.minAlt;
+			for (f = 0; f < floorsNb + 1; f ++) {
 				for (c = 0; c < buildingCoordNb; c ++) {
 					if (f > 0) {
 						faceTopLeft = buildingCoordNb + c;
@@ -194,30 +173,24 @@ Oev.Tile.Extension.Building = function(_tile) {
 						bufferFaces[bufferFaceIndex + 4] = faceTopRight + pastFaceNb + tmp;
 						bufferFaces[bufferFaceIndex + 5] = faceTopLeft + pastFaceNb + tmp;
 						bufferFaceIndex += 6;
-						// console.log('Face A', faceTopLeft, faceBottomLeft, faceBottomRight);
-						// console.log('Face B', faceBottomRight, faceTopRight, faceTopLeft);
-						// console.log('');
 					}
-					
-					vertCoord = curBuilding.vertex[c];
-					vertPos = OEV.earth.coordToXYZ(vertCoord.lon, vertCoord.lat, (f + curBuilding['tags']['building:min_level']) * 10 + curBuilding['tags']['building:minHeight']);
+					vertCoordLon = curBuilding.bufferVertex[c * 2 + 0];
+					vertCoordLat = curBuilding.bufferVertex[c * 2 + 1];
+					vertPos = OEV.earth.coordToXYZ(vertCoordLon, vertCoordLat, fondationsLat + alt + minAlt + (f * floorHeight));
 					bufferVertices[bufferVertIndex + 0] = vertPos.x;
 					bufferVertices[bufferVertIndex + 1] = vertPos.y;
 					bufferVertices[bufferVertIndex + 2] = vertPos.z;
 					bufferVertIndex += 3;
 				}
+				fondationsLat = 0;
 			}
-			pastFaceNb += buildingCoordNb * (nbFloors + 1);
+			pastFaceNb += buildingCoordNb * (floorsNb + 1);
 		}
-		// console.log(bufferVertices.length / 3);
-		// console.log('-------------------');
 		var bufferGeometry = new THREE.BufferGeometry();
 		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
-		
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		
 		this.bufferMesh = new THREE.Mesh(bufferGeometry, Oev.Globe.buildingsWallMatBuffer);
 		this.bufferMesh.receiveShadow = true;
 		this.bufferMesh.castShadow = true;
@@ -229,15 +202,3 @@ Oev.Tile.Extension.Building = function(_tile) {
 	
 	return ext;
 }
-
-Oev.Tile.Extension.Building.exculdedId = [23762981, 
-	19441489, 
-	201247295, 
-	150335048, 
-	309413981, 
-	249003371, 
-	249003371, 
-	112452790, 
-	3504257, 
-	227662017, 
-];

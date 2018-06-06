@@ -411,6 +411,7 @@ Oev.Sky = (function(){
 			if (_state) {
 				createSkyNew(OEV.earth.radius * 0.7);
 				api.setSunTime(0.5);
+				updateSkyNew();
 				/*
 				if (skyDome == undefined){
 					skyMat = new THREE.MeshPhongMaterial({ color: new THREE.Color("rgb(103,144,230)"), side: THREE.BackSide, fog:false});

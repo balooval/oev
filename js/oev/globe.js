@@ -87,12 +87,12 @@ Oev.Globe = (function() {
 			api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
 			api.tilesWeatherMng = new DatasMng( "WEATHER" );
 			api.tilesLandusesMng = new DatasMng( "SURFACE" );
-			api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xffffff, side: THREE.DoubleSide});
+			api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide});
 			api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.FaceColors });
 			api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testForestMat.alphaTest = 0.1;
-			api.landuseSpritesMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xe0e0e0, side: THREE.DoubleSide});
+			api.landuseSpritesMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xffffff, side: THREE.DoubleSide});
 			api.landuseSpritesMat.alphaTest = 0.1;
 			api.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
 			api.testScrubMat.alphaTest = 0.1;
@@ -104,9 +104,10 @@ Oev.Globe = (function() {
 			api.vineyardMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 1000});
 			api.vineyardMat.alphaTest = 0.4;
 			api.vineyardMat.transparent = true;
-			api.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
-			api.grassMat.alphaTest = 0.4;
-			api.grassMat.transparent = true;
+			// api.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
+			api.grassMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xe0e0e0, side: THREE.DoubleSide});
+			api.grassMat.alphaTest = 0.9;
+			// api.grassMat.opacity = 0.99;
 			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 		}, 
 		

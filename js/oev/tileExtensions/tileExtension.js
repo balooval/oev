@@ -31,19 +31,15 @@ Oev.Tile.Extension = {
 			for (var i = 0; i < Oev.Tile.Extension.activated.length; i ++) {
 				if (Oev.Tile.Extension.activated[i] == _extensionId) {
 					Oev.Tile.Extension.activated.splice(i, 1);
-					console.log('Ok remove from activated');
+					// console.log('Ok remove from activated');
 					break;
 				}
 			}
-			
-			
 			Oev.Tile.Extension.evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
-			
 			if (_extensionId == 'LANDUSE') {
 				console.warn('CLEAR tilesLandusesMng');
 				OEV.earth.tilesLandusesMng.clearAll();
 			}
-			
 			for (var i = 0; i < Oev.Globe.tilesBase.length; i ++) {
 				Oev.Globe.tilesBase[i].removeExtension(_extensionId);
 			}
@@ -79,7 +75,6 @@ Oev.Tile.Extension = {
 		onDesactivate : function() {
 			Oev.Tile.Extension['ACTIV_' + this.id] = false;
 			this.onHide();
-			// this.onDispose();
 			this.desactivate();
 			this.tile.evt.removeEventListener('SHOW', this, this.onShow);
 		}, 
