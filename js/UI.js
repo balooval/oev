@@ -50,9 +50,10 @@ export function initUi(){
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
-	OEV.renderer.domElement.addEventListener('mousedown',INPUT.Mouse.onMouseDown,false);
-	OEV.renderer.domElement.addEventListener('mouseup',INPUT.Mouse.onMouseUp,true);
-	OEV.renderer.domElement.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
+	const domContainer = OEV.domContainer();
+	domContainer.addEventListener('mousedown',INPUT.Mouse.onMouseDown,false);
+	domContainer.addEventListener('mouseup',INPUT.Mouse.onMouseUp,true);
+	domContainer.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
 	var elem = document.getElementsByClassName( "toolsBox" );
 	for( var i = 0; i < elem.length; i ++ ){
 		var title = elem[i].getElementsByTagName("h3")[0];
@@ -119,16 +120,6 @@ function onHemilightChanged(){
 	SKY.hemiIntensity = ( this.value / 100 ) * 0.35
 	SKY.updateSun();
 	console.log( "sky.hemiIntensity : " + SKY.hemiIntensity );
-	OEV.MUST_RENDER = true;	
-}
-
-function onBokehChanged(){
-	OEV.bokehPass.uniforms.aperture.value = document.getElementById( "cfg_bokeh_aperture" ).value * 0.001;
-	OEV.bokehPass.uniforms.maxblur.value = document.getElementById( "cfg_bokeh_maxblur" ).value * 0.0005;
-	OEV.bokehPass.uniforms.focus.value = 0.9 + document.getElementById( "cfg_bokeh_focus" ).value * 0.002;
-	console.log( OEV.bokehPass.uniforms.aperture.value );
-	console.log( OEV.bokehPass.uniforms.maxblur.value );
-	console.log( OEV.bokehPass.uniforms.focus.value );
 	OEV.MUST_RENDER = true;	
 }
 
@@ -237,14 +228,7 @@ function saveNewWP( _name ){
 	Oev.Navigation.saveWaypoint( OEV.camCtrl.coordLookat.x, OEV.camCtrl.coordLookat.y, OEV.earth.CUR_ZOOM, _name, 'default', true );
 }
 
-export function updateWaypointsList( _waysPts ){
-	document.getElementById( "waypointsInfos" ).innerHTML = "";
-	for( var w = 0; w < _waysPts.length; w ++ ){
-		if( _waysPts[w].showList ){
-			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint('+w+')">X</span> ' + ( w + 1 ) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint('+w+');" title=" '+ ( Math.round( _waysPts[w].lon * 1000 ) / 1000 ) + " / " + ( Math.round( _waysPts[w].lat * 1000 ) / 1000 ) +'">'+_waysPts[w].name + '</span><br>';
-		}
-	}
-}
+
 
 export function showUICoords(){
 	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ 'm<br>SunTime: ' + Math.round( SKY.normalizedTime * 24 )+'H';

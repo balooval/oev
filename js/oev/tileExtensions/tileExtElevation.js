@@ -1,11 +1,10 @@
 import * as TileExtension from './tileExtension.js';
 
-console.log('ELE');
 
-export class Elevation extends TileExtension.DefaultExt{
-// export class Elevation {
+// export class Elevation extends TileExtension.DefaultExt{
+export class Elevation {
 	constructor(_tile) {
-		// super();
+		// super();a
 		this.loaderEle = OEV.earth.loaderEle;
 		this.id = 'ELEVATION';
 		this.elevationBuffer = new Uint16Array((32 * 32) / 4);

@@ -39,6 +39,16 @@ export function closeModal(){
 	document.getElementById( "modalContent" ).innerHTML = '';
 }
 
+export function updateWaypointsList( _waysPts ){
+	document.getElementById( "waypointsInfos" ).innerHTML = "";
+	for( var w = 0; w < _waysPts.length; w ++ ){
+		if( _waysPts[w].showList ){
+			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint('+w+')">X</span> ' + ( w + 1 ) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint('+w+');" title=" '+ ( Math.round( _waysPts[w].lon * 1000 ) / 1000 ) + " / " + ( Math.round( _waysPts[w].lat * 1000 ) / 1000 ) +'">'+_waysPts[w].name + '</span><br>';
+		}
+	}
+}
+
+
 const TilesExtension = (function(){
 	'use strict';
 	var api = {

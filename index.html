@@ -6,8 +6,6 @@
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
 		<script type="text/javascript" src="js/libs/three.min.js"></script>
 		<script src="js/OEV.js" type="module"></script>
-		<!-- <script type="text/javascript" src="js/oev/utils.js"></script> -->
-		<!-- <script type="text/javascript" src="js/utils/water.js"></script> -->
 	</head>
 	
 
@@ -244,61 +242,8 @@ void main() {
 				<a id="contactLink" href="mailto:toto@toto.com">Contact</a>
 			</div>
 		<script>
-			// var OEV = new OpenEarthViewer('threeContainer');
-		</script>
-		<!-- <script type="text/javascript" src="js/oev/ui.js"></script>
-		<script type="text/javascript" src="js/oev/net/Net.js"></script>
-		<script type="text/javascript" src="js/oev/net/NetTextures.js"></script>
-		<script type="text/javascript" src="js/oev/net/NetModels.js"></script>
-		<script type="text/javascript" src="js/oev/net/OverpassProxy.js"></script>
-		<script type="text/javascript" src="js/oev/globe.js"></script>
-		<script type="text/javascript" src="js/oev/tile.js"></script>
-		<script type="text/javascript" src="js/oev/geo.js"></script>
-		<script type="text/javascript" src="js/oev/input.js"></script>
-		<script type="text/javascript" src="js/oev/dataLoader.js"></script>
-		<script type="text/javascript" src="js/oev/tileBuilding.js"></script>
-		<script type="text/javascript" src="js/oev/tileSurface.js"></script>
-		<script type="text/javascript" src="js/oev/navigation.js"></script>
-		<script type="text/javascript" src="js/oev/sky.js"></script>
-		<script type="text/javascript" src="js/oev/math.js"></script>
-		<script type="text/javascript" src="js/oev/animation.js"></script>
-		<script type="text/javascript" src="js/oev/modelTree.js"></script>
-		<script type="text/javascript" src="js/oev/geoBuild/geometryBuilder.js"></script>
-		<script type="text/javascript" src="js/oev/rtt.js"></script>
-		<script type="text/javascript" src="js/oev/shader.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/water.js"></script>
-		
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtension.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/nodeMesh.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtOverpass.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtNormal.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtBuilding.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtPlanes.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtElevation.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtLife.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtLifeGround.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtLifeWater.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtLanduse.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/tileExtDummy.js"></script>
-		<script type="text/javascript" src="js/oev/tileExtensions/whale.js"></script>
-		<script type="text/javascript" src="js/UI.js"></script>
-		<script type="text/javascript" src="js/CamCtrl.js" type="module"></script>
-		
-		<script type="text/javascript" src="js/Tile3d.js"></script>
-		<script type="text/javascript" src="js/TileSurface.js"></script>
-		<script type="text/javascript" src="js/TileNodes.js"></script>
-		<script type="text/javascript" src="js/DatasMng.js"></script>
-		
-		<script type="text/javascript" src="js/Earcut.js"></script>
-		<script type="text/javascript" src="js/utils/lineclip.js"></script>
-		<script type="text/javascript" src="js/utils/geojson-area.js"></script> -->
-		<!-- <script type="text/javascript" src="js/plugins/GpxMng.js" type="module"></script> -->
-		<!-- <script type="text/javascript" src="js/plugins/PlanesMng.js"></script> -->
-		<!-- <script type="text/javascript" src="js/net/NetCtrl.js"></script> -->
-		
-		<script>
 			window.addEventListener('load', evt => {
-				OEV.init();
+				OEV.init('threeContainer');
 			})
 			
 			// document.getElementById("cfg_load_ele").checked = true;

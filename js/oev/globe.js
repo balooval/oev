@@ -81,7 +81,6 @@ var api = {
 		
 		// api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
 		// api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
-		console.log('Elevation', TileExtension.Elevation);
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
 		// api.tileExtensions['OVERPASS'] = Oev.Tile.Extension.Overpass;
 		// api.tileExtensions['LANDUSE'] = Oev.Tile.Extension.Landuse;
@@ -231,18 +230,13 @@ var api = {
 	}, 
 
 	updateTilesModelProvider : function( _added, _name ) {
-		for( var i = 0; i < api.tilesBase.length; i ++ ){
-			nb = api.tilesBase[i].updateDatasProviders( _added, _name );
-		}
+		api.tilesBase.forEach(t => t.updateDatasProviders(_added, _name));
 	}, 
 
 	setTilesProvider : function( _provider ) {
 		if (api.tilesProvider != _provider) {
 			api.loaderTile2D.clear();
-				for (var i = 0; i < api.tilesBase.length; i ++) {
-					api.tilesBase[i].reloadTexture();
-				}
-			// }
+			api.tilesBase.forEach(t => t.reloadTexture());
 		}
 		api.tilesProvider = _provider;
 	}, 
@@ -279,12 +273,8 @@ var api = {
 	},  
 
 	updateLOD : function() {
-		for (var i = 0; i < api.tilesBase.length; i ++) {
-			api.tilesBase[i].updateVertex();
-		}
-		for( var w = 0; w < OEV.waypoints.length; w ++ ){
-			OEV.waypoints[w].updatePos();
-		}
+		api.tilesBase.forEach(t => t.updateVertex());
+		OEV.waypoints.forEach(w => w.updatePos());
 	}, 
 
 	updateZoom : function(_value){
@@ -315,9 +305,7 @@ var api = {
 			OEV.camera.up.set(0, 1, 0);
 		}
 		api.projection = _mode;
-		for (var i = 0; i < api.tilesBase.length; i ++) {
-			api.tilesBase[i].updateVertex();
-		}
+		api.tilesBase.forEach(t => t.updateVertex());
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation){
@@ -448,47 +436,31 @@ var api = {
 
 	getElevationAtCoords : function(_lon, _lat, _inMeters) {
 		_inMeters = _inMeters || false;
-		if (api.eleActiv) {
-			for (var i = 0; i < api.tilesBase.length; i ++) {
-				var tile = api.tilesBase[i];
-				if (tile.checkCameraHover(api.coordDetails, 1)) {
-					var ele = tile.getElevation(_lon, _lat);
-					if (_inMeters) {
-						return ele;
-					}else{
-						return ele * (api.meter * eleFactor);
-					}
-				}
-			}
+		if (!api.eleActiv) {
+			return 0;
 		}
-		return 0;
+		var ele = 0;
+		api.tilesBase.filter(t => {
+			return t.checkCameraHover(api.coordDetails, 1);
+		}).forEach(t => {
+			ele = t.getElevation(_lon, _lat);
+		});
+		if (!_inMeters) {
+			ele *= (api.meter * eleFactor);
+		}
+		return ele;
 	}, 
 	
 	getCurTile : function() {
-		var tileZoom = 0;
-		for (var i = 0; i < api.tilesBase.length; i ++) {
-			var tile = api.tilesBase[i];
-			var res = tile.searchMainTile(api.coordDetails);
-			if (res !== false) {
-				return res;
-			}
-		}
-		return null;
+		return api.tilesBase.map(t => {
+			return t.searchMainTile(api.coordDetails)
+		}).filter(res => res !== false).pop();
 	}, 
 	
 	onCurTileChange : function(_newTile){
 		TILE.setMinMax(999999999, 999999999, -999999999, -999999999);
 		curTile = _newTile;
-		for (var i = 0; i < api.tilesBase.length; i ++) {
-			api.tilesBase[i].updateDetails(api.coordDetails);
-		}
-		// if (api.curLOD == api.LOD_STREET) {
-		// 	console.log('');
-		// 	console.log('minX', minX);
-		// 	console.log('maxX', maxX);
-		// 	console.log('minY', minY);
-		// 	console.log('maxY', maxY);
-		// }
+		api.tilesBase.forEach(t => t.updateDetails(api.coordDetails));
 		api.evt.fireEvent( "CURTILE_CHANGED" );
 	}, 
 

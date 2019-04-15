@@ -11,119 +11,111 @@ import GLOBE from './oev/globe.js';
 import * as CamCtrl from './CamCtrl.js';
 import * as SHADER from './oev/shader.js';
 
-class OpenEarthViewer {
-	constructor( _containerId ) {
-		this.appStarted = false;
-		this.htmlContainer = _containerId;
-		this.sceneWidth = 400;
-		this.sceneHeight = 300;
-		this.scene;
-		this.camera;
-		this.renderer;
-		this.containerOffset = undefined;
-		this.earth;
-		this.evt = new Evt();
-		this.textures = {};
-		this.modelsLib = {};
-		this.geoDebug = undefined;
-		this.ctrlActiv = false;
-		this.bokehPass;
-		this.MUST_RENDER = true;
-		this.MODELS_CFG;
-		this.showRendererInfos = false;
-		this.raycaster = undefined;
-		this.clock = null;
-		this.preloadQuery = [];
-		this.camCtrl = null;
-		this.userMat = undefined;
-		this.waypoints = [];
-		this.plugins = [];
-		this.WpStored = [];
-		this.shadowsEnabled = true;
-		this.objToUpdate = [];
-		this.globalTime = 0;
-		this.mouseScreenClick = new THREE.Vector2( 0, 0 );
-		this.socketEnabled = false;
-		this.aMeshMirror = undefined;
-		this.tuniform = {
+let containerOffset = undefined;
+const objToUpdate = [];
+const mouseScreenClick = new THREE.Vector2( 0, 0 );
+const shaders = {};
+const socketEnabled = false;
+let renderer = undefined;
+
+const OpenEarthViewer = (function() {
+
+	let api = {
+		appStarted : false, 
+		sceneWidth : 400, 
+		sceneHeight : 300, 
+		scene : undefined, 
+		camera : undefined, 
+		earth : undefined, 
+		evt : new Evt(), 
+		textures : {}, 
+		modelsLib : {}, 
+		geoDebug : undefined, 
+		MUST_RENDER : true, 
+		MODELS_CFG : undefined, 
+		raycaster : undefined, 
+		clock : null, 
+		camCtrl : null, 
+		userMat : undefined, 
+		waypoints : [], 
+		plugins : [], 
+		shadowsEnabled : true, 
+		globalTime : 0, 
+		tuniform : {
 			iGlobalTime: {
 				type: 'f',
 				value: 0.1
 			}
-		};
-		
-		this.shaders = {};
+		}, 
 	}
 
-	init() {
+	api.init = function(_htmlContainer) {
 		UI.init();
 		NET.init();
 		INPUT.init();
 		SKY.init();
 		NAVIGATION.init();
-		this.clock = new THREE.Clock();
+		api.clock = new THREE.Clock();
 		document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
-		var intElemClientWidth = document.getElementById( this.htmlContainer ).clientWidth;
+		var intElemClientWidth = document.getElementById( _htmlContainer ).clientWidth;
 		var intElemClientHeight = document.getElementById( "tools" ).clientHeight;
-		this.sceneWidth = Math.min( intElemClientWidth, 13000 );
-		this.sceneHeight = Math.min( intElemClientHeight, 800 );
-		this.scene = new THREE.Scene();
-		this.camera = new THREE.PerspectiveCamera( 90, this.sceneWidth / this.sceneHeight, 0.1, 20000 );
-		this.earth = GLOBE;
-		this.earth.init();
-		this.scene.add(this.earth.meshe);
-		this.renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
-		this.raycaster = new THREE.Raycaster();
-		this.renderer.setSize( this.sceneWidth, this.sceneHeight );
-		document.getElementById( this.htmlContainer ).appendChild( this.renderer.domElement );
-		this.containerOffset = new THREE.Vector2( document.getElementById( this.htmlContainer ).offsetLeft, document.getElementById( this.htmlContainer ).offsetTop );
-		this.camera.position.x = 0;
-		this.camera.position.y = 0;
-		this.camera.position.z = 500;	
-		this.renderer.setClearColor( 0x101020, 1 );
-		if (this.shadowsEnabled) {
-			this.renderer.shadowMap.enabled = true;
-			this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+		api.sceneWidth = Math.min( intElemClientWidth, 13000 );
+		api.sceneHeight = Math.min( intElemClientHeight, 800 );
+		api.scene = new THREE.Scene();
+		api.camera = new THREE.PerspectiveCamera( 90, api.sceneWidth / api.sceneHeight, 0.1, 20000 );
+		api.earth = GLOBE;
+		api.earth.init();
+		api.scene.add(api.earth.meshe);
+		renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
+		api.raycaster = new THREE.Raycaster();
+		renderer.setSize( api.sceneWidth, api.sceneHeight );
+		document.getElementById( _htmlContainer ).appendChild( renderer.domElement );
+		containerOffset = new THREE.Vector2( document.getElementById( _htmlContainer ).offsetLeft, document.getElementById( _htmlContainer ).offsetTop );
+		api.camera.position.x = 0;
+		api.camera.position.y = 0;
+		api.camera.position.z = 500;	
+		renderer.setClearColor( 0x101020, 1 );
+		if (api.shadowsEnabled) {
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 		}
-		if( this.socketEnabled ){
-			this.netCtrl = new NetCtrl();
-			this.netCtrl.init( this );
+		if( socketEnabled ){
+			api.netCtrl = new NetCtrl();
+			api.netCtrl.init( this );
 		}
-		this.camCtrl = new CamCtrl.CamCtrlGod();
-		this.evt.fireEvent('APP_INIT');	
-		this.loadTextures();
+		api.camCtrl = new CamCtrl.CamCtrlGod();
+		api.evt.fireEvent('APP_INIT');	
+		api.loadTextures();
 	}
 
-	start() {
+	api.start = function() {
 		OLD_UI.initUi();
-		this.fountainPartMat = new THREE.PointsMaterial({color:0xFFFFFF, size:((this.earth.meter) * 10), map:this.textures['particleWater']});
-		this.fountainPartMat.alphaTest = 0.4;
-		this.fountainPartMat.transparent = true;
-		this.userMat = new THREE.SpriteMaterial( { map: this.textures['god'], color: 0xffffff, fog: false } );
-		var debugGeo = new THREE.SphereGeometry(this.earth.meter * 100, 16, 7); 
+		api.fountainPartMat = new THREE.PointsMaterial({color:0xFFFFFF, size:((api.earth.meter) * 10), map:api.textures['particleWater']});
+		api.fountainPartMat.alphaTest = 0.4;
+		api.fountainPartMat.transparent = true;
+		api.userMat = new THREE.SpriteMaterial( { map: api.textures['god'], color: 0xffffff, fog: false } );
+		var debugGeo = new THREE.SphereGeometry(api.earth.meter * 100, 16, 7); 
 		var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
-		this.geoDebug = new THREE.Mesh(debugGeo, debugMat);
-		this.scene.add(this.geoDebug);
-		// this.earth.construct();
-		this.camCtrl.init(this.camera, this.earth);
+		api.geoDebug = new THREE.Mesh(debugGeo, debugMat);
+		api.scene.add(api.geoDebug);
+		// api.earth.construct();
+		api.camCtrl.init(api.camera, api.earth);
 		NAVIGATION.saveWaypoint(4.231021, 43.795594, 13);
 		NAVIGATION.saveWaypoint(3.854188, 43.958125, 13);
 		NAVIGATION.saveWaypoint(2.383138,48.880945, 13);
-		this.appStarted = true;
-		
+		api.appStarted = true;
 		// Oev.Tile.Extension.LanduseWorker.init();
-		
 		console.log('OEV.START');
-		this.evt.fireEvent('APP_START');
+		api.evt.fireEvent('APP_START');
 		render();
 	}
 
-	loadShader() {
+	api.loadShader = function() {
 		SHADER.build('ocean', onShaderLoader, {map:OEV.textures['sea'], normalMap:OEV.textures['waternormals']});
 	}
 
 
-	loadTextures() {
+	api.loadTextures = function() {
 		UI.openModal( "Loading textures" );
 		var textList = [];
 		NET_TEXTURES.addToList(textList, 'landuse_sprites', 'landuse_sprites.png');
@@ -161,7 +153,7 @@ class OpenEarthViewer {
 	}
 
 
-	loadModels() {
+	api.loadModels = function() {
 		UI.openModal( "Loading models" );
 		var modelList = [];
 		NET_MODELS.addToList(modelList, 'eolienne', 'eolienne.json');
@@ -181,7 +173,11 @@ class OpenEarthViewer {
 		NET_MODELS.loadBatch(modelList, onOevModelsLoaded);
 	}
 
-	switchClouds() {
+	api.domContainer = function() {
+		return renderer.domElement;
+	}
+
+	api.switchClouds = function() {
 		if (Oev.Sky.cloudsActiv) {
 			Oev.Sky.clearClouds();
 			setElementActiv( document.getElementById( "btnClouds" ), false );
@@ -191,101 +187,82 @@ class OpenEarthViewer {
 		}
 	}
 
-	checkMouseWorldPos() {
-		var mX = ( ( INPUT.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth ) * 2 - 1;
-		var mY = -( ( INPUT.Mouse.curMouseY - this.containerOffset.y ) / this.sceneHeight ) * 2 + 1;
-		this.mouseScreenClick.x = mX;
-		this.mouseScreenClick.y = mY;
-		this.raycaster.near = this.camera.near;
-		this.raycaster.far = this.camera.far;
-		this.raycaster.setFromCamera( new THREE.Vector2( mX, mY ), this.camera );
-		var intersects = this.raycaster.intersectObjects( this.earth.meshe.children );
+	api.checkMouseWorldPos = function() {
+		var mX = ( ( INPUT.Mouse.curMouseX - containerOffset.x ) / api.sceneWidth ) * 2 - 1;
+		var mY = -( ( INPUT.Mouse.curMouseY - containerOffset.y ) / api.sceneHeight ) * 2 + 1;
+		mouseScreenClick.x = mX;
+		mouseScreenClick.y = mY;
+		api.raycaster.near = api.camera.near;
+		api.raycaster.far = api.camera.far;
+		api.raycaster.setFromCamera( new THREE.Vector2( mX, mY ), api.camera );
+		var intersects = api.raycaster.intersectObjects( api.earth.meshe.children );
 		var coord = undefined;
-		for ( var i = 0; i < intersects.length; i++ ) {
-			coord = this.earth.coordFromPos( intersects[ i ].point.x, intersects[ i ].point.z );
-		}
+		intersects.forEach(i => coord = api.earth.coordFromPos(i.point.x, i.point.z));
 		return coord;
 	}
 
-	addObjToUpdate( _obj ) {
-		if( this.objToUpdate.indexOf( _obj ) < 0 ){
-			this.objToUpdate.push( _obj );
+	api.addObjToUpdate = function( _obj ) {
+		if( objToUpdate.indexOf( _obj ) < 0 ){
+			objToUpdate.push( _obj );
 		}
 	}
 
-	removeObjToUpdate( _obj ) {
-		var index = this.objToUpdate.indexOf( _obj );
+	api.removeObjToUpdate = function( _obj ) {
+		var index = objToUpdate.indexOf( _obj );
 		if( index < 0 ){
 			console.warn( 'OEV.removeObjToUpdate NOT FOUND !' );
 		}else{
-			this.objToUpdate.splice( index, 1 );
+			objToUpdate.splice( index, 1 );
 		}
 	}
 
-	render() {
-		if( this.MUST_RENDER ){
-			if( this.tuniform != undefined ){
-				this.tuniform.iGlobalTime.value += 0.1;
-			}
-			if( this.aMeshMirror != undefined ){
-				this.aMeshMirror.position.x = Oev.Sky.posCenter.x;
-				this.aMeshMirror.position.z = Oev.Sky.posCenter.z;
+	api.render = function() {
+		if( api.MUST_RENDER ){
+			if( api.tuniform != undefined ){
+				api.tuniform.iGlobalTime.value += 0.1;
 			}
 			var d = new Date();
-			this.globalTime = d.getTime();
+			api.globalTime = d.getTime();
 			OLD_UI.showUICoords();
-			this.renderer.render( this.scene, this.camera );
-			this.MUST_RENDER = false;
+			renderer.render( api.scene, api.camera );
+			api.MUST_RENDER = false;
 		}
-		this.camCtrl.update();
+		api.camCtrl.update();
 		if( OLD_UI.dragSun ){
-			var mX = ( ( INPUT.Mouse.curMouseX - this.containerOffset.x ) / this.sceneWidth );
-			Oev.Sky.setSunTime(mX);
+			var mX = ( ( INPUT.Mouse.curMouseX - containerOffset.x ) / api.sceneWidth );
+			SKY.setSunTime(mX);
 		}
-		if( this.showRendererInfos ){
-			var rendererInfos = '';
-			for( var key in this.renderer.info ){
-				for( var prop in this.renderer.info[key] ){
-					rendererInfos += "info " + key + " / " + prop + " / " + this.renderer.info[key][prop] + '<br>';
-				}
-			}
-			console.log(rendererInfos, true);
-		}
-		this.earth.update();
+		api.earth.update();
 		SKY.update();
-		
-		for( var u = 0; u < this.objToUpdate.length; u ++ ){
-			this.objToUpdate[u].update();
-		}
-		if (OEV.shaders['ocean'] !== undefined) {
-			OEV.shaders['ocean'].uniforms.time.value += 0.01;
+		objToUpdate.forEach(o => o.update());
+		if (shaders['ocean'] !== undefined) {
+			shaders['ocean'].uniforms.time.value += 0.01;
 		}
 	}
 
-	gotoWaypoint(_waypointIndex) {
+	api.gotoWaypoint = function(_waypointIndex) {
 		var waypoint = NAVIGATION.getWaypointById(_waypointIndex);
-		this.camCtrl.setDestination(waypoint.lon, waypoint.lat);
-		this.camCtrl.setZoomDest(waypoint.zoom, 2000);
+		api.camCtrl.setDestination(waypoint.lon, waypoint.lat);
+		api.camCtrl.setZoomDest(waypoint.zoom, 2000);
 	}
 
-	setPlugin(_name, _object) {
+	api.setPlugin = function(_name, _object) {
 		console.log('setPlugin', _name, _object);
-		this.plugins[_name] = _object;
+		api.plugins[_name] = _object;
 	}
-}
+
+	return api;
+})();
 
 function onShaderLoader(_name, _material) {
 	console.log('Shader "' + _name + '" loaded');
-	OEV.shaders[_name] = _material;
+	shaders[_name] = _material;
 }
 
 function onOevTexturesLoaded() {
 	console.log('All default textures loaded');
 	OEV.textures = NET_TEXTURES.tmpGetTextures();
-	
-	// OEV.textures['skydome'].mapping = THREE.SphericalReflectionMapping;
 	OEV.textures['skydome'].mapping = THREE.EquirectangularReflectionMapping;
-	
 	OEV.loadShader();
 	OEV.loadModels();
 }
@@ -297,5 +274,4 @@ function onOevModelsLoaded() {
 	OEV.start();
 }
 
-window.OEV = new OpenEarthViewer('threeContainer');
-console.log('window.OEV', window.OEV);
+window.OEV = OpenEarthViewer;

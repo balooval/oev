@@ -1,4 +1,4 @@
-import * as OLD_UI from '../UI.js';
+import * as UI from './ui.js';
 
 var waypointMat;
 var waypointsList = [];
@@ -29,9 +29,9 @@ var api = {
 	saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore) {
 		_name = _name || "WP " + waypointsList.length;
 		_localStore = _localStore || false;
-		var wp = new api.WayPoint( _lon, _lat, _zoom, _name);
+		var wp = new WayPoint( _lon, _lat, _zoom, _name);
 		waypointsList.push(wp);
-		OLD_UI.updateWaypointsList(waypointsList);
+		UI.updateWaypointsList(waypointsList);
 		if (_localStore) {
 			WpStored.push({name : _name, lon : _lon, lat : _lat, zoom : _zoom});
 			localStorage.setItem("waypoints", JSON.stringify(WpStored));
@@ -54,55 +54,54 @@ var api = {
 	}
 };
 
-
-api.WayPoint = function (_lon, _lat,_zoom, _name) {
-	this.showSprite = true;
-	this.showList = true;
-	if (_name == "none") {
-		this.showList = false;
+class WayPoint {
+	constructor(_lon, _lat,_zoom, _name) {
+		this.showSprite = true;
+		this.showList = true;
+		if (_name == "none") {
+			this.showList = false;
+		}
+		this.lon = _lon;
+		this.lat = _lat;
+		this.zoom = _zoom;
+		this.name = _name;
+		this.onStage = true;
+		this.sprite = undefined;
+		this.material = undefined;
+		if (this.showSprite) {
+			this.material = waypointMat;
+			this.sprite = new THREE.Sprite(this.material);
+			var ele = OEV.earth.getElevationAtCoords(this.lon, this.lat);
+			var pos = OEV.earth.coordToXYZ(_lon, _lat, ele);
+			this.sprite.position.x = pos.x;
+			this.sprite.position.y = pos.y;
+			this.sprite.position.z = pos.z;
+			var wpScale = (OEV.camCtrl.coordCam.z / OEV.earth.radius) * 1000;
+			this.sprite.scale.x = wpScale;
+			this.sprite.scale.y = wpScale;
+			this.sprite.scale.z = wpScale;
+			OEV.scene.add(this.sprite);
+		}
 	}
-	this.lon = _lon;
-	this.lat = _lat;
-	this.zoom = _zoom;
-	this.name = _name;
-	this.onStage = true;
-	this.sprite = undefined;
-	this.material = undefined;
-	if (this.showSprite) {
-		this.material = waypointMat;
-		this.sprite = new THREE.Sprite(this.material);
-		var ele = OEV.earth.getElevationAtCoords(this.lon, this.lat);
-		var pos = OEV.earth.coordToXYZ(_lon, _lat, ele);
-		this.sprite.position.x = pos.x;
-		this.sprite.position.y = pos.y;
-		this.sprite.position.z = pos.z;
-		var wpScale = (OEV.camCtrl.coordCam.z / OEV.earth.radius) * 1000;
-		this.sprite.scale.x = wpScale;
-		this.sprite.scale.y = wpScale;
-		this.sprite.scale.z = wpScale;
-		OEV.scene.add(this.sprite);
-	}
-}
 
-api.WayPoint.prototype = {
-	updatePos : function() {
+	updatePos() {
 		if (this.showSprite) {
 			var pos = OEV.earth.coordToXYZ(this.lon, this.lat, (OEV.earth.meter * 64) * OEV.earth.globalScale);
 			this.sprite.position.x = pos.x;
 			this.sprite.position.y = pos.y;
 			this.sprite.position.z = pos.z;
 		}
-	}, 
+	}
 
-	resize : function(_scale) {
+	resize(_scale) {
 		if (this.showSprite) {
 			this.sprite.scale.x = _scale;
 			this.sprite.scale.y = _scale;
 			this.sprite.scale.z = _scale;
 		}
-	}, 
+	}
 
-	hide : function(_state) {
+	hide(_state) {
 		if (this.showSprite){
 			if (this.onStage && _state){
 				this.onStage = false;
@@ -112,13 +111,13 @@ api.WayPoint.prototype = {
 				OEV.scene.add(this.sprite);
 			}
 		}
-	}, 
+	}
 
-	dispose : function() {
+	dispose() {
 		if( this.showSprite ){
 			OEV.scene.remove(this.sprite);
 		}
-	}, 
+	}
 };
 
 export { api as default}

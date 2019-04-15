@@ -145,7 +145,6 @@ export class DefaultExt {
 	}
 }
 
-console.log('DefaultExt',DefaultExt);
 
 Params.actives['ACTIV_ELEVATION'] = true;
 
