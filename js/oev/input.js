@@ -1,22 +1,18 @@
-Oev.Input = (function(){
-	'use strict';
-	var api = {
-		init : function() {
-			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
-			Oev.Input.Mouse.init();
-		}, 
-		
-		onAppStart : function() {
-			
-		}, 
-	};
-	
-	return api;
-})();
+import Evt from './event.js';
 
-var tmp = false;
-var tmpNoCache = false;
+export function init() {
+	OEV.evt.addEventListener('APP_START', null, onAppStart);
+	Mouse.init();
+}
+
+export function onAppStart() {
 	
+}
+
+let tmp = false;
+let tmpNoCache = false;
+
+/*
 Oev.Input.Keyboard = (function(){
 	'use strict';
 	var majActiv = false;
@@ -127,8 +123,9 @@ Oev.Input.Keyboard = (function(){
 	
 	return api;
 })();
+*/
 
-Oev.Input.Mouse = (function(){
+export const Mouse = (function(){
 	'use strict';
 	var api = {
 		curMouseX : 0, 
@@ -136,7 +133,7 @@ Oev.Input.Mouse = (function(){
 		mouseBtnLeftState : false, 
 		mouseBtnMiddleState : false, 
 		mouseBtnRightState : false, 
-		evt : new Oev.Utils.Evt(), 
+		evt : new Evt(), 
 		
 		init : function() {
 			document.onmousemove = api.onMouseMove;

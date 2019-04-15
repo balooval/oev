@@ -1,4 +1,3 @@
-importScripts('../../oev/utils.js');
 
 onmessage = function(_evt) {
 	var result = precomputeBuildings(_evt.data["json"], _evt.data["bbox"]);

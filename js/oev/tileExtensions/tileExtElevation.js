@@ -1,27 +1,30 @@
+import * as TileExtension from './tileExtension.js';
 
-Oev.Tile.Extension.Elevation = function(_tile) {
-	'use strict';
+console.log('ELE');
 
-	var ext = Object.create(Oev.Tile.Extension);
-	var loaderEle = OEV.earth.loaderEle;
-	
-	ext.id = 'ELEVATION';
-	ext.elevationBuffer = new Uint16Array((32 * 32) / 4);
-	ext.mesheBorder = undefined;
-	// ext.materialBorder = new THREE.MeshBasicMaterial({color: 0xffffff,map: OEV.textures["checker"]});
-	ext.materialBorder = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
-	
-	ext.init = function() {
-		this.tile.getElevation = ext.getElevation;
-		this.tile._getVerticeElevation = ext._getVerticeElevation;
-		this.tile.interpolateEle = ext.interpolateEle;
+export class Elevation extends TileExtension.DefaultExt{
+// export class Elevation {
+	constructor(_tile) {
+		// super();
+		this.loaderEle = OEV.earth.loaderEle;
+		this.id = 'ELEVATION';
+		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
+		this.mesheBorder = undefined;
+		this.materialBorder = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		this.onInit(_tile);
 	}
 	
-	ext.tileReady = function() {
+	init() {
+		this.tile.getElevation = this.getElevation;
+		this.tile._getVerticeElevation = this._getVerticeElevation;
+		this.tile.interpolateEle = this.interpolateEle;
+	}
+	
+	tileReady() {
 		if (this.dataLoaded) {
 			return false;
 		}
-		loaderEle.getData(
+		this.loaderEle.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -29,28 +32,28 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 				priority : this.tile.distToCam
 			}, 
 			function(_datas) {
-				ext._onElevationLoaded(_datas.slice(0));
+				this._onElevationLoaded(_datas.slice(0));
 			}
 		);
 	}
 	
-	ext.show = function() {
+	showfunction() {
 		if (this.datasLoaded) {
 			return false;
 		}
 		this.tileReady();
 	}
 	
-	ext.hide = function() {
-		loaderEle.abort({
+	hide() {
+		this.loaderEle.abort({
 			z : this.tile.zoom, 
 			x : this.tile.tileX, 
 			y : this.tile.tileY
 		});
 	}
 	
-	ext._onElevationLoaded = function(_datas) {
-		if (!Oev.Tile.Extension['ACTIV_' + this.id]) {
+	_onElevationLoaded(_datas) {
+		if (!TileExtension.Params.actives['ACTIV_' + this.id]) {
 			return false;
 		}
 		this.dataLoaded = true;
@@ -58,63 +61,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.applyElevationToGeometry();
 	}
 	
-	/*
-	ext.applyElevationToGeometryBuffer = function() {
-		if (!this.dataLoaded) {
-			return false;
-		}
-		
-		var x, y;
-		var index = 0;
-		var nbVertX = Oev.Globe.tilesDefinition + 1;
-		var nbVertY = Oev.Globe.tilesDefinition + 1;
-		var verticePosition;
-		var stepCoord = new THREE.Vector2((this.tile.endCoord.x - this.tile.startCoord.x) / Oev.Globe.tilesDefinition, (this.tile.endCoord.y - this.tile.startCoord.y) / Oev.Globe.tilesDefinition);
-		var ele;
-		
-		var def = Oev.Globe.tilesDefinition;
-		var vertBySide = def + 1;
-		var nbFaces = (def * def) * 2;
-		var nbVertices = nbFaces * 3;
-		var bufferVertices = new Float32Array(nbVertices * 3);
-		var curVertId = 0;
-		var startLon = this.tile.startCoord.x;
-		var startLat = this.tile.startCoord.y;
-		
-		for (var x = 0; x < def; x ++) {
-			for (var y = 0; y < def; y ++) {
-				ele = this.elevationBuffer[index];
-				verticePosition = Oev.Globe.coordToXYZ(startLon + (stepCoord.x * x), startLat + (stepCoord.y * y), ele);
-				bufferVertices[curVertId] = verticePosition.x;
-				curVertId ++;
-				bufferVertices[curVertId] = verticePosition.y;
-				curVertId ++;
-				bufferVertices[curVertId] = verticePosition.z;
-				curVertId ++;
-			}
-		}
-		
-		for (x = 0; x < nbVertX; x ++) {
-			for (y = 0; y < nbVertY; y ++) {
-				var ele = this.elevationBuffer[index];
-				verticePosition = Oev.Globe.coordToXYZ(this.tile.startCoord.x + (stepCoord.x * x), this.tile.startCoord.y + (stepCoord.y * y), ele);
-				this.tile.meshe.geometry.vertices[index].x = verticePosition.x;
-				this.tile.meshe.geometry.vertices[index].y = verticePosition.y;
-				this.tile.meshe.geometry.vertices[index].z = verticePosition.z;
-				index ++;
-			}
-		}
-		this.makeBorders();
-		this.tile.meshe.geometry.verticesNeedUpdate = true;
-		this.tile.meshe.geometry.uvsNeedUpdate = true;
-		this.tile.meshe.geometry.computeFaceNormals();
-		this.tile.meshe.geometry.mergeVertices()
-		this.tile.meshe.geometry.computeVertexNormals();
-		OEV.MUST_RENDER = true;
-		
-	} 
-	*/
-	ext.applyElevationToGeometry = function() {
+	applyElevationToGeometry() {
 		this.tile.makeFaceBuffer();
 		return false;
 		if (!this.dataLoaded) {
@@ -145,7 +92,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		OEV.MUST_RENDER = true;
 	} 
 	
-	ext.makeBorders = function() {
+	makeBorders() {
 		return false;
 		var b;
 		var x;
@@ -227,8 +174,8 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		this.tile.meshe.add(this.mesheBorder);
 	}
 	
-	ext.getElevation = function(_lon, _lat) {
-		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
+	getElevation(_lon, _lat) {
+		if (Oev.Tile.Extension['ACTIV_' + this.id] === false) {
 			return 0;
 		}
 		if (_lon < this.startCoord.x || _lon > this.endCoord.x) {
@@ -249,19 +196,19 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		return -9999;
 	}
 	
-	ext._getVerticeElevation = function(_vertIndex, _lon, _lat) {
-		if (Oev.Tile.Extension['ACTIV_' + ext.id] === false) {
+	_getVerticeElevation(_vertIndex, _lon, _lat) {
+		if (Oev.Tile.Extension['ACTIV_' + this.id] === false) {
 			return 0;
 		}
-		if (ext.dataLoaded === true) {
-			return ext.elevationBuffer[_vertIndex];
+		if (this.dataLoaded === true) {
+			return this.elevationBuffer[_vertIndex];
 		}
 		if (this.parentTile != undefined) {
 			return this.parentTile.interpolateEle(_lon, _lat);
 		}
 	}
 	
-	ext.interpolateEle = function(_lon, _lat) {
+	interpolateEle(_lon, _lat) {
 		var gapLeft = this.endCoord.x - this.startCoord.x;
 		var distFromLeft = _lon - this.startCoord.x;
 		var prctLeft = distFromLeft / gapLeft;
@@ -271,7 +218,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		if (prctLeft < 0 || prctLeft > 1 || prctTop < 0 || prctTop > 1) {
 			return -9999;
 		}
-		if (ext.dataLoaded === false) {
+		if (this.dataLoaded === false) {
 			if (this.parentTile === undefined) {
 				return 0;
 			}
@@ -322,34 +269,34 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 			var vertRightBottomIdY = Math.floor(Oev.Globe.tilesDefinition * prctTop) + 1;
 		}
 		var vertRightBottomId = vertRightBottomIdY + (vertRightBottomIdX * (Oev.Globe.tilesDefinition + 1));
-		if (vertLeftTopId > ext.elevationBuffer.length - 1) {
-			console.log("Overflow A " + vertLeftTopId + " / " + ext.elevationBuffer.length);
+		if (vertLeftTopId > this.elevationBuffer.length - 1) {
+			console.log("Overflow A " + vertLeftTopId + " / " + this.elevationBuffer.length);
 			console.log("prctLeft : " + prctLeft + " / prctTop : " + prctTop);
 		}
-		if (vertRightTopId > ext.elevationBuffer.length - 1) {
-			console.log("Overflow B " + vertRightTopId + " / " + ext.elevationBuffer.length);
+		if (vertRightTopId > this.elevationBuffer.length - 1) {
+			console.log("Overflow B " + vertRightTopId + " / " + this.elevationBuffer.length);
 			console.log("prctLeft : " + prctLeft + " / prctTop : " + prctTop);
 		}
-		if (vertLeftBottomId > ext.elevationBuffer.length - 1) {
-			console.log("Overflow C " + vertLeftBottomId + " / " + ext.elevationBuffer.length);
+		if (vertLeftBottomId > this.elevationBuffer.length - 1) {
+			console.log("Overflow C " + vertLeftBottomId + " / " + this.elevationBuffer.length);
 			console.log("prctLeft : " + prctLeft + " / prctTop : " + prctTop);
 		}
-		if (vertRightBottomId > ext.elevationBuffer.length - 1) {
-			console.log("Overflow D " + vertRightBottomId + " / " + ext.elevationBuffer.length);
+		if (vertRightBottomId > this.elevationBuffer.length - 1) {
+			console.log("Overflow D " + vertRightBottomId + " / " + this.elevationBuffer.length);
 			console.log("prctLeft : " + prctLeft + " / prctTop : " + prctTop);
 		}
-		var ampEleTop = ext.elevationBuffer[vertRightTopId] - ext.elevationBuffer[vertLeftTopId];
-		var ampEleBottom = ext.elevationBuffer[vertRightBottomId] - ext.elevationBuffer[vertLeftBottomId];
-		var ampEleLeft = ext.elevationBuffer[vertLeftBottomId] - ext.elevationBuffer[vertLeftTopId];
-		var ampEleRight = ext.elevationBuffer[vertRightBottomId] - ext.elevationBuffer[vertRightTopId];
+		var ampEleTop = this.elevationBuffer[vertRightTopId] - this.elevationBuffer[vertLeftTopId];
+		var ampEleBottom = this.elevationBuffer[vertRightBottomId] - this.elevationBuffer[vertLeftBottomId];
+		var ampEleLeft = this.elevationBuffer[vertLeftBottomId] - this.elevationBuffer[vertLeftTopId];
+		var ampEleRight = this.elevationBuffer[vertRightBottomId] - this.elevationBuffer[vertRightTopId];
 		var gapVertLeft = this.vertCoords[vertRightTopId].x - this.vertCoords[vertLeftTopId].x;
 		var distFromVertLeft = _lon - this.vertCoords[vertLeftTopId].x;
 		var prctVertLeft = distFromVertLeft / gapVertLeft;
 		var gapVertTop = this.vertCoords[vertLeftBottomId].y - this.vertCoords[vertLeftTopId].y;
 		var distFromVertTop = _lat - this.vertCoords[vertLeftTopId].y;
 		var prctVertTop = distFromVertTop / gapVertTop;
-		var eleInterpolTop = ext.elevationBuffer[vertLeftTopId] + (ampEleTop * prctVertLeft);
-		var eleInterpolBottom = ext.elevationBuffer[vertLeftBottomId] + (ampEleTop * prctVertLeft);
+		var eleInterpolTop = this.elevationBuffer[vertLeftTopId] + (ampEleTop * prctVertLeft);
+		var eleInterpolBottom = this.elevationBuffer[vertLeftBottomId] + (ampEleTop * prctVertLeft);
 		var amplVert = eleInterpolBottom - eleInterpolTop;
 		var eleInterpolFinal = eleInterpolTop + (amplVert * prctVertTop);
 		if (isNaN(eleInterpolFinal)) {
@@ -358,7 +305,7 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		return eleInterpolFinal;
 	}
 	
-	ext.dispose = function() {
+	dispose() {
 		this.resetElevation();
 		this.applyElevationToGeometry();
 		this.dataLoaded = false;
@@ -373,13 +320,12 @@ Oev.Tile.Extension.Elevation = function(_tile) {
 		OEV.MUST_RENDER = true;
 	}
 	
-	ext.resetElevation = function() {
+	resetElevation() {
 		for (var i = 0; i < this.elevationBuffer.length; i ++) {
 			this.elevationBuffer[i] = 0;
 		}
 	}
 	
-	ext.onInit(_tile);
-	
-	return ext;
 }
+
+// export {Elevation as default}

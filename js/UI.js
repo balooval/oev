@@ -1,4 +1,8 @@
-var dragSun = false;
+import Evt from './oev/event.js';
+import * as INPUT from './oev/input.js';
+import SKY from './oev/sky.js';
+
+export let dragSun = false;
 var notifCloseTimer = -1;
 var urlParams = [];
 var UiObj = undefined;
@@ -7,13 +11,13 @@ var htmlElmtLoadingDatas;
 var lastTimeLoadingUpdated = 0;
 
 var UI = function () {
-	this.evt = new Oev.Utils.Evt();
+	this.evt = new Evt();
 	this.coordOnGround = new THREE.Vector3( 0, 0, 0 );
 }
 
 UI.prototype.init = function() {
-	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-	Oev.Input.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 }
 UI.prototype.onMouseDownLeft = function() {
 	var coordOnGround = OEV.checkMouseWorldPos();
@@ -25,7 +29,7 @@ UI.prototype.onMouseUpLeft = function() {
 	dragSun = false;
 }
 
-function initUi(){
+export function initUi(){
 	UiObj = new UI();
 	UiObj.init();
 	htmlElmtLoadingDatas = {
@@ -46,8 +50,8 @@ function initUi(){
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
-	OEV.renderer.domElement.addEventListener('mousedown',Oev.Input.Mouse.onMouseDown,false);
-	OEV.renderer.domElement.addEventListener('mouseup',Oev.Input.Mouse.onMouseUp,true);
+	OEV.renderer.domElement.addEventListener('mousedown',INPUT.Mouse.onMouseDown,false);
+	OEV.renderer.domElement.addEventListener('mouseup',INPUT.Mouse.onMouseUp,true);
 	OEV.renderer.domElement.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
 	var elem = document.getElementsByClassName( "toolsBox" );
 	for( var i = 0; i < elem.length; i ++ ){
@@ -75,7 +79,6 @@ function initUi(){
 				}
 			}
 		}
-		this.MUST_UPDATE = true;
 	}
 }
 
@@ -113,9 +116,9 @@ function setElementActiv( _elm, _state ){
 }
 
 function onHemilightChanged(){
-	Oev.Sky.hemiIntensity = ( this.value / 100 ) * 0.35
-	Oev.Sky.updateSun();
-	console.log( "sky.hemiIntensity : " + Oev.Sky.hemiIntensity );
+	SKY.hemiIntensity = ( this.value / 100 ) * 0.35
+	SKY.updateSun();
+	console.log( "sky.hemiIntensity : " + SKY.hemiIntensity );
 	OEV.MUST_RENDER = true;	
 }
 
@@ -234,7 +237,7 @@ function saveNewWP( _name ){
 	Oev.Navigation.saveWaypoint( OEV.camCtrl.coordLookat.x, OEV.camCtrl.coordLookat.y, OEV.earth.CUR_ZOOM, _name, 'default', true );
 }
 
-function updateWaypointsList( _waysPts ){
+export function updateWaypointsList( _waysPts ){
 	document.getElementById( "waypointsInfos" ).innerHTML = "";
 	for( var w = 0; w < _waysPts.length; w ++ ){
 		if( _waysPts[w].showList ){
@@ -243,8 +246,8 @@ function updateWaypointsList( _waysPts ){
 	}
 }
 
-function showUICoords(){
-	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ 'm<br>SunTime: ' + Math.round( Oev.Sky.normalizedTime * 24 )+'H';
+export function showUICoords(){
+	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ 'm<br>SunTime: ' + Math.round( SKY.normalizedTime * 24 )+'H';
 }
 
 function onPostChatMsg( evt ){
@@ -255,7 +258,7 @@ function onPostChatMsg( evt ){
 	return false;
 }
 
-function updateLoadingDatas(_type, _nb){
+export function updateLoadingDatas(_type, _nb){
 	var curTime = OEV.clock.getElapsedTime();
 	if (curTime - lastTimeLoadingUpdated > 1) {
 		lastTimeLoadingUpdated = curTime;

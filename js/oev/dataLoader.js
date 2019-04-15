@@ -1,199 +1,202 @@
-'use strict';
-Oev.DataLoader = {};
+import * as OLD_UI from '../UI.js';
 
-Oev.DataLoader.Proxy = function(_type) {
-	this._type = _type;
-	var simulByType = {
-		TILE2D : 4, 
-		ELE : 4, 
-		BUILDINGS : 2, 
-		NORMAL : 1, 
-		PLANE : 1, 
-		OVERPASS_CACHE : 1, 
-	};
-	this._simulLoad = simulByType[this._type];
-	this._datasLoaded = {};
-	this._datasWaiting = [];
-	this._datasLoading = [];
-	this._loaders = [];
-	this._initLoaders();
-}
+export const Params = {};
+const DataLoader = {};
 
-Oev.DataLoader.Proxy.prototype = {
-	
-	getData : function(_params, _callback) {
-		_params.priority = _params.priority || 1;
-		_params.key = this._genKey(_params);
-		_params.callback = _callback;
-		if (this._type == 'BUILDINGO') {
-			console.log('getData', _params.key);
-		}
-		if (this._sendCachedData(_params) === true) {
-			return true;
-		}
-		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
-			return false;
-		}
-		this._addSorted(_params);
-		this._checkForNextLoad();
-	}, 
-	
-	_genKey : function(_params) {
-		_params.keyOpt = _params.keyOpt || '';
-		return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
-	}, 
-	
-	_initLoaders : function() {
-		var i;
-		var loader;
-		var _self = this;
-		for (i = 0; i < this._simulLoad; i ++) {
-			if (this._type == 'TILE2D') {
-				loader = new Oev.DataLoader.Tile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'ELE') {
-				loader = new Oev.DataLoader.Elevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'BUILDINGS') {
-				loader = new Oev.DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'NORMAL') {
-				loader = new Oev.DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'PLANE') {
-				loader = new Oev.DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			} else if (this._type == 'OVERPASS_CACHE') {
-				loader = new Oev.DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-			}
-			this._loaders.push(loader);
-		}
-	}, 
-	
-	onDataLoaded : function(_data, _params) {
-		if (this._type == 'OVERPASS_CACHE0') {
-			console.log('_params', _params.key);
-			// var date = new Date();
-			// console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
-		}
-		var i;
-		if (_data === null) {
-			console.warn('Error loading ressource');
-			return false;
-		}
-		for (i = 0; i < this._datasLoading.length; i ++) {
-			if (this._datasLoading[i].key == _params.key) {
-				this._datasLoading.splice(i, 1);
-				break;
-			}
-		}
-		_params.callback(_data);
-		if (_params.dropDatas === undefined || _params.dropDatas == false) {
-			this._datasLoaded[_params.key] = _data;
-		}
-		this._checkForNextLoad();
-	}, 
-	
-	_addSorted : function(_params) {
-		var i;
-		_params.priority /= _params.z;
-		for (var i = 0; i < this._datasWaiting.length; i ++) {
-			if (_params.priority < this._datasWaiting[i].priority) {
-				this._datasWaiting.splice(i, 0, _params);
-				return true;
-			}
-		}
-		this._datasWaiting.push(_params);
-		return false;
-	}, 
-	
-	_sendCachedData : function(_params) {
-		if (this._datasLoaded[_params.key] === undefined) {
-			return false;
-		}
-		_params.callback(this._datasLoaded[_params.key]);
-		return true;
-	}, 
-	
-	abort : function(_params) {
-		if (_params.key === undefined) {
-			// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
-			_params.key = this._genKey(_params);
-		}
-		var i;
-		for (i = 0; i < this._datasWaiting.length; i ++) {
-			if (this._datasWaiting[i].key == _params.key) {
-				this._datasWaiting.splice(i, 1);
-				return true;
-			}
-		}
-		return false;
-	}, 
-	
-	clear : function() {
+
+export class Proxy {
+	constructor(_type) {
+		this._type = _type;
+		var simulByType = {
+			TILE2D : 4, 
+			ELE : 4, 
+			BUILDINGS : 2, 
+			NORMAL : 1, 
+			PLANE : 1, 
+			OVERPASS_CACHE : 1, 
+		};
+		this._simulLoad = simulByType[this._type];
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
-	}, 
-	
-	_checkForNextLoad : function() {
-		if (this._datasLoading.length < this._simulLoad) {
-			this._loadNext();
+		this._loaders = [];
+		this.serverUrl = 'https://val.openearthview.net';
+		this._initLoaders();
+	}
+
+		getData(_params, _callback) {
+			_params.priority = _params.priority || 1;
+			_params.key = this._genKey(_params);
+			_params.callback = _callback;
+			if (this._type == 'BUILDINGO') {
+				console.log('getData', _params.key);
+			}
+			if (this._sendCachedData(_params) === true) {
+				return true;
+			}
+			if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
+				return false;
+			}
+			this._addSorted(_params);
+			this._checkForNextLoad();
+		}
+		
+		_genKey(_params) {
+			_params.keyOpt = _params.keyOpt || '';
+			return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
+		}
+		
+		_initLoaders() {
+			var i;
+			var loader;
+			var _self = this;
+			for (i = 0; i < this._simulLoad; i ++) {
+				if (this._type == 'TILE2D') {
+					loader = new DataLoader.Tile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				} else if (this._type == 'ELE') {
+					loader = new DataLoader.Elevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				} else if (this._type == 'BUILDINGS') {
+					loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				} else if (this._type == 'NORMAL') {
+					loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				} else if (this._type == 'PLANE') {
+					loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				} else if (this._type == 'OVERPASS_CACHE') {
+					loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				}
+				this._loaders.push(loader);
+			}
+		}
+		
+		onDataLoaded(_data, _params) {
+			if (this._type == 'OVERPASS_CACHE0') {
+				console.log('_params', _params.key);
+				// var date = new Date();
+				// console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
+			}
+			var i;
+			if (_data === null) {
+				console.warn('Error loading ressource');
+				return false;
+			}
+			for (i = 0; i < this._datasLoading.length; i ++) {
+				if (this._datasLoading[i].key == _params.key) {
+					this._datasLoading.splice(i, 1);
+					break;
+				}
+			}
+			_params.callback(_data);
+			if (_params.dropDatas === undefined || _params.dropDatas == false) {
+				this._datasLoaded[_params.key] = _data;
+			}
+			this._checkForNextLoad();
+		}
+		
+		_addSorted(_params) {
+			var i;
+			_params.priority /= _params.z;
+			for (var i = 0; i < this._datasWaiting.length; i ++) {
+				if (_params.priority < this._datasWaiting[i].priority) {
+					this._datasWaiting.splice(i, 0, _params);
+					return true;
+				}
+			}
+			this._datasWaiting.push(_params);
+			return false;
+		}
+		
+		_sendCachedData(_params) {
+			if (this._datasLoaded[_params.key] === undefined) {
+				return false;
+			}
+			_params.callback(this._datasLoaded[_params.key]);
 			return true;
 		}
-		return false;
-	}, 
-	
-	_loadNext : function() {
-		if (this._datasWaiting.length == 0) {
+		
+		abort(_params) {
+			if (_params.key === undefined) {
+				// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
+				_params.key = this._genKey(_params);
+			}
+			var i;
+			for (i = 0; i < this._datasWaiting.length; i ++) {
+				if (this._datasWaiting[i].key == _params.key) {
+					this._datasWaiting.splice(i, 1);
+					return true;
+				}
+			}
 			return false;
 		}
-		var freeLoader = this._getAvailableLoader();
-		if (freeLoader === null) {
+		
+		clear() {
+			this._datasLoaded = {};
+			this._datasWaiting = [];
+			this._datasLoading = [];
+		}
+		
+		_checkForNextLoad() {
+			if (this._datasLoading.length < this._simulLoad) {
+				this._loadNext();
+				return true;
+			}
 			return false;
 		}
-		var currentLoadingParams = this._datasWaiting.shift();
-		this._datasLoading.push(currentLoadingParams);
 		
-		updateLoadingDatas(this._type, this._datasWaiting.length);
+		_loadNext() {
+			if (this._datasWaiting.length == 0) {
+				return false;
+			}
+			var freeLoader = this._getAvailableLoader();
+			if (freeLoader === null) {
+				return false;
+			}
+			var currentLoadingParams = this._datasWaiting.shift();
+			this._datasLoading.push(currentLoadingParams);
+			
+			OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
+			
+			freeLoader.load(currentLoadingParams);
+		}
 		
-		freeLoader.load(currentLoadingParams);
-	}, 
-	
-	_getAvailableLoader : function() {
-		var i;
-		for (i = 0; i < this._simulLoad; i ++) {
-			if (!this._loaders[i].isLoading) {
-				return this._loaders[i];
+		_getAvailableLoader() {
+			var i;
+			for (i = 0; i < this._simulLoad; i ++) {
+				if (!this._loaders[i].isLoading) {
+					return this._loaders[i];
+				}
 			}
+			return null;
 		}
-		return null;
-	}, 
-	
-	_isWaiting : function(_key) {
-		var i;
-		for (i = 0; i < this._datasWaiting.length; i ++) {
-			if (this._datasWaiting[i].key == _key) {
-				return true;
+		
+		_isWaiting(_key) {
+			var i;
+			for (i = 0; i < this._datasWaiting.length; i ++) {
+				if (this._datasWaiting[i].key == _key) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
-	}, 
-	
-	_isLoading : function(_key) {
-		var i;
-		for (i = 0; i < this._datasLoading.length; i ++) {
-			if (this._datasLoading[i].key == _key) {
-				return true;
+		
+		_isLoading(_key) {
+			var i;
+			for (i = 0; i < this._datasLoading.length; i ++) {
+				if (this._datasLoading[i].key == _key) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
-	}, 
-}
+	}
 
 
 
-Oev.DataLoader.Ajax = function () {
+DataLoader.Ajax = function () {
 	this.request = new XMLHttpRequest();
 	this.request.onreadystatechange = this.bindFunction(this.stateChange, this);
 }
 
-Oev.DataLoader.Ajax.prototype = {
+DataLoader.Ajax.prototype = {
 	load : function(url, _callback) {
 		this.url = url;
 		this.callback = _callback;
@@ -215,7 +218,7 @@ Oev.DataLoader.Ajax.prototype = {
 }
 
 
-Oev.DataLoader.Canvas = (function() {
+DataLoader.Canvas = (function() {
 	var canvas = document.createElement('canvas');
 	canvas.width = '64';
 	canvas.height = '64';
@@ -255,8 +258,9 @@ Oev.DataLoader.Canvas = (function() {
 	return api;
 })();
 
-Oev.DataLoader.Elevation = function(_callback) {
-	this.definition = Oev.DataLoader.Elevation.definition;
+
+DataLoader.Elevation = function(_callback) {
+	this.definition = Params.Elevation.definition;
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
@@ -265,19 +269,22 @@ Oev.DataLoader.Elevation = function(_callback) {
 	this.imageObj.onload = function() {
 		loader.onImgReady(this);
 	};
+	this.serverUrl = 'https://val.openearthview.net';
 }
 
-Oev.DataLoader.Elevation.definition = 4;
+Params.Elevation = {
+	definition : 4, 
+}
 
-Oev.DataLoader.Elevation.prototype = {
+DataLoader.Elevation.prototype = {
 	load : function(_params) {
 		this.isLoading = true;
 		this.params = _params;
-		this.imageObj.src = 'libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+		this.imageObj.src = this.serverUrl + '/libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
 	}, 
 	
 	onImgReady : function(_img) {
-		var res = Oev.DataLoader.Canvas.extractElevation(_img, _img.width, _img.height);
+		var res = DataLoader.Canvas.extractElevation(_img, _img.width, _img.height);
 		this.isLoading = false;
 		if (this.callback) {
 			this.callback(res, this.params);
@@ -285,27 +292,23 @@ Oev.DataLoader.Elevation.prototype = {
 	}, 
 }
 
-Oev.DataLoader.Tile2D = function(_callback) {
+DataLoader.Tile2D = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
+	this.serverUrl = 'https://val.openearthview.net';
 	this.tileLoader = new THREE.TextureLoader();
 }
 
-Oev.DataLoader.Tile2D.prototype = {
+DataLoader.Tile2D.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
 		
 		var cache = '';
-		// if (Math.random() > 0.5 && _params.z < 19) {
-		if (tmpNoCache) {
-			cache = '&nocache=1';
-			console.warn('reload tile2D');
-		}
 		
-		this.tileLoader.load('libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_params.z+'&x='+_params.x+'&y='+_params.y+cache, 
+		this.tileLoader.load(this.serverUrl + '/libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_params.z+'&x='+_params.x+'&y='+_params.y+cache, 
 			function(_texture){
 				loader.onDataLoadSuccess(_texture);
 			}, 
@@ -324,26 +327,27 @@ Oev.DataLoader.Tile2D.prototype = {
 	
 	onDataLoadError : function() {
 		this.isLoading = false;
-		console.warn( 'Oev.DataLoader.Tile2D error', this.params);
+		console.warn( 'DataLoader.Tile2D error', this.params);
 		this.callback(null);
 	}, 
 }
 
 
 
-Oev.DataLoader.Normal = function(_callback) {
+DataLoader.Normal = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
 	this.tileLoader = new THREE.TextureLoader();
+	this.serverUrl = 'https://val.openearthview.net';
 }
 
-Oev.DataLoader.Normal.prototype = {
+DataLoader.Normal.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		var url = 'libs/remoteImg.php?tileNormal';
+		var url = this.serverUrl + '/libs/remoteImg.php?tileNormal';
 		this.tileLoader.load(url + '=1&def=64&z='+_params.z+'&x='+_params.x+'&y='+_params.y, 
 			function(_texture){
 				loader.onDataLoadSuccess(_texture);
@@ -363,13 +367,13 @@ Oev.DataLoader.Normal.prototype = {
 	
 	onDataLoadError : function(_evt) {
 		this.isLoading = false;
-		console.warn( 'Oev.DataLoader.Normal error', this.params, _evt);
+		console.warn( 'DataLoader.Normal error', this.params, _evt);
 		this.callback(null);
 	}, 
 }
 
 
-Oev.DataLoader.BuildingWorker = (function() {
+DataLoader.BuildingWorker = (function() {
 	var worker = new Worker('js/oev/workers/buildingJson.js');
 	var loaders = [];
 	
@@ -391,19 +395,20 @@ Oev.DataLoader.BuildingWorker = (function() {
 	return api;
 })();
 
-Oev.DataLoader.Building = function(_callback) {
+DataLoader.Building = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
-	this.ajax = new Oev.DataLoader.Ajax();
+	this.ajax = new DataLoader.Ajax();
+	this.serverUrl = 'https://val.openearthview.net';
 }
 
-Oev.DataLoader.Building.prototype = {
+DataLoader.Building.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load("libs/remoteImg.php?overpass_buildings=1&zoom="+_params.z+"&tileX="+_params.x+"&tileY="+_params.y, 
+		this.ajax.load(this.serverUrl + "/libs/remoteImg.php?overpass_buildings=1&zoom="+_params.z+"&tileX="+_params.x+"&tileY="+_params.y, 
 			function(_datas){
 				loader.onDataLoadSuccess(_datas);
 			}
@@ -411,7 +416,7 @@ Oev.DataLoader.Building.prototype = {
 	}, 
 	
 	onDataLoadSuccess : function(_data) {
-		Oev.DataLoader.BuildingWorker.compute(this, {"json" : _data, "bbox" : this.params.bbox});
+		DataLoader.BuildingWorker.compute(this, {"json" : _data, "bbox" : this.params.bbox});
 	}, 
 	
 	datasReady : function(_datas) {
@@ -423,19 +428,20 @@ Oev.DataLoader.Building.prototype = {
 
 
 
-Oev.DataLoader.Planes = function(_callback) {
+DataLoader.Planes = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
-	this.ajax = new Oev.DataLoader.Ajax();
+	this.ajax = new DataLoader.Ajax();
+	this.serverUrl = 'https://val.openearthview.net';
 }
 
-Oev.DataLoader.Planes.prototype = {
+DataLoader.Planes.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load('libs/remoteImg.php?planes', 
+		this.ajax.load(this.serverUrl + '/libs/remoteImg.php?planes', 
 			function(_datas){
 				loader.onDataLoadSuccess(JSON.parse(_datas));
 			}
@@ -452,19 +458,20 @@ Oev.DataLoader.Planes.prototype = {
 
 
 
-Oev.DataLoader.OverpassCache = function(_callback) {
+DataLoader.OverpassCache = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
 	this.params = {};
-	this.ajax = new Oev.DataLoader.Ajax();
+	this.ajax = new DataLoader.Ajax();
+	this.serverUrl = 'https://val.openearthview.net';
 }
 
-Oev.DataLoader.OverpassCache.prototype = {
+DataLoader.OverpassCache.prototype = {
 	load : function(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load('libs/remoteImg.php?overpassClient=1&type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
+		this.ajax.load(this.serverUrl + '/libs/remoteImg.php?overpassClient=1&type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
 			function(_datas, _xhr){
 				loader.onDataLoadSuccess(_datas, _xhr);
 			}

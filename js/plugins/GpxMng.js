@@ -94,4 +94,6 @@ OpenEarthViewer.gpx = {
 	}
 }
 
-OpenEarthViewer.plugins["GPX"] = OpenEarthViewer.gpx;
+// OpenEarthViewer.plugins["GPX"] = OpenEarthViewer.gpx;
+console.log('OEV', OEV)
+OEV.setPlugin("GPX", OpenEarthViewer.gpx);

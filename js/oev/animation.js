@@ -1,4 +1,6 @@
-Oev.Animation = (function(){
+import Evt from './event.js';
+
+const Animation = (function(){
 	'use strict';
 	var api = {
 		
@@ -13,7 +15,7 @@ Oev.Animation = (function(){
 		this.timeEnd = -1;
 		this.timeTotal = -1;
 		this.running = false;
-		this.evt = new Oev.Utils.Evt();
+		this.evt = new Evt();
 	};
 	
 	api.TweenValue.prototype = {
@@ -54,3 +56,4 @@ Oev.Animation = (function(){
 	return api;
 })();
 
+export {Animation as default}

@@ -1,101 +1,39 @@
-var Oev = (function(){
-	var api = {};
-	return api;
-})();
 
-Oev.Utils = (function(){
-	'use strict';
-	var api = {
-		tileToCoords : function(_tile_x, _tile_y, _zoom) {
-			var p = [];
-			var n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
-			p[0] = ((_tile_x / Math.pow(2.0, _zoom) * 360.0) - 180.0);
-			p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
-			return p;
-		}, 
-		
-		tileToCoordsVect : function(_tile_x, _tile_y, _zoom){
-			var res = Oev.Utils.tileToCoords(_tile_x, _tile_y, _zoom);
-			return new THREE.Vector2(res[0], res[1]);
-		}, 
+export function tileToCoords(_tile_x, _tile_y, _zoom) {
+	var p = [];
+	var n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
+	p[0] = ((_tile_x / Math.pow(2.0, _zoom) * 360.0) - 180.0);
+	p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
+	return p;
+}
 
-		rgbToHex : function(r, g, b) {
-			if (r > 255 || g > 255 || b > 255)
-				throw "Invalid color component";
-			return ((r << 16) | (g << 8) | b).toString(16);
-		}, 
-		
-		coordDistance : function(_startLon, _startLat, _endLon, _endLat){
-			var R = 6371000; // metres
-			var sigma1 = Oev.Math.radians( _startLat );
-			var sigma2 = Oev.Math.radians( _endLat );
-			var deltaSigma = Oev.Math.radians( _endLat-_startLat )
-			var deltaTruc = Oev.Math.radians( _endLon - _startLon );
-			var a = Math.sin( deltaSigma / 2 ) * Math.sin( deltaSigma / 2 ) +
-					Math.cos( sigma1 ) * Math.cos( sigma2 ) *
-					Math.sin( deltaTruc / 2 ) * Math.sin( deltaTruc / 2 );
-			var c = 2 * Math.atan2( Math.sqrt( a ), Math.sqrt( 1 - a ) );
-			var distance = R * c;
-			return distance;
-		}, 
-	};
+export function tileToCoordsVect(_tile_x, _tile_y, _zoom){
+	var res = tileToCoords(_tile_x, _tile_y, _zoom);
+	return new THREE.Vector2(res[0], res[1]);
+}
+
+export function rgbToHex(r, g, b) {
+	if (r > 255 || g > 255 || b > 255)
+		throw "Invalid color component";
+	return ((r << 16) | (g << 8) | b).toString(16);
+}
+
+export function coordDistance(_startLon, _startLat, _endLon, _endLat){
+	var R = 6371000; // metres
+	var sigma1 = Oev.Math.radians( _startLat );
+	var sigma2 = Oev.Math.radians( _endLat );
+	var deltaSigma = Oev.Math.radians( _endLat-_startLat )
+	var deltaTruc = Oev.Math.radians( _endLon - _startLon );
+	var a = Math.sin( deltaSigma / 2 ) * Math.sin( deltaSigma / 2 ) +
+			Math.cos( sigma1 ) * Math.cos( sigma2 ) *
+			Math.sin( deltaTruc / 2 ) * Math.sin( deltaTruc / 2 );
+	var c = 2 * Math.atan2( Math.sqrt( a ), Math.sqrt( 1 - a ) );
+	var distance = R * c;
+	return distance;
+}
 	
-	api.Evt = function() {
-		this.events = {};
-		this.listeners = {};
-	};
-	
-	api.Evt.prototype = {
-		addEventListener : function(_evtName, _listener, _callback) {
-			if (this.events[_evtName] === undefined) {
-                this.events[_evtName] = [];
-                this.listeners[_evtName] = [];
-            }
-            this.events[_evtName].push(_callback);
-            this.listeners[_evtName].push(_listener);
-		}, 
-		
-		removeEventListener : function(_evtName, _listener, _callback) {
-			var i;
-			var index = -1;
-			if (!this.events.hasOwnProperty(_evtName)){
-				return false;
-			}
-			for (i = 0; i < this.listeners[_evtName].length; i ++) {
-				if (this.listeners[_evtName][i] == _listener && this.events[_evtName][i] == _callback) {
-					index = i;
-                    break;
-				}
-			}
-			if (index < 0){
-				console.error('removeEventListener "' + _evtName + '" NOT found');
-				return false;
-			}
-			this.events[_evtName].splice(index, 1);
-			this.listeners[_evtName].splice(index, 1);
-		}, 
 
-		fireEvent : function(_evtName, _args) {
-			var i;
-			if (!this.events.hasOwnProperty(_evtName)){
-				return false;
-			}
-			if (_args === undefined) {
-				_args = [];
-			}
-            var evs = this.events[_evtName].slice(0);
-            var lst = this.listeners[_evtName].slice(0);
-            var listenerNb = evs.length;
-			for (i = 0; i < listenerNb; i++) {
-				evs[i].call(lst[i], _args);
-			}
-		}, 
-	}
-	
-	return api;
-})();
-
-Oev.Utils.getColorByName = function(_name) {
+export function getColorByName(_name) {
 	var colorsNames = {
 		"alice blue" :  [240, 248, 255] ,
 		"aliceblue" :  [240, 248, 255] ,

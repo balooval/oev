@@ -1,173 +1,175 @@
-var TileNodes = function (_tile) {
-	this.tile = _tile;
-	this.datasLoaded = false;
-	this.datasContent = undefined;
-	this.meshe = undefined;
-	this.meshes = undefined;
-	this.onStage = this.tile.onStage;
-	this.mustUpdate = false;
-	this.particules = [];
-}
-
-TileNodes.prototype.loadDatas = function() {
-	if (OEV.earth.loadNodes && this.onStage && this.tile.zoom >= 17) {
-		OEV.earth.nodesLoadManager.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
+class TileNodes {
+	constructor(_tile) {
+		this.tile = _tile;
+		this.datasLoaded = false;
+		this.datasContent = undefined;
+		this.meshe = undefined;
+		this.meshes = undefined;
+		this.onStage = this.tile.onStage;
+		this.mustUpdate = false;
+		this.particules = [];
 	}
-}
 
-
-TileNodes.prototype.onDatasLoaded = function( _datas ) {
-	this.datasLoaded = true;
-	this.datasContent = _datas;
-	if( this.onStage ){
-		this.drawDatas();
+	loadDatas() {
+		if (OEV.earth.loadNodes && this.onStage && this.tile.zoom >= 17) {
+			OEV.earth.nodesLoadManager.getDatas(this, this.tile.zoom+'/'+this.tile.tileX+'/'+this.tile.tileY, this.tile.tileX, this.tile.tileY, this.tile.zoom, this.tile.distToCam);
+		}
 	}
-}
 
-	
 
-TileNodes.prototype.drawDatas = function() {
-	this.onStage = this.tile.onStage;
-	if( !this.datasLoaded ){
-		this.loadDatas();
-	}else{
-		if( this.meshes == undefined ){
-			this.meshes = {};
-			var bigGeosTab = new THREE.Geometry();
-			
-			for( var t = 0; t < this.datasContent["elements"].length; t ++ ){
+	onDatasLoaded( _datas ) {
+		this.datasLoaded = true;
+		this.datasContent = _datas;
+		if( this.onStage ){
+			this.drawDatas();
+		}
+	}
+
+		
+
+	drawDatas() {
+		this.onStage = this.tile.onStage;
+		if( !this.datasLoaded ){
+			this.loadDatas();
+		}else{
+			if( this.meshes == undefined ){
+				this.meshes = {};
+				var bigGeosTab = new THREE.Geometry();
 				
-				// console.log( 'amenity : ' + this.datasContent["elements"][t]['tags']['amenity'] );
-				var tmpBuffGeo;
-				var curNodeType = 'none';
-				
-				if( "amenity" in this.datasContent["elements"][t]['tags'] ){
-					if( this.datasContent["elements"][t]['tags']['amenity'] == 'recycling' ){
-						curNodeType = 'recycling';
-						tmpBuffGeo = OEV.modelsLib["recycling"].geometry.clone();
-					}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'fountain' ){
-						this.mustUpdate = true;
-						curNodeType = 'fountain';
-						tmpBuffGeo = OEV.modelsLib["fountain"].geometry.clone();
-					}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'waste_basket' ){
-						curNodeType = 'poubelle';
-						tmpBuffGeo = OEV.modelsLib["poubelle"].geometry.clone();
-					}else{
-						// curNodeType = 'default';
-						// tmpBuffGeo = OEV.modelsLib["LAMP_lod_2"].geometry.clone();
+				for( var t = 0; t < this.datasContent["elements"].length; t ++ ){
+					
+					// console.log( 'amenity : ' + this.datasContent["elements"][t]['tags']['amenity'] );
+					var tmpBuffGeo;
+					var curNodeType = 'none';
+					
+					if( "amenity" in this.datasContent["elements"][t]['tags'] ){
+						if( this.datasContent["elements"][t]['tags']['amenity'] == 'recycling' ){
+							curNodeType = 'recycling';
+							tmpBuffGeo = OEV.modelsLib["recycling"].geometry.clone();
+						}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'fountain' ){
+							this.mustUpdate = true;
+							curNodeType = 'fountain';
+							tmpBuffGeo = OEV.modelsLib["fountain"].geometry.clone();
+						}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'waste_basket' ){
+							curNodeType = 'poubelle';
+							tmpBuffGeo = OEV.modelsLib["poubelle"].geometry.clone();
+						}else{
+							// curNodeType = 'default';
+							// tmpBuffGeo = OEV.modelsLib["LAMP_lod_2"].geometry.clone();
+						}
+					}else if( "artwork_type" in this.datasContent["elements"][t]['tags'] ){
+						console.log('statue');
+						curNodeType = 'statue';
+						tmpBuffGeo = OEV.modelsLib["statue"].geometry.clone();
 					}
-				}else if( "artwork_type" in this.datasContent["elements"][t]['tags'] ){
-					console.log('statue');
-					curNodeType = 'statue';
-					tmpBuffGeo = OEV.modelsLib["statue"].geometry.clone();
+					
+					if( curNodeType != 'none' ){
+						if( this.meshes[curNodeType] == undefined ){
+							this.meshes[curNodeType] = new THREE.Mesh( new THREE.Geometry(), OEV.earth.modelsMesheMat[curNodeType] );
+							this.meshes[curNodeType].receiveShadow = true;
+							this.meshes[curNodeType].castShadow = true;
+						}
+						
+						
+						var tmpGeo = new THREE.Geometry().fromBufferGeometry( tmpBuffGeo );
+						var importMeshe = new THREE.Mesh( tmpGeo );
+						
+						var lon = this.datasContent["elements"][t]["lon"];
+						var lat = this.datasContent["elements"][t]["lat"];
+						
+						var ele = this.tile.interpolateEle( lon, lat, true );
+						var pos = OEV.earth.coordToXYZ( lon, lat, ele );
+						
+						if( curNodeType == 'fountain' ){
+							this.particules.push( new Particules( pos ) );
+						}
+						
+						importMeshe.position.x = pos.x;
+						importMeshe.position.y = pos.y;
+						importMeshe.position.z = pos.z;
+						importMeshe.rotation.x = Math.PI;
+						importMeshe.rotation.y = Math.random() * 3.14;
+						
+						var scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
+						
+						importMeshe.scale.x = scaleVariation;
+						importMeshe.scale.y = scaleVariation;
+						importMeshe.scale.z = scaleVariation;
+						importMeshe.updateMatrix();
+						this.meshes[curNodeType].geometry.merge(importMeshe.geometry, importMeshe.matrix);
+					}
 				}
-				
-				if( curNodeType != 'none' ){
-					if( this.meshes[curNodeType] == undefined ){
-						this.meshes[curNodeType] = new THREE.Mesh( new THREE.Geometry(), OEV.earth.modelsMesheMat[curNodeType] );
-						this.meshes[curNodeType].receiveShadow = true;
-						this.meshes[curNodeType].castShadow = true;
-					}
-					
-					
-					var tmpGeo = new THREE.Geometry().fromBufferGeometry( tmpBuffGeo );
-					var importMeshe = new THREE.Mesh( tmpGeo );
-					
-					var lon = this.datasContent["elements"][t]["lon"];
-					var lat = this.datasContent["elements"][t]["lat"];
-					
-					var ele = this.tile.interpolateEle( lon, lat, true );
-					var pos = OEV.earth.coordToXYZ( lon, lat, ele );
-					
-					if( curNodeType == 'fountain' ){
-						this.particules.push( new Particules( pos ) );
-					}
-					
-					importMeshe.position.x = pos.x;
-					importMeshe.position.y = pos.y;
-					importMeshe.position.z = pos.z;
-					importMeshe.rotation.x = Math.PI;
-					importMeshe.rotation.y = Math.random() * 3.14;
-					
-					var scaleVariation = ( 0.005 + ( 0.005 * ( Math.random() * 0.2 ) ) ) * OEV.earth.globalScale;
-					
-					importMeshe.scale.x = scaleVariation;
-					importMeshe.scale.y = scaleVariation;
-					importMeshe.scale.z = scaleVariation;
-					importMeshe.updateMatrix();
-					this.meshes[curNodeType].geometry.merge(importMeshe.geometry, importMeshe.matrix);
+				if( this.mustUpdate ){
+					OEV.addObjToUpdate( this );
 				}
 			}
+			if( this.onStage ){
+				for (var key in this.meshes) {
+					if (!this.meshes.hasOwnProperty(key)) continue;
+					OEV.scene.add( this.meshes[key] );
+				}
+				OEV.MUST_RENDER = true;
+			}
+		}
+	}
+
+	update() {
+		for( var p = 0; p < this.particules.length; p ++ ){
+			this.particules[p].update();
+		}
+	}
+
+	hide( _state ) {
+		if( _state && this.onStage ){
+			this.onStage = false;
+			
+			if( !this.datasLoaded ){
+				OEV.earth.nodesLoadManager.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
+			}
+			
+			for (var key in this.meshes) {
+				if (!this.meshes.hasOwnProperty(key)) continue;
+				OEV.scene.remove( this.meshes[key] );
+			}
+			
+			if( this.mustUpdate ){
+				OEV.removeObjToUpdate( this );
+			}
+			
+			for( var p = 0; p < this.particules.length; p ++ ){
+				this.particules[p].hide( true );
+			}
+			
+		}else if( !_state && !this.onStage ){
+			this.onStage = true;
+			this.drawDatas();
 			if( this.mustUpdate ){
 				OEV.addObjToUpdate( this );
 			}
-		}
-		if( this.onStage ){
-			for (var key in this.meshes) {
-				if (!this.meshes.hasOwnProperty(key)) continue;
-				OEV.scene.add( this.meshes[key] );
+			for( var p = 0; p < this.particules.length; p ++ ){
+				this.particules[p].hide( false );
 			}
-			OEV.MUST_RENDER = true;
 		}
 	}
-}
 
-TileNodes.prototype.update = function() {
-	for( var p = 0; p < this.particules.length; p ++ ){
-		this.particules[p].update();
-	}
-}
-
-TileNodes.prototype.hide = function( _state ) {
-	if( _state && this.onStage ){
-		this.onStage = false;
-		
+	dispose() {
 		if( !this.datasLoaded ){
 			OEV.earth.nodesLoadManager.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
 		}
+		this.hide( true );
+		OEV.MUST_RENDER = true;
 		
 		for (var key in this.meshes) {
 			if (!this.meshes.hasOwnProperty(key)) continue;
-			OEV.scene.remove( this.meshes[key] );
+			this.meshes[key].geometry.dispose();
 		}
-		
-		if( this.mustUpdate ){
-			OEV.removeObjToUpdate( this );
-		}
+		this.meshes = undefined;
 		
 		for( var p = 0; p < this.particules.length; p ++ ){
-			this.particules[p].hide( true );
+			this.particules[p].dispose();
 		}
-		
-	}else if( !_state && !this.onStage ){
-		this.onStage = true;
-		this.drawDatas();
-		if( this.mustUpdate ){
-			OEV.addObjToUpdate( this );
-		}
-		for( var p = 0; p < this.particules.length; p ++ ){
-			this.particules[p].hide( false );
-		}
+		this.particules = undefined;
 	}
-}
-
-TileNodes.prototype.dispose = function() {
-	if( !this.datasLoaded ){
-		OEV.earth.nodesLoadManager.removeWaitingList(this.tile.zoom + "/" + this.tile.tileX + "/" + this.tile.tileY);
-	}
-	this.hide( true );
-	OEV.MUST_RENDER = true;
-	
-	for (var key in this.meshes) {
-		if (!this.meshes.hasOwnProperty(key)) continue;
-		this.meshes[key].geometry.dispose();
-	}
-	this.meshes = undefined;
-	
-	for( var p = 0; p < this.particules.length; p ++ ){
-		this.particules[p].dispose();
-	}
-	this.particules = undefined;
 }
 
 
@@ -231,3 +233,5 @@ Particules.prototype.dispose = function() {
 	this.partMesh.geometry.dispose();
 	this.partMesh = undefined;
 }
+
+export {TileNodes as default}

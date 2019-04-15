@@ -1,4 +1,3 @@
-// REPLACED BY Oev.Tile.Extension.Building
 Oev.Tile.Building = function (_tile, _tileX, _tileY, _zoom) {
 	this.tile = _tile;
 	this.datasLoaded = false;

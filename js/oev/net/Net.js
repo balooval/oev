@@ -1,17 +1,12 @@
-Oev.Net = (function(){
-	'use strict';
-	
-	var api = {
-		init : function() {
-			OEV.evt.addEventListener('APP_INIT', api, api.onAppInit);
-			// OEV.evt.addEventListener('APP_START', api, api.onAppStart);
-		}, 
-		
-		onAppInit : function() {
-			Oev.Net.Textures.onAppInit();
-			Oev.Net.Models.onAppInit();
-		}, 
-	};
-	
-	return api;
-})();
+import * as Textures from './NetTextures.js';
+import * as Models from './NetModels.js';
+
+export function init() {
+	OEV.evt.addEventListener('APP_INIT', null, onAppInit);
+	// OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+}
+
+export function onAppInit() {
+	Textures.onAppInit();
+	Models.onAppInit();
+}

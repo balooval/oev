@@ -4,19 +4,10 @@
 		<title>OpenEarthViewer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
-		<script type="text/javascript" src="js/libs/three.js"></script>
-		<script type="text/javascript" src="js/OEV.js"></script>
-		<script type="text/javascript" src="js/oev/utils.js"></script>
-		
-		
-		<script type="text/javascript" src="js/postprocessing/EffectComposer.js"></script>
-		<script type="text/javascript" src="js/postprocessing/CopyShader.js"></script>
-		<script type="text/javascript" src="js/postprocessing/ShaderPass.js"></script>
-		<script type="text/javascript" src="js/postprocessing/RenderPass.js"></script>
-		<script type="text/javascript" src="js/postprocessing/MaskPass.js"></script>
-		<script type="text/javascript" src="js/postprocessing/BokehPass.js"></script>
-		<script type="text/javascript" src="js/postprocessing/BokehShader.js"></script>
-		<script type="text/javascript" src="js/utils/water.js"></script>
+		<script type="text/javascript" src="js/libs/three.min.js"></script>
+		<script src="js/OEV.js" type="module"></script>
+		<!-- <script type="text/javascript" src="js/oev/utils.js"></script> -->
+		<!-- <script type="text/javascript" src="js/utils/water.js"></script> -->
 	</head>
 	
 
@@ -253,9 +244,9 @@ void main() {
 				<a id="contactLink" href="mailto:toto@toto.com">Contact</a>
 			</div>
 		<script>
-			var OEV = new OpenEarthViewer('threeContainer');
+			// var OEV = new OpenEarthViewer('threeContainer');
 		</script>
-		<script type="text/javascript" src="js/oev/ui.js"></script>
+		<!-- <script type="text/javascript" src="js/oev/ui.js"></script>
 		<script type="text/javascript" src="js/oev/net/Net.js"></script>
 		<script type="text/javascript" src="js/oev/net/NetTextures.js"></script>
 		<script type="text/javascript" src="js/oev/net/NetModels.js"></script>
@@ -291,7 +282,7 @@ void main() {
 		<script type="text/javascript" src="js/oev/tileExtensions/tileExtDummy.js"></script>
 		<script type="text/javascript" src="js/oev/tileExtensions/whale.js"></script>
 		<script type="text/javascript" src="js/UI.js"></script>
-		<script type="text/javascript" src="js/CamCtrl.js"></script>
+		<script type="text/javascript" src="js/CamCtrl.js" type="module"></script>
 		
 		<script type="text/javascript" src="js/Tile3d.js"></script>
 		<script type="text/javascript" src="js/TileSurface.js"></script>
@@ -300,17 +291,18 @@ void main() {
 		
 		<script type="text/javascript" src="js/Earcut.js"></script>
 		<script type="text/javascript" src="js/utils/lineclip.js"></script>
-		<script type="text/javascript" src="js/utils/geojson-area.js"></script>
-		<script type="text/javascript" src="js/plugins/GpxMng.js"></script>
-		<script type="text/javascript" src="js/plugins/PlanesMng.js"></script>
-		<script type="text/javascript" src="js/net/NetCtrl.js"></script>
+		<script type="text/javascript" src="js/utils/geojson-area.js"></script> -->
+		<!-- <script type="text/javascript" src="js/plugins/GpxMng.js" type="module"></script> -->
+		<!-- <script type="text/javascript" src="js/plugins/PlanesMng.js"></script> -->
+		<!-- <script type="text/javascript" src="js/net/NetCtrl.js"></script> -->
 		
 		<script>
-		
-			OEV.init();
+			window.addEventListener('load', evt => {
+				OEV.init();
+			})
 			
-			document.getElementById("cfg_load_ele").checked = true;
-			switchElevation();
+			// document.getElementById("cfg_load_ele").checked = true;
+			// switchElevation();
 			
 			
 			function render() {

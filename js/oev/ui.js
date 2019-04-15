@@ -1,43 +1,45 @@
-Oev.Ui = (function(){
-	'use strict';
-	var api = {
-		
-		init : function() {
-			Oev.Ui.TilesExtension.init();
-			
-			document.getElementById('cfg_sun_time').addEventListener('input', function() {
-				Oev.Sky.setSunTime(this.value / 100);
-			});
-			
-			document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
-				Oev.Sky.testLuminosity(this.value / 50);
-				// skyParamsNew.sunLuminosity
-			});
-			
-			
-			
-		}, 
-		
-		listenOnChildsClass : function(_parentId, _event, _childsClass, _callback) {
-			var childClass = _childsClass;
-			document.getElementById(_parentId).addEventListener(_event, function(_evt) {
-				if (_evt.target.classList.contains(childClass)) {
-					_callback(_evt);
-				}
-			}, false);
-		}, 
-		
-		setQueueNb : function(_nb) {
-			document.getElementById('computingQueue').innerHTML = 'compute waiting : ' + _nb;
-		}, 
-		
-	};
+import * as TileExtension from './tileExtensions/tileExtension.js';
+
+export function init() {
+	TilesExtension.init();
 	
-	return api;
-})();
+	document.getElementById('cfg_sun_time').addEventListener('input', function() {
+		Oev.Sky.setSunTime(this.value / 100);
+	});
+	
+	document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
+		Oev.Sky.testLuminosity(this.value / 50);
+		// skyParamsNew.sunLuminosity
+	});
+	
+	
+	
+}
 
+export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {
+	var childClass = _childsClass;
+	document.getElementById(_parentId).addEventListener(_event, function(_evt) {
+		if (_evt.target.classList.contains(childClass)) {
+			_callback(_evt);
+		}
+	}, false);
+}
 
-Oev.Ui.TilesExtension = (function(){
+export function setQueueNb(_nb) {
+	document.getElementById('computingQueue').innerHTML = 'compute waiting : ' + _nb;
+}
+
+export function openModal( _content ){
+	document.getElementById( "modalContent" ).innerHTML = _content;
+	document.getElementById( "modalContainer" ).classList.add( "activ" );
+}
+
+export function closeModal(){
+	document.getElementById( "modalContainer" ).classList.remove( "activ" );
+	document.getElementById( "modalContent" ).innerHTML = '';
+}
+
+const TilesExtension = (function(){
 	'use strict';
 	var api = {
 		
@@ -46,7 +48,7 @@ Oev.Ui.TilesExtension = (function(){
 		}, 
 		
 		onAppStart : function() {
-			Oev.Ui.listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', api._onExtensionChange);
+			listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', api._onExtensionChange);
 			addExtensionsSwitchs();
 		}, 
 		
@@ -56,9 +58,9 @@ Oev.Ui.TilesExtension = (function(){
 				return false;
 			}
 			if (_evt.target.checked === true) {
-				Oev.Tile.Extension.activateExtension(extension);
+				TileExtension.activateExtension(extension);
 			} else {
-				Oev.Tile.Extension.desactivateExtension(extension);
+				TileExtension.desactivateExtension(extension);
 			}
 		}, 
 		
