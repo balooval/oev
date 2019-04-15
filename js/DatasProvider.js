@@ -1,4 +1,5 @@
-'use strict';
+import * as NET_MODELS from './oev/net/NetModels.js';
+
 var DatasProvider = function(_tile, _name) {
 	this.tile = _tile;
 	this.datasLoaded = false;
@@ -80,7 +81,7 @@ DatasProvider.prototype.drawDatas = function() {
 				if (this.name == 'TREE') {
 					// tmpGeo = Oev.Model.Tree.generate(lon, lat, ele);
 				} else {
-					tmpBuffGeo = OEV.modelsLib[OEV.MODELS_CFG[this.name]["OBJECT"]+"_lod_"+modelLod+""].geometry.clone();
+					tmpBuffGeo = NET_MODELS.model(OEV.MODELS_CFG[this.name]["OBJECT"] + "_lod_" + modelLod).geometry.clone();
 					tmpGeo = new THREE.Geometry().fromBufferGeometry(tmpBuffGeo);
 					importMeshe = new THREE.Mesh(tmpGeo);
 				}

@@ -1,30 +1,23 @@
 import Evt from './event.js';
+import * as NET_TEXTURES from './net/NetTextures.js';
 
-var lightAmbiant = undefined;
-var sunSpriteMat = undefined;
-// var sunSpriteObj = undefined;
-var atmosphereMeshe = undefined;
-// var skyDome = undefined;
-// var skyMat = undefined;
-var sunRotation = -1.5;
-var particleSystem = undefined;
-var pMaterial = undefined;
-var colorsGradient = undefined;
-var fogActive = true;
-// var hemiIntensity = 0.35;
-var stars = null;
-var starsMat = null;
-var snowEmiter = undefined;
-var destTime = 0;
-var destTimeSpeed = 0.01;
-var rainEnabled = false;
-var weatherEnabled = false;
-var lightSun;
-
-
-var skyMeshNew = null;
-var sunMeshNew = null;
-var skyParamsNew = {
+let lightAmbiant = undefined;
+let sunRotation = -1.5;
+let particleSystem = undefined;
+let pMaterial = undefined;
+let colorsGradient = undefined;
+let fogActive = true;
+let stars = null;
+let starsMat = null;
+let destTime = 0;
+const destTimeSpeed = 0.01;
+const rainEnabled = false;
+const weatherEnabled = false;
+let lightSun;
+let materialCloudNew;
+let skyMeshNew = null;
+let sunMeshNew = null;
+let skyParamsNew = {
 	sunPosition : new THREE.Vector3(0, 0, 0), 
 	sunInclinaison : 0, 
 	skyRadius : 100, 
@@ -33,16 +26,12 @@ var skyParamsNew = {
 	sunLuminosity : 0.2, 
 };
 
-
-var materialCloudNew;
-
 function createCloudNew() {
-	console.log('createCloudNew');
-	var parametersSun = {
+	const parametersSun = {
 		vertexShader: document.getElementById('vertexCloud').textContent,
 		fragmentShader: document.getElementById('fragmentCloud').textContent,
 		uniforms: {
-			map : { type: "t", value: OEV.textures['cloud'] }, 
+			map : { type: "t", value: NET_TEXTURES.texture('cloud')}, 
 			normalizedTime : {value : 0.5}, 
 		}, 
 		side: THREE.DoubleSide, 
@@ -50,24 +39,24 @@ function createCloudNew() {
 		depthWrite: false, 
 	};
 	materialCloudNew = new THREE.ShaderMaterial(parametersSun);
-	var cloudsMesh = new THREE.Mesh(new THREE.Geometry(), materialCloudNew);
-	var groupPos = new THREE.Vector3();
-	var groupsDispertion = 5000;
+	const cloudsMesh = new THREE.Mesh(new THREE.Geometry(), materialCloudNew);
+	const groupPos = new THREE.Vector3();
+	const groupsDispertion = 5000;
+	const doublePi = Math.PI * 2;
 	for (var c = 0; c < 30; c ++) {
 		if (c % 5 == 0) {
 			groupPos.x = Math.random() * groupsDispertion - groupsDispertion / 2;
 			groupPos.y = (Math.random() * groupsDispertion / 10 + groupsDispertion / 20) * -1;
 			groupPos.z = Math.random() * groupsDispertion - groupsDispertion / 2;
 		}
-		var tileOffset;
-		var faceRotX;
-		var faceRotY;
-		var doublePi = Math.PI * 2;
-		var faceWidth = 10;
-		var faceHeight = 10;
-		var geoFinal = new THREE.Geometry();
-		for (var i = 0; i < 8; i ++) {
-			var geo = new THREE.Geometry();
+		let tileOffset;
+		let faceRotX;
+		let faceRotY;
+		const faceWidth = 10;
+		const faceHeight = 10;
+		const geoFinal = new THREE.Geometry();
+		for (let i = 0; i < 8; i ++) {
+			const geo = new THREE.Geometry();
 			tileOffset = Math.random() > 0.5 ? 0.5 : 0;
 			faceRotX = (Math.random() * doublePi) - Math.PI;
 			faceRotY = (Math.random() * doublePi) - Math.PI;
@@ -103,7 +92,7 @@ function createCloudNew() {
 				new THREE.Vector2(tileOffset + 0.5, 0),
 				new THREE.Vector2(tileOffset + 0.5, 1)
 			];
-			var tmpMesh = new THREE.Mesh(geo);
+			const tmpMesh = new THREE.Mesh(geo);
 			tmpMesh.rotation.x = faceRotX;
 			tmpMesh.rotation.y = faceRotY;
 			geoFinal.mergeMesh(tmpMesh);
@@ -112,12 +101,12 @@ function createCloudNew() {
 		geoFinal.computeVertexNormals();
 		geoFinal.uvsNeedUpdate = true;
 		geoFinal.verticesNeedUpdate = true;
-		var curCloudMesh = new THREE.Mesh(geoFinal);
-		var dispertion = 500;
+		const curCloudMesh = new THREE.Mesh(geoFinal);
+		const dispertion = 500;
 		curCloudMesh.position.x = groupPos.x + (Math.random() * dispertion - dispertion / 2);
 		curCloudMesh.position.y = groupPos.y + ((Math.random() * dispertion / 10 + dispertion / 20) * -1);
 		curCloudMesh.position.z = groupPos.z + (Math.random() * dispertion - dispertion / 2);
-		var curScale = 4 + (Math.random() * 40);
+		const curScale = 4 + (Math.random() * 40);
 		curCloudMesh.scale.x = curScale * 2;
 		curCloudMesh.scale.y = curScale;
 		curCloudMesh.scale.z = curScale;
@@ -138,64 +127,58 @@ function removeSkyNew() {
 }
 
 function createSkyNew(_skyRadius) {
-	if (skyMeshNew !== null) {
-		return false;
-	}
+	if (skyMeshNew !== null) return false;
 	createCloudNew();
 	skyParamsNew.skyRadius = _skyRadius * 0.9;
 	// Sky
-	var uniformsSky = {
+	const uniformsSky = {
 		skyRadius : {value : _skyRadius}, 
 		sunPos : {value : new THREE.Vector3(0,0,0)}, 
 		sunLuminosity : {value : skyParamsNew.sunLuminosity}, 
 	};
-	var parametersSky = {
+	const parametersSky = {
 		vertexShader: document.getElementById('vertexSky').textContent,
 		fragmentShader: document.getElementById('fragmentSky').textContent,
 		uniforms: uniformsSky, 
 		side: THREE.DoubleSide, 
 	};
-	var materialSky = new THREE.ShaderMaterial(parametersSky);
+	const materialSky = new THREE.ShaderMaterial(parametersSky);
 	skyMeshNew = new THREE.Mesh(new THREE.SphereGeometry(_skyRadius, 16, 16 ), materialSky);
 	OEV.scene.add(skyMeshNew);
 	// Sun
-	var sunRadius = _skyRadius / 20;
-	var vertexShaderSun = document.getElementById('vertexSun').textContent;
-	var fragmentShaderSun = document.getElementById('fragmentSun').textContent;
-	var uniformsSun = {
+	const sunRadius = _skyRadius / 20;
+	const vertexShaderSun = document.getElementById('vertexSun').textContent;
+	const fragmentShaderSun = document.getElementById('fragmentSun').textContent;
+	const uniformsSun = {
 		sunElevation : {value : 0.5}, 
 		myModelViewMatrixInverse : {value: new THREE.Matrix4()}, 
 	};
-	var parametersSun = {
+	const parametersSun = {
 		fragmentShader: fragmentShaderSun,
 		vertexShader: vertexShaderSun,
 		uniforms: uniformsSun, 
 		transparent: true, 
-		// depthTest : false, 
 	};
-	var materialSun = new THREE.ShaderMaterial(parametersSun);
+	const materialSun = new THREE.ShaderMaterial(parametersSun);
 	sunMeshNew = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 16, 16 ), materialSun);
 	OEV.scene.add(sunMeshNew);
 }
 
 
 function updateSkyNew() {
-	if (skyMeshNew === null) {
-		return false;
-	}
+	if (skyMeshNew === null) return false;
 	skyParamsNew.sunAzimuth = (api.normalizedTime * -2) + 1;
 	skyParamsNew.sunInclinaison = Math.cos(api.normalizedTime * Math.PI * 2);
-	var dayLightTime = Math.sin((api.normalizedTime) * Math.PI);
+	let dayLightTime = Math.sin((api.normalizedTime) * Math.PI);
 	dayLightTime = Math.max(dayLightTime - 0.67, 0.02);
 	dayLightTime *= 3;
 	skyParamsNew.sunLuminosity = dayLightTime;
 	skyParamsNew.skyTransmission = Math.max((1 - dayLightTime) * 2, 0.4);
-	// console.log('skyTransmission', skyParamsNew.skyTransmission.toFixed(2));
 	skyParamsNew.sunPosition.x = Math.sin(skyParamsNew.sunAzimuth * Math.PI * 1) * (skyParamsNew.skyRadius * Math.cos(skyParamsNew.sunInclinaison * Math.PI * 0.5));
 	skyParamsNew.sunPosition.y = Math.sin(skyParamsNew.sunInclinaison * Math.PI * 0.5) * skyParamsNew.skyRadius;
 	skyParamsNew.sunPosition.z = 0 - Math.cos(skyParamsNew.sunAzimuth * Math.PI * 1) * (skyParamsNew.skyRadius * Math.cos(skyParamsNew.sunInclinaison * Math.PI * 0.5));
 	updateSkyPosition();
-	var transmission = new THREE.Vector3();
+	const transmission = new THREE.Vector3();
 	transmission.x = skyParamsNew.sunPosition.x * skyParamsNew.skyTransmission;
 	transmission.y = skyParamsNew.sunPosition.y * skyParamsNew.skyTransmission;
 	transmission.z = skyParamsNew.sunPosition.z * skyParamsNew.skyTransmission;
@@ -203,12 +186,9 @@ function updateSkyNew() {
 	skyMeshNew.material.uniforms.sunLuminosity.value = skyParamsNew.sunLuminosity;
 	sunMeshNew.material.uniforms.sunElevation.value = Math.abs(skyParamsNew.sunInclinaison);
 	materialCloudNew.uniforms.normalizedTime.value = api.normalizedTime;
-	// console.log('api.normalizedTime', api.normalizedTime.toFixed(2));
 }
 
-
-
-var api = {
+const api = {
 	evt : new Evt(), 
 	cloudsActiv : true, 
 	globalScale : 1, 
@@ -227,7 +207,7 @@ var api = {
 		if( fogActive ){
 			OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 		}
-		colorsGradient = getImageData(OEV.textures['sky_gradient'].image);	
+		colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
 		lightSun = new THREE.DirectionalLight(0xffffff, 1);
 		OEV.scene.add(lightSun);
 		lightAmbiant = new THREE.AmbientLight(0x25282d);
@@ -241,7 +221,6 @@ var api = {
 			api.makeClouds();
 		}
 		api.makeStars();
-		
 		OEV.earth.evt.addEventListener( 'CURTILE_CHANGED', api, api.onCurTileChanged );
 		OEV.earth.evt.addEventListener( 'LOD_CHANGED', api, api.onLodChanged );
 		api.onLodChanged();
@@ -253,17 +232,12 @@ var api = {
 			var delta = destTime - api.normalizedTime;
 			if (delta > 0) {
 				api.normalizedTime += destTimeSpeed;
-				if (api.normalizedTime > destTime) {
-					api.normalizedTime = destTime;
-				}
+				api.normalizedTime = Math.min(destTime, api.normalizedTime);
 			} else {
 				api.normalizedTime -= destTimeSpeed;
-				if (api.normalizedTime < destTime) {
-					api.normalizedTime = destTime;
-				}
+				api.normalizedTime = Math.max(destTime, api.normalizedTime);
 			}
 			api.updateSun();
-			
 			if (destTime == api.normalizedTime) {
 				console.log( "sunTime END" );
 				OEV.earth.walkRecorder.endCmdStep( "sunTime" );
@@ -279,7 +253,6 @@ var api = {
 	
 	
 	testLuminosity : function(_value) {
-		// skyParamsNew.sunLuminosity = _value;
 		skyMeshNew.material.uniforms.sunLuminosity.value = _value;
 		console.log('skyParamsNew.sunLuminosity', _value);
 		OEV.MUST_RENDER = true;
@@ -294,9 +267,6 @@ var api = {
 
 	updateSun : function() {
 		lightSun.target = OEV.camCtrl.pointer;
-		// if( skyDome != undefined ){
-			// updateSkyPosition();
-		// }
 		sunRotation = 2.0 + (api.normalizedTime * 5);
 		var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
 		var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
@@ -312,7 +282,6 @@ var api = {
 			rampColorFog.r = grey;
 			rampColorFog.g = grey;
 			rampColorFog.b = grey;
-			
 			grey = Math.round( ( rampColorLight.r + rampColorLight.g + rampColorLight.b ) / 3 );
 			rampColorLight.r = grey;
 			rampColorLight.g = grey;
@@ -322,53 +291,12 @@ var api = {
 		starsMat.opacity = cos;
 		var sunCol = new THREE.Color("rgb("+rampColorLight.r+","+rampColorLight.g+","+rampColorLight.b+")");
 		lightSun.color = sunCol;
-		if (OEV.earth.projection == "PLANE") {
-			var sunPosX = api.posCenter.x - (Math.cos(sunRotation) * (OEV.earth.radius / 4));
-			var sunPosY = api.posCenter.y + (Math.sin(sunRotation) * (OEV.earth.radius / 4));
-			var sunPosZ = api.posCenter.z + (Math.sin(sunRotation) * (OEV.earth.radius / 8));
-		}else{
-			var sunPosX = OEV.camera.position.x;
-			var sunPosY = OEV.camera.position.y;
-			var sunPosZ = OEV.camera.position.z;
-		}
-		/*
-		lightSun.position.x = sunPosX;
-		lightSun.position.y = sunPosY;
-		lightSun.position.z = sunPosZ;
-		*/
-		// hemiIntensity = 0.35 - (0.3 * cos);
-		
-		// var sunBackCol = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
-		// var spotAngle = Math.abs(api.normalizedTime - 0.5) + 0.5;
-		// spotAngle = (spotAngle - 0.5) * 3;
-		// sunSpriteMat.color = new THREE.Color("rgb("+ Math.round(255 - cos * 1) +", "+ Math.round(255 - cos * 50) +", "+ Math.round(255 - cos * 150) +")");
-		/*
-		var sunSpriteScale = 1000 * OEV.earth.globalScale;
-		sunSpriteObj.scale.x = sunSpriteScale;
-		sunSpriteObj.scale.y = sunSpriteScale;
-		sunSpriteObj.scale.z = sunSpriteScale;
-		*/
-		/*
-		if (OEV.earth.projection == "PLANE"){
-			var sunSpritePosX = api.posCenter.x - ( Math.cos(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-			var sunSpritePosY = api.posCenter.y + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-			var sunSpritePosZ = api.posCenter.z + ( Math.sin(sunRotation) * (OEV.earth.radius * (skyDome.scale.x * 0.6)));
-		}else{
-			var sunSpritePosX = Math.cos(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
-			var sunSpritePosY = 0;
-			var sunSpritePosZ = Math.sin(api.normalizedTime * 2 * Math.PI) * (OEV.earth.radius * 1.1);
-		}
-		sunSpriteObj.position.x = sunSpritePosX;
-		sunSpriteObj.position.y = sunSpritePosY;
-		sunSpriteObj.position.z = sunSpritePosZ;
-		*/
 		if (api.cloudsActiv){
 			pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		}
 		OEV.earth.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		OEV.earth.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		OEV.earth.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-		// skyMat.emissive = new THREE.Color("rgb("+rampColorSky.r+","+rampColorSky.g+","+rampColorSky.b+")");
 		lightAmbiant.color.r = rampColorLight.r / 400;
 		lightAmbiant.color.g = rampColorLight.g / 400;
 		lightAmbiant.color.b = rampColorLight.b / 400;
@@ -379,48 +307,12 @@ var api = {
 		api.evt.fireEvent("SUN_CHANGED");
 	},
 	
-	activAtmosphere : function(_state) {
-		// console.warn('activAtmosphere not working : no shader');
-		return false;
-		/*
-		if (_state) {
-			if (atmosphereMeshe == undefined) {
-				var skyGeo = new THREE.SphereGeometry( OEV.earth.radius * 1.5, 32, 15 );
-				var skyMat = new THREE.ShaderMaterial( 
-				{
-					uniforms: {  },
-					vertexShader:   document.getElementById( 'vertAtmosphere'   ).textContent,
-					fragmentShader: document.getElementById( 'fragAtmosphere' ).textContent,
-					side: THREE.BackSide,
-					blending: THREE.AdditiveBlending,
-					transparent: true
-				}   );
-				atmosphereMeshe = new THREE.Mesh( skyGeo, skyMat );
-			}
-			OEV.scene.add(atmosphereMeshe);
-		} else if (!_state && atmosphereMeshe != undefined) {
-			OEV.scene.remove(atmosphereMeshe);
-		}
-		*/
-	}, 
-	
 	activSky : function(_state) {
-		if (OEV.appStarted === false) {
-			return false;
-		}
+		if (OEV.appStarted === false) return false;
 		if (_state) {
 			createSkyNew(OEV.earth.radius * 0.7);
 			api.setSunTime(0.5);
 			updateSkyNew();
-			/*
-			if (skyDome == undefined){
-				skyMat = new THREE.MeshPhongMaterial({ color: new THREE.Color("rgb(103,144,230)"), side: THREE.BackSide, fog:false});
-				skyDome = new THREE.Mesh(new THREE.SphereGeometry( OEV.earth.radius * 0.8, 32, 15 ), skyMat);
-			}
-			OEV.scene.add(skyDome);
-		} else if (!_state && skyDome != undefined){
-			OEV.scene.remove(skyDome);
-			*/
 		} else {
 			removeSkyNew();
 		}
@@ -446,7 +338,6 @@ var api = {
 			particleSystem.scale.z = OEV.earth.globalScale;
 			pMaterial.size = 800 * OEV.earth.globalScale;
 		}
-		
 		stars.position.x = api.posCenter.x;
 		stars.position.y = api.posCenter.y;
 		stars.position.z = api.posCenter.z;
@@ -462,7 +353,7 @@ var api = {
 		var particleCount = 1000;
 		var particles = new THREE.Geometry();
 		if (pMaterial == undefined){
-			pMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 800, map: OEV.textures['cloud'] });
+			pMaterial = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 800, map: NET_TEXTURES.texture('cloud')});
 			pMaterial.alphaTest = 0.4;
 			pMaterial.transparent = true;
 		}
@@ -498,7 +389,6 @@ var api = {
 			var particle = new THREE.Vector3( pX, pY, pZ );
 			particles.vertices.push( particle );
 		}
-		// create the particle system
 		particleSystem = new THREE.Points(particles, pMaterial);
 		particleSystem.position.x = api.posCenter.x;
 		particleSystem.position.y = api.posCenter.y;
@@ -613,10 +503,8 @@ function getImageData(image) {
 	var canvas = document.createElement( 'canvas' );
 	canvas.width = image.width;
 	canvas.height = image.height;
-
 	var context = canvas.getContext( '2d' );
 	context.drawImage( image, 0, 0 );
-
 	return context.getImageData( 0, 0, image.width, image.height );
 }
 

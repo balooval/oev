@@ -1,3 +1,5 @@
+import * as NET_MODELS from './oev/net/NetModels.js';
+
 Oev.Tile.Extension.Node = function(_tile, _tagsHandled, _meshBuilder) {
 	this.tile = _tile;
 	this.tagsHandled = _tagsHandled;
@@ -287,7 +289,7 @@ Oev.Tile.Extension.NodeGeoLib.prototype = {
 	}, 
 	
 	getGeometry : function() {
-		var geoModel = OEV.modelsLib[this.model].geometry.clone();
+		var geoModel = NET_MODELS.model(this.model).geometry.clone();
 		geoModel = new THREE.Geometry().fromBufferGeometry(geoModel);
 		return geoModel;
 	}, 

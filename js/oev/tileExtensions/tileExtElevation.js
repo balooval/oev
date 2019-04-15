@@ -1,4 +1,5 @@
 import * as TileExtension from './tileExtension.js';
+import * as NET_TEXTURES from '../net/NetTextures.js';
 
 
 // export class Elevation extends TileExtension.DefaultExt{
@@ -9,7 +10,7 @@ export class Elevation {
 		this.id = 'ELEVATION';
 		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
 		this.mesheBorder = undefined;
-		this.materialBorder = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: OEV.textures["checker"]});
+		this.materialBorder = new THREE.MeshPhongMaterial({color: 0xA0A0A0, shininess: 0, map: NET_TEXTURES.texture("checker")});
 		this.onInit(_tile);
 	}
 	

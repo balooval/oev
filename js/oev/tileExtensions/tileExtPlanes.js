@@ -1,4 +1,4 @@
-'use strict';
+import * as NET_MODELS from './oev/net/NetModels.js';
 
 Oev.Tile.Extension.PlanesWatcher = (function() {
 	var isLaunched = false;
@@ -32,7 +32,7 @@ Oev.Tile.Extension.PlanesWatcher = (function() {
 			isLaunched = true;
 			console.warn('PlanesWatcher.init');
 			api.planeMat = new THREE.MeshLambertMaterial({ color: 0xD0D0E0 });
-			api.planeGeo = OEV.modelsLib["plane"].geometry.clone();
+			api.planeGeo = NET_MODELS.model("plane").geometry.clone();
 			loaderPlane = OEV.earth.loaderPlane;
 			api.updatePlanes();
 		}, 

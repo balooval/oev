@@ -14,7 +14,8 @@ export function getAltitude(_zoomlevel, _radius) {
 	if (projection == "SPHERE") {
 		var C = (Math.PI * 2) * _radius;
 		return (C * Math.cos(0) / Math.pow(2, _zoomlevel));
-	}else if(projection == "PLANE"){
+	}
+	if(projection == "PLANE"){
 		return ((_radius * Math.PI * 2) / Math.pow(2, _zoomlevel));
 	}
 }
@@ -30,10 +31,7 @@ export function mercatorLonToX(_lon) {
 }
 
 export function mercatorLatToY(_lat) {
-	if (_lat > 89.5)
-		_lat = 89.5;
-	if (_lat < -89.5)
-		_lat = -89.5;
+	_lat = Math.max(-89.5, Math.min(89.5, _lat));
 	var r_major = 6378137.000;
 	var r_minor = 6356752.3142;
 	var temp = r_minor / r_major;
@@ -42,9 +40,9 @@ export function mercatorLatToY(_lat) {
 	var phi = Oev.Math.radians(_lat);
 	var sinphi = Math.sin(phi);
 	var con = eccent * sinphi;
-	var com = .5 * eccent;
-	con = Math.pow((1.0-con)/(1.0+con), com);
-	var ts = Math.tan(.5 * (Math.PI*0.5 - phi))/con;
+	var com = 0.5 * eccent;
+	con = Math.pow((1.0 - con) / (1.0 + con), com);
+	var ts = Math.tan(0.5 * (Math.PI*0.5 - phi)) / con;
 	var y = 0 - r_major * Math.log(ts);
 	return y;
 }

@@ -1,3 +1,5 @@
+import * as NET_MODELS from './oev/net/NetModels.js';
+
 class TileNodes {
 	constructor(_tile) {
 		this.tile = _tile;
@@ -45,22 +47,22 @@ class TileNodes {
 					if( "amenity" in this.datasContent["elements"][t]['tags'] ){
 						if( this.datasContent["elements"][t]['tags']['amenity'] == 'recycling' ){
 							curNodeType = 'recycling';
-							tmpBuffGeo = OEV.modelsLib["recycling"].geometry.clone();
+							tmpBuffGeo = NET_MODELS.model("recycling").geometry.clone();
 						}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'fountain' ){
 							this.mustUpdate = true;
 							curNodeType = 'fountain';
-							tmpBuffGeo = OEV.modelsLib["fountain"].geometry.clone();
+							tmpBuffGeo = NET_MODELS.model("fountain").geometry.clone();
 						}else if( this.datasContent["elements"][t]['tags']['amenity'] == 'waste_basket' ){
 							curNodeType = 'poubelle';
-							tmpBuffGeo = OEV.modelsLib["poubelle"].geometry.clone();
+							tmpBuffGeo = NET_MODELS.model("poubelle").geometry.clone();
 						}else{
 							// curNodeType = 'default';
-							// tmpBuffGeo = OEV.modelsLib["LAMP_lod_2"].geometry.clone();
+							// tmpBuffGeo = NET_MODELS.model("LAMP_lod_2").geometry.clone();
 						}
 					}else if( "artwork_type" in this.datasContent["elements"][t]['tags'] ){
 						console.log('statue');
 						curNodeType = 'statue';
-						tmpBuffGeo = OEV.modelsLib["statue"].geometry.clone();
+						tmpBuffGeo = NET_MODELS.model("statue").geometry.clone();
 					}
 					
 					if( curNodeType != 'none' ){

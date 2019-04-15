@@ -1,3 +1,5 @@
+import * as NET_TEXTURES from './net/NetTextures.js';
+
 Oev.Tile.Extension.LifeWater = function(_tile) {
 	'use strict';
 
@@ -14,14 +16,13 @@ Oev.Tile.Extension.LifeWater = function(_tile) {
 	
 	ext.tileReady = function() {
 		if (this.tile.zoom > 10) {
-			this.tile.material.envMap = OEV.textures['skydome'];
-			// this.tile.material.map = OEV.textures['sea'];
-			this.tile.material.normalMap = OEV.textures['waternormals'];
-			this.tile.material.displacementMap = OEV.textures['waternormals'];
+			this.tile.material.envMap = NET_TEXTURES.texture('skydome');
+			this.tile.material.normalMap = NET_TEXTURES.texture('waternormals');
+			this.tile.material.displacementMap = NET_TEXTURES.texture('waternormals');
 			this.tile.material.displacementScale = 5;
 			this.tile.material.transparent = true;
 			this.tile.material.opacity = 0.8;
-			// this.tile.material.map = OEV.textures['water_color'];
+			// this.tile.material.map = NET_TEXTURES.texture('water_color');
 			ext.tile.material.map.needsUpdate = true;
 			// ext.tile.setTexture = function() {};
 			OEV.addObjToUpdate(this);
@@ -30,7 +31,7 @@ Oev.Tile.Extension.LifeWater = function(_tile) {
 			// this.tile.material.shininess = 50;
 			// this.tile.material.opacity = 0.8;
 			// this.tile.material.transparent = true;
-			// this.tile.material.normalMap = OEV.textures['waternormals'];
+			// this.tile.material.normalMap = NET_TEXTURES.texture('waternormals');
 			// this.tile.material.needsUpdate = true;
 			/*
 			var light = new THREE.PointLight(0xffffff, 1, 1000);
@@ -53,7 +54,7 @@ Oev.Tile.Extension.LifeWater = function(_tile) {
 
 	
 	ext.update = function() {
-		// ext.tile.material.map = OEV.textures['sea'];
+		// ext.tile.material.map = NET_TEXTURES.texture('sea');
 		// ext.tile.material.map.wrapS = THREE.RepeatWrapping;
 		// ext.tile.material.map.wrapT = THREE.RepeatWrapping;
 		// ext.tile.material.map.repeat.y = 1;

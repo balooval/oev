@@ -3,6 +3,7 @@ import * as UTILS from './utils.js';
 import TileNodes from '../TileNodes.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import GLOBE from './globe.js';
+import * as NET_TEXTURES from './net/NetTextures.js';
 
 var minX = 999999999;
 var maxX = -999999999;
@@ -45,70 +46,42 @@ export class Basic {
 		this.nodesProvider = new TileNodes(this);
 		this.distToCam = -1;
 		GLOBE.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
-		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: OEV.textures["checker"]});
-		
+		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: NET_TEXTURES.texture("checker")});
 		this.extensions = [];
-		for (var i = 0; i < TileExtension.Params.activated.length; i ++) {
-			this.addExtension(TileExtension.Params.activated[i]);
-		}
+		TileExtension.Params.activated.forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 	}
-
 	
 	onExtensionActivation(_extensionId) {
 		this.addExtension(_extensionId);
 	}
 	
 	addExtension(_extensionId) {
-		if (this.ownExtension(_extensionId)) {
-			return false;
-		}
+		if (this.ownExtension(_extensionId)) return false;
 		var ext = new GLOBE.tileExtensions[_extensionId](this);
 		this.extensions.push(ext);
-		for (var i = 0; i < this.childTiles.length; i ++) {
-			this.childTiles[i].addExtension(_extensionId);
-		}
+		this.childTiles.forEach(t => t.addExtension(_extensionId));
 		return true;
 	}
 	
 	ownExtension(_id) {
-		for (var i = 0; i < this.extensions.length; i ++) {
-			if (this.extensions[i].id === _id) {
-				return true;
-			}
-		}
-		return false;
+		return this.extensions.filter(e => e.id == _id).length;
 	}
 	
 	removeExtension(_id) {
-		var found = false;
-		for (var i = 0; i < this.extensions.length; i ++) {
-			if (this.extensions[i].id == _id) {
-				this.extensions.splice(i, 1);
-				found = true;
-				break;
-			}
-		}
-		for (i = 0; i < this.childTiles.length; i ++) {
-			this.childTiles[i].removeExtension(_id);
-		}
-		if (found === true) {
-			return true;
-		}
-		console.warn('Tile.removeExtension, not found :', _id);
-		return false;
+		this.extensions = this.extensions.filter(e => e.id != _id);
+		this.childTiles.forEach(t => t.removeExtension(_id));
 	}
 	
 	mapParentTextureBuffer() {
-		// return false;
-		var stepUV;
-		var curParent = this.parentTile;
+		let stepUV;
+		let curParent = this.parentTile;
 		if (this.textureLoaded || curParent === undefined) {
 			return false;
 		}
-		var uvReduc = 0.5;
-		var curOffsetX = this.parentOffset.x * 0.5;
-		var curOffsetY = this.parentOffset.y * 0.5;
+		let uvReduc = 0.5;
+		let curOffsetX = this.parentOffset.x * 0.5;
+		let curOffsetY = this.parentOffset.y * 0.5;
 		while (curParent != undefined && !curParent.textureLoaded) {
 			uvReduc *= 0.5;
 			curOffsetX = curParent.parentOffset.x * 0.5 + (curOffsetX * 0.5);
@@ -118,14 +91,14 @@ export class Basic {
 		if (curParent === undefined) {
 			return false;
 		}
-		var def = GLOBE.tilesDefinition;
-		var vertBySide = def + 1;
-		var nbVertices = vertBySide * vertBySide;
-		var bufferUvs = new Float32Array(nbVertices * 2);
+		const def = GLOBE.tilesDefinition;
+		const vertBySide = def + 1;
+		const nbVertices = vertBySide * vertBySide;
+		const bufferUvs = new Float32Array(nbVertices * 2);
 		stepUV = uvReduc / def;
-		var uvIndex = 0;
-		for (var x = 0; x < vertBySide; x ++) {
-			for (var y = 0; y < vertBySide; y ++) {
+		let uvIndex = 0;
+		for (let x = 0; x < vertBySide; x ++) {
+			for (let y = 0; y < vertBySide; y ++) {
 				uvIndex = (x * vertBySide) + y;
 				bufferUvs[uvIndex * 2] = curOffsetX + (stepUV * x);
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y)- curOffsetY;
@@ -138,18 +111,15 @@ export class Basic {
 	}
 	
 	mapSelfTexture() {
-		if (this.meshe === undefined) {
-			return false;
-		}
-		var def = GLOBE.tilesDefinition;
-		var vertBySide = def + 1;
-		var stepUV = 1 / def;
-		var nbVertices = vertBySide * vertBySide;
-		var bufferUvs = new Float32Array(nbVertices * 2);
-		var uvIndex = 0;
-		var vertId = 0;
-		for (var x = 0; x < vertBySide; x ++) {
-			for (var y = 0; y < vertBySide; y ++) {
+		if (this.meshe === undefined) return false;
+		const def = GLOBE.tilesDefinition;
+		const vertBySide = def + 1;
+		const stepUV = 1 / def;
+		const nbVertices = vertBySide * vertBySide;
+		const bufferUvs = new Float32Array(nbVertices * 2);
+		let uvIndex = 0;
+		for (let x = 0; x < vertBySide; x ++) {
+			for (let y = 0; y < vertBySide; y ++) {
 				uvIndex = (x * vertBySide) + y;
 				bufferUvs[uvIndex * 2] = stepUV * x;
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y);
@@ -209,7 +179,6 @@ export class Basic {
 		}
 		var geoBuffer = new THREE.BufferGeometry();
 		geoBuffer.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		// geoBuffer.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 		geoBuffer.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 		geoBuffer.computeFaceNormals();
 		geoBuffer.computeVertexNormals();
@@ -219,8 +188,6 @@ export class Basic {
 			this.meshe = undefined;
 		}
 		this.meshe = new THREE.Mesh(geoBuffer, this.material);
-		
-		
 		if (this.onStage) {
 			GLOBE.addMeshe(this.meshe);
 		}
@@ -238,7 +205,6 @@ export class Basic {
 	makeFace() {
 		this.makeFaceBuffer();
 		return false;
-		
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 		var geometry = new THREE.Geometry();
 		// geometry.dynamic = false;
@@ -252,7 +218,7 @@ export class Basic {
 		var vectX, vectY, vertZ;
 		var stepUV = 1 / GLOBE.tilesDefinition;
 		var stepCoord = new THREE.Vector2((this.endCoord.x - this.startCoord.x) / GLOBE.tilesDefinition, (this.endCoord.y - this.startCoord.y) / GLOBE.tilesDefinition);
-		for( x = 0; x < vertBySide; x ++ ){
+		for (x = 0; x < vertBySide; x ++ ){
 			for (y = 0; y < vertBySide; y ++) {
 				vectX = this.startCoord.x + (stepCoord.x * x);
 				vectY = this.startCoord.y + (stepCoord.y * y);
@@ -263,7 +229,6 @@ export class Basic {
 				vectIndex ++;
 			}
 		}
-		
 		for (x = 0; x < GLOBE.tilesDefinition; x ++) {
 			for (y = 0; y < GLOBE.tilesDefinition; y ++) {
 				geometry.faces.push(new THREE.Face3((y + 1) + (x * vertBySide), y + ((x + 1) * vertBySide), y + (x * vertBySide)));
@@ -362,24 +327,17 @@ export class Basic {
 		GLOBE.removeMeshe(this.meshe);
 		this.meshe.geometry.dispose();
 		this.makeFace();
-		for( var i = 0; i < this.childTiles.length; i ++ ){
-			this.childTiles[i].updateVertex();
-		}
+		this.childTiles.forEach(t => t.updateVertex());
 		OEV.MUST_RENDER = true;
 	}
 
 	show() {
-		if (this.onStage) {
-			return false;
-		}
-		var i;
+		if (this.onStage) return false;
 		this.onStage = true;
 		GLOBE.addMeshe(this.meshe);
 		this.loadImage();
 		this.loadDatas();
-		for (i = 0; i < this.surfacesProviders.length; i ++) {
-			this.surfacesProviders[i].hide(false);
-		}
+		this.surfacesProviders.forEach(p => p.hide(false));
 		this.nodesProvider.hide(false);
 		this.loadNodes();
 		if(this.meshInstance) {
@@ -389,10 +347,7 @@ export class Basic {
 	}
 	
 	hide() {
-		if (!this.onStage) {
-			return false;
-		}
-		var i;
+		if (!this.onStage) return false;
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
 		if (!this.textureLoaded) {
@@ -402,9 +357,7 @@ export class Basic {
 				y : this.tileY
 			});
 		}
-		for (i = 0; i < this.surfacesProviders.length; i ++) {
-			this.surfacesProviders[i].hide(true);
-		}
+		this.surfacesProviders.forEach(p => p.hide(true));
 		this.nodesProvider.hide(true);
 		if(this.meshInstance) {
 			OEV.scene.remove(this.meshInstance);
@@ -413,13 +366,8 @@ export class Basic {
 	}
 
 	clearChildrens() {
-		if( this.childTiles.length == 0 ){
-			return false;
-		}
-		for (var i = 0; i < this.childTiles.length; i ++) {
-			this.childTiles[i].dispose();
-			this.childTiles[i] = undefined;
-		}
+		if( this.childTiles.length == 0 ) return false;
+		this.childTiles.forEach(t => t.dispose());
 		this.childTiles = [];
 		this.show();
 	}
@@ -430,46 +378,33 @@ export class Basic {
 		}
 	}
 
+	split(_coords) {
+		this.createChild(_coords, 0, 0);
+		this.createChild(_coords, 0, 1);
+		this.createChild(_coords, 1, 0);
+		this.createChild(_coords, 1, 1);
+		this.hide();
+	}
+		
+	createChild(_coords, _offsetX, _offsetY) {
+		const newTile = new Basic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
+		newTile.parentTile = this;
+		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
+		newTile.makeFace();
+		this.childTiles.push(newTile);
+		newTile.updateDetails(_coords);
+	}
+
 	updateDetails(_coords) {
-		var i;
-		var newTile;
-		var childZoom;
 		if (this.checkCameraHover(_coords, GLOBE.tilesDetailsMarge)) {
 			if (this.childTiles.length == 0 && this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
 				this.childsZoom = GLOBE.CUR_ZOOM;
-				childZoom = this.zoom + 1;
-				newTile = new Basic(this.tileX * 2, this.tileY * 2, childZoom);
-				newTile.parentTile = this;
-				newTile.parentOffset = new THREE.Vector2( 0, 0 );
-				newTile.makeFace();
-				this.childTiles.push(newTile);
-				newTile.updateDetails(_coords);
-				newTile = new Basic(this.tileX * 2, this.tileY * 2 + 1, childZoom);
-				newTile.parentTile = this;
-				newTile.parentOffset = new THREE.Vector2( 0, 1 );
-				newTile.makeFace();
-				this.childTiles.push( newTile );
-				newTile.updateDetails(_coords);
-				newTile = new Basic(this.tileX * 2 + 1, this.tileY * 2, childZoom);
-				newTile.parentTile = this;
-				newTile.parentOffset = new THREE.Vector2( 1, 0 );
-				newTile.makeFace();
-				this.childTiles.push(newTile);
-				newTile.updateDetails(_coords);
-				newTile = new Basic(this.tileX * 2 + 1, this.tileY * 2 + 1, childZoom);
-				newTile.parentTile = this;
-				newTile.parentOffset = new THREE.Vector2( 1, 1 );
-				newTile.makeFace();
-				this.childTiles.push(newTile);
-				newTile.updateDetails(_coords);
-				this.hide();
+				this.split(_coords);
 			}else{
 				if (this.childTiles.length > 0 && this.childsZoom > GLOBE.CUR_ZOOM) {
 					this.clearTilesOverzoomed();
 				}
-				for (i = 0; i < this.childTiles.length; i ++) {
-					this.childTiles[i].updateDetails(_coords);
-				}
+				this.childTiles.forEach(t => t.updateDetails(_coords));
 			}
 		}else{
 			this.clearChildrens();
@@ -489,35 +424,22 @@ export class Basic {
 	}
 	
 	searchMainTile(_coords) {
-		if (this.checkCameraHover(_coords, 1)) {
-			if (this.childTiles.length == 0) {
-				return this;
-			}
-			for (var i = 0; i < this.childTiles.length; i ++) {
-				var childRes = this.childTiles[i].searchMainTile(_coords);
-				if (childRes !== false) {
-					return childRes;
-				}
-			}
-		}
+		if (this.checkCameraHover(_coords, 1) === false) return false;
+		if (this.childTiles.length == 0) return this;
+		const childs = this.childTiles
+			.map(t => t.searchMainTile(_coords))
+			.filter(res => res !== false);
+		if (childs.length) return childs[0];
 		return false;
 	}
 
 	checkCameraHover(_coords, _marge) {
 		var startLimit = UTILS.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
 		var endLimit = UTILS.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
-		if (startLimit[0] > _coords.x) {
-			return false;
-		}
-		if (endLimit[0] < _coords.x) {
-			return false;
-		}
-		if (startLimit[1] < _coords.y) {
-			return false;
-		}
-		if (endLimit[1] > _coords.y) {
-			return false;
-		}
+		if (startLimit[0] > _coords.x) return false;
+		if (endLimit[0] < _coords.x) return false;
+		if (startLimit[1] < _coords.y) return false;
+		if (endLimit[1] > _coords.y) return false;
 		return true;
 	}
 
@@ -533,16 +455,11 @@ export class Basic {
 					this.surfacesProviders.push(surfA);
 					surfA.load();
 				} else {
-					for (var i = 0; i < this.surfacesProviders.length; i ++) {
-						this.surfacesProviders[i].hide(false);
-					}
+					this.surfacesProviders.forEach(p => p.hide(false));
 				}
 			}
 		} else if (!GLOBE.loadLanduse) {
-			for (var i = 0; i < this.surfacesProviders.length; i ++) {
-				this.surfacesProviders[i].dispose();
-				this.surfacesProviders[i] = undefined;
-			}
+			this.surfacesProviders.forEach(p => p.dispose());
 			this.surfacesProviders = [];
 			OEV.MUST_RENDER = true;
 		}
@@ -551,9 +468,7 @@ export class Basic {
 	reloadTexture() {
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
-		for( var i = 0; i < this.childTiles.length; i ++ ){
-			this.childTiles[i].reloadTexture();
-		}
+		this.childTiles.forEach(t => t.reloadTexture());
 		this.loadImage();
 	}
 
@@ -569,22 +484,20 @@ export class Basic {
 	}
 
 	loadImage() {
-		if( !this.textureLoaded ){
-			var _self = this;
-			GLOBE.loaderTile2D.getData(
-				{
-					z : this.zoom, 
-					x : this.tileX, 
-					y : this.tileY, 
-					priority : this.distToCam
-				}, 
-				function(_texture) {
-					_self.setTexture(_texture);
-				}
-			);
-		}else{
+		if(this.textureLoaded) {
 			this.setTexture(this.remoteTex);
+			return true;
 		}
+		GLOBE.loaderTile2D.getData(
+			{
+				z : this.zoom, 
+				x : this.tileX, 
+				y : this.tileY, 
+				priority : this.distToCam
+			}, 
+			_texture => this.setTexture(_texture)
+		);
+		return false;
 	}
 
 	update() {
@@ -594,9 +507,9 @@ export class Basic {
 	}
 
 	loadNodes() {
-		if( GLOBE.loadNodes ){
+		if (GLOBE.loadNodes) {
 			this.nodesProvider.drawDatas();
-		}else{
+		} else {
 			this.nodesProvider.hide(true);
 		}
 	}
@@ -619,9 +532,7 @@ export class Basic {
 		this.clearChildrens();
 		this.hide();
 		this.nodesProvider.dispose();
-		for( var i = 0; i < this.surfacesProviders.length; i ++ ){
-			this.surfacesProviders[i].dispose();
-		}
+		this.surfacesProviders.forEach(p => p.dispose());
 		if( this.meshe != undefined ){
 			this.meshe.geometry.dispose();
 			this.material.map.dispose();

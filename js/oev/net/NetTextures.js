@@ -5,11 +5,11 @@ let curBatch = null;
 let textLoaded = {};
 
 
-export function tmpGetTextures() {
-	return textLoaded;
+export function texture(_name) {
+	return textLoaded[_name];
 } 
 
-export function onAppInit() {
+export function init() {
 	textureLoader = new THREE.TextureLoader();
 	textLoaded = {};
 }

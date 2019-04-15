@@ -1,7 +1,6 @@
 import Evt from './oev/event.js';
 import * as UI from './oev/ui.js';
 import * as OLD_UI from './UI.js';
-import * as NET from './oev/net/Net.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
 import * as INPUT from './oev/input.js';
@@ -29,7 +28,6 @@ const OpenEarthViewer = (function() {
 		earth : undefined, 
 		evt : new Evt(), 
 		textures : {}, 
-		modelsLib : {}, 
 		geoDebug : undefined, 
 		MUST_RENDER : true, 
 		MODELS_CFG : undefined, 
@@ -51,7 +49,8 @@ const OpenEarthViewer = (function() {
 
 	api.init = function(_htmlContainer) {
 		UI.init();
-		NET.init();
+		NET_TEXTURES.init();
+		NET_MODELS.init();
 		INPUT.init();
 		SKY.init();
 		NAVIGATION.init();
@@ -90,10 +89,10 @@ const OpenEarthViewer = (function() {
 
 	api.start = function() {
 		OLD_UI.initUi();
-		api.fountainPartMat = new THREE.PointsMaterial({color:0xFFFFFF, size:((api.earth.meter) * 10), map:api.textures['particleWater']});
+		api.fountainPartMat = new THREE.PointsMaterial({color:0xFFFFFF, size:((api.earth.meter) * 10), map:NET_TEXTURES.texture('particleWater')});
 		api.fountainPartMat.alphaTest = 0.4;
 		api.fountainPartMat.transparent = true;
-		api.userMat = new THREE.SpriteMaterial( { map: api.textures['god'], color: 0xffffff, fog: false } );
+		api.userMat = new THREE.SpriteMaterial( { map: NET_TEXTURES.texture('god'), color: 0xffffff, fog: false } );
 		var debugGeo = new THREE.SphereGeometry(api.earth.meter * 100, 16, 7); 
 		var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 		api.geoDebug = new THREE.Mesh(debugGeo, debugMat);
@@ -111,7 +110,7 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.loadShader = function() {
-		SHADER.build('ocean', onShaderLoader, {map:OEV.textures['sea'], normalMap:OEV.textures['waternormals']});
+		SHADER.build('ocean', onShaderLoader, {map:NET_TEXTURES.texture('sea'), normalMap:NET_TEXTURES.texture('waternormals')});
 	}
 
 
@@ -202,18 +201,17 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.addObjToUpdate = function( _obj ) {
-		if( objToUpdate.indexOf( _obj ) < 0 ){
-			objToUpdate.push( _obj );
-		}
+		if (objToUpdate.includes(_obj)) return false;
+		objToUpdate.push(_obj);
 	}
 
 	api.removeObjToUpdate = function( _obj ) {
 		var index = objToUpdate.indexOf( _obj );
 		if( index < 0 ){
 			console.warn( 'OEV.removeObjToUpdate NOT FOUND !' );
-		}else{
-			objToUpdate.splice( index, 1 );
+			return false;
 		}
+		objToUpdate.splice(index, 1);
 	}
 
 	api.render = function() {
@@ -261,15 +259,13 @@ function onShaderLoader(_name, _material) {
 
 function onOevTexturesLoaded() {
 	console.log('All default textures loaded');
-	OEV.textures = NET_TEXTURES.tmpGetTextures();
-	OEV.textures['skydome'].mapping = THREE.EquirectangularReflectionMapping;
+	NET_TEXTURES.texture('skydome').mapping = THREE.EquirectangularReflectionMapping;
 	OEV.loadShader();
 	OEV.loadModels();
 }
 
 function onOevModelsLoaded() {
 	console.log('All default models loaded');
-	OEV.modelsLib = NET_MODELS.tmpGetModels();
 	UI.closeModal();
 	OEV.start();
 }

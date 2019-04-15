@@ -5,6 +5,7 @@ import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
 import * as GEO from './geo.js';
+import * as NET_TEXTURES from './net/NetTextures.js';
 
 var curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 var curTile = new THREE.Vector2( 0, 0, 0 );
@@ -117,34 +118,34 @@ var api = {
 	}, 
 	
 	onAppStart : function() {
-		api.modelsMesheMat['pylone'].map = OEV.textures['pylone'];
+		api.modelsMesheMat['pylone'].map = NET_TEXTURES.texture('pylone');
 		api.modelsMesheMat['pylone'].needsUpdate = true;
-		// api.modelsMesheMat['TREE'].map = OEV.textures['tree_procedural'];
-		api.modelsMesheMat['TREE'].map = OEV.textures['tree_top'];
+		// api.modelsMesheMat['TREE'].map = NET_TEXTURES.texture('tree_procedural');
+		api.modelsMesheMat['TREE'].map = NET_TEXTURES.texture('tree_top');
 		api.modelsMesheMat['TREE'].alphaTest = 0.9;
 		api.modelsMesheMat['TREE'].side = THREE.DoubleSide;
 		api.modelsMesheMat['TREE'].needsUpdate = true;
-		api.testForestMat.map = OEV.textures['tree_side'];
+		api.testForestMat.map = NET_TEXTURES.texture('tree_side');
 		api.testForestMat.needsUpdate = true;
-		api.landuseSpritesMat.map = OEV.textures['landuse_sprites'];
+		api.landuseSpritesMat.map = NET_TEXTURES.texture('landuse_sprites');
 		api.landuseSpritesMat.needsUpdate = true;
-		api.testScrubMat.map = OEV.textures['scrub'];
+		api.testScrubMat.map = NET_TEXTURES.texture('scrub');
 		api.testScrubMat.needsUpdate = true;
-		api.testVineyardMat.map = OEV.textures['vineyard'];
+		api.testVineyardMat.map = NET_TEXTURES.texture('vineyard');
 		api.testVineyardMat.needsUpdate = true;
-		api.forestMat.map = OEV.textures['scrub'];
+		api.forestMat.map = NET_TEXTURES.texture('scrub');
 		api.forestMat.needsUpdate = true;
-		api.vineyardMat.map = OEV.textures['vineyard'];
+		api.vineyardMat.map = NET_TEXTURES.texture('vineyard');
 		api.vineyardMat.needsUpdate = true;
-		api.grassMat.map = OEV.textures['grass'];
+		api.grassMat.map = NET_TEXTURES.texture('grass');
 		api.grassMat.needsUpdate = true;
 		loadCoastline();
 		api.construct();
 	}, 
 	
 	construct : function() {
-		var zoomBase = 4;
-		var nbTiles = Math.pow( 2, zoomBase );
+		const zoomBase = 4;
+		const nbTiles = Math.pow( 2, zoomBase );
 		for( var curTileY = 0; curTileY < nbTiles + 1; curTileY ++ ){
 			if( curTileY > 0 ){
 				for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
@@ -156,22 +157,16 @@ var api = {
 				}
 			}
 		}
-		api.matWayPoints = new THREE.SpriteMaterial( { map: OEV.textures['waypoint'], color: 0xffffff, fog: false } );
+		api.matWayPoints = new THREE.SpriteMaterial( { map: NET_TEXTURES.texture('waypoint'), color: 0xffffff, fog: false } );
 	}, 
 
-	isCoordOnGround : function(_lon, _lat, _marge) {
-		if (coastDatas === null) {
-			return false;
-		}
-		_marge = _marge || 0;
-		// console.log('_marge', _marge);
+	isCoordOnGround : function(_lon, _lat, _marge = 0) {
+		if (coastDatas === null) return false;
 		var mercX = GEO.mercatorLonToX(_lon);
 		var mercY = GEO.mercatorLatToY(_lat);
 		var pxlX = Math.round(mercX * coastPxlRatio) + 1024;
 		var pxlY = Math.round(mercY * coastPxlRatio) + 1024;
 		pxlY = Math.abs(2048 - pxlY);
-		
-		
 		var bufferIndex;
 		for (var i = 0; i < _marge * 2; i ++) {
 			for (var j = 0; j < _marge * 2; j ++) {
@@ -184,8 +179,6 @@ var api = {
 			}
 		}
 		bufferIndex = (pxlX * 2048 + pxlY);
-		
-		// console.log('isCoordOnGround', coastDatas[bufferIndex]);
 		return coastDatas[bufferIndex];
 	}, 
 
@@ -278,10 +271,9 @@ var api = {
 	}, 
 
 	updateZoom : function(_value){
-		if (api.CUR_ZOOM != _value) {
-			api.CUR_ZOOM = _value;
-			api.checkLOD();
-		}
+		if (api.CUR_ZOOM == _value) return false;
+		api.CUR_ZOOM = _value;
+		api.checkLOD();
 	}, 
 
 	switchProjection : function(){
@@ -294,12 +286,10 @@ var api = {
 
 	setProjection : function(_mode) {
 		if (_mode == "PLANE") {
-			SKY.activAtmosphere(false);
 			SKY.activSky(true);
 			api.coordToXYZ = api.coordToXYZPlane;
 			OEV.camera.up.set(0, 0, 1);
 		} else if (_mode == "SPHERE") {
-			SKY.activAtmosphere(true);
 			SKY.activSky(false);
 			api.coordToXYZ = api.coordToXYZSphere;
 			OEV.camera.up.set(0, 1, 0);
@@ -434,11 +424,8 @@ var api = {
 		api.meter = (api.radius / 40075017.0) * api.globalScale;
 	}, 
 
-	getElevationAtCoords : function(_lon, _lat, _inMeters) {
-		_inMeters = _inMeters || false;
-		if (!api.eleActiv) {
-			return 0;
-		}
+	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
+		if (!api.eleActiv) return 0;
 		var ele = 0;
 		api.tilesBase.filter(t => {
 			return t.checkCameraHover(api.coordDetails, 1);

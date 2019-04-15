@@ -1,3 +1,5 @@
+import * as NET_TEXTURES from './net/NetTextures.js';
+
 Oev.Tile.Extension.LanduseWorker = (function() {
 	var worker = new Worker('js/oev/workers/tileExtLanduse.js');
 	
@@ -201,7 +203,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	}
 	
 	ext.buildSurfacesTexture = function() {
-		this.tile.material.normalMap = OEV.textures['normal_flat'];
+		this.tile.material.normalMap = NET_TEXTURES.texture('normal_flat');
 		var coordW = Math.abs(this.tile.endCoord.x - this.tile.startCoord.x);
 		var coordH = Math.abs(this.tile.startCoord.y - this.tile.endCoord.y);
 		var i;
@@ -241,7 +243,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			contextDiffuse.closePath();
 			contextDiffuse.clip();
-			contextDiffuse.drawImage(OEV.textures[this.twoSideProps[type].mapDiffuse].image, 0, 0);
+			contextDiffuse.drawImage(NET_TEXTURES.texture(this.twoSideProps[type].mapDiffuse).image, 0, 0);
 			contextDiffuse.restore();
 			contextNormal.save();
 			contextNormal.beginPath();
@@ -251,7 +253,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			}
 			contextNormal.closePath();
 			contextNormal.clip();
-			contextNormal.drawImage(OEV.textures[this.twoSideProps[type].mapNormal].image, 0, 0);
+			contextNormal.drawImage(NET_TEXTURES.texture(this.twoSideProps[type].mapNormal).image, 0, 0);
 			contextNormal.restore();
 		}
 		this.tile.material.map = new THREE.Texture(canvasDiffuse)

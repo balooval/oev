@@ -1,3 +1,5 @@
+import * as NET_TEXTURES from './net/NetTextures.js';
+
 OpenEarthViewer.planes = {
 	init : function(){
 		console.log( "Plugin PLANES loaded" );
@@ -106,10 +108,6 @@ OpenEarthViewer.plugins["PLANES"] = OpenEarthViewer.planes;
 
 
 
-
-
-
-
 var Plane = function ( _start, _end ) {
 	this.onStage = true;
 	this.tweenLon = new Oev.Animation.TweenValue( _start.x );
@@ -129,11 +127,11 @@ var Plane = function ( _start, _end ) {
 	
 	
 	this.material = new THREE.MeshLambertMaterial({ color: 0xD0D0E0 });
-	var tmpBuffGeo = OEV.modelsLib["plane"].geometry.clone();
+	var tmpBuffGeo = NET_MODELS.model('plane').geometry.clone();
 	var tmpGeo = new THREE.Geometry().fromBufferGeometry( tmpBuffGeo );
 	this.meshe = new THREE.Mesh( tmpGeo, this.material );
 	
-	var contrailMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, map:OEV.textures['plane_contrail'], transparent: true });
+	var contrailMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, map:NET_TEXTURES.texture('plane_contrail'), transparent: true });
 	// right
 	var contrailGeometry = new THREE.PlaneGeometry( 3, 20 );
 	var contrailMeshe = new THREE.Mesh( contrailGeometry, contrailMat );

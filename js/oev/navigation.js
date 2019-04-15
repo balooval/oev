@@ -1,4 +1,5 @@
 import * as UI from './ui.js';
+import * as NET_TEXTURES from './net/NetTextures.js';
 
 var waypointMat;
 var waypointsList = [];
@@ -10,7 +11,7 @@ var api = {
 	}, 
 	
 	onAppStart : function() {
-		waypointMat = new THREE.SpriteMaterial({map:OEV.textures['waypoint'], color:0xffffff, fog:false})
+		waypointMat = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false})
 		if (localStorage.getItem("waypoints") == undefined) {
 			localStorage.setItem("waypoints", JSON.stringify(WpStored));
 		}else{

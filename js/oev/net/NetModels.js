@@ -1,16 +1,14 @@
-var objectLoader = null;
-var batchs = [];
-var curBatch = null;
-var modelsLoaded = {};
+const batchs = [];
+const modelsLoaded = {};
+let objectLoader = null;
+let curBatch = null;
 
-
-export function tmpGetModels() {
-	return modelsLoaded;
+export function model(_name) {
+	return modelsLoaded[_name];
 }
 
-export function onAppInit() {
+export function init() {
 	objectLoader = new THREE.ObjectLoader();
-	modelsLoaded = {};
 }
 
 export function addToList(_list, _id, _url) {
@@ -45,7 +43,7 @@ function loadNextModel() {
 	var nextModel = curBatch.list.shift();
 	objectLoader.load(
 		'assets/models/' + nextModel.url, 
-		function(object){
+		object => {
 			object.rotation.x = Math.PI;
 			object.scale.x = 0.005;
 			object.scale.y = 0.005;
@@ -58,11 +56,7 @@ function loadNextModel() {
 				loadNextModel();
 			}
 		}, 
-		function(xhr) {
-			
-		},
-		function(xhr) {
-			console.warn( 'Oev.Net.Models error for loading', nextModel.url );
-		}
+		xhr => {},
+		xhr => console.warn( 'Oev.Net.Models error for loading', nextModel.url )
 	);
 }

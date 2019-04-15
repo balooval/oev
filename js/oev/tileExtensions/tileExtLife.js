@@ -1,6 +1,6 @@
+import * as NET_MODELS from './oev/net/NetModels.js';
+
 Oev.Tile.Extension.Life = (function() {
-	'use strict';
-	
 	var api = function(_tile) {
 		var isOnGround = Oev.Globe.isCoordOnGround(_tile.middleCoord.x, _tile.middleCoord.y, 2);
 		var ext;
@@ -16,7 +16,7 @@ Oev.Tile.Extension.Life = (function() {
 	var material = new THREE.MeshPhongMaterial( {color: 0x96a0a3} );
 
 	api.getMeshLife = function() {
-		var geo = OEV.modelsLib['whale'].geometry.clone();
+		var geo = NET_MODELS.model('whale').geometry.clone();
 		return new THREE.Mesh(geo, material);
 	}
 	

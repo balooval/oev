@@ -1,4 +1,4 @@
-import Animation from './oev/animation.js';
+import * as Animation from './oev/animation.js';
 import Evt from './oev/event.js';
 import * as INPUT from './oev/input.js';
 import SKY from './oev/sky.js';

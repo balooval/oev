@@ -1,34 +1,33 @@
 
 export function tileToCoords(_tile_x, _tile_y, _zoom) {
-	var p = [];
-	var n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
+	const p = [];
+	const n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
 	p[0] = ((_tile_x / Math.pow(2.0, _zoom) * 360.0) - 180.0);
 	p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
 	return p;
 }
 
 export function tileToCoordsVect(_tile_x, _tile_y, _zoom){
-	var res = tileToCoords(_tile_x, _tile_y, _zoom);
+	const res = tileToCoords(_tile_x, _tile_y, _zoom);
 	return new THREE.Vector2(res[0], res[1]);
 }
 
 export function rgbToHex(r, g, b) {
-	if (r > 255 || g > 255 || b > 255)
-		throw "Invalid color component";
+	if (r > 255 || g > 255 || b > 255) throw "Invalid color component";
 	return ((r << 16) | (g << 8) | b).toString(16);
 }
 
 export function coordDistance(_startLon, _startLat, _endLon, _endLat){
-	var R = 6371000; // metres
-	var sigma1 = Oev.Math.radians( _startLat );
-	var sigma2 = Oev.Math.radians( _endLat );
-	var deltaSigma = Oev.Math.radians( _endLat-_startLat )
-	var deltaTruc = Oev.Math.radians( _endLon - _startLon );
-	var a = Math.sin( deltaSigma / 2 ) * Math.sin( deltaSigma / 2 ) +
-			Math.cos( sigma1 ) * Math.cos( sigma2 ) *
-			Math.sin( deltaTruc / 2 ) * Math.sin( deltaTruc / 2 );
-	var c = 2 * Math.atan2( Math.sqrt( a ), Math.sqrt( 1 - a ) );
-	var distance = R * c;
+	const R = 6371000; // metres
+	const sigma1 = Oev.Math.radians( _startLat );
+	const sigma2 = Oev.Math.radians( _endLat );
+	const deltaSigma = Oev.Math.radians( _endLat-_startLat )
+	const deltaTruc = Oev.Math.radians( _endLon - _startLon );
+	const a = Math.sin(deltaSigma / 2) * Math.sin(deltaSigma / 2) +
+			Math.cos(sigma1) * Math.cos(sigma2) *
+			Math.sin(deltaTruc / 2) * Math.sin(deltaTruc / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	const distance = R * c;
 	return distance;
 }
 	
