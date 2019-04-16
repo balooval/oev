@@ -13,7 +13,6 @@ import * as SHADER from './oev/shader.js';
 let containerOffset = undefined;
 const objToUpdate = [];
 const mouseScreenClick = new THREE.Vector2( 0, 0 );
-const shaders = {};
 const socketEnabled = false;
 let renderer = undefined;
 
@@ -109,11 +108,6 @@ const OpenEarthViewer = (function() {
 		render();
 	}
 
-	api.loadShader = function() {
-		SHADER.build('ocean', onShaderLoader, {map:NET_TEXTURES.texture('sea'), normalMap:NET_TEXTURES.texture('waternormals')});
-	}
-
-
 	api.loadTextures = function() {
 		UI.openModal( "Loading textures" );
 		var textList = [];
@@ -152,6 +146,14 @@ const OpenEarthViewer = (function() {
 	}
 
 
+	api.loadShaders = function() {
+		SHADER.loadList([
+			'cloud', 
+			'sky', 
+			'sun', 
+		], onOevShadersLoaded);
+	}
+
 	api.loadModels = function() {
 		UI.openModal( "Loading models" );
 		var modelList = [];
@@ -166,7 +168,6 @@ const OpenEarthViewer = (function() {
 		NET_MODELS.addToList(modelList, 'recycling', 'recycling.json');
 		NET_MODELS.addToList(modelList, 'fountain', 'fountain2.json');
 		NET_MODELS.addToList(modelList, 'poubelle', 'poubelle2.json');
-		// NET_MODELS.addToList(modelList, 'statue', 'statue.json');
 		NET_MODELS.addToList(modelList, 'plane', 'avion.json');
 		NET_MODELS.addToList(modelList, 'whale', 'whale.json');
 		NET_MODELS.loadBatch(modelList, onOevModelsLoaded);
@@ -233,9 +234,6 @@ const OpenEarthViewer = (function() {
 		api.earth.update();
 		SKY.update();
 		objToUpdate.forEach(o => o.update());
-		if (shaders['ocean'] !== undefined) {
-			shaders['ocean'].uniforms.time.value += 0.01;
-		}
 	}
 
 	api.gotoWaypoint = function(_waypointIndex) {
@@ -252,15 +250,13 @@ const OpenEarthViewer = (function() {
 	return api;
 })();
 
-function onShaderLoader(_name, _material) {
-	console.log('Shader "' + _name + '" loaded');
-	shaders[_name] = _material;
-}
-
 function onOevTexturesLoaded() {
 	console.log('All default textures loaded');
 	NET_TEXTURES.texture('skydome').mapping = THREE.EquirectangularReflectionMapping;
-	OEV.loadShader();
+	OEV.loadShaders();
+}
+
+function onOevShadersLoaded() {
 	OEV.loadModels();
 }
 

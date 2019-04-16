@@ -1,5 +1,6 @@
 import Evt from './event.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
+import * as SHADER from './shader.js';
 
 let lightAmbiant = undefined;
 let sunRotation = -1.5;
@@ -28,8 +29,8 @@ let skyParamsNew = {
 
 function createCloudNew() {
 	const parametersSun = {
-		vertexShader: document.getElementById('vertexCloud').textContent,
-		fragmentShader: document.getElementById('fragmentCloud').textContent,
+		vertexShader: SHADER.get('vert_cloud'), 
+		fragmentShader: SHADER.get('frag_cloud'),
 		uniforms: {
 			map : { type: "t", value: NET_TEXTURES.texture('cloud')}, 
 			normalizedTime : {value : 0.5}, 
@@ -137,8 +138,9 @@ function createSkyNew(_skyRadius) {
 		sunLuminosity : {value : skyParamsNew.sunLuminosity}, 
 	};
 	const parametersSky = {
-		vertexShader: document.getElementById('vertexSky').textContent,
-		fragmentShader: document.getElementById('fragmentSky').textContent,
+		
+		vertexShader: SHADER.get('vert_sky'),
+		fragmentShader: SHADER.get('frag_sky'),
 		uniforms: uniformsSky, 
 		side: THREE.DoubleSide, 
 	};
@@ -147,8 +149,8 @@ function createSkyNew(_skyRadius) {
 	OEV.scene.add(skyMeshNew);
 	// Sun
 	const sunRadius = _skyRadius / 20;
-	const vertexShaderSun = document.getElementById('vertexSun').textContent;
-	const fragmentShaderSun = document.getElementById('fragmentSun').textContent;
+	const vertexShaderSun = SHADER.get('vert_sun');
+	const fragmentShaderSun = SHADER.get('frag_sun');
 	const uniformsSun = {
 		sunElevation : {value : 0.5}, 
 		myModelViewMatrixInverse : {value: new THREE.Matrix4()}, 
