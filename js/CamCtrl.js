@@ -1,6 +1,7 @@
 import * as Animation from './oev/animation.js';
 import Evt from './oev/event.js';
 import * as INPUT from './oev/input.js';
+import * as GEO from './oev/geo.js';
 import SKY from './oev/sky.js';
 
 export var CamCtrlGod = function () {
@@ -95,7 +96,7 @@ CamCtrlGod.prototype.update = function() {
 
 CamCtrlGod.prototype.setDestination = function( _lon, _lat, _duration ) {
 	if (_duration == undefined) {
-		var distance = Oev.Utils.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
+		var distance = GEO.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
 		_duration = Math.min(5000, distance / 10);
 	}	
 	this.tweenLon.value = this.coordLookat.x;
@@ -479,7 +480,7 @@ CamCtrlFps.prototype.update = function() {
 
 CamCtrlFps.prototype.setDestination = function( _lon, _lat, _duration ) {
 	if( _duration == undefined ){
-		var distance = Oev.Utils.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
+		var distance = GEO.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
 		_duration = Math.min( 5000, distance / 10 );
 		// debug( "_duration undefined, set to " + _duration + ' (' + distance + ')' );
 	}	

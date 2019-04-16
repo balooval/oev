@@ -14,8 +14,8 @@ export class TweenValue {
 	}
 
 	setTargetValue(_value, _duration) {
-		var d = new Date();
-		var curTime = d.getTime();
+		const d = new Date();
+		const curTime = d.getTime();
 		this.valueStart = this.value;
 		this.valueEnd = _value;
 		this.timeStart = curTime;
@@ -26,9 +26,9 @@ export class TweenValue {
 	
 	getValueAtTime(_curTime) {
 		this.timeTotal = this.timeEnd - this.timeStart;
-		var timeElapsed = _curTime - this.timeStart;
-		var timePrct = (timeElapsed / this.timeTotal);
-		var delta = this.valueEnd - this.valueStart;
+		const timeElapsed = _curTime - this.timeStart;
+		const timePrct = (timeElapsed / this.timeTotal);
+		const delta = this.valueEnd - this.valueStart;
 		this.value = this.valueStart + (delta * (timePrct));
 		if(timePrct >= 1){
 			this.reachTargetValue();

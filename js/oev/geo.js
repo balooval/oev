@@ -1,8 +1,35 @@
 export let projection = 'PLANE';
 
+export function tileToCoords(_tile_x, _tile_y, _zoom) {
+	const p = [];
+	const n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
+	p[0] = ((_tile_x / Math.pow(2.0, _zoom) * 360.0) - 180.0);
+	p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
+	return p;
+}
+
+export function tileToCoordsVect(_tile_x, _tile_y, _zoom){
+	const res = tileToCoords(_tile_x, _tile_y, _zoom);
+	return new THREE.Vector2(res[0], res[1]);
+}
+
+export function coordDistance(_startLon, _startLat, _endLon, _endLat){
+	const R = 6371000; // metres
+	const sigma1 = Oev.Math.radians( _startLat );
+	const sigma2 = Oev.Math.radians( _endLat );
+	const deltaSigma = Oev.Math.radians( _endLat-_startLat )
+	const deltaTruc = Oev.Math.radians( _endLon - _startLon );
+	const a = Math.sin(deltaSigma / 2) * Math.sin(deltaSigma / 2) +
+			Math.cos(sigma1) * Math.cos(sigma2) *
+			Math.sin(deltaTruc / 2) * Math.sin(deltaTruc / 2);
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	const distance = R * c;
+	return distance;
+}
+
 export function coordsToTile(_lon, _lat, _zoom) {
 	_zoom = Math.floor(_zoom);
-	var tile = new THREE.Vector2();
+	var tile = new THREE.Vector3();
 	tile.x = Math.floor( (_lon + 180) / 360 * Math.pow( 2, _zoom));
 	tile.y = Math.floor((1 - Math.log(Math.tan(_lat * Math.PI / 180) + 1 / Math.cos(_lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow( 2, _zoom));
 	tile.z = _zoom;

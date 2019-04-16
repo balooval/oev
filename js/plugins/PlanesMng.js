@@ -119,7 +119,7 @@ var Plane = function ( _start, _end ) {
 	this.tile = Oev.Geo.coordsToTile( this.tweenLon.value, this.tweenLat.value, this.zoom );
 	console.log( "Plane.this.zoom : " + this.zoom );
 
-	var distance = Oev.Utils.coordDistance( _start.x, _start.y, _end.x, _end.y );
+	var distance = GEO.coordDistance( _start.x, _start.y, _end.x, _end.y );
 	_duration = distance / 1;
 	
 	this.tweenLon.setTargetValue( _end.x, _duration );

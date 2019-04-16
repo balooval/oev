@@ -216,16 +216,6 @@ export class Elevation {
 		return -9999;
 	}
 	
-	_getVerticeElevation(_vertIndex, _lon, _lat) {
-		if (TileExtension.Params.actives['ACTIV_' + this.id] === false) return 0;
-		if (this.dataLoaded === true) {
-			return this.elevationBuffer[_vertIndex];
-		}
-		if (this.parentTile != undefined) {
-			return this.parentTile.interpolateEle(_lon, _lat);
-		}
-	}
-	
 	interpolateEle(_lon, _lat) {
 		var gapLeft = this.endCoord.x - this.startCoord.x;
 		var distFromLeft = _lon - this.startCoord.x;
@@ -237,7 +227,7 @@ export class Elevation {
 			return -9999;
 		}
 		if (this.dataLoaded === false) {
-			if (this.parentTile === undefined) {
+			if (this.parentTile === null) {
 				return 0;
 			}
 			return this.parentTile.interpolateEle(_lon, _lat);

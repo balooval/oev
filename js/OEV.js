@@ -55,8 +55,8 @@ const OpenEarthViewer = (function() {
 		NAVIGATION.init();
 		api.clock = new THREE.Clock();
 		document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
-		var intElemClientWidth = document.getElementById( _htmlContainer ).clientWidth;
-		var intElemClientHeight = document.getElementById( "tools" ).clientHeight;
+		const intElemClientWidth = document.getElementById( _htmlContainer ).clientWidth;
+		const intElemClientHeight = document.getElementById( "tools" ).clientHeight;
 		api.sceneWidth = Math.min( intElemClientWidth, 13000 );
 		api.sceneHeight = Math.min( intElemClientHeight, 800 );
 		api.scene = new THREE.Scene();
@@ -92,8 +92,8 @@ const OpenEarthViewer = (function() {
 		api.fountainPartMat.alphaTest = 0.4;
 		api.fountainPartMat.transparent = true;
 		api.userMat = new THREE.SpriteMaterial( { map: NET_TEXTURES.texture('god'), color: 0xffffff, fog: false } );
-		var debugGeo = new THREE.SphereGeometry(api.earth.meter * 100, 16, 7); 
-		var debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+		const debugGeo = new THREE.SphereGeometry(api.earth.meter * 100, 16, 7); 
+		const debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 		api.geoDebug = new THREE.Mesh(debugGeo, debugMat);
 		api.scene.add(api.geoDebug);
 		// api.earth.construct();
@@ -110,7 +110,7 @@ const OpenEarthViewer = (function() {
 
 	api.loadTextures = function() {
 		UI.openModal( "Loading textures" );
-		var textList = [];
+		const textList = [];
 		NET_TEXTURES.addToList(textList, 'landuse_sprites', 'landuse_sprites.png');
 		NET_TEXTURES.addToList(textList, 'normal_flat', 'normal_flat.png');
 		NET_TEXTURES.addToList(textList, 'normal_scrub', 'normal_scrub.png');
@@ -156,7 +156,7 @@ const OpenEarthViewer = (function() {
 
 	api.loadModels = function() {
 		UI.openModal( "Loading models" );
-		var modelList = [];
+		const modelList = [];
 		NET_MODELS.addToList(modelList, 'eolienne', 'eolienne.json');
 		NET_MODELS.addToList(modelList, 'pylone', 'pylone.json');
 		NET_MODELS.addToList(modelList, 'tree_lod_1', 'hydrant_lod_0.json');
@@ -188,47 +188,47 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.checkMouseWorldPos = function() {
-		var mX = ( ( INPUT.Mouse.curMouseX - containerOffset.x ) / api.sceneWidth ) * 2 - 1;
-		var mY = -( ( INPUT.Mouse.curMouseY - containerOffset.y ) / api.sceneHeight ) * 2 + 1;
+		const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / api.sceneWidth) * 2 - 1;
+		const mY = -((INPUT.Mouse.curMouseY - containerOffset.y) / api.sceneHeight) * 2 + 1;
 		mouseScreenClick.x = mX;
 		mouseScreenClick.y = mY;
 		api.raycaster.near = api.camera.near;
 		api.raycaster.far = api.camera.far;
-		api.raycaster.setFromCamera( new THREE.Vector2( mX, mY ), api.camera );
-		var intersects = api.raycaster.intersectObjects( api.earth.meshe.children );
-		var coord = undefined;
+		api.raycaster.setFromCamera( new THREE.Vector2(mX, mY), api.camera);
+		const intersects = api.raycaster.intersectObjects( api.earth.meshe.children);
+		let coord = undefined;
 		intersects.forEach(i => coord = api.earth.coordFromPos(i.point.x, i.point.z));
 		return coord;
 	}
 
-	api.addObjToUpdate = function( _obj ) {
+	api.addObjToUpdate = function(_obj) {
 		if (objToUpdate.includes(_obj)) return false;
 		objToUpdate.push(_obj);
 	}
 
-	api.removeObjToUpdate = function( _obj ) {
-		var index = objToUpdate.indexOf( _obj );
-		if( index < 0 ){
-			console.warn( 'OEV.removeObjToUpdate NOT FOUND !' );
+	api.removeObjToUpdate = function(_obj) {
+		const index = objToUpdate.indexOf( _obj );
+		if (index < 0) {
+			console.warn('OEV.removeObjToUpdate NOT FOUND !');
 			return false;
 		}
 		objToUpdate.splice(index, 1);
 	}
 
 	api.render = function() {
-		if( api.MUST_RENDER ){
-			if( api.tuniform != undefined ){
+		if (api.MUST_RENDER) {
+			if (api.tuniform != undefined) {
 				api.tuniform.iGlobalTime.value += 0.1;
 			}
-			var d = new Date();
+			const d = new Date();
 			api.globalTime = d.getTime();
 			OLD_UI.showUICoords();
-			renderer.render( api.scene, api.camera );
+			renderer.render(api.scene, api.camera);
 			api.MUST_RENDER = false;
 		}
 		api.camCtrl.update();
-		if( OLD_UI.dragSun ){
-			var mX = ( ( INPUT.Mouse.curMouseX - containerOffset.x ) / api.sceneWidth );
+		if (OLD_UI.dragSun) {
+			const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / api.sceneWidth);
 			SKY.setSunTime(mX);
 		}
 		api.earth.update();
@@ -237,7 +237,7 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.gotoWaypoint = function(_waypointIndex) {
-		var waypoint = NAVIGATION.getWaypointById(_waypointIndex);
+		const waypoint = NAVIGATION.getWaypointById(_waypointIndex);
 		api.camCtrl.setDestination(waypoint.lon, waypoint.lat);
 		api.camCtrl.setZoomDest(waypoint.zoom, 2000);
 	}

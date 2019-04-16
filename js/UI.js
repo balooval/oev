@@ -45,7 +45,6 @@ export function initUi(){
 		elem[i].addEventListener("click", changeTilesLayer );
 	}
 	document.getElementById( "contactLink" ).setAttribute('href', "mailto:val.poub@gmail.com");
-	document.getElementById( "cfg_load_ele" ).addEventListener("click", switchElevation );
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );

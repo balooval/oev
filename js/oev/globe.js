@@ -13,7 +13,7 @@ var coastDatas = null;
 var coastPxlRatio = 2048 / (20037508 * 2);
 var eleFactor = 1;
 
-var api = {
+const api = {
 	evt : null, 
 	tilesBase : [], 
 	CUR_ZOOM : 14, 
@@ -140,31 +140,31 @@ var api = {
 	
 	construct : function() {
 		const zoomBase = 4;
-		const nbTiles = Math.pow( 2, zoomBase );
-		for( var curTileY = 0; curTileY < nbTiles + 1; curTileY ++ ){
-			if( curTileY > 0 ){
-				for( var curTileX = 0; curTileX < nbTiles + 1; curTileX ++ ){
-					if( curTileX > 0 ){
-						var tile = new TILE.Basic(curTileX - 1, curTileY - 1, zoomBase);
+		const nbTiles = Math.pow(2, zoomBase);
+		for (let curTileY = 0; curTileY < nbTiles + 1; curTileY ++) {
+			if (curTileY > 0) {
+				for (let curTileX = 0; curTileX < nbTiles + 1; curTileX ++) {
+					if (curTileX > 0) {
+						const tile = new TILE.Basic(curTileX - 1, curTileY - 1, zoomBase);
 						api.tilesBase.push(tile);
-						tile.makeFace();
+						tile.buildGeometry();
 					}
 				}
 			}
 		}
-		api.matWayPoints = new THREE.SpriteMaterial( { map: NET_TEXTURES.texture('waypoint'), color: 0xffffff, fog: false } );
+		api.matWayPoints = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false});
 	}, 
 
 	isCoordOnGround : function(_lon, _lat, _marge = 0) {
 		if (coastDatas === null) return false;
-		var mercX = GEO.mercatorLonToX(_lon);
-		var mercY = GEO.mercatorLatToY(_lat);
-		var pxlX = Math.round(mercX * coastPxlRatio) + 1024;
-		var pxlY = Math.round(mercY * coastPxlRatio) + 1024;
+		const mercX = GEO.mercatorLonToX(_lon);
+		const mercY = GEO.mercatorLatToY(_lat);
+		const pxlX = Math.round(mercX * coastPxlRatio) + 1024;
+		const pxlY = Math.round(mercY * coastPxlRatio) + 1024;
 		pxlY = Math.abs(2048 - pxlY);
-		var bufferIndex;
-		for (var i = 0; i < _marge * 2; i ++) {
-			for (var j = 0; j < _marge * 2; j ++) {
+		let bufferIndex;
+		for (let i = 0; i < _marge * 2; i ++) {
+			for (let j = 0; j < _marge * 2; j ++) {
 				bufferIndex = ((pxlX - _marge + i) * 2048 + (pxlY - _marge + j));
 				if (coastDatas[bufferIndex] == 1) {
 					return 1;
@@ -176,22 +176,22 @@ var api = {
 	}, 
 
 	_onCoastLineLoaded : function(_img) {
-		var imgW = 2048;
-		var imgH = 2048;
-		var canvas = document.createElement('canvas');
+		const imgW = 2048;
+		const imgH = 2048;
+		const canvas = document.createElement('canvas');
 		canvas.width = imgW;
 		canvas.height = imgH;
-		var context = canvas.getContext('2d');
+		const context = canvas.getContext('2d');
 		context.drawImage(_img, 0, 0, imgW, imgH);
-		var img = context.getImageData(0, 0, imgW, imgH); 
-		var imageData = context.getImageData(0, 0, imgW, imgH);
-		var data = imageData.data;
+		const img = context.getImageData(0, 0, imgW, imgH); 
+		const imageData = context.getImageData(0, 0, imgW, imgH);
+		const data = imageData.data;
 		coastDatas = new Int8Array(data.length / 4);
-		var x, y;
-		var index;
-		var red;
-		var isGround;
-		var bufferIndex = 0;
+		let x, y;
+		let index;
+		let red;
+		let isGround;
+		let bufferIndex = 0;
 		for (x = 0; x < imgW; ++x) {
 			for (y = 0; y < imgH; ++y) {
 				index = (y * imgW + x) * 4;
@@ -334,16 +334,16 @@ var api = {
 	}, 
 
 	coordFromPos : function( _x, _y ) {
-		var pxlStart = api.coordToXYZ( -180, 85.0511, 0 );
-		var pxlEnd = api.coordToXYZ( 180, -85.0511, 0 );
-		var pxlWidth = Math.abs( pxlEnd.x - pxlStart.x );
-		var pxlHeight = Math.abs( pxlEnd.z - pxlStart.z ) / 2;
-		var prctW = ( _x - pxlStart.x ) / pxlWidth;
-		var prctH = ( ( _y - pxlEnd.z ) / pxlHeight ) - 1;
-		var coordX = -180 + ( prctW * 360 );
-		var coordY = ( prctH * 180 );
+		const pxlStart = api.coordToXYZ( -180, 85.0511, 0 );
+		const pxlEnd = api.coordToXYZ( 180, -85.0511, 0 );
+		const pxlWidth = Math.abs( pxlEnd.x - pxlStart.x );
+		const pxlHeight = Math.abs( pxlEnd.z - pxlStart.z ) / 2;
+		const prctW = ( _x - pxlStart.x ) / pxlWidth;
+		const prctH = ( ( _y - pxlEnd.z ) / pxlHeight ) - 1;
+		const coordX = -180 + ( prctW * 360 );
+		let coordY = ( prctH * 180 );
 		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
-		var ele = api.getElevationAtCoords(coordX, coordY, true);
+		const ele = api.getElevationAtCoords(coordX, coordY, true);
 		return new THREE.Vector3( coordX, coordY, ele );
 	}, 
 
@@ -418,7 +418,7 @@ var api = {
 
 	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
 		if (!api.eleActiv) return 0;
-		var ele = 0;
+		let ele = 0;
 		api.tilesBase.filter(t => {
 			return t.checkCameraHover(api.coordDetails, 1);
 		}).forEach(t => {
@@ -432,22 +432,22 @@ var api = {
 	
 	getCurTile : function() {
 		return api.tilesBase.map(t => {
-			return t.searchMainTile(api.coordDetails)
-		}).filter(res => res !== false).pop();
+			return t.getCurTile(api.coordDetails)
+		}).filter(res => res).pop();
 	}, 
 	
 	onCurTileChange : function(_newTile){
 		TILE.setMinMax(999999999, 999999999, -999999999, -999999999);
 		curTile = _newTile;
 		api.tilesBase.forEach(t => t.updateDetails(api.coordDetails));
-		api.evt.fireEvent( "CURTILE_CHANGED" );
+		api.evt.fireEvent('CURTILE_CHANGED');
 	}, 
 
-	updateCurTile : function( _coordX, _coordY ){
+	updateCurTile : function(_coordX, _coordY) {
 		api.coordDetails.x = _coordX;
 		api.coordDetails.y = _coordY;
-		var newTile = GEO.coordsToTile(api.coordDetails.x, api.coordDetails.y, api.CUR_ZOOM);
-		if( newTile.x != curTile.x || newTile.y != curTile.y || newTile.z != curTile.z ){
+		const newTile = GEO.coordsToTile(api.coordDetails.x, api.coordDetails.y, api.CUR_ZOOM);
+		if (newTile.x != curTile.x || newTile.y != curTile.y || newTile.z != curTile.z) {
 			api.onCurTileChange(newTile);
 		}
 		curTile = newTile;
@@ -458,11 +458,10 @@ var api = {
 	}, 
 
 	zoomFromAltitudeTest : function( _altitude ) { // _altitude : meters units
-		var nbTilesToDraw = 4;
-		var groundMeterWidth = _altitude;
-		var tileMeterWidth = groundMeterWidth / nbTilesToDraw;
-		var z = 1;
-		var meterByPixel = 78 * 256;
+		const nbTilesToDraw = 4;
+		const tileMeterWidth = _altitude / nbTilesToDraw;
+		let z = 1;
+		let meterByPixel = 78 * 256;
 		while( meterByPixel > tileMeterWidth ){
 			z ++;
 			meterByPixel /= 2;
@@ -476,7 +475,7 @@ var api = {
 };
 
 function loadCoastline() {
-	var imgCoast = new Image();
+	const imgCoast = new Image();
 	imgCoast.onload = function() {
 		api._onCoastLineLoaded(this);
 	};
