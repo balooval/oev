@@ -18,7 +18,6 @@ class TileNodes {
 		}
 	}
 
-
 	onDatasLoaded( _datas ) {
 		this.datasLoaded = true;
 		this.datasContent = _datas;
@@ -26,8 +25,6 @@ class TileNodes {
 			this.drawDatas();
 		}
 	}
-
-		
 
 	drawDatas() {
 		this.onStage = this.tile.onStage;
@@ -37,13 +34,9 @@ class TileNodes {
 			if( this.meshes == undefined ){
 				this.meshes = {};
 				var bigGeosTab = new THREE.Geometry();
-				
 				for( var t = 0; t < this.datasContent["elements"].length; t ++ ){
-					
-					// console.log( 'amenity : ' + this.datasContent["elements"][t]['tags']['amenity'] );
 					var tmpBuffGeo;
 					var curNodeType = 'none';
-					
 					if( "amenity" in this.datasContent["elements"][t]['tags'] ){
 						if( this.datasContent["elements"][t]['tags']['amenity'] == 'recycling' ){
 							curNodeType = 'recycling';

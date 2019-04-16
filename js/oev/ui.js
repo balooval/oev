@@ -2,18 +2,12 @@ import * as TileExtension from './tileExtensions/tileExtension.js';
 
 export function init() {
 	TilesExtension.init();
-	
 	document.getElementById('cfg_sun_time').addEventListener('input', function() {
 		Oev.Sky.setSunTime(this.value / 100);
 	});
-	
 	document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
 		Oev.Sky.testLuminosity(this.value / 50);
-		// skyParamsNew.sunLuminosity
 	});
-	
-	
-	
 }
 
 export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {
@@ -41,13 +35,13 @@ export function closeModal(){
 
 export function updateWaypointsList( _waysPts ){
 	document.getElementById( "waypointsInfos" ).innerHTML = "";
-	for( var w = 0; w < _waysPts.length; w ++ ){
-		if( _waysPts[w].showList ){
-			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint('+w+')">X</span> ' + ( w + 1 ) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint('+w+');" title=" '+ ( Math.round( _waysPts[w].lon * 1000 ) / 1000 ) + " / " + ( Math.round( _waysPts[w].lat * 1000 ) / 1000 ) +'">'+_waysPts[w].name + '</span><br>';
-		}
-	}
-}
+	_waysPts
+		.filter(w => w.showList)
+		.forEach((w, i) => {
+			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
+	});
 
+}
 
 const TilesExtension = (function(){
 	'use strict';

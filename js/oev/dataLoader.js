@@ -24,170 +24,123 @@ export class Proxy {
 		this._initLoaders();
 	}
 
-		getData(_params, _callback) {
-			_params.priority = _params.priority || 1;
-			_params.key = this._genKey(_params);
-			_params.callback = _callback;
-			if (this._type == 'BUILDINGO') {
-				console.log('getData', _params.key);
-			}
-			if (this._sendCachedData(_params) === true) {
-				return true;
-			}
-			if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
-				return false;
-			}
-			this._addSorted(_params);
-			this._checkForNextLoad();
+	getData(_params, _callback) {
+		_params.priority = _params.priority || 1;
+		_params.key = this._genKey(_params);
+		_params.callback = _callback;
+		if (this._type == 'BUILDINGO') {
+			console.log('getData', _params.key);
 		}
-		
-		_genKey(_params) {
-			_params.keyOpt = _params.keyOpt || '';
-			return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
-		}
-		
-		_initLoaders() {
-			var i;
-			var loader;
-			var _self = this;
-			for (i = 0; i < this._simulLoad; i ++) {
-				if (this._type == 'TILE2D') {
-					loader = new DataLoader.Tile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				} else if (this._type == 'ELE') {
-					loader = new DataLoader.Elevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				} else if (this._type == 'BUILDINGS') {
-					loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				} else if (this._type == 'NORMAL') {
-					loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				} else if (this._type == 'PLANE') {
-					loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				} else if (this._type == 'OVERPASS_CACHE') {
-					loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
-				}
-				this._loaders.push(loader);
+		if (this._sendCachedData(_params) === true) return true;
+		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) return false;
+		this._addSorted(_params);
+		this._checkForNextLoad();
+	}
+	
+	_genKey(_params) {
+		_params.keyOpt = _params.keyOpt || '';
+		return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
+	}
+	
+	_initLoaders() {
+		var i;
+		var loader;
+		var _self = this;
+		for (i = 0; i < this._simulLoad; i ++) {
+			if (this._type == 'TILE2D') {
+				loader = new LoaderTile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'ELE') {
+				loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'BUILDINGS') {
+				loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'NORMAL') {
+				loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'PLANE') {
+				loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+			} else if (this._type == 'OVERPASS_CACHE') {
+				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
 			}
-		}
-		
-		onDataLoaded(_data, _params) {
-			if (this._type == 'OVERPASS_CACHE0') {
-				console.log('_params', _params.key);
-				// var date = new Date();
-				// console.log(this._type, date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(), 'Waiting queue :', this._datasWaiting.length);
-			}
-			var i;
-			if (_data === null) {
-				console.warn('Error loading ressource');
-				return false;
-			}
-			for (i = 0; i < this._datasLoading.length; i ++) {
-				if (this._datasLoading[i].key == _params.key) {
-					this._datasLoading.splice(i, 1);
-					break;
-				}
-			}
-			_params.callback(_data);
-			if (_params.dropDatas === undefined || _params.dropDatas == false) {
-				this._datasLoaded[_params.key] = _data;
-			}
-			this._checkForNextLoad();
-		}
-		
-		_addSorted(_params) {
-			var i;
-			_params.priority /= _params.z;
-			for (var i = 0; i < this._datasWaiting.length; i ++) {
-				if (_params.priority < this._datasWaiting[i].priority) {
-					this._datasWaiting.splice(i, 0, _params);
-					return true;
-				}
-			}
-			this._datasWaiting.push(_params);
-			return false;
-		}
-		
-		_sendCachedData(_params) {
-			if (this._datasLoaded[_params.key] === undefined) {
-				return false;
-			}
-			_params.callback(this._datasLoaded[_params.key]);
-			return true;
-		}
-		
-		abort(_params) {
-			if (_params.key === undefined) {
-				// _params.key = _params.z + '-' + _params.x + '-' + _params.y;
-				_params.key = this._genKey(_params);
-			}
-			var i;
-			for (i = 0; i < this._datasWaiting.length; i ++) {
-				if (this._datasWaiting[i].key == _params.key) {
-					this._datasWaiting.splice(i, 1);
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		clear() {
-			this._datasLoaded = {};
-			this._datasWaiting = [];
-			this._datasLoading = [];
-		}
-		
-		_checkForNextLoad() {
-			if (this._datasLoading.length < this._simulLoad) {
-				this._loadNext();
-				return true;
-			}
-			return false;
-		}
-		
-		_loadNext() {
-			if (this._datasWaiting.length == 0) {
-				return false;
-			}
-			var freeLoader = this._getAvailableLoader();
-			if (freeLoader === null) {
-				return false;
-			}
-			var currentLoadingParams = this._datasWaiting.shift();
-			this._datasLoading.push(currentLoadingParams);
-			
-			OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
-			
-			freeLoader.load(currentLoadingParams);
-		}
-		
-		_getAvailableLoader() {
-			var i;
-			for (i = 0; i < this._simulLoad; i ++) {
-				if (!this._loaders[i].isLoading) {
-					return this._loaders[i];
-				}
-			}
-			return null;
-		}
-		
-		_isWaiting(_key) {
-			var i;
-			for (i = 0; i < this._datasWaiting.length; i ++) {
-				if (this._datasWaiting[i].key == _key) {
-					return true;
-				}
-			}
-			return false;
-		}
-		
-		_isLoading(_key) {
-			var i;
-			for (i = 0; i < this._datasLoading.length; i ++) {
-				if (this._datasLoading[i].key == _key) {
-					return true;
-				}
-			}
-			return false;
+			this._loaders.push(loader);
 		}
 	}
+	
+	onDataLoaded(_data, _params) {
+		if (this._type == 'OVERPASS_CACHE0') {
+			console.log('_params', _params.key);
+		}
+		var i;
+		if (_data === null) {
+			console.warn('Error loading ressource');
+			return false;
+		}
+		this._datasLoading = this._datasLoading.filter(l => l.key != _params.key);
+		_params.callback(_data);
+		if (_params.dropDatas === undefined || _params.dropDatas == false) {
+			this._datasLoaded[_params.key] = _data;
+		}
+		this._checkForNextLoad();
+	}
+	
+	_addSorted(_params) {
+		var i;
+		_params.priority /= _params.z;
+		for (var i = 0; i < this._datasWaiting.length; i ++) {
+			if (_params.priority < this._datasWaiting[i].priority) {
+				this._datasWaiting.splice(i, 0, _params);
+				return true;
+			}
+		}
+		this._datasWaiting.push(_params);
+		return false;
+	}
+	
+	_sendCachedData(_params) {
+		if (this._datasLoaded[_params.key] === undefined) return false;
+		_params.callback(this._datasLoaded[_params.key]);
+		return true;
+	}
+	
+	abort(_params) {
+		if (_params.key === undefined) {
+			_params.key = this._genKey(_params);
+		}
+		this._datasWaiting = this._datasWaiting.filter(w => w.key != _params.key);
+	}
+	
+	clear() {
+		this._datasLoaded = {};
+		this._datasWaiting = [];
+		this._datasLoading = [];
+	}
+	
+	_checkForNextLoad() {
+		if (this._datasLoading.length >= this._simulLoad) return false;
+		this._loadNext();
+		return true;
+	}
+	
+	_loadNext() {
+		if (this._datasWaiting.length == 0) return false;
+		var freeLoader = this._getAvailableLoader();
+		if (!freeLoader) return false;
+		var currentLoadingParams = this._datasWaiting.shift();
+		this._datasLoading.push(currentLoadingParams);
+		OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
+		freeLoader.load(currentLoadingParams);
+	}
+	
+	_getAvailableLoader() {
+		return this._loaders.filter(l => !l.isLoading).pop();
+	}
+	
+	_isWaiting(_key) {
+		return this._datasWaiting.some(w => w.key == _key);
+	}
+	
+	_isLoading(_key) {
+		return this._datasLoading.some(w => w.key == _key);
+	}
+}
 
 
 
@@ -259,80 +212,72 @@ DataLoader.Canvas = (function() {
 })();
 
 
-DataLoader.Elevation = function(_callback) {
-	this.definition = Params.Elevation.definition;
-	this.isLoading = false;
-	this.callback = _callback;
-	this.params = {};
-	var loader = this;
-	this.imageObj = new Image();
-	this.imageObj.onload = function() {
-		loader.onImgReady(this);
-	};
-	this.serverUrl = 'https://val.openearthview.net';
-}
-
 Params.Elevation = {
 	definition : 4, 
 }
 
-DataLoader.Elevation.prototype = {
-	load : function(_params) {
+class LoaderElevation {
+
+	constructor(_callback) {
+		this.definition = Params.Elevation.definition;
+		this.isLoading = false;
+		this.callback = _callback;
+		this.params = {};
+		var loader = this;
+		this.imageObj = new Image();
+		this.imageObj.crossOrigin = 'Anonymous';
+		this.imageObj.onload = function() {
+			loader.onImgReady(this);
+		};
+		this.serverUrl = 'https://val.openearthview.net';
+	}
+
+	load(_params) {
 		this.isLoading = true;
 		this.params = _params;
 		this.imageObj.src = this.serverUrl + '/libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
-	}, 
+	}
 	
-	onImgReady : function(_img) {
+	onImgReady(_img) {
 		var res = DataLoader.Canvas.extractElevation(_img, _img.width, _img.height);
 		this.isLoading = false;
 		if (this.callback) {
 			this.callback(res, this.params);
 		}
-	}, 
+	}
 }
 
-DataLoader.Tile2D = function(_callback) {
-	this.isLoading = false;
-	this.callback = _callback;
-	this.params = {};
-	this.serverUrl = 'https://val.openearthview.net';
-	this.tileLoader = new THREE.TextureLoader();
-}
+class LoaderTile2D {
+	constructor(_callback) {
+		this.isLoading = false;
+		this.callback = _callback;
+		this.params = {};
+		this.serverUrl = 'https://val.openearthview.net';
+		this.tileLoader = new THREE.TextureLoader();
+	}
 
-DataLoader.Tile2D.prototype = {
-	load : function(_params) {
+	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		
-		var cache = '';
-		
-		this.tileLoader.load(this.serverUrl + '/libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_params.z+'&x='+_params.x+'&y='+_params.y+cache, 
-			function(_texture){
-				loader.onDataLoadSuccess(_texture);
-			}, 
-			function(xhr) {
-			},
-			function(xhr) {
-				loader.onDataLoadError();
-			}
+		this.tileLoader.load(this.serverUrl + '/libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
+			_texture => loader.onDataLoadSuccess(_texture), 
+			xhr => {},
+			xhr => loader.onDataLoadError()
 		);
-	}, 
+	}
 	
-	onDataLoadSuccess : function(_data) {
+	onDataLoadSuccess(_data) {
 		this.isLoading = false;
 		this.callback(_data, this.params);
-	}, 
+	}
 	
-	onDataLoadError : function() {
+	onDataLoadError() {
 		this.isLoading = false;
-		console.warn( 'DataLoader.Tile2D error', this.params);
+		console.warn( 'LoaderTile2D error', this.params);
 		this.callback(null);
-	}, 
+	}
 }
-
-
 
 DataLoader.Normal = function(_callback) {
 	this.isLoading = false;

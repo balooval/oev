@@ -1,8 +1,7 @@
-
-let textureLoader = null;
 const batchs = [];
+const textLoaded = {};
+let textureLoader = null;
 let curBatch = null;
-let textLoaded = {};
 
 
 export function texture(_name) {
@@ -11,7 +10,6 @@ export function texture(_name) {
 
 export function init() {
 	textureLoader = new THREE.TextureLoader();
-	textLoaded = {};
 }
 
 export function addToList(_list, _id, _url) {
@@ -28,9 +26,7 @@ export function loadBatch(_list, _callback) {
 		list : _list, 
 	};
 	batchs.push(batch);
-	if (curBatch === null) {
-		loadNextBatch();
-	}
+	if (curBatch === null) loadNextBatch();
 }
 
 function loadNextBatch() {
@@ -46,7 +42,7 @@ function loadNextTexture() {
 	var nextText = curBatch.list.shift();
 	textureLoader.load(
 		'assets/textures/' + nextText.url, 
-		function(t){
+		t => {
 			textLoaded[nextText.id] = t;
 			textLoaded[nextText.id].wrapS = textLoaded[nextText.id].wrapT = THREE.RepeatWrapping;
 			if (curBatch.list.length == 0) {
@@ -56,11 +52,7 @@ function loadNextTexture() {
 				loadNextTexture();
 			}
 		}, 
-		function(xhr) {
-			
-		},
-		function(xhr) {
-			console.warn( 'Oev.Net.Textures error for loading', nextText.url );
-		}
+		xhr => {},
+		xhr => console.warn('Oev.Net.Textures error for loading', nextText.url)
 	);
 }

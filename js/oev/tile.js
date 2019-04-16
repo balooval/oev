@@ -1,6 +1,5 @@
 import Evt from './event.js';
 import * as UTILS from './utils.js';
-import TileNodes from '../TileNodes.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import GLOBE from './globe.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
@@ -43,7 +42,6 @@ export class Basic {
 		this.middleCoord = new THREE.Vector2( ( this.startCoord.x + this.endCoord.x ) / 2, ( this.startCoord.y + this.endCoord.y ) / 2 );
 		this.vertCoords = [];
 		this.surfacesProviders = [];
-		this.nodesProvider = new TileNodes(this);
 		this.distToCam = -1;
 		GLOBE.evt.addEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: NET_TEXTURES.texture("checker")});
@@ -239,7 +237,6 @@ export class Basic {
 		}
 		geometry.uvsNeedUpdate = true;
 		geometry.computeFaceNormals();
-		// geometry.mergeVertices();
 		geometry.computeVertexNormals();
 		this.meshe = new THREE.Mesh(geometry, this.material);
 		this.meshe.matrixAutoUpdate = false;
@@ -257,7 +254,6 @@ export class Basic {
 	
 	loadDatas() {
 		this.loadLanduse();
-		this.loadNodes();
 		this.evt.fireEvent('LOAD_DATAS');
 	}
 
@@ -338,8 +334,6 @@ export class Basic {
 		this.loadImage();
 		this.loadDatas();
 		this.surfacesProviders.forEach(p => p.hide(false));
-		this.nodesProvider.hide(false);
-		this.loadNodes();
 		if(this.meshInstance) {
 			OEV.scene.add(this.meshInstance);
 		}
@@ -358,7 +352,6 @@ export class Basic {
 			});
 		}
 		this.surfacesProviders.forEach(p => p.hide(true));
-		this.nodesProvider.hide(true);
 		if(this.meshInstance) {
 			OEV.scene.remove(this.meshInstance);
 		}
@@ -505,14 +498,6 @@ export class Basic {
 		this.material.uniforms.time.value.needsUpdate = true;
 		OEV.MUST_RENDER = true;
 	}
-
-	loadNodes() {
-		if (GLOBE.loadNodes) {
-			this.nodesProvider.drawDatas();
-		} else {
-			this.nodesProvider.hide(true);
-		}
-	}
 	
 	getElevation(_lon, _lat) {
 		return 0;
@@ -531,7 +516,7 @@ export class Basic {
 		GLOBE.evt.removeEventListener("DATAS_TO_LOAD_CHANGED", this, this.loadDatas);
 		this.clearChildrens();
 		this.hide();
-		this.nodesProvider.dispose();
+		// this.nodesProvider.dispose();
 		this.surfacesProviders.forEach(p => p.dispose());
 		if( this.meshe != undefined ){
 			this.meshe.geometry.dispose();

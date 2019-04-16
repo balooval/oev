@@ -14,7 +14,6 @@ var coastPxlRatio = 2048 / (20037508 * 2);
 var eleFactor = 1;
 
 var api = {
-	equirectMaterial : null, 
 	evt : null, 
 	tilesBase : [], 
 	CUR_ZOOM : 14, 
@@ -23,7 +22,6 @@ var api = {
 	LOD_STREET : 19, 
 	curLOD : 0, 
 	tilesDetailsMarge : 2, 
-	// tilesDetailsMarge : 1, 
 	loaderTile2D : null, 
 	loaderEle : null, 
 	coordDetails : new THREE.Vector2( 0, 0 ), 
@@ -46,8 +44,6 @@ var api = {
 	loaderNormal : null, 
 	loaderPlane : null, 
 	meshe : null, 
-	// tilesDefinition : 4, 
-	// tilesDefinition : 8, 
 	tilesDefinition : 16, 
 	grassMat : undefined, 
 	modelsMesheMat : {
@@ -64,11 +60,10 @@ var api = {
 	}, 
 	
 	init : function() {
-		console.log('GLOBE.init');
 		api.evt = new Evt();
 		api.meshe = new THREE.Mesh(new THREE.Geometry());
-		api.providersLoadManager = new DatasMng("OBJECTS");
-		api.nodesLoadManager = new DatasMng('NODES');
+		// api.providersLoadManager = new DatasMng("OBJECTS");
+		// api.nodesLoadManager = new DatasMng('NODES');
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
 		DataLoader.Params.Elevation.definition = api.tilesDefinition;
@@ -171,9 +166,7 @@ var api = {
 		for (var i = 0; i < _marge * 2; i ++) {
 			for (var j = 0; j < _marge * 2; j ++) {
 				bufferIndex = ((pxlX - _marge + i) * 2048 + (pxlY - _marge + j));
-				// console.log('bufferIndex', bufferIndex);
 				if (coastDatas[bufferIndex] == 1) {
-					// console.log('--');
 					return 1;
 				}
 			}
@@ -299,13 +292,12 @@ var api = {
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation){
-		var pos = new THREE.Vector3(0, 0, 0);
+		const pos = new THREE.Vector3(0, 0, 0);
 		pos.x = api.radius * (_lon / 60);
 		pos.y = api.posFromAltitude(_elevation);
-		var tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
+		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
 		pos.z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
 		pos.x *= api.globalScale;
-		// pos.y *= api.globalScale;
 		pos.y *= 10;
 		pos.z *= api.globalScale;
 		pos.x -= curLodOrigine.x;
@@ -316,9 +308,9 @@ var api = {
 	coordToXYZSphere : function( lon, lat, _elevation ){
 		_elevation *= api.meter;
 		_elevation += api.radius;
-		var pos = new THREE.Vector3( 0, 0, 0 );
-		var radY = Oev.Math.radians( ( lon - 180 ) * -1 );
-		var radX =  Oev.Math.radians( lat * -1 );
+		const pos = new THREE.Vector3( 0, 0, 0 );
+		const radY = Oev.Math.radians( ( lon - 180 ) * -1 );
+		const radX =  Oev.Math.radians( lat * -1 );
 		pos.x = Math.cos( radY ) * ( ( _elevation ) * Math.cos( radX ) );
 		pos.y = Math.sin( radX ) * _elevation * -1;
 		pos.z = Math.sin( radY ) * ( _elevation * Math.cos( radX ) );
