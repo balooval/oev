@@ -84,26 +84,16 @@ export class Elevation {
 	
 	applyElevationToGeometry() {
 		if (!this.dataLoaded) return false;
-		var index = 0;
-		let vertIndex = 0;
-		var nbVertBySide = GLOBE.tilesDefinition + 1;
-		const stepCoordX = (this.tile.endCoord.x - this.tile.startCoord.x) / GLOBE.tilesDefinition;
-		const stepCoordY =  (this.tile.endCoord.y - this.tile.startCoord.y) / GLOBE.tilesDefinition;
+		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
-		for (let x = 0; x < nbVertBySide; x ++) {
-			for (let y = 0; y < nbVertBySide; y ++) {
-				let verticePosition = GLOBE.coordToXYZ(
-					this.tile.startCoord.x + (stepCoordX * x), 
-					this.tile.startCoord.y + (stepCoordY * y), 
-					this.elevationBuffer[index]
-				);
-				index ++;
-				verticePositions.array[vertIndex + 0] = verticePosition.x;
-				verticePositions.array[vertIndex + 1] = verticePosition.y;
-				verticePositions.array[vertIndex + 2] = verticePosition.z;
-				vertIndex += 3;
-			}
-		}
+		const vertCoords = this.tile.getVerticesPlaneCoords();
+		vertCoords.forEach((c, i) => {
+			const vertPos = GLOBE.coordToXYZ(c[0], c[1], this.elevationBuffer[i]);
+			verticePositions.array[curVertId + 0] = vertPos.x;
+			verticePositions.array[curVertId + 1] = vertPos.y;
+			verticePositions.array[curVertId + 2] = vertPos.z;
+			curVertId += 3;
+		});
 		verticePositions.needsUpdate = true;
 		this.tile.meshe.geometry.verticesNeedUpdate = true;
 		this.tile.meshe.geometry.uvsNeedUpdate = true;

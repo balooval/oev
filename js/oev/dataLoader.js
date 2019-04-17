@@ -163,7 +163,7 @@ DataLoader.Ajax.prototype = {
 		};
 	}, 
 
-	stateChange : function(object) {
+	stateChange : function() {
 		if (this.request.readyState==4){
 			this.callback(this.request.responseText, this.request);
 		}
@@ -172,34 +172,24 @@ DataLoader.Ajax.prototype = {
 
 
 DataLoader.Canvas = (function() {
-	var canvas = document.createElement('canvas');
+	const canvas = document.createElement('canvas');
 	canvas.width = '64';
 	canvas.height = '64';
-	var context = canvas.getContext('2d');
+	const context = canvas.getContext('2d');
 	
 	var api = {
-		extractElevation : function(_img, _w, _h) {
-			context.drawImage(_img, 0, 0, _w, _h);
-			var img = context.getImageData(0, 0, _w, _h); 
-			var imgWidth = _w;
-			var imgHeight = _h;
-			var imageData = context.getImageData(0, 0, imgWidth, imgHeight);
-			var data = imageData.data;
-			var eleBuffer = new Uint16Array(data.length / 4);
-			var x, y;
-			var index;
-			var red;
-			var green;
-			var blue;
-			var alt;
-			var bufferIndex = 0;
-			for (x = 0; x < imgWidth; ++x) {
-				for (y = 0; y < imgHeight; ++y) {
-					index = (y * imgWidth + x) * 4;
-					red = data[index];
-					green = data[++index];
-					blue = data[++index];
-					alt = red * 256 + blue;
+		extractElevation : function(_img, _imgWidth, _imgHeight) {
+			context.drawImage(_img, 0, 0, _imgWidth, _imgHeight);
+			const imageData = context.getImageData(0, 0, _imgWidth, _imgHeight).data;
+			const eleBuffer = new Uint16Array(imageData.length / 4);
+			let bufferIndex = 0;
+			for (let x = 0; x < _imgWidth; ++x) {
+				for (let y = 0; y < _imgHeight; ++y) {
+					let index = (y * _imgWidth + x) * 4;
+					const red = imageData[index];
+					index ++;
+					const blue = imageData[++index];
+					const alt = red * 256 + blue;
 					eleBuffer[bufferIndex] = alt;
 					bufferIndex ++;
 				}

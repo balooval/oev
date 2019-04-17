@@ -113,7 +113,8 @@ export class Basic {
 		this.meshe.geometry.attributes.uv.needsUpdate = true;
 	}
 
-	buildGeometry() {
+	getVerticesPlaneCoords() {
+		const coords = [];
 		const def = GLOBE.tilesDefinition;
 		const vertBySide = def + 1;
 		let curVertId = 0;
@@ -122,16 +123,28 @@ export class Basic {
 		const bufferVertices = new Float32Array(this.verticesNb * 3);
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
-				const vectX = this.startCoord.x + (stepCoordX * x);
-				const vectY = this.startCoord.y + (stepCoordY * y);
-				const vertZ = 0;
-				const vertPos = GLOBE.coordToXYZ(vectX, vectY, vertZ);
-				bufferVertices[curVertId + 0] = vertPos.x;
-				bufferVertices[curVertId + 1] = vertPos.y;
-				bufferVertices[curVertId + 2] = vertPos.z;
-				curVertId += 3;
+				coords.push([
+					this.startCoord.x + (stepCoordX * x), 
+					this.startCoord.y + (stepCoordY * y)
+				]);
 			}
 		}
+		return coords;
+	}
+
+	buildGeometry() {
+		let curVertId = 0;
+		const bufferVertices = new Float32Array(this.verticesNb * 3);
+		const vertCoords = this.getVerticesPlaneCoords();
+		vertCoords.forEach(c => {
+			const vertPos = GLOBE.coordToXYZ(c[0], c[1], 0);
+			bufferVertices[curVertId + 0] = vertPos.x;
+			bufferVertices[curVertId + 1] = vertPos.y;
+			bufferVertices[curVertId + 2] = vertPos.z;
+			curVertId += 3;
+		});
+		const def = GLOBE.tilesDefinition;
+		const vertBySide = def + 1;
 		let faceId = 0;
 		const nbFaces = (def * def) * 2;
 		const bufferFaces = new Uint32Array(nbFaces * 3);
