@@ -1,9 +1,9 @@
 import * as UI from './ui.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
-var waypointMat;
-var waypointsList = [];
-var WpStored = [];
+let waypointMat;
+const waypointsList = [];
+let WpStored = [];
 
 var api = {
 	init : function() {
@@ -30,7 +30,7 @@ var api = {
 	saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore) {
 		_name = _name || "WP " + waypointsList.length;
 		_localStore = _localStore || false;
-		var wp = new WayPoint( _lon, _lat, _zoom, _name);
+		const wp = new WayPoint( _lon, _lat, _zoom, _name);
 		waypointsList.push(wp);
 		UI.updateWaypointsList(waypointsList);
 		if (_localStore) {
@@ -41,13 +41,12 @@ var api = {
 	}, 
 	
 	removeWaypoint : function( _wId ) {
-		for (var w = 0; w < WpStored.length; w ++) {
-			var storedWP = WpStored[w];
-			if (storedWP["lon"] == waypoints[_wId].lon && storedWP["lat"] == waypoints[_wId].lat && storedWP["zoom"] == waypoints[_wId].zoom) {
-				WpStored.splice(w, 1);
-				break;
-			}
-		}
+		WpStored = WpStored.filter(w => {
+			if (w.lon != waypoints[_wId].lon) return true;
+			if (w.lat != waypoints[_wId].lat) return true;
+			if (w.zoom != waypoints[_wId].zoom) return true;
+			return false;
+		});
 		localStorage.setItem("waypoints", JSON.stringify(WpStored));	
 		waypoints[_wId].dispose();
 		waypoints.splice(_wId, 1);

@@ -1,36 +1,12 @@
 import Evt from './oev/event.js';
-import * as INPUT from './oev/input.js';
+import * as INPUT from './oev/input/input.js';
 import SKY from './oev/sky.js';
 
-export let dragSun = false;
-var urlParams = [];
-var UiObj = undefined;
-
-var htmlElmtLoadingDatas;
-var lastTimeLoadingUpdated = 0;
-
-var UI = function () {
-	this.evt = new Evt();
-	this.coordOnGround = new THREE.Vector3( 0, 0, 0 );
-}
-
-UI.prototype.init = function() {
-	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
-}
-UI.prototype.onMouseDownLeft = function() {
-	var coordOnGround = OEV.checkMouseWorldPos();
-	if (coordOnGround === undefined){
-		dragSun = true;
-	}
-}
-UI.prototype.onMouseUpLeft = function() {
-	dragSun = false;
-}
+let urlParams = [];
+let htmlElmtLoadingDatas;
+let lastTimeLoadingUpdated = 0;
 
 export function initUi(){
-	UiObj = new UI();
-	UiObj.init();
 	htmlElmtLoadingDatas = {
 		'loading_OBJECTS' : document.getElementById( "loading_OBJECTS"), 
 		'loading_TILE2D' : document.getElementById( "loading_TILE2D"), 
@@ -59,7 +35,6 @@ export function initUi(){
 			title.addEventListener("click", foldToolbox );
 		}
 	}
-	showUICoords();
 	if( location.hash != '' ){
 		urlParams = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
 		if( urlParams[3] ){
@@ -88,14 +63,12 @@ function foldToolbox(){
 }
 
 function isElementActiv( _elm ){
-	if( _elm.className.indexOf( 'activ' ) < 0 ){
-		return false;
-	}
+	if( _elm.className.indexOf( 'activ' ) < 0 ) return false;
 	return true;
 }
 
 function setElementActiv( _elm, _state ){
-	var elmArray;
+	let elmArray;
 	if( _elm.constructor === Array ){
 		elmArray = _elm;
 	}else{
@@ -132,33 +105,13 @@ function switchNodes(){
 	}
 }
 
-function switchElevation(){
-	if( document.getElementById("cfg_load_ele").checked ){
-		OEV.earth.activElevation( true );
-	}else{
-		OEV.earth.activElevation( false );
-	}
-}
-
-function hideNotification(){
-	var notifBox = document.getElementById( "boxNotification" );
-	notifBox.innerHTML = '';
-	setElementActiv( notifBox, false );
-	notifCloseTimer = -1;
-}
-
-export function showUICoords(){
-	document.getElementById( "overlayUICoords" ).innerHTML = "<h2>Position</h2>Lon : " + ( Math.round( OEV.camCtrl.coordLookat.x * 1000 ) / 1000 ) + "<br>Lat : " + ( Math.round( OEV.camCtrl.coordLookat.y * 1000 ) / 1000 ) + "<br>Elevation : " + Math.round( OEV.camCtrl.coordLookat.z )+ 'm<br>SunTime: ' + Math.round( SKY.normalizedTime * 24 )+'H';
-}
-
 export function updateLoadingDatas(_type, _nb){
 	var curTime = OEV.clock.getElapsedTime();
-	if (curTime - lastTimeLoadingUpdated > 1) {
-		lastTimeLoadingUpdated = curTime;
-		if (htmlElmtLoadingDatas['loading_' + _type] === undefined) {
-			console.log('not ', _type);
-			return false;
-		}
-		htmlElmtLoadingDatas['loading_' + _type].innerHTML = _nb + " " + _type + " to load";
+	if (curTime - lastTimeLoadingUpdated <= 1) return false;
+	lastTimeLoadingUpdated = curTime;
+	if (htmlElmtLoadingDatas['loading_' + _type] === undefined) {
+		console.warn('not ', _type);
+		return false;
 	}
+	htmlElmtLoadingDatas['loading_' + _type].innerHTML = _nb + " " + _type + " to load";
 }

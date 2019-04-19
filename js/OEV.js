@@ -3,17 +3,15 @@ import * as UI from './oev/ui.js';
 import * as OLD_UI from './UI.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
-import * as INPUT from './oev/input.js';
+import * as INPUT from './oev/input/input.js';
 import SKY from './oev/sky.js';
-import NAVIGATION from './oev/navigation.js';
+import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './CamCtrl.js';
 import * as SHADER from './oev/shader.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
-const mouseScreenClick = new THREE.Vector2( 0, 0 );
-const socketEnabled = false;
 let renderer = undefined;
 
 const OpenEarthViewer = (function() {
@@ -52,7 +50,7 @@ const OpenEarthViewer = (function() {
 		NET_MODELS.init();
 		INPUT.init();
 		SKY.init();
-		NAVIGATION.init();
+		Navigation.init();
 		api.clock = new THREE.Clock();
 		document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
 		const intElemClientWidth = document.getElementById( _htmlContainer ).clientWidth;
@@ -77,11 +75,8 @@ const OpenEarthViewer = (function() {
 			renderer.shadowMap.enabled = true;
 			renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
 		}
-		if( socketEnabled ){
-			api.netCtrl = new NetCtrl();
-			api.netCtrl.init( this );
-		}
 		api.camCtrl = new CamCtrl.CamCtrlGod();
+		UI.setCamera(api.camCtrl);
 		api.evt.fireEvent('APP_INIT');	
 		api.loadTextures();
 	}
@@ -96,13 +91,11 @@ const OpenEarthViewer = (function() {
 		const debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 		api.geoDebug = new THREE.Mesh(debugGeo, debugMat);
 		api.scene.add(api.geoDebug);
-		// api.earth.construct();
 		api.camCtrl.init(api.camera, api.earth);
-		NAVIGATION.saveWaypoint(4.231021, 43.795594, 13);
-		NAVIGATION.saveWaypoint(3.854188, 43.958125, 13);
-		NAVIGATION.saveWaypoint(2.383138,48.880945, 13);
+		Navigation.saveWaypoint(4.231021, 43.795594, 13);
+		Navigation.saveWaypoint(3.854188, 43.958125, 13);
+		Navigation.saveWaypoint(2.383138,48.880945, 13);
 		api.appStarted = true;
-		// Oev.Tile.Extension.LanduseWorker.init();
 		console.log('OEV.START');
 		api.evt.fireEvent('APP_START');
 		render();
@@ -111,41 +104,45 @@ const OpenEarthViewer = (function() {
 	api.loadTextures = function() {
 		UI.openModal( "Loading textures" );
 		const textList = [];
-		NET_TEXTURES.addToList(textList, 'landuse_sprites', 'landuse_sprites.png');
-		NET_TEXTURES.addToList(textList, 'normal_flat', 'normal_flat.png');
-		NET_TEXTURES.addToList(textList, 'normal_scrub', 'normal_scrub.png');
-		NET_TEXTURES.addToList(textList, 'normal_vineyard', 'normal_vineyard.png');
-		NET_TEXTURES.addToList(textList, 'normal_forest', 'normal_forest.png');
-		NET_TEXTURES.addToList(textList, 'landuse_vineyard', 'landuse_vineyard.png');
-		NET_TEXTURES.addToList(textList, 'landuse_scrub', 'landuse_scrub.png');
-		NET_TEXTURES.addToList(textList, 'landuse_forest', 'landuse_forest.png');
-		NET_TEXTURES.addToList(textList, 'tree_top', 'tree_top.png');
-		NET_TEXTURES.addToList(textList, 'skydome', 'skydome.jpg');
-		NET_TEXTURES.addToList(textList, 'pylone', 'pylone.png');
-		NET_TEXTURES.addToList(textList, 'sea', 'sea.jpg');
-		NET_TEXTURES.addToList(textList, 'water_color', 'water_color.jpg');
-		NET_TEXTURES.addToList(textList, 'roof', 'roof.png');
-		NET_TEXTURES.addToList(textList, 'god', 'god_2.png');
-		NET_TEXTURES.addToList(textList, 'waternormals', 'waternormals.png');
-		NET_TEXTURES.addToList(textList, 'waypoint', 'waypoint.png');
-		NET_TEXTURES.addToList(textList, 'checker', 'loading.png');
-		NET_TEXTURES.addToList(textList, 'sky', 'sky.png');
-		NET_TEXTURES.addToList(textList, 'checker_alpha', 'checker_alpha.png');
-		NET_TEXTURES.addToList(textList, 'sun', 'sun2.png');
-		NET_TEXTURES.addToList(textList, 'cloud', 'cloud.png');
-		NET_TEXTURES.addToList(textList, 'sky_gradient', 'sky_gradient.png');
-		NET_TEXTURES.addToList(textList, 'grass', 'grass2.png');
-		NET_TEXTURES.addToList(textList, 'vineyard', 'vineyard.png');
-		NET_TEXTURES.addToList(textList, 'natural_tree', 'natural_tree.png');
-		NET_TEXTURES.addToList(textList, 'tree_side', 'tree_tiles.png');
-		NET_TEXTURES.addToList(textList, 'scrub', 'scrub.png');
-		NET_TEXTURES.addToList(textList, 'plane_contrail', 'plane_contrail_2.png');
-		NET_TEXTURES.addToList(textList, 'particleWater', 'particleWater.png');
-		NET_TEXTURES.addToList(textList, 'tree_procedural', 'tree_procedural.png');
+		const toLoad = [
+			['landuse_sprites', 'landuse_sprites.png'], 
+			['normal_flat', 'normal_flat.png'], 
+			['normal_scrub', 'normal_scrub.png'], 
+			['normal_vineyard', 'normal_vineyard.png'], 
+			['normal_forest', 'normal_forest.png'], 
+			['landuse_vineyard', 'landuse_vineyard.png'], 
+			['landuse_scrub', 'landuse_scrub.png'], 
+			['landuse_forest', 'landuse_forest.png'], 
+			['tree_top', 'tree_top.png'], 
+			['skydome', 'skydome.jpg'], 
+			['pylone', 'pylone.png'], 
+			['sea', 'sea.jpg'], 
+			['water_color', 'water_color.jpg'], 
+			['roof', 'roof.png'], 
+			['god', 'god_2.png'], 
+			['waternormals', 'waternormals.png'], 
+			['waypoint', 'waypoint.png'], 
+			['checker', 'loading.png'], 
+			['sky', 'sky.png'], 
+			['checker_alpha', 'checker_alpha.png'], 
+			['sun', 'sun2.png'], 
+			['cloud', 'cloud.png'], 
+			['sky_gradient', 'sky_gradient.png'], 
+			['grass', 'grass2.png'], 
+			['vineyard', 'vineyard.png'], 
+			['natural_tree', 'natural_tree.png'], 
+			['tree_side', 'tree_tiles.png'], 
+			['scrub', 'scrub.png'], 
+			['plane_contrail', 'plane_contrail_2.png'], 
+			['particleWater', 'particleWater.png'], 
+			['tree_procedural', 'tree_procedural.png'], 
+		];
+		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
+
 		NET_TEXTURES.loadBatch(textList, onOevTexturesLoaded);
 	}
-
-
+	
+	
 	api.loadShaders = function() {
 		SHADER.loadList([
 			'cloud', 
@@ -178,11 +175,11 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.switchClouds = function() {
-		if (Oev.Sky.cloudsActiv) {
-			Oev.Sky.clearClouds();
+		if (SKY.cloudsActiv) {
+			SKY.clearClouds();
 			setElementActiv( document.getElementById( "btnClouds" ), false );
 		} else {
-			Oev.Sky.makeClouds();
+			SKY.makeClouds();
 			setElementActiv( document.getElementById( "btnClouds" ), true );
 		}
 	}
@@ -190,8 +187,6 @@ const OpenEarthViewer = (function() {
 	api.checkMouseWorldPos = function() {
 		const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / api.sceneWidth) * 2 - 1;
 		const mY = -((INPUT.Mouse.curMouseY - containerOffset.y) / api.sceneHeight) * 2 + 1;
-		mouseScreenClick.x = mX;
-		mouseScreenClick.y = mY;
 		api.raycaster.near = api.camera.near;
 		api.raycaster.far = api.camera.far;
 		api.raycaster.setFromCamera( new THREE.Vector2(mX, mY), api.camera);
@@ -207,12 +202,7 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.removeObjToUpdate = function(_obj) {
-		const index = objToUpdate.indexOf( _obj );
-		if (index < 0) {
-			console.warn('OEV.removeObjToUpdate NOT FOUND !');
-			return false;
-		}
-		objToUpdate.splice(index, 1);
+		objToUpdate = objToUpdate.filter(o => o != _obj);
 	}
 
 	api.render = function() {
@@ -222,12 +212,12 @@ const OpenEarthViewer = (function() {
 			}
 			const d = new Date();
 			api.globalTime = d.getTime();
-			OLD_UI.showUICoords();
+			UI.showUICoords();
 			renderer.render(api.scene, api.camera);
 			api.MUST_RENDER = false;
 		}
 		api.camCtrl.update();
-		if (OLD_UI.dragSun) {
+		if (UI.dragSun) {
 			const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / api.sceneWidth);
 			SKY.setSunTime(mX);
 		}
@@ -237,7 +227,7 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.gotoWaypoint = function(_waypointIndex) {
-		const waypoint = NAVIGATION.getWaypointById(_waypointIndex);
+		const waypoint = Navigation.getWaypointById(_waypointIndex);
 		api.camCtrl.setDestination(waypoint.lon, waypoint.lat);
 		api.camCtrl.setZoomDest(waypoint.zoom, 2000);
 	}

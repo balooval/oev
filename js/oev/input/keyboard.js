@@ -1,18 +1,7 @@
-import Evt from './event.js';
-
-export function init() {
-	OEV.evt.addEventListener('APP_START', null, onAppStart);
-	Mouse.init();
-}
-
-export function onAppStart() {
-	
-}
-
+/*
 let tmp = false;
 let tmpNoCache = false;
 
-/*
 Oev.Input.Keyboard = (function(){
 	'use strict';
 	var majActiv = false;
@@ -124,88 +113,3 @@ Oev.Input.Keyboard = (function(){
 	return api;
 })();
 */
-
-export const Mouse = (function(){
-	'use strict';
-	var api = {
-		curMouseX : 0, 
-		curMouseY : 0, 
-		mouseBtnLeftState : false, 
-		mouseBtnMiddleState : false, 
-		mouseBtnRightState : false, 
-		evt : new Evt(), 
-		
-		init : function() {
-			document.onmousemove = api.onMouseMove;
-			document.addEventListener('mousewheel', api.onMouseWheel, {passive: true});
-		}, 
-		
-		onMouseDown : function(evt) {
-			var e = e || window.event;      
-			var btnCode;
-			if ('object' === typeof evt) {
-				btnCode = evt.button;
-				switch (btnCode) {
-					case 0:
-						api.mouseBtnLeftState = true;
-						onMouseLeftDown();
-					break;
-					case 1:
-					   api.mouseBtnMiddleState = true;
-					break;
-					case 2:
-						api.mouseBtnRightState = true;
-						onMouseRightDown();
-					break;
-				}
-			}
-		}, 
-		
-		onMouseUp : function(evt) {
-			var btnCode;
-			if ('object' === typeof evt) {
-				btnCode = evt.button;
-				switch (btnCode) {
-					case 0:
-						api.mouseBtnLeftState = false;
-						onMouseLeftUp();
-					break;
-					case 1:
-						api.mouseBtnMiddleState = false;
-					break;
-					case 2:
-						api.mouseBtnRightState = false;
-						onMouseRightUp();
-					break;
-				}
-			}
-		}, 
-		
-		onMouseMove : function(evt) {
-			api.curMouseX = evt.clientX;
-			api.curMouseY = evt.clientY;
-		}, 
-		
-		onMouseWheel : function(evt) {
-			var delta = evt.wheelDelta / 360;
-			api.evt.fireEvent('MOUSE_WHEEL', delta);
-		}, 
-	};
-	
-	
-	function onMouseLeftDown() {
-		api.evt.fireEvent('MOUSE_LEFT_DOWN');
-	}
-	function onMouseRightDown() {
-		api.evt.fireEvent('MOUSE_RIGHT_DOWN');
-	}
-	
-	function onMouseLeftUp() {
-		api.evt.fireEvent('MOUSE_LEFT_UP');
-	}
-	function onMouseRightUp() {
-		api.evt.fireEvent('MOUSE_RIGHT_UP');
-	}
-	
-	return api;
-})();

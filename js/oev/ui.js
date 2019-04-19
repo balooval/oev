@@ -1,4 +1,32 @@
+import * as INPUT from './input/input.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
+
+let elmtCamHeading;
+let elmtComputingQUeue;
+let elmtCoord;
+export let dragSun = false;
+
+function onMouseDownLeft() {
+	var coordOnGround = OEV.checkMouseWorldPos();
+	if (coordOnGround === undefined){
+		dragSun = true;
+	}
+}
+function onMouseUpLeft() {
+	dragSun = false;
+}
+
+export function setCamera(_camCtrl) {
+	_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
+}
+
+export function showUICoords(){
+	elmtCoord.innerHTML = "Lon : " + (Math.round(OEV.camCtrl.coordLookat.x * 1000) / 1000) + "<br>Lat : " + (Math.round(OEV.camCtrl.coordLookat.y * 1000) / 1000) + "<br>Elevation : " + Math.round(OEV.camCtrl.coordLookat.z);
+}
+
+function onCamRotate(_evt) {
+	elmtCamHeading.style.transform = "rotate("+(180 + (180 * _evt / Math.PI))+"deg)";
+}
 
 export function init() {
 	TilesExtension.init();
@@ -8,6 +36,11 @@ export function init() {
 	document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
 		Oev.Sky.testLuminosity(this.value / 50);
 	});
+	elmtCamHeading = document.getElementById("camHeading");
+	elmtComputingQUeue = document.getElementById('computingQueue');
+	elmtCoord = document.getElementById("overlayUICoords");
+	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
+	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
 }
 
 export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {
@@ -20,7 +53,7 @@ export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) 
 }
 
 export function setQueueNb(_nb) {
-	document.getElementById('computingQueue').innerHTML = 'compute waiting : ' + _nb;
+	elmtComputingQUeue.innerHTML = 'compute waiting : ' + _nb;
 }
 
 export function openModal( _content ){
