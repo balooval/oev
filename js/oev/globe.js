@@ -1,10 +1,11 @@
 import Evt from './event.js';
-import DatasMng from '../DatasMng.js';
+import DatasMng from './DatasMng.js';
 import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
 import * as GEO from './geo.js';
+import MATH from './math.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
 var curLodOrigine = new THREE.Vector3( 0, 0, 0 );
@@ -278,6 +279,7 @@ const api = {
 	}, 
 
 	setProjection : function(_mode) {
+		console.log('setProjection', _mode);
 		if (_mode == "PLANE") {
 			SKY.activSky(true);
 			api.coordToXYZ = api.coordToXYZPlane;
@@ -291,7 +293,7 @@ const api = {
 		api.tilesBase.forEach(t => t.updateVertex());
 	}, 
 
-	coordToXYZPlane : function(_lon, _lat, _elevation){
+	coordToXYZPlane : function(_lon, _lat, _elevation) {
 		const pos = new THREE.Vector3(0, 0, 0);
 		pos.x = api.radius * (_lon / 60);
 		pos.y = api.posFromAltitude(_elevation);
@@ -305,15 +307,16 @@ const api = {
 		return pos;
 	}, 
 
-	coordToXYZSphere : function( lon, lat, _elevation ){
+	coordToXYZSphere : function(lon, lat, _elevation) {
 		_elevation *= api.meter;
 		_elevation += api.radius;
-		const pos = new THREE.Vector3( 0, 0, 0 );
-		const radY = Oev.Math.radians( ( lon - 180 ) * -1 );
-		const radX =  Oev.Math.radians( lat * -1 );
-		pos.x = Math.cos( radY ) * ( ( _elevation ) * Math.cos( radX ) );
-		pos.y = Math.sin( radX ) * _elevation * -1;
-		pos.z = Math.sin( radY ) * ( _elevation * Math.cos( radX ) );
+		const pos = new THREE.Vector3(0, 0, 0);
+		const radY = MATH.radians((lon - 180) * -1);
+		const radX = MATH.radians(lat * -1);
+		// console.log('coordToXYZSphere', MATH.radians(lat * -1), MATH.radians((lon - 180) * -1));
+		pos.x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
+		pos.y = Math.sin(radX) * _elevation * -1;
+		pos.z = Math.sin(radY) * (_elevation * Math.cos(radX));
 		if (api.curLOD == api.LOD_CITY) {
 			pos.x -= curLodOrigine.x;
 			pos.y -= curLodOrigine.y;
@@ -396,8 +399,8 @@ const api = {
 				api.globalScale = 1;
 				api._updateMeter();
 				api.curLOD = api.LOD_PLANET;
-				api.updateLOD();
 				api.setProjection("SPHERE");
+				api.updateLOD();
 				OEV.camera.far = (api.radius * 2 ) * api.globalScale;
 				OEV.camera.near = (api.radius * api.globalScale) / 1000000;
 				OEV.camera.updateProjectionMatrix();

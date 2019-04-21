@@ -225,7 +225,8 @@ class LoaderElevation {
 	load(_params) {
 		this.isLoading = true;
 		this.params = _params;
-		this.imageObj.src = this.serverUrl + '/libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+		// this.imageObj.src = this.serverUrl + '/libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+		this.imageObj.src = this.serverUrl + '/api/index.php?ressource=elevation&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
 	}
 	
 	onImgReady(_img) {
@@ -243,6 +244,7 @@ class LoaderTile2D {
 		this.callback = _callback;
 		this.params = {};
 		this.serverUrl = 'https://val.openearthview.net';
+		// this.serverUrl = 'http://ns378984.ip-5-196-69.eu';
 		this.tileLoader = new THREE.TextureLoader();
 	}
 
@@ -250,7 +252,7 @@ class LoaderTile2D {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.tileLoader.load(this.serverUrl + '/libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
+		this.tileLoader.load(this.serverUrl + '/api/index.php?ressource=osm&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
 			_texture => loader.onDataLoadSuccess(_texture), 
 			xhr => {},
 			xhr => loader.onDataLoadError()

@@ -1,41 +1,47 @@
-import * as OLD_UI from './UI.js';
+import * as OLD_UI from '../UI.js';
 
 class DatasMng {
 	constructor(_type) {
 		this.logQuery = false;
-		// this.logQuery = true;
 		this.loaderPool = [];
 		this.loaderBusy = [];
 		this.type = _type;
-		if( this.type == "ELE" ){
-			console.error('DatasMng ELE must not be used');
-			this.simulLoad = 2;
-			this.maxRamNb = 1000;
-		}else if( this.type == "TILE2D" ){
-			this.simulLoad = 4;
-			this.maxRamNb = 1000;
-			for( var i = 0; i < this.simulLoad; i ++ ){
-				this.loaderPool.push( new THREE.TextureLoader() );
-			}
-		}else if( this.type == "MODELS" ){
-			this.simulLoad = 1;
-			this.maxRamNb = 10;
-		}else if( this.type == "BUILDINGS" ){
-			this.simulLoad = 2;
-			this.maxRamNb = 10;
-		}else if( this.type == "OBJECTS" ){
-			this.simulLoad = 1;
-			this.maxRamNb = 10;
-		}else if( this.type == "SURFACE" ){
-			this.simulLoad = 1;
-			this.maxRamNb = 100;
-		}else if( this.type == "WEATHER" ){
-			this.simulLoad = 1;
-			this.maxRamNb = 20;
-		}else if( this.type == "NODES" ){
-			this.simulLoad = 1;
-			this.maxRamNb = 10;
-		}
+		const loadParams = {
+			TILE2D : {
+				simulLoad : 2, 
+				maxRamNb : 1000, 
+			}, 
+			ELE : {
+				simulLoad : 2, 
+				maxRamNb : 1000, 
+			}, 
+			MODELS : {
+				simulLoad : 1, 
+				maxRamNb : 10, 
+			}, 
+			BUILDINGS : {
+				simulLoad : 2, 
+				maxRamNb : 10, 
+			}, 
+			OBJECTS : {
+				simulLoad : 1, 
+				maxRamNb : 10, 
+			}, 
+			SURFACE : {
+				simulLoad : 1, 
+				maxRamNb : 100, 
+			}, 
+			WEATHER : {
+				simulLoad : 1, 
+				maxRamNb : 20, 
+			}, 
+			NODES : {
+				simulLoad : 1, 
+				maxRamNb : 10, 
+			}, 
+		};
+		this.simulLoad = loadParams[this.type].simulLoad;
+		this.maxRamNb = loadParams[this.type].maxRamNb;
 		this.datasLoaded = {};
 		this.datasWaiting = [];
 		this.datasLoading = [];
@@ -86,44 +92,42 @@ class DatasMng {
 	getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority) {
 		_priority = _priority || -1;
 		var i;
-		var key = _key;
-		if (this.datasLoaded[key] != undefined) {
+		if (this.datasLoaded[_key] != undefined) {
 			if (_tile != undefined) {
-				this.setDatas(_tile, this.datasLoaded[key]);
+				this.setDatas(_tile, this.datasLoaded[_key]);
 			}
-			this.updateLastAccess(key);
-		} else {
-			var mustLoad = true;
-			for (i = 0; i < this.datasLoading.length; i ++ ){
-				if (this.datasLoading[i]["key"] == key) {
+			return this.updateLastAccess(_key);
+		}
+		let mustLoad = true;
+		for (i = 0; i < this.datasLoading.length; i ++ ){
+			if (this.datasLoading[i].key == _key) {
+				mustLoad = false;
+				break;
+			}
+		}
+		if (mustLoad) {
+			for (i = 0; i < this.datasWaiting.length; i ++ ){
+				if (this.datasWaiting[i].key == _key) {
 					mustLoad = false;
 					break;
 				}
 			}
-			if (mustLoad) {
-				for (i = 0; i < this.datasWaiting.length; i ++ ){
-					if (this.datasWaiting[i]["key"] == key) {
+		}
+		if (mustLoad) {
+			if (_priority >= 0 && this.datasWaiting.length > 0) {
+				_priority /= _zoom;
+				for (var w = 0; w < this.datasWaiting.length; w ++) {
+					if (this.datasWaiting[w]["priority"] > _priority) {
+						this.datasWaiting.splice(w, 0, {"priority" : _priority, "key" : _key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
 						mustLoad = false;
 						break;
 					}
 				}
 			}
-			if (mustLoad) {
-				if (_priority >= 0 && this.datasWaiting.length > 0) {
-					_priority /= _zoom;
-					for (var w = 0; w < this.datasWaiting.length; w ++) {
-						if (this.datasWaiting[w]["priority"] > _priority) {
-							this.datasWaiting.splice(w, 0, {"priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
-							mustLoad = false;
-							break;
-						}
-					}
-				}
-			}
-			if (mustLoad) {
-				this.datasWaiting.push({"priority" : _priority, "key" : key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
-				this.checkForNextLoad();
-			}
+		}
+		if (mustLoad) {
+			this.datasWaiting.push({"priority" : _priority, "key" : _key, "tile" : _tile, "z" : _zoom, "x" : _tileX, "y" : _tileY});
+			this.checkForNextLoad();
 		}
 	}
 

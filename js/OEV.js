@@ -7,7 +7,7 @@ import * as INPUT from './oev/input/input.js';
 import SKY from './oev/sky.js';
 import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
-import * as CamCtrl from './CamCtrl.js';
+import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
 
 let containerOffset = undefined;
@@ -46,7 +46,7 @@ const OpenEarthViewer = (function() {
 
 	api.init = function(_htmlContainer) {
 		UI.init();
-		NET_TEXTURES.init();
+		NET_TEXTURES.init('assets/textures');
 		NET_MODELS.init();
 		INPUT.init();
 		SKY.init();
@@ -102,9 +102,12 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.loadTextures = function() {
-		UI.openModal( "Loading textures" );
+		UI.openModal('Loading textures');
 		const textList = [];
 		const toLoad = [
+			['checker', 'loading.png'], 
+			['sky_gradient', 'sky_gradient.png'], 
+			/*
 			['landuse_sprites', 'landuse_sprites.png'], 
 			['normal_flat', 'normal_flat.png'], 
 			['normal_scrub', 'normal_scrub.png'], 
@@ -122,12 +125,10 @@ const OpenEarthViewer = (function() {
 			['god', 'god_2.png'], 
 			['waternormals', 'waternormals.png'], 
 			['waypoint', 'waypoint.png'], 
-			['checker', 'loading.png'], 
 			['sky', 'sky.png'], 
 			['checker_alpha', 'checker_alpha.png'], 
 			['sun', 'sun2.png'], 
 			['cloud', 'cloud.png'], 
-			['sky_gradient', 'sky_gradient.png'], 
 			['grass', 'grass2.png'], 
 			['vineyard', 'vineyard.png'], 
 			['natural_tree', 'natural_tree.png'], 
@@ -136,9 +137,9 @@ const OpenEarthViewer = (function() {
 			['plane_contrail', 'plane_contrail_2.png'], 
 			['particleWater', 'particleWater.png'], 
 			['tree_procedural', 'tree_procedural.png'], 
+			*/
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
-
 		NET_TEXTURES.loadBatch(textList, onOevTexturesLoaded);
 	}
 	
@@ -153,6 +154,7 @@ const OpenEarthViewer = (function() {
 
 	api.loadModels = function() {
 		UI.openModal( "Loading models" );
+		/*
 		const modelList = [];
 		NET_MODELS.addToList(modelList, 'eolienne', 'eolienne.json');
 		NET_MODELS.addToList(modelList, 'pylone', 'pylone.json');
@@ -168,6 +170,8 @@ const OpenEarthViewer = (function() {
 		NET_MODELS.addToList(modelList, 'plane', 'avion.json');
 		NET_MODELS.addToList(modelList, 'whale', 'whale.json');
 		NET_MODELS.loadBatch(modelList, onOevModelsLoaded);
+		*/
+		onOevModelsLoaded();
 	}
 
 	api.domContainer = function() {
@@ -242,7 +246,7 @@ const OpenEarthViewer = (function() {
 
 function onOevTexturesLoaded() {
 	console.log('All default textures loaded');
-	NET_TEXTURES.texture('skydome').mapping = THREE.EquirectangularReflectionMapping;
+	// NET_TEXTURES.texture('skydome').mapping = THREE.EquirectangularReflectionMapping;
 	OEV.loadShaders();
 }
 

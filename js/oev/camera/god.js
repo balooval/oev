@@ -1,8 +1,9 @@
-import * as Animation from './oev/animation.js';
-import Evt from './oev/event.js';
-import * as INPUT from './oev/input/input.js';
-import * as GEO from './oev/geo.js';
-import SKY from './oev/sky.js';
+import * as Animation from '../animation.js';
+import Evt from '../event.js';
+import * as INPUT from '../input/input.js';
+import * as GEO from '../geo.js';
+import SKY from '../sky.js';
+import MATH from '../math.js';
 
 export class CamCtrlGod {
 	constructor() {
@@ -204,8 +205,8 @@ export class CamCtrlGod {
 	}
 
 	updateOnSphere() {
-		const radLon = Oev.Math.radians(this.coordLookat.x);
-		const radLat = Oev.Math.radians(this.coordLookat.y);
+		const radLon = MATH.radians(this.coordLookat.x);
+		const radLat = MATH.radians(this.coordLookat.y);
 		const matGlob = new THREE.Matrix4();
 		const matZ = new THREE.Matrix4();
 		const matY = new THREE.Matrix4();

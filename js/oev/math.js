@@ -1,6 +1,5 @@
-Oev.Math = (function(){
-	'use strict';
-	var api = {
+const api = {
+
 		radians : function(_degres){
 			return Math.PI * _degres / 180;
 		}, 
@@ -26,6 +25,7 @@ Oev.Math = (function(){
         && (c = !c);
     return c;
 		}, 
+
 		ptIsInPolygonOk : function(_polygon, _lon, _lat) {
 			var angle = 0;
 			var ptA;
@@ -34,7 +34,7 @@ Oev.Math = (function(){
 			for( var i = 0; i < segNb; i++ ){
 				ptA = _polygon[i];
 				ptB = _polygon[i+1];
-				angle += Oev.Math.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
+				angle += api.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
 			}
 			if( Math.abs( angle ) < Math.PI ){
 				return false;
@@ -66,7 +66,7 @@ Oev.Math = (function(){
 				lon: y / f + off[0]
 			};
 		},
-	};
-	
-	return api;
-})();
+
+}
+
+export {api as default};

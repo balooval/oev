@@ -54,7 +54,7 @@ export class Elevation {
 	
 	tileReady() {
 		if (this.dataLoaded) return false;
-		if (this.tile.zoom < 12) return false;
+		// if (this.tile.zoom < 12) return false;
 		OEV.earth.loaderEle.getData(
 			{
 				z : this.tile.zoom, 

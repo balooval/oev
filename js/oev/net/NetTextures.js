@@ -2,15 +2,16 @@ const batchs = [];
 const textLoaded = {};
 let textureLoader = null;
 let curBatch = null;
+let serveurUrl;
 
+export function init(_serveurUrl) {
+	serveurUrl = _serveurUrl;
+	textureLoader = new THREE.TextureLoader();
+}
 
 export function texture(_name) {
 	return textLoaded[_name];
 } 
-
-export function init() {
-	textureLoader = new THREE.TextureLoader();
-}
 
 export function addToList(_list, _id, _url) {
 	_list.push({id:_id, url:_url});
@@ -41,7 +42,7 @@ function loadNextBatch() {
 function loadNextTexture() {
 	var nextText = curBatch.list.shift();
 	textureLoader.load(
-		'assets/textures/' + nextText.url, 
+		serveurUrl + '/' + nextText.url, 
 		t => {
 			textLoaded[nextText.id] = t;
 			textLoaded[nextText.id].wrapS = textLoaded[nextText.id].wrapT = THREE.RepeatWrapping;

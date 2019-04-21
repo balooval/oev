@@ -96,6 +96,7 @@ export class Basic {
 	}
 
 	applyTexture(_textureDatas) {
+		if (_textureDatas === null) return false;
 		if (this.meshe === undefined) return false;
 		const vertBySide = GLOBE.tilesDefinition + 1;
 		const bufferUvs = new Float32Array(this.verticesNb * 2);
