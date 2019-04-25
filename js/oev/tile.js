@@ -121,7 +121,6 @@ export class Basic {
 		let curVertId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / def;
 		const stepCoordY = (this.endCoord.y - this.startCoord.y) / def;
-		const bufferVertices = new Float32Array(this.verticesNb * 3);
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
 				coords.push([

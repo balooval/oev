@@ -48,17 +48,17 @@ export class Proxy {
 		var _self = this;
 		for (i = 0; i < this._simulLoad; i ++) {
 			if (this._type == 'TILE2D') {
-				loader = new LoaderTile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new LoaderTile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'ELE') {
-				loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'BUILDINGS') {
-				loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'NORMAL') {
-				loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'PLANE') {
-				loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'OVERPASS_CACHE') {
-				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params);});
+				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			}
 			this._loaders.push(loader);
 		}

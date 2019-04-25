@@ -48,7 +48,7 @@ class DatasMng {
 		this.datasLastAccess = [];
 	}
 
-	clearOldDatas = function() {
+	clearOldDatas() {
 		if (this.datasLastAccess.length > this.maxRamNb) {
 			console.log(this.type + " A clearOldDatas " + this.datasLastAccess.length);
 			while(this.datasLastAccess.length > this.maxRamNb / 2) {
@@ -56,11 +56,11 @@ class DatasMng {
 				this.datasLoaded[keyToDel] = null;
 				delete this.datasLoaded[keyToDel];
 			}
-			console.log( this.type + " B clearOldDatas " + this.datasLastAccess.length );
+			console.log(this.type + " B clearOldDatas " + this.datasLastAccess.length);
 		}
 	}
 
-	updateLastAccess = function( _key ) {
+	updateLastAccess( _key ) {
 		var prevId = this.datasLastAccess.indexOf( _key );
 		if (prevId >= 0) {
 			this.datasLastAccess.splice(prevId, 1);
@@ -69,7 +69,7 @@ class DatasMng {
 	}
 
 
-	setDatas = function(_tile, _datas) {
+	setDatas(_tile, _datas) {
 		if( this.type == "ELE" ){
 			// _tile.computeEle( _datas );
 		}else if( this.type == "TILE2D" ){
@@ -89,7 +89,7 @@ class DatasMng {
 		}
 	}
 
-	getDatas = function(_tile, _key, _tileX, _tileY, _zoom, _priority) {
+	getDatas(_tile, _key, _tileX, _tileY, _zoom, _priority) {
 		_priority = _priority || -1;
 		var i;
 		if (this.datasLoaded[_key] != undefined) {
@@ -132,14 +132,14 @@ class DatasMng {
 	}
 
 
-	checkForNextLoad = function() {
+	checkForNextLoad() {
 		updateLoadingDatas(this.type, this.datasWaiting.length);
 		if (this.datasLoading.length < this.simulLoad) {
 			this.loadNext();
 		}
 	}
 
-	removeWaitingList = function( _key ) {
+	removeWaitingList( _key ) {
 		for (var i = 0; i < this.datasWaiting.length; i ++) {
 			if (this.datasWaiting[i]["key"] == _key) {
 				this.datasWaiting.splice(i, 1);
@@ -149,7 +149,7 @@ class DatasMng {
 		OLD_UI.updateLoadingDatas(this.type, this.datasWaiting.length);
 	}
 
-	removeLoadingList = function(_key) {
+	removeLoadingList(_key) {
 		for (var i = 0; i < this.datasLoading.length; i ++) {
 			if (this.datasLoading[i]["key"] == _key) {
 				this.datasLoading.splice(i, 1);
@@ -158,13 +158,13 @@ class DatasMng {
 		}
 	}
 
-	clearAll = function() {
+	clearAll() {
 		this.datasLoaded = {};
 		this.datasWaiting = [];
 		this.datasLoading = [];
 	}
 
-	loadNext = function() {
+	loadNext() {
 		if (this.datasWaiting.length > 0) {
 			var loadInfos = this.datasWaiting.shift();
 			this.datasLoading.push(loadInfos);
@@ -191,7 +191,7 @@ class DatasMng {
 		}
 	}
 
-	loadWeather = function( _loadInfos ) {
+	loadWeather( _loadInfos ) {
 		var mng = this;
 		var url = "libs/remoteImg.php?getWeather=1&z="+_loadInfos["z"]+"&x="+_loadInfos["x"]+"&y="+_loadInfos["y"];
 		var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
@@ -206,11 +206,11 @@ class DatasMng {
 		);
 	}
 
-	onWorkerBuildingResponse = function(evt) {
+	onWorkerBuildingResponse(evt) {
 		
 	}
 
-	loadBuildingsOverpass = function( _loadInfos ) {
+	loadBuildingsOverpass( _loadInfos ) {
 		var mng = this;
 		var useCache = '&nocache=1';
 		if (Tile3d.prototype.useCache) {
@@ -242,7 +242,7 @@ class DatasMng {
 		);
 	}
 
-	loadNodes = function( _loadInfos ) {
+	loadNodes( _loadInfos ) {
 		var mng = this;
 		var useCache = '';
 		// var useCache = '&nocache=1';
@@ -259,7 +259,7 @@ class DatasMng {
 		);
 	}
 
-	loadObjects = function( _loadInfos ) {
+	loadObjects( _loadInfos ) {
 		var mng = this;
 		var url = "libs/remoteImg.php?overpass_obj=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"]+"&model="+_loadInfos["tile"].name;
 		var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
@@ -274,7 +274,7 @@ class DatasMng {
 		);
 	}
 
-	loadSurfaces = function( _loadInfos ) {
+	loadSurfaces( _loadInfos ) {
 		var useCache = '&nocache=1';
 		if( TileSurface.prototype.useCache ){
 			useCache = '';
@@ -294,7 +294,7 @@ class DatasMng {
 	}
 
 
-	loadOverpass = function( _loadInfos ) {
+	loadOverpass( _loadInfos ) {
 		var mng = this;
 		var url = "libs/remoteImg.php?overpass=1&tileX="+_loadInfos["x"]+"&tileY="+_loadInfos["y"]+"&zoom="+_loadInfos["z"];
 		var ajaxMng = new AjaxMng( url, {"key" : _loadInfos["key"], "tile":_loadInfos["tile"], "mng" : mng}, 
@@ -309,7 +309,7 @@ class DatasMng {
 		);
 	}
 
-	loadTile2d = function( _loadInfos ) {
+	loadTile2d( _loadInfos ) {
 		console.log('loadTile2d');
 		var mng = this;
 		var tileLoader = new THREE.TextureLoader();
@@ -335,37 +335,39 @@ class DatasMng {
 	}
 }
 
-var AjaxMng = function ( url, params, callbackFunction ) {
-	this.url = url;
-	this.params = params;
-	this.callbackFunction = callbackFunction;
-	this.request = this.getRequest();
-	if (this.request) {
-		var req = this.request;
-		req.onreadystatechange = this.bindFunction(this.stateChange, this);
-		req.open("GET", url, true);
-		req.send(this.postBody);
+class AjaxMng {
+	constructor( url, params, callbackFunction ) {
+		this.url = url;
+		this.params = params;
+		this.callbackFunction = callbackFunction;
+		this.request = this.getRequest();
+		if (this.request) {
+			var req = this.request;
+			req.onreadystatechange = this.bindFunction(this.stateChange, this);
+			req.open("GET", url, true);
+			req.send(this.postBody);
+		}
+	}
+
+	bindFunction(caller, object) {
+		return function() {
+			return caller.apply(object, [object]);
+		};
+	}
+
+	stateChange(object) {
+		if (this.request.readyState==4){
+			this.callbackFunction(this.request.responseText, this.params);
+		}
+	}
+
+	getRequest() {
+		if (window.ActiveXObject)
+			return new ActiveXObject('Microsoft.XMLHTTP');
+		else if (window.XMLHttpRequest)
+			return new XMLHttpRequest();
+		return false;
 	}
 }
-
-AjaxMng.prototype.bindFunction = function(caller, object) {
-	return function() {
-		return caller.apply(object, [object]);
-	};
-};
-
-AjaxMng.prototype.stateChange = function(object) {
-	if (this.request.readyState==4){
-		this.callbackFunction(this.request.responseText, this.params);
-	}
-};
-
-AjaxMng.prototype.getRequest = function() {
-	if (window.ActiveXObject)
-		return new ActiveXObject('Microsoft.XMLHTTP');
-	else if (window.XMLHttpRequest)
-		return new XMLHttpRequest();
-	return false;
-};
 
 export { DatasMng as default}

@@ -1,6 +1,7 @@
 import * as TileExtension from './tileExtension.js';
 import * as NET_TEXTURES from '../net/NetTextures.js';
 import GLOBE from '../globe.js';
+import ElevationDatas from '../globeElevation.js';
 
 export class Elevation {
 	constructor(_tile) {
@@ -54,7 +55,7 @@ export class Elevation {
 	
 	tileReady() {
 		if (this.dataLoaded) return false;
-		// if (this.tile.zoom < 12) return false;
+		this.applyElevationToGeometry(this.nearestElevationDatas());
 		OEV.earth.loaderEle.getData(
 			{
 				z : this.tile.zoom, 
@@ -62,7 +63,7 @@ export class Elevation {
 				y : this.tile.tileY, 
 				priority : this.tile.distToCam
 			}, 
-			_datas => this._onElevationLoaded(_datas.slice(0))
+			_datas => this.onElevationLoaded(_datas.slice(0))
 		);
 	}
 	
@@ -73,22 +74,32 @@ export class Elevation {
 			y : this.tile.tileY
 		});
 	}
+
+	nearestElevationDatas() {
+		const def = GLOBE.tilesDefinition + 1;
+		const buffer = new Uint16Array(def * def);
+		const vertCoords = this.tile.getVerticesPlaneCoords();
+		vertCoords.forEach((c, i) => {
+			buffer[i] = ElevationDatas.get(c[0], c[1]);
+		});
+		return buffer;
+	}
 	
-	_onElevationLoaded(_datas) {
+	onElevationLoaded(_datas) {
 		if (!this.tile.isReady) return false;
 		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
 		this.dataLoaded = true;
 		this.elevationBuffer = _datas;
-		this.applyElevationToGeometry();
+		ElevationDatas.set(this.tile, this.elevationBuffer);
+		this.applyElevationToGeometry(this.elevationBuffer);
 	}
 	
-	applyElevationToGeometry() {
-		if (!this.dataLoaded) return false;
+	applyElevationToGeometry(_elevationBuffer) {
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
 		const vertCoords = this.tile.getVerticesPlaneCoords();
 		vertCoords.forEach((c, i) => {
-			const vertPos = GLOBE.coordToXYZ(c[0], c[1], this.elevationBuffer[i]);
+			const vertPos = GLOBE.coordToXYZ(c[0], c[1], _elevationBuffer[i]);
 			verticePositions.array[curVertId + 0] = vertPos.x;
 			verticePositions.array[curVertId + 1] = vertPos.y;
 			verticePositions.array[curVertId + 2] = vertPos.z;

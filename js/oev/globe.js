@@ -1,11 +1,12 @@
 import Evt from './event.js';
-import DatasMng from './DatasMng.js';
+import DatasMng from './datasMng.js';
 import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
 import * as GEO from './geo.js';
 import MATH from './math.js';
+import Elevation from './globeElevation.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
 var curLodOrigine = new THREE.Vector3( 0, 0, 0 );
