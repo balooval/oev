@@ -6,14 +6,14 @@ import SKY from './sky.js';
 import * as TILE from './tile.js';
 import * as GEO from './geo.js';
 import MATH from './math.js';
-import Elevation from './globeElevation.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
+import ElevationDatas from './globeElevation.js';
 
-var curLodOrigine = new THREE.Vector3( 0, 0, 0 );
-var curTile = new THREE.Vector2( 0, 0, 0 );
-var coastDatas = null;
-var coastPxlRatio = 2048 / (20037508 * 2);
-var eleFactor = 1;
+let curLodOrigine = new THREE.Vector3(0, 0, 0);
+let curTile = new THREE.Vector2(0, 0, 0);
+let coastDatas = null;
+const coastPxlRatio = 2048 / (20037508 * 2);
+const eleFactor = 1;
 
 const api = {
 	evt : null, 
@@ -82,7 +82,7 @@ const api = {
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
 		// api.tileExtensions['OVERPASS'] = Oev.Tile.Extension.Overpass;
 		// api.tileExtensions['LANDUSE'] = Oev.Tile.Extension.Landuse;
-		// api.tileExtensions['BUILDING'] = Oev.Tile.Extension.Building;
+		api.tileExtensions['BUILDING'] = TileExtension.Building;
 		// api.tileExtensions['LIFE'] = Oev.Tile.Extension.Life;
 		// api.tileExtensions['DUMMY'] = Oev.Tile.Extension.Dummy;
 		
@@ -421,16 +421,8 @@ const api = {
 	}, 
 
 	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
-		if (!api.eleActiv) return 0;
-		let ele = 0;
-		api.tilesBase.filter(t => {
-			return t.checkCameraHover(api.coordDetails, 1);
-		}).forEach(t => {
-			ele = t.getElevation(_lon, _lat);
-		});
-		if (!_inMeters) {
-			ele *= (api.meter * eleFactor);
-		}
+		let ele = ElevationDatas.get(_lon, _lat) || 0;
+		if (!_inMeters) ele *= (api.meter * eleFactor);
 		return ele;
 	}, 
 	

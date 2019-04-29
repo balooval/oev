@@ -321,14 +321,6 @@ export class Basic {
 		OEV.MUST_RENDER = true;
 	}
 	
-	getElevation(_lon, _lat) {
-		return 0;
-	}
-
-	interpolateEle(_lon, _lat, _debug) {
-		return 0;
-	}
-	
 	dispose() {
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		this.clearChildrens();

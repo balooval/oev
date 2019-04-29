@@ -36,12 +36,6 @@ const OpenEarthViewer = (function() {
 		plugins : [], 
 		shadowsEnabled : true, 
 		globalTime : 0, 
-		tuniform : {
-			iGlobalTime: {
-				type: 'f',
-				value: 0.1
-			}
-		}, 
 	}
 
 	api.init = function(_htmlContainer) {
@@ -211,9 +205,6 @@ const OpenEarthViewer = (function() {
 
 	api.render = function() {
 		if (api.MUST_RENDER) {
-			if (api.tuniform != undefined) {
-				api.tuniform.iGlobalTime.value += 0.1;
-			}
 			const d = new Date();
 			api.globalTime = d.getTime();
 			UI.showUICoords();

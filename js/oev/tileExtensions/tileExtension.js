@@ -149,3 +149,4 @@ export class DefaultExt {
 Params.actives['ACTIV_ELEVATION'] = true;
 
 export {Elevation} from './tileExtElevation.js';
+export {Building} from './tileExtBuilding.js';

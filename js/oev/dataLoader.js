@@ -52,7 +52,7 @@ export class Proxy {
 			} else if (this._type == 'ELE') {
 				loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'BUILDINGS') {
-				loader = new DataLoader.Building(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
+				loader = new LoaderBuilding(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'NORMAL') {
 				loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'PLANE') {
@@ -225,7 +225,6 @@ class LoaderElevation {
 	load(_params) {
 		this.isLoading = true;
 		this.params = _params;
-		// this.imageObj.src = this.serverUrl + '/libs/remoteImg.php?tileEle=1&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
 		this.imageObj.src = this.serverUrl + '/api/index.php?ressource=elevation&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
 	}
 	
@@ -311,18 +310,17 @@ DataLoader.Normal.prototype = {
 
 
 DataLoader.BuildingWorker = (function() {
-	var worker = new Worker('js/oev/workers/buildingJson.js');
-	var loaders = [];
+	const worker = new Worker('js/oev/workers/buildingJson.js');
+	const loaders = [];
 	
 	var api = {
-		
 		compute : function(_loader, _datas) {
 			loaders.push(_loader);
 			worker.postMessage(_datas);
 		}, 
 		
 		onWorkerMessage : function(_res) {
-			var loader = loaders.shift();
+			const loader = loaders.shift();
 			loader.datasReady(_res.data);
 		}, 
 	};
@@ -332,37 +330,37 @@ DataLoader.BuildingWorker = (function() {
 	return api;
 })();
 
-DataLoader.Building = function(_callback) {
-	this.isLoading = false;
-	this.callback = _callback;
-	this.params = {};
-	this.ajax = new DataLoader.Ajax();
-	this.serverUrl = 'https://val.openearthview.net';
-}
+class LoaderBuilding {
+	constructor(_callback) {
+		this.isLoading = false;
+		this.callback = _callback;
+		this.params = {};
+		this.ajax = new DataLoader.Ajax();
+		this.serverUrl = 'https://val.openearthview.net';
+	}	
 
-DataLoader.Building.prototype = {
-	load : function(_params) {
+	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load(this.serverUrl + "/libs/remoteImg.php?overpass_buildings=1&zoom="+_params.z+"&tileX="+_params.x+"&tileY="+_params.y, 
-			function(_datas){
-				loader.onDataLoadSuccess(_datas);
-			}
+		this.ajax.load(
+			this.serverUrl + "/api/index.php?ressource=building&z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y, 
+			_datas => loader.onDataLoadSuccess(_datas)
 		);
-	}, 
+	}
 	
-	onDataLoadSuccess : function(_data) {
-		DataLoader.BuildingWorker.compute(this, {"json" : _data, "bbox" : this.params.bbox});
-	}, 
+	onDataLoadSuccess(_data) {
+		DataLoader.BuildingWorker.compute(this, {
+			json : _data, 
+			bbox : this.params.bbox
+		});
+	}
 	
-	datasReady : function(_datas) {
+	datasReady(_datas) {
 		this.isLoading = false;
 		this.callback(_datas, this.params);
-	}, 
+	}
 }
-
-
 
 
 DataLoader.Planes = function(_callback) {

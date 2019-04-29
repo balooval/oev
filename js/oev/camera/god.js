@@ -8,7 +8,7 @@ import MATH from '../math.js';
 export class CamCtrlGod {
 	constructor() {
 		this.camera = undefined;
-		this.planet = undefined;
+		this.globe = undefined;
 		this.pointer = undefined;
 		this.mouseLastPos = [0, 0];
 		this.zoomCur = 14;
@@ -36,18 +36,18 @@ export class CamCtrlGod {
 		OEV.evt.addEventListener('APP_START', this, this.onAppStart);
 	}
 
-	init(_cam, _planet) {
+	init(_cam, _globe) {
 		this.camera = _cam;
-		this.planet = _planet;
+		this.globe = _globe;
 	}
 
 	onAppStart() {
 		this.camera.up.set(0, -1, 0);
-		this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+		this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
 		OEV.scene.add(this.pointer);
-		this.clicPointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0x0000ff}));
+		this.clicPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0x0000ff}));
 		OEV.scene.add(this.clicPointer);
-		this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.planet.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
+		this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
 		OEV.scene.add(this.debugPointer);
 		if (location.hash != '') {
 			var urlParamsLoc = location.hash.substr(location.hash.search('=') + 1).split('/');
@@ -57,8 +57,8 @@ export class CamCtrlGod {
 			this.setLookAt(parseFloat(urlParamsLoc[1]), parseFloat(urlParamsLoc[2]));
 			this.tweens.lon.value = this.coordLookat.x;
 			this.tweens.lat.value = this.coordLookat.y;
-			this.planet.updateCurTile(this.coordLookat.x, this.coordLookat.y);
-			this.planet.updateZoom(this.zoomCur);
+			this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
+			this.globe.updateZoom(this.zoomCur);
 			this.MUST_UPDATE = true;
 		}
 		this.updateCamera();
@@ -117,8 +117,8 @@ export class CamCtrlGod {
 
 	setCurZoom( _value ) {
 		this.zoomCur = _value;
-		this.planet.updateZoom(this.zoomCur);
-		const wpScale = (this.coordCam.z / this.planet.radius) * 1000;
+		this.globe.updateZoom(this.zoomCur);
+		const wpScale = (this.coordCam.z / this.globe.radius) * 1000;
 		OEV.waypoints.forEach(w => w.resize(wpScale));
 		this.MUST_UPDATE = true;
 	}
@@ -167,12 +167,12 @@ export class CamCtrlGod {
 
 	updateCamera() {
 		this.updateHistory();
-		this.coordLookat.z = this.planet.getElevationAtCoords(this.coordLookat.x, this.coordLookat.y, true);
-		const posLookat = this.planet.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
-		this.coordCam.z = this.planet.altitude(this.zoomCur);
-		this.planet.zoomFromAltitudeTest(this.coordCam.z);
+		this.coordLookat.z = this.globe.getElevationAtCoords(this.coordLookat.x, this.coordLookat.y, true);
+		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
+		this.coordCam.z = this.globe.altitude(this.zoomCur);
+		this.globe.zoomFromAltitudeTest(this.coordCam.z);
 		let posCam;
-		if (this.planet.projection == "SPHERE") {
+		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();
 		}else{
 			posCam = this.updateOnPlane(posLookat);
@@ -180,14 +180,14 @@ export class CamCtrlGod {
 		this.camera.position.x = posCam[0];
 		this.camera.position.y = posCam[1];
 		this.camera.position.z = posCam[2];
-		const tmpCoords = this.planet.coordFromPos(posCam[0], posCam[2]);
+		const tmpCoords = this.globe.coordFromPos(posCam[0], posCam[2]);
 		this.coordCam.x = tmpCoords.x;
 		this.coordCam.y = tmpCoords.y;
 		this.camera.lookAt(posLookat);
-		this.planet.updateCurTile(this.coordLookat.x, this.coordLookat.y);
-		this.planet.zoomDetails = this.zoomCur;
-		this.planet.checkLOD();
-		const wpScale = (this.coordCam.z / this.planet.radius) * 500;
+		this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
+		this.globe.zoomDetails = this.zoomCur;
+		this.globe.checkLOD();
+		const wpScale = (this.coordCam.z / this.globe.radius) * 500;
 		this.pointer.scale.x = wpScale;
 		this.pointer.scale.y = wpScale;
 		this.pointer.scale.z = wpScale;
@@ -200,7 +200,7 @@ export class CamCtrlGod {
 		OEV.MUST_RENDER = true;
 		this.evt.fireEvent('CAM_UPDATED');
 		SKY.updateCameraLookat(posLookat);
-		SKY.globalScale = this.planet.globalScale;
+		SKY.globalScale = this.globe.globalScale;
 		SKY.updateSun();
 	}
 
@@ -216,7 +216,7 @@ export class CamCtrlGod {
 		matZ.makeRotationZ(radLat);
 		matGlob.multiplyMatrices(matY, matZ);
 		matGlob.multiply(matX);
-		const tmpG = new THREE.Vector3(this.planet.radius / this.planet.globalScale, 0, 0);
+		const tmpG = new THREE.Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
 		tmpG.applyMatrix4(matGlob);
 		// rotation locale
 		const matLocX = new THREE.Matrix4();
@@ -227,7 +227,7 @@ export class CamCtrlGod {
 		matLocZ.makeRotationZ(this.camRotation[1] * 1);
 		matGlob.multiply(matLocX);
 		matGlob.multiply(matLocZ);
-		const tmpL = new THREE.Vector3(this.coordCam.z / this.planet.globalScale, 0, 0);
+		const tmpL = new THREE.Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
 		tmpL.applyMatrix4(matGlob);
 		tmpG.x += tmpL.x;
 		tmpG.y += tmpL.y;
@@ -245,7 +245,7 @@ export class CamCtrlGod {
 
 	updateOnPlane(_posLookat) {
 		this.camera.up.set(0, -1, 0);
-		this.coordCam.z *= this.planet.globalScale;
+		this.coordCam.z *= this.globe.globalScale;
 		const orbitRadius = Math.sin(this.camRotation[1]) * this.coordCam.z;
 		return [
 			_posLookat.x + Math.sin(this.camRotation[0]) * orbitRadius, 
@@ -261,11 +261,11 @@ export class CamCtrlGod {
 	onMouseDownLeft() {
 		this.coordOnGround = OEV.checkMouseWorldPos();
 		if (this.coordOnGround != undefined) {
-			const wpScale = (this.coordCam.z / this.planet.radius) * 500;
+			const wpScale = (this.coordCam.z / this.globe.radius) * 500;
 			this.clicPointer.scale.x = wpScale;
 			this.clicPointer.scale.y = wpScale;
 			this.clicPointer.scale.z = wpScale;
-			const pos = this.planet.coordToXYZ(this.coordOnGround.x, this.coordOnGround.y, this.coordOnGround.z);
+			const pos = this.globe.coordToXYZ(this.coordOnGround.x, this.coordOnGround.y, this.coordOnGround.z);
 			this.clicPointer.position.x = pos.x;
 			this.clicPointer.position.y = pos.y;
 			this.clicPointer.position.z = pos.z;
