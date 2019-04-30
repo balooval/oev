@@ -1,6 +1,29 @@
+
+export function parseColor(_color) {
+	let res = getColorByName(_color);
+	if (res) return res;
+	res = hexToRgb(_color);
+	return res;
+}
+
 export function rgbToHex(r, g, b) {
 	if (r > 255 || g > 255 || b > 255) throw "Invalid color component";
 	return ((r << 16) | (g << 8) | b).toString(16);
+}
+
+function hexToRgb(hex) {
+    // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+    var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+        return r + r + g + g + b + b;
+    });
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (result) return [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+	];
+	return  [255, 255, 255];
 }
 
 export function getColorByName(_name) {
@@ -788,5 +811,6 @@ export function getColorByName(_name) {
 		"yellow4" :  [139, 139, 0] ,
 		"yellowgreen" :  [154, 205, 50]
 	};
+	if (!colorsNames[_name]) return null;
 	return colorsNames[_name];
 }

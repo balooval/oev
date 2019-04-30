@@ -16,6 +16,9 @@ class Api_building extends Api_default {
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
+
+        // $this->fetchDatas($this->params, $filePath);
+
         if (!is_file($filePath)) $this->fetchDatas($this->params, $filePath);
         return $this->loadCachedFile($filePath);
     }
@@ -57,8 +60,8 @@ class Api_building extends Api_default {
 		$west = $endC[0];
 		$coord = '('.$south.','.$east.','.$north.','.$west.')';
 		$curServer = $this->getOverpassUrl();
-		// $url = $curServer . '/interpreter?data=[out:json];(way' . $coord . '["building"~"."];way' . $coord . '["building:part"~"."]);(._;>;);out;';
-		$url = $curServer . '/interpreter?data=[out:json];way' . $coord . '["building"~"."];(._;>;);out;';
+		$url = $curServer . '/interpreter?data=[out:json];(way' . $coord . '["building"~"."];way' . $coord . '["building:part"~"."];);(._;>;);out;';
+		// $url = $curServer . '/interpreter?data=[out:json];way' . $coord . '["building"~"."];(._;>;);out;';
         // echo $url;
         // exit();
         $response = @file_get_contents($url);

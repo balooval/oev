@@ -13,6 +13,13 @@ function cleanTags(_tags) {
 	_tags['min_height'] = _tags['min_height'] || '0';
 	_tags['building:levels'] = _tags['building:levels'] || '1';
 	_tags['building:min_level'] = _tags['building:min_level'] || '0';
+
+	tags.mainColour = _tags['building:colour'] || 'white';
+	tags.wallColour = _tags['building:facade:colour'] || tags.mainColour;
+	tags.roofColour = _tags['roof:colour'] || tags.mainColour;
+	tags.roofColour = _tags['building:roof:colour'] || tags.roofColour;
+	// tags.roofColour = '#8DF0B8';
+
 	let height = parseFloat(_tags.height);
 	let minAlt = parseInt(_tags.min_height);
 	let levels = parseInt(_tags['building:levels']);
