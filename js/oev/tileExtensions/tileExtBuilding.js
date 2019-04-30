@@ -1,6 +1,7 @@
 import GLOBE from '../globe.js';
 import * as TileExtension from './tileExtension.js';
 import ElevationDatas from '../globeElevation.js';
+import Earcut from '../Earcut.js';
 
 export class Building {
 	constructor(_tile) {
@@ -27,7 +28,6 @@ export class Building {
 		TileExtension.Params.actives['ACTIV_' + this.id] = true;
 		this.dataLoaded = false;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
-		this.tile.evt.addEventListener('HIDE', this, this.hide);
 		if (this.tile.isReady) {
 			this.onTileReady();
 		}
@@ -39,9 +39,8 @@ export class Building {
 	}
 
 	onTileReady(_evt) {
-		if (!this.tile.onStage || this.tile.zoom < 15) {
-			return false;
-		}
+		if (!this.tile.onStage) return false;
+		if (this.tile.zoom != 15) return false;
 		var bbox = { 
 			minLon : this.tile.startCoord.x, 
 			maxLon : this.tile.endCoord.x, 
@@ -49,7 +48,6 @@ export class Building {
 			maxLat : this.tile.startCoord.y
 		};
 		this.waiting = true;
-		OEV.evt.addEventListener('DEBUG', this, this.debug);
 		this.loaderBuilding.getData(
 			{
 				z : this.tile.zoom, 
@@ -65,12 +63,6 @@ export class Building {
 		);
 	}
 	
-	debug() {
-		if (this.waiting) {
-			console.log('waiting', this.tile.tileX, this.tile.tileY);
-		}
-	}
-	
 	show() {
 		if (this.dataLoaded) {
 			Oev.Tile.ProcessQueue.addWaiting(this);
@@ -82,7 +74,6 @@ export class Building {
 	onTileDispose() {
 		if (TileExtension.Params.actives['ACTIV_' + this.id] === true) {
 			this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-			this.tile.evt.removeEventListener('HIDE', this, this.hide);
 		}
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
@@ -106,6 +97,7 @@ export class Building {
 	}
 	
 	onBuildingsLoaded(_datas) {
+		if (!this.tile.onStage) return false;
 		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
 		this.dataLoaded = true;
 		this.datas = _datas;
@@ -129,8 +121,58 @@ export class Building {
 		OEV.MUST_RENDER = true;
 	}
 	
-	buildRoof(_vertex) {
-		
+	buildRoof(_datas) {
+		let nbVert = 0;
+		let nbFaces = 0;
+		const roofFacesIndex = [];
+		for (let b = 0; b < _datas.length; b ++) {
+			const curBuilding = _datas[b];
+			nbVert += curBuilding.bufferVertex.length - 1;
+			const roofCoords = curBuilding.bufferVertex.slice(0, -2);
+			const facesIndex = Earcut(roofCoords);
+			nbFaces += facesIndex.length;
+			roofFacesIndex.push(facesIndex);
+		}
+		const bufferFaces = new Uint32Array(nbFaces);
+		const bufferVertices = new Float32Array(nbVert * 3);
+		let bufferVertIndex = 0;
+		let bufferFaceIndex = 0;
+		for (let b = 0; b < _datas.length; b ++) {
+			const curBuilding = _datas[b];
+			const alt = ElevationDatas.get(curBuilding.centroid[0], curBuilding.centroid[1]);
+			const minAlt = curBuilding.props.minAlt;
+			const floorsNb = curBuilding.props.floorsNb;
+			const floorHeight = curBuilding.props.floorHeight;
+			const roofAlt = alt + minAlt + (floorsNb * floorHeight)
+			for (let f = 0; f < roofFacesIndex[b].length; f ++) {
+				bufferFaces[bufferFaceIndex] = roofFacesIndex[b][f] + (bufferVertIndex / 3);
+				bufferFaceIndex ++;
+			}
+			for (let v = 0; v < curBuilding.bufferVertex.length / 2; v ++) {
+				const vertLon = curBuilding.bufferVertex[v * 2 + 0];
+				const vertLat = curBuilding.bufferVertex[v * 2 + 1];
+				const vertPos = GLOBE.coordToXYZ(
+					vertLon, 
+					vertLat, 
+					roofAlt
+				);
+				bufferVertices[bufferVertIndex + 0] = vertPos.x;
+				bufferVertices[bufferVertIndex + 1] = vertPos.y;
+				bufferVertices[bufferVertIndex + 2] = vertPos.z;
+				bufferVertIndex += 3;
+			}
+			
+		}
+
+		const bufferGeometry = new THREE.BufferGeometry();
+		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+		bufferGeometry.computeFaceNormals();
+        bufferGeometry.computeVertexNormals();
+		this.bufferMesh = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
+		this.bufferMesh.receiveShadow = true;
+		this.bufferMesh.castShadow = true;
+		OEV.scene.add(this.bufferMesh);
 	}
 
 	construct() {
@@ -139,6 +181,7 @@ export class Building {
 			OEV.scene.add(this.bufferMesh);
 			return false;
 		}
+		this.buildRoof(this.datas);
 		let curBuilding;
 		let floorsNb = 1;
 		let nbVert = 0;
@@ -150,6 +193,10 @@ export class Building {
 			nbVert += buildingCoordNb * (floorsNb + 1);
 			nbFaces += (buildingCoordNb * 2) * floorsNb;
 		}
+
+		
+
+
 		const bufferVertices = new Float32Array(nbVert * 3);
 		const bufferCoord = new Float32Array(nbVert * 3);
 		const bufferFaces = new Uint32Array(nbFaces * 3);
@@ -157,6 +204,8 @@ export class Building {
 		let bufferFaceIndex = 0;
 		let pastFaceNb = 0;
 		let fondationsLat;
+
+
 		for (let b = 0; b < this.datas.length; b ++) {
 			curBuilding = this.datas[b];
 			let buildingCoordNb = curBuilding.bufferVertex.length / 2;
@@ -194,6 +243,8 @@ export class Building {
 			}
 			pastFaceNb += buildingCoordNb * (floorsNb + 1);
 		}
+		
+
 		bufferVertIndex = 0;
 		for (let c = 0; c < bufferCoord.length; c ++) {
 			const vertPos = GLOBE.coordToXYZ(
@@ -215,6 +266,7 @@ export class Building {
 		this.bufferMesh.receiveShadow = true;
 		this.bufferMesh.castShadow = true;
 		OEV.scene.add(this.bufferMesh);
+
 		OEV.MUST_RENDER = true;
 	}
 

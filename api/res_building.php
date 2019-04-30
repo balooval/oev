@@ -17,8 +17,23 @@ class Api_building extends Api_default {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
         if (!is_file($filePath)) $this->fetchDatas($this->params, $filePath);
-        // $this->fetchDatas($this->params, $filePath);
-        return file_get_contents($filePath);
+        return $this->loadCachedFile($filePath);
+    }
+
+    private function loadCachedFile($_filePath) {
+        $content = file_get_contents($_filePath);
+        if ($content) return $content;
+        unlink($_filePath);
+        return '{
+            "version": 0.6,
+            "generator": "Overpass API",
+            "osm3s": {
+              "timestamp_osm_base": "2016-02-11T22:14:01Z",
+              "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+            },
+            "elements": [
+            ]
+          }';
     }
 
     private function buildFilePath($_param) {
