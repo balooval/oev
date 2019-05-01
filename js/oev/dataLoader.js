@@ -3,11 +3,10 @@ import * as OLD_UI from '../UI.js';
 export const Params = {};
 const DataLoader = {};
 
-
 export class Proxy {
 	constructor(_type) {
 		this._type = _type;
-		var simulByType = {
+		const simulByType = {
 			TILE2D : 4, 
 			ELE : 4, 
 			BUILDINGS : 2, 
@@ -40,10 +39,9 @@ export class Proxy {
 	}
 	
 	_initLoaders() {
-		var i;
-		var loader;
-		var _self = this;
-		for (i = 0; i < this._simulLoad; i ++) {
+		let loader;
+		const _self = this;
+		for (let i = 0; i < this._simulLoad; i ++) {
 			if (this._type == 'TILE2D') {
 				loader = new LoaderTile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'ELE') {
@@ -62,10 +60,6 @@ export class Proxy {
 	}
 	
 	onDataLoaded(_data, _params) {
-		if (this._type == 'OVERPASS_CACHE0') {
-			console.log('_params', _params.key);
-		}
-		var i;
 		if (_data === null) {
 			console.warn('Error loading ressource');
 			return false;
@@ -79,9 +73,8 @@ export class Proxy {
 	}
 	
 	_addSorted(_params) {
-		var i;
 		_params.priority /= _params.z;
-		for (var i = 0; i < this._datasWaiting.length; i ++) {
+		for (let i = 0; i < this._datasWaiting.length; i ++) {
 			if (_params.priority < this._datasWaiting[i].priority) {
 				this._datasWaiting.splice(i, 0, _params);
 				return true;
@@ -120,7 +113,7 @@ export class Proxy {
 		if (this._datasWaiting.length == 0) return false;
 		var freeLoader = this._getAvailableLoader();
 		if (!freeLoader) return false;
-		var currentLoadingParams = this._datasWaiting.shift();
+		const currentLoadingParams = this._datasWaiting.shift();
 		this._datasLoading.push(currentLoadingParams);
 		OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
 		freeLoader.load(currentLoadingParams);
@@ -307,7 +300,7 @@ DataLoader.Normal.prototype = {
 
 
 DataLoader.BuildingWorker = (function() {
-	const worker = new Worker('js/oev/workers/buildingJson.js');
+	const worker = new Worker('js/oev/workers/buildingJsonParser.js');
 	const loaders = [];
 	
 	var api = {
