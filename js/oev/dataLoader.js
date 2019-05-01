@@ -28,9 +28,6 @@ export class Proxy {
 		_params.priority = _params.priority || 1;
 		_params.key = this._genKey(_params);
 		_params.callback = _callback;
-		if (this._type == 'BUILDINGO') {
-			console.log('getData', _params.key);
-		}
 		if (this._sendCachedData(_params) === true) return true;
 		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) return false;
 		this._addSorted(_params);

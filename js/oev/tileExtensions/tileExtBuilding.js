@@ -10,8 +10,8 @@ export class Building {
 		
 		this.id = 'BUILDING';
 		this.datas = undefined;
-		this.bufferMesh = undefined;
-		this.bufferMeshRoof = undefined;
+		this.meshWalls = undefined;
+		this.meshRoof = undefined;
 		this.waiting = false;
 
 		this.tile = _tile;
@@ -98,13 +98,13 @@ export class Building {
 				y : this.tile.tileY
 			});
 		}
-		if (this.bufferMesh != undefined) {
-			OEV.scene.remove(this.bufferMesh);
-			OEV.scene.remove(this.bufferMeshRoof);
-			this.bufferMesh.geometry.dispose();
-			this.bufferMesh = undefined;
-			this.bufferMeshRoof.geometry.dispose();
-			this.bufferMeshRoof = undefined;
+		if (this.meshWalls != undefined) {
+			OEV.scene.remove(this.meshWalls);
+			OEV.scene.remove(this.meshRoof);
+			this.meshWalls.geometry.dispose();
+			this.meshWalls = undefined;
+			this.meshRoof.geometry.dispose();
+			this.meshRoof = undefined;
 		}
 		OEV.MUST_RENDER = true;
 	}
@@ -161,103 +161,62 @@ export class Building {
 		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		this.bufferMeshRoof = new THREE.Mesh(bufferGeometry, GLOBE.buildingsRoofMat);
-		this.bufferMeshRoof.receiveShadow = true;
-		this.bufferMeshRoof.castShadow = true;
-		OEV.scene.add(this.bufferMeshRoof);
+		this.meshRoof = new THREE.Mesh(bufferGeometry, GLOBE.buildingsRoofMat);
+		this.meshRoof.receiveShadow = true;
+		this.meshRoof.castShadow = true;
+		OEV.scene.add(this.meshRoof);
+	}
+
+	applyElevationToVertices(_datas) {
+		let bufferVertIndex = 0;
+		const buffer = new Float32Array(_datas.geometry.bufferCoord);
+		for (let b = 0; b < _datas.buildings.length; b ++) {
+			const curBuilding = _datas.buildings[b];
+			const alt = ElevationDatas.get(curBuilding.centroid[0], curBuilding.centroid[1]);
+			for (let v = 0; v < curBuilding.nbVert; v ++) {
+				buffer[bufferVertIndex + 2] += alt;
+				bufferVertIndex += 3;
+			}
+		}
+		return buffer;
+	}
+
+	convertCoordToPosition(_bufferCoord) {
+		const bufferPos = new Float32Array(_bufferCoord);
+		let bufferVertIndex = 0;
+		for (let c = 0; c < _bufferCoord.length; c ++) {
+			const vertPos = GLOBE.coordToXYZ(
+				_bufferCoord[bufferVertIndex + 0], 
+				_bufferCoord[bufferVertIndex + 1], 
+				_bufferCoord[bufferVertIndex + 2]
+			);
+			bufferPos[bufferVertIndex + 0] = vertPos.x;
+			bufferPos[bufferVertIndex + 1] = vertPos.y;
+			bufferPos[bufferVertIndex + 2] = vertPos.z;
+			bufferVertIndex += 3;
+		}
+		return bufferPos;
 	}
 
 	construct(_datas) {
-		if (_datas.length == 0) return false;
-		if (this.bufferMesh != undefined) {
-			OEV.scene.add(this.bufferMesh);
+		if (_datas.buildings.length == 0) return false;
+		if (this.meshWalls != undefined) {
+			OEV.scene.add(this.meshWalls);
 			return false;
 		}
-		this.buildRoof(_datas);
-		let curBuilding;
-		let floorsNb = 1;
-		let nbVert = 0;
-		let nbFaces = 0;
-		for (let b = 0; b < _datas.length; b ++) {
-			curBuilding = _datas[b];
-			let buildingCoordNb = curBuilding.bufferVertex.length / 2;
-			floorsNb = curBuilding.props.floorsNb;
-			nbVert += buildingCoordNb * (floorsNb + 1);
-			nbFaces += (buildingCoordNb * 2) * floorsNb;
-		}
-
-		const bufferVertices = new Float32Array(nbVert * 3);
-		const bufferCoord = new Float32Array(nbVert * 3);
-		const bufferFaces = new Uint32Array(nbFaces * 3);
-		let bufferVertIndex = 0;
-		let bufferFaceIndex = 0;
-		let pastFaceNb = 0;
-		let fondationsLat;
-		const colorVertices = [];
-		for (let b = 0; b < _datas.length; b ++) {
-			curBuilding = _datas[b];
-			const color = Utils.parseColor(curBuilding.props.wallColour);
-			let buildingCoordNb = curBuilding.bufferVertex.length / 2;
-			const alt = ElevationDatas.get(curBuilding.centroid[0], curBuilding.centroid[1]);
-			fondationsLat = -10;
-			floorsNb = curBuilding.props.floorsNb;
-			const floorHeight = curBuilding.props.floorHeight;
-			const minAlt = curBuilding.props.minAlt;
-			for (let floor = 0; floor < floorsNb + 1; floor ++) {
-				for (let c = 0; c < buildingCoordNb; c ++) {
-					if (floor > 0) {
-						const faceTopLeft = buildingCoordNb + c;
-						const faceBottomLeft = c;
-						let faceBottomRight = c + 1;
-						let faceTopRight = faceBottomRight + buildingCoordNb;
-						if (faceBottomRight >= buildingCoordNb) {
-							faceBottomRight = 0;
-							faceTopRight = buildingCoordNb;
-						}
-						const tmp = (floor - 1) * buildingCoordNb;
-						bufferFaces[bufferFaceIndex + 0] = faceTopLeft + pastFaceNb + tmp;
-						bufferFaces[bufferFaceIndex + 1] = faceBottomLeft + pastFaceNb + tmp;
-						bufferFaces[bufferFaceIndex + 2] = faceBottomRight + pastFaceNb + tmp;
-						bufferFaces[bufferFaceIndex + 3] = faceBottomRight + pastFaceNb + tmp;
-						bufferFaces[bufferFaceIndex + 4] = faceTopRight + pastFaceNb + tmp;
-						bufferFaces[bufferFaceIndex + 5] = faceTopLeft + pastFaceNb + tmp;
-						bufferFaceIndex += 6;
-					}
-					bufferCoord[bufferVertIndex + 0] = curBuilding.bufferVertex[c * 2 + 0];
-					bufferCoord[bufferVertIndex + 1] = curBuilding.bufferVertex[c * 2 + 1];
-					bufferCoord[bufferVertIndex + 2] = fondationsLat + alt + minAlt + (floor * floorHeight);
-					bufferVertIndex += 3;
-					colorVertices.push(...color);
-				}
-				fondationsLat = 0;
-			}
-			pastFaceNb += buildingCoordNb * (floorsNb + 1);
-		}
-		
-
-		bufferVertIndex = 0;
-		for (let c = 0; c < bufferCoord.length; c ++) {
-			const vertPos = GLOBE.coordToXYZ(
-				bufferCoord[bufferVertIndex + 0], 
-				bufferCoord[bufferVertIndex + 1], 
-				bufferCoord[bufferVertIndex + 2]
-			);
-			bufferVertices[bufferVertIndex + 0] = vertPos.x;
-			bufferVertices[bufferVertIndex + 1] = vertPos.y;
-			bufferVertices[bufferVertIndex + 2] = vertPos.z;
-			bufferVertIndex += 3;
-		}
-		const bufferColor = new Uint8Array(colorVertices);
+		this.buildRoof(_datas.buildings);
+		let bufferVertices = this.applyElevationToVertices(_datas);
+		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
 		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_datas.geometry.bufferColor, 3, true));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.geometry.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		this.bufferMesh = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
-		this.bufferMesh.receiveShadow = true;
-		this.bufferMesh.castShadow = true;
-		OEV.scene.add(this.bufferMesh);
+		this.meshWalls = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
+		this.meshWalls.receiveShadow = true;
+		this.meshWalls.castShadow = true;
+		OEV.scene.add(this.meshWalls);
 		OEV.MUST_RENDER = true;
 	}
 
