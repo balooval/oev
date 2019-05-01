@@ -1,7 +1,6 @@
 import GLOBE from '../globe.js';
 import * as TileExtension from './tileExtension.js';
 import ElevationDatas from '../globeElevation.js';
-import Earcut from '../Earcut.js';
 import Evt from '../event.js';
 
 const workerEvent = new Evt();
@@ -182,7 +181,7 @@ export class Building {
 		}
 		return bufferPos;
 	}
-	
+
 	dispose() {
 		if (!this.dataLoaded){
 			this.loaderBuilding.abort({

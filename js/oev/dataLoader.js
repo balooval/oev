@@ -300,13 +300,13 @@ DataLoader.Normal.prototype = {
 
 
 DataLoader.BuildingWorker = (function() {
-	const worker = new Worker('js/oev/workers/buildingJsonParser.js');
+	const workerParser = new Worker('js/oev/workers/buildingJsonParser.js');
 	const loaders = [];
 	
 	var api = {
 		compute : function(_loader, _datas) {
 			loaders.push(_loader);
-			worker.postMessage(_datas);
+			workerParser.postMessage(_datas);
 		}, 
 		
 		onWorkerMessage : function(_res) {
@@ -315,7 +315,7 @@ DataLoader.BuildingWorker = (function() {
 		}, 
 	};
 	
-	worker.onmessage = api.onWorkerMessage;
+	workerParser.onmessage = api.onWorkerMessage;
 	
 	return api;
 })();

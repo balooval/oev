@@ -1,9 +1,11 @@
 import * as INPUT from './input/input.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
+import Globe from './globe.js';
 
 let elmtCamHeading;
 let elmtComputingQUeue;
 let elmtCoord;
+let elmtPlugins;
 export let dragSun = false;
 
 function onMouseDownLeft() {
@@ -39,8 +41,19 @@ export function init() {
 	elmtCamHeading = document.getElementById("camHeading");
 	elmtComputingQUeue = document.getElementById('computingQueue');
 	elmtCoord = document.getElementById("overlayUICoords");
+	elmtPlugins = document.getElementById("overlayPlugins");
 	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
 	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
+	OEV.evt.addEventListener('APP_INIT', null, onAppInit);
+}
+
+function onAppInit() {
+	OEV.evt.removeEventListener('APP_INIT', null, onAppInit);
+	Globe.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
+}
+
+function onCurTileChanged(_evt) {
+	elmtPlugins.innerText = 'Z : ' + _evt.z + ', X : ' + _evt.x + ', Y : ' + _evt.y;
 }
 
 export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {

@@ -436,7 +436,7 @@ const api = {
 		TILE.setMinMax(999999999, 999999999, -999999999, -999999999);
 		curTile = _newTile;
 		api.tilesBase.forEach(t => t.updateDetails(api.coordDetails));
-		api.evt.fireEvent('CURTILE_CHANGED');
+		api.evt.fireEvent('CURTILE_CHANGED', curTile);
 	}, 
 
 	updateCurTile : function(_coordX, _coordY) {
