@@ -11,15 +11,18 @@ function onWorkerMessage(_res) {
 	workerEvent.fireEvent('BUILDING_READY_' + _res.data.tileKey, _res.data.result);
 }
 
-export class Building {
+let loaderBuilding = null;
+export function setBuildingLoader(_loader) {
+	loaderBuilding = _loader;
+}
+
+export class BuildingExtension {
 	constructor(_tile) {
-		this.loaderBuilding = OEV.earth.loaderBuilding;
 		this.id = 'BUILDING';
 		this.datas = undefined;
 		this.meshWalls = undefined;
 		this.meshRoof = undefined;
 		this.waiting = false;
-
 		this.tile = _tile;
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		if (TileExtension.Params.actives['ACTIV_' + this.id] === undefined) {
@@ -56,7 +59,7 @@ export class Building {
 			maxLat : this.tile.startCoord.y
 		};
 		this.waiting = true;
-		this.loaderBuilding.getData(
+		loaderBuilding.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -184,7 +187,7 @@ export class Building {
 
 	dispose() {
 		if (!this.dataLoaded){
-			this.loaderBuilding.abort({
+			loaderBuilding.abort({
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
 				y : this.tile.tileY

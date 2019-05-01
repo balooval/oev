@@ -111,6 +111,7 @@ export class Elevation {
 	} 
 	
 	dispose() {
+		if (this.dataLoaded) ElevationDatas.delete(this.tile);
 		this.dataLoaded = false;
 		this.elevationBuffer = null;
 		OEV.MUST_RENDER = true;

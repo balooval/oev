@@ -82,7 +82,7 @@ const api = {
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
 		// api.tileExtensions['OVERPASS'] = Oev.Tile.Extension.Overpass;
 		// api.tileExtensions['LANDUSE'] = Oev.Tile.Extension.Landuse;
-		api.tileExtensions['BUILDING'] = TileExtension.Building;
+		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
 		// api.tileExtensions['LIFE'] = Oev.Tile.Extension.Life;
 		// api.tileExtensions['DUMMY'] = Oev.Tile.Extension.Dummy;
 		

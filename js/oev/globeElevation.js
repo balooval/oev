@@ -37,20 +37,34 @@ const api = {
 		let startLat = _tile.startCoord.y;
 		let endLon = _tile.endCoord.x;
 		let endLat = _tile.endCoord.y;
+		let midLon = _tile.middleCoord.x;
+		let midLat = _tile.middleCoord.y;
 		let validParent;
 		let parents = store;
+		let prevParent;
 		while(true) {
-			let parent = parents.filter(s => structContainCoord(s, _lon, _lat)).pop();
-			if (parent) {
-				validParent = parent;
-				parents = parent.childs;
-			} else {
+			prevParent = validParent;
+			let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
+			if (!parent) break;
+			validParent = parent;
+			parents = parent.childs;
+			if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
+				prevParent.childs = prevParent.childs.filter(s => !isStructure(s, startLon, startLat, endLon, endLat));
 				break;
 			}
 		}
+		
 	}, 
 	
 };
+
+function isStructure(_struct, _startLon, _startLat, _endLon, _endLat) {
+	if (_struct.startLon != _startLon) return false;
+	if (_struct.startLat != _startLat) return false;
+	if (_struct.endLon != _endLon) return false;
+	if (_struct.endLat != _endLat) return false;
+	return true;
+}
 
 function mapValue(_value, _min, _max) {
 	const length = Math.abs(_max - _min);
