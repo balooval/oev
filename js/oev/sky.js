@@ -1,4 +1,4 @@
-import Evt from './event.js';
+import Evt from './utils/event.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import * as SHADER from './shader.js';
 

@@ -1,10 +1,10 @@
-import Evt from './event.js';
+import Evt from './utils/event.js';
 import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
-import * as GEO from './geo.js';
-import MATH from './math.js';
+import * as GEO from './utils/geo.js';
+import MATH from './utils/math.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import ElevationDatas from './tileExtensions/elevation/globeElevation.js';
 

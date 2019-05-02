@@ -1,5 +1,5 @@
-import Evt from './event.js';
-import * as GEO from './geo.js';
+import Evt from './utils/event.js';
+import * as GEO from './utils/geo.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import * as MapLoader from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';

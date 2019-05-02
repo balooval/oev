@@ -1,4 +1,4 @@
-import Evt from '../event.js';
+import Evt from '../utils/event.js';
 
 const Mouse = (function(){
 	'use strict';

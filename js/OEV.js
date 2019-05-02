@@ -1,4 +1,4 @@
-import Evt from './oev/event.js';
+import Evt from './oev/utils/event.js';
 import * as UI from './oev/ui.js';
 import * as OLD_UI from './UI.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';

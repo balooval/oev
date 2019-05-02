@@ -1,4 +1,4 @@
-import Evt from '../event.js';
+import Evt from '../utils/event.js';
 import GLOBE from '../globe.js';
 
 export const evt = new Evt();

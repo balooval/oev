@@ -1,7 +1,7 @@
 import GLOBE from '../../globe.js';
 import * as TileExtension from '../tileExtension.js';
 import ElevationDatas from '../elevation/globeElevation.js';
-import Evt from '../../event.js';
+import Evt from '../../utils/event.js';
 import * as BuildingsDatas from './globeBuildings.js';
 
 const workerEvent = new Evt();

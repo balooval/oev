@@ -37,7 +37,7 @@ function onFileLoaded(_name, _content) {
 
 function loadFile(_name) {
 	loading = true;
-	fetch('js/shaders/' + _name + '.glsl')
+	fetch('assets/shaders/' + _name + '.glsl')
 	.then(function(response) {
 		return response.text();
 	})

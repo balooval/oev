@@ -1,9 +1,9 @@
-import * as Animation from '../animation.js';
-import Evt from '../event.js';
+import * as Animation from '../utils/animation.js';
+import Evt from '../utils/event.js';
 import * as INPUT from '../input/input.js';
-import * as GEO from '../geo.js';
+import * as GEO from '../utils/geo.js';
 import SKY from '../sky.js';
-import MATH from '../math.js';
+import MATH from '../utils/math.js';
 
 export class CamCtrlGod {
 	constructor() {

@@ -1,6 +1,4 @@
-import Evt from './oev/event.js';
 import * as INPUT from './oev/input/input.js';
-import SKY from './oev/sky.js';
 import GLOBE from './oev/globe.js';
 
 let urlParams = [];
