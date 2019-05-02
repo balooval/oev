@@ -10,24 +10,19 @@ export const Params = {
 
 export function activateExtension(_extensionId) {
 	console.log('activateExtension', _extensionId);
-	
 	Params.activated.push(_extensionId);
-	
 	for (var i = 0; i < GLOBE.tilesBase.length; i ++) {
 		GLOBE.tilesBase[i].addExtension(_extensionId);
 	}
 	evt.fireEvent('TILE_EXTENSION_ACTIVATE', _extensionId);
-	
 	evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 }
 
 export function desactivateExtension(_extensionId) {
 	console.log('desactivateExtension', _extensionId);
-	
 	for (var i = 0; i < Params.activated.length; i ++) {
 		if (Params.activated[i] == _extensionId) {
 			Params.activated.splice(i, 1);
-			// console.log('Ok remove from activated');
 			break;
 		}
 	}
@@ -61,7 +56,6 @@ export class DefaultExt {
 		if (Params.actives['ACTIV_' + this.id]) {
 			this.onActivate();
 		}
-		this.init();
 	}
 	
 	onActivate() {
@@ -70,7 +64,6 @@ export class DefaultExt {
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('SHOW', this, this.onShow);
 		this.tile.evt.addEventListener('HIDE', this, this.onHide);
-		this.activate();
 		if (this.tile.isReady) {
 			this.onTileReady();
 		}
@@ -79,21 +72,15 @@ export class DefaultExt {
 	onDesactivate() {
 		Params.actives['ACTIV_' + this.id] = false;
 		this.onHide();
-		this.desactivate();
 		this.tile.evt.removeEventListener('SHOW', this, this.onShow);
 	}
 	
 	onTileReady(_evt) {
 		this.isInstancied = true;
-		this.tileReady();
-	}
-	
-	onShow() {
-		this.show();
 	}
 	
 	onHide() {
-		this.hide();
+		
 	}
 	
 	onTileDispose() {
@@ -109,40 +96,10 @@ export class DefaultExt {
 	}
 	
 	onDispose() {
-		this.dispose();
 		this.isInstancied = false;
 		this.isInit = false;
 	}
-	
-	/*		TO OVERRIDE		*/
-	
-	init() {
-		
-	}
-	
-	tileReady() {
-		
-	}
-	
-	activate() {
-		
-	}
-	
-	desactivate() {
-		
-	}
-	
-	show() {
-		
-	}
-	
-	hide() {
-	
-	}
-	
-	dispose() {
-		
-	}
+
 }
 
 

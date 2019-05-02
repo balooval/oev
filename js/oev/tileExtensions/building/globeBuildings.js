@@ -1,11 +1,7 @@
+import * as BuildingsLoader from './buildingLoader.js';
+
 const mainZoom = 14;
-
-let loaderBuilding = null;
 let waitings = {};
-
-export function setBuildingLoader(_loader) {
-	loaderBuilding = _loader;
-}
 
 export const store = {
 	get : function(_zoom, _tileX, _tileY, _bbox, _priority, _callback) {
@@ -13,7 +9,7 @@ export const store = {
 		const key = mainValues.z + '_' + mainValues.x + '_' + mainValues.y;
 		waitings[key] = waitings[key] || 0;
 		waitings[key] ++;
-		loaderBuilding.getData(
+		BuildingsLoader.loader.getData(
 			{
 				z : mainValues.z, 
 				x : mainValues.x, 
@@ -31,7 +27,7 @@ export const store = {
 		// console.warn('Abort', waitings[key]);
 		waitings[key] --;
 		waitings[key] = Math.max(0, waitings[key]);
-		if (waitings[key] == 0) loaderBuilding.abort({key : key});
+		if (waitings[key] == 0) BuildingsLoader.loader.abort({key : key});
 	}
 };
 

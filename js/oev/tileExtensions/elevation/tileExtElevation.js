@@ -1,7 +1,7 @@
 import * as TileExtension from '../tileExtension.js';
 import GLOBE from '../../globe.js';
 import ElevationDatas from './globeElevation.js';
-import * as Loader from './elevationLoader.js';
+import * as LoaderElevation from './elevationLoader.js';
 
 
 export class Elevation {
@@ -47,7 +47,7 @@ export class Elevation {
 		if (this.tile.zoom > 15) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
-		Loader.loaderEle.getData(
+		LoaderElevation.loader.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -70,7 +70,7 @@ export class Elevation {
 	}
 	
 	hide() {
-		Loader.loaderEle.abort({
+		LoaderElevation.loader.abort({
 			z : this.tile.zoom, 
 			x : this.tile.tileX, 
 			y : this.tile.tileY

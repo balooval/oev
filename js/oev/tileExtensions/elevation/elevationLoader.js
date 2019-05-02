@@ -28,7 +28,6 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
 class LoaderElevation {
 
 	constructor(_callback) {
-        console.log('Create LoaderElevation', GLOBE.tilesDefinition);
 		this.definition = GLOBE.tilesDefinition;
 		this.isLoading = false;
 		this.callback = _callback;
@@ -58,4 +57,4 @@ class LoaderElevation {
 }
 
 DataLoader.registerLoader('ELE', LoaderElevation);
-export const loaderEle = new DataLoader.Proxy('ELE');
+export const loader = new DataLoader.Proxy('ELE');

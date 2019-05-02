@@ -57,8 +57,6 @@ const OpenEarthViewer = (function() {
 		api.sceneHeight = Math.min(intElemClientHeight, 800);
 		api.scene = new THREE.Scene();
 		api.camera = new THREE.PerspectiveCamera( 90, api.sceneWidth / api.sceneHeight, 0.1, 20000);
-		TileExtension.setBuildingLoader(new DataLoader.Proxy('BUILDINGS'));
-		BuildingsDatas.setBuildingLoader(new DataLoader.Proxy('BUILDINGS'));
 		api.earth = GLOBE;
 		api.earth.init();
 		api.scene.add(api.earth.meshe);

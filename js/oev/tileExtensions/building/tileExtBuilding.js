@@ -12,11 +12,6 @@ function onWorkerMessage(_res) {
 	workerEvent.fireEvent('BUILDING_READY_' + _res.data.tileKey, _res.data.result);
 }
 
-let loaderBuilding = null;
-export function setBuildingLoader(_loader) {
-	loaderBuilding = _loader;
-}
-
 export class BuildingExtension {
 	constructor(_tile) {
 		this.id = 'BUILDING';
@@ -66,22 +61,6 @@ export class BuildingExtension {
 			this.waiting = false;
 			this.onBuildingsLoaded(_datas);
 		});
-
-		/*
-		loaderBuilding.getData(
-			{
-				z : this.tile.zoom, 
-				x : this.tile.tileX, 
-				y : this.tile.tileY, 
-				priority : this.tile.distToCam, 
-				bbox : bbox, 
-			}, 
-			_datas => {
-				this.waiting = false;
-				this.onBuildingsLoaded(_datas);
-			}
-		);
-		*/
 	}
 	
 	show() {
@@ -200,11 +179,6 @@ export class BuildingExtension {
 		if (!this.isActive) return false;
 		if (!this.dataLoaded){
 			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
-			// loaderBuilding.abort({
-			// 	z : this.tile.zoom, 
-			// 	x : this.tile.tileX, 
-			// 	y : this.tile.tileY
-			// });
 		}
 		if (this.meshWalls != undefined) {
 			OEV.scene.remove(this.meshWalls);
