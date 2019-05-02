@@ -118,7 +118,7 @@ const TilesExtension = (function(){
 	
 	function addExtensionsSwitchs() {
 		var btnExtensions = '';
-		for (var key in OEV.earth.tileExtensions) {
+		for (var key in Globe.tileExtensions) {
 			btnExtensions += '<input id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
 		}
 		document.getElementById('toolsContent_datasToLoad').innerHTML += btnExtensions;

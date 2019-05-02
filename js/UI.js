@@ -1,6 +1,7 @@
 import Evt from './oev/event.js';
 import * as INPUT from './oev/input/input.js';
 import SKY from './oev/sky.js';
+import GLOBE from './oev/globe.js';
 
 let urlParams = [];
 let htmlElmtLoadingDatas;
@@ -45,10 +46,10 @@ export function initUi(){
 					Oev.Tile.Extension.activateExtension('BUILDINGS');
 					document.getElementById( "cfg_load_buildings" ).checked = true;
 				}else if( urlParams[p] == 'landuse' ){
-					OEV.earth.activLanduse( true );
+					GLOBE.activLanduse( true );
 					document.getElementById( "cfg_load_landuse" ).checked = true;
 				}else if( urlParams[p] == 'elevation' ){
-					OEV.earth.activElevation( true );
+					GLOBE.activElevation( true );
 					document.getElementById( "cfg_load_ele" ).checked = true;
 				}
 			}
@@ -78,7 +79,7 @@ function setElementActiv( _elm, _state ){
 }
 
 function onFogNearChanged(){
-	OEV.scene.fog.near = ( ( ( OEV.earth.radius / 4 ) * OEV.earth.globalScale ) * ( this.value / 100 ) );
+	OEV.scene.fog.near = ( ( ( GLOBE.radius / 4 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
 	if( OEV.scene.fog.near > OEV.scene.fog.far ){
 		OEV.scene.fog.far = OEV.scene.fog.near;
 	}
@@ -86,7 +87,7 @@ function onFogNearChanged(){
 }
 
 function onFogFarChanged(){
-	OEV.scene.fog.far = ( ( ( OEV.earth.radius / 50 ) * OEV.earth.globalScale ) * ( this.value / 100 ) );
+	OEV.scene.fog.far = ( ( ( GLOBE.radius / 50 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
 	if( OEV.scene.fog.far < OEV.scene.fog.near ){
 		OEV.scene.fog.near = OEV.scene.fog.far;
 	}
@@ -94,14 +95,14 @@ function onFogFarChanged(){
 }
 
 function changeTilesLayer(){
-	OEV.earth.setTilesProvider( this.value );
+	GLOBE.setTilesProvider( this.value );
 }
 
 function switchNodes(){
 	if( document.getElementById("cfg_load_nodes").checked ){
-		OEV.earth.activNodes( true );
+		GLOBE.activNodes( true );
 	}else{
-		OEV.earth.activNodes( false );
+		GLOBE.activNodes( false );
 	}
 }
 

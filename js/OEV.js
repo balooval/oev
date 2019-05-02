@@ -11,7 +11,7 @@ import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
 import * as TileExtension from './oev/tileExtensions/tileExtension.js';
 import * as DataLoader from './oev/dataLoader.js';
-import * as BuildingsDatas from './oev/globeBuildings.js';
+import * as BuildingsDatas from './oev/tileExtensions/building/globeBuildings.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -49,11 +49,12 @@ const OpenEarthViewer = (function() {
 		SKY.init();
 		Navigation.init();
 		api.clock = new THREE.Clock();
-		document.getElementById( "tools" ).style['max-height'] = document.getElementById( "main" ).clientHeight+'px';
-		const intElemClientWidth = document.getElementById( _htmlContainer ).clientWidth;
+		const elmtHtmlContainer = document.getElementById(_htmlContainer);
+		document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
+		const intElemClientWidth = elmtHtmlContainer.clientWidth;
 		const intElemClientHeight = document.getElementById( "tools" ).clientHeight;
-		api.sceneWidth = Math.min( intElemClientWidth, 13000 );
-		api.sceneHeight = Math.min( intElemClientHeight, 800 );
+		api.sceneWidth = Math.min(intElemClientWidth, 13000);
+		api.sceneHeight = Math.min(intElemClientHeight, 800);
 		api.scene = new THREE.Scene();
 		api.camera = new THREE.PerspectiveCamera( 90, api.sceneWidth / api.sceneHeight, 0.1, 20000);
 		TileExtension.setBuildingLoader(new DataLoader.Proxy('BUILDINGS'));
@@ -63,9 +64,9 @@ const OpenEarthViewer = (function() {
 		api.scene.add(api.earth.meshe);
 		renderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
 		api.raycaster = new THREE.Raycaster();
-		renderer.setSize( api.sceneWidth, api.sceneHeight );
-		document.getElementById( _htmlContainer ).appendChild( renderer.domElement );
-		containerOffset = new THREE.Vector2( document.getElementById( _htmlContainer ).offsetLeft, document.getElementById( _htmlContainer ).offsetTop );
+		renderer.setSize(api.sceneWidth, api.sceneHeight);
+		elmtHtmlContainer.appendChild(renderer.domElement);
+		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
 		api.camera.position.x = 0;
 		api.camera.position.y = 0;
 		api.camera.position.z = 500;	
@@ -106,37 +107,6 @@ const OpenEarthViewer = (function() {
 		const toLoad = [
 			['checker', 'loading.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
-			/*
-			['landuse_sprites', 'landuse_sprites.png'], 
-			['normal_flat', 'normal_flat.png'], 
-			['normal_scrub', 'normal_scrub.png'], 
-			['normal_vineyard', 'normal_vineyard.png'], 
-			['normal_forest', 'normal_forest.png'], 
-			['landuse_vineyard', 'landuse_vineyard.png'], 
-			['landuse_scrub', 'landuse_scrub.png'], 
-			['landuse_forest', 'landuse_forest.png'], 
-			['tree_top', 'tree_top.png'], 
-			['skydome', 'skydome.jpg'], 
-			['pylone', 'pylone.png'], 
-			['sea', 'sea.jpg'], 
-			['water_color', 'water_color.jpg'], 
-			['roof', 'roof.png'], 
-			['god', 'god_2.png'], 
-			['waternormals', 'waternormals.png'], 
-			['waypoint', 'waypoint.png'], 
-			['sky', 'sky.png'], 
-			['checker_alpha', 'checker_alpha.png'], 
-			['sun', 'sun2.png'], 
-			['cloud', 'cloud.png'], 
-			['grass', 'grass2.png'], 
-			['vineyard', 'vineyard.png'], 
-			['natural_tree', 'natural_tree.png'], 
-			['tree_side', 'tree_tiles.png'], 
-			['scrub', 'scrub.png'], 
-			['plane_contrail', 'plane_contrail_2.png'], 
-			['particleWater', 'particleWater.png'], 
-			['tree_procedural', 'tree_procedural.png'], 
-			*/
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, onOevTexturesLoaded);
@@ -153,23 +123,6 @@ const OpenEarthViewer = (function() {
 
 	api.loadModels = function() {
 		UI.openModal( "Loading models" );
-		/*
-		const modelList = [];
-		NET_MODELS.addToList(modelList, 'eolienne', 'eolienne.json');
-		NET_MODELS.addToList(modelList, 'pylone', 'pylone.json');
-		NET_MODELS.addToList(modelList, 'tree_lod_1', 'hydrant_lod_0.json');
-		NET_MODELS.addToList(modelList, 'HYDRANT_lod_1', 'hydrant_lod_1.json');
-		NET_MODELS.addToList(modelList, 'HYDRANT_lod_2', 'hydrant_lod_1.json');
-		NET_MODELS.addToList(modelList, 'LAMP_lod_0', 'lamp_lod_0.json');
-		NET_MODELS.addToList(modelList, 'LAMP_lod_1', 'lamp_lod_1.json');
-		NET_MODELS.addToList(modelList, 'LAMP_lod_2', 'lamp_lod_2.json');
-		NET_MODELS.addToList(modelList, 'recycling', 'recycling.json');
-		NET_MODELS.addToList(modelList, 'fountain', 'fountain2.json');
-		NET_MODELS.addToList(modelList, 'poubelle', 'poubelle2.json');
-		NET_MODELS.addToList(modelList, 'plane', 'avion.json');
-		NET_MODELS.addToList(modelList, 'whale', 'whale.json');
-		NET_MODELS.loadBatch(modelList, onOevModelsLoaded);
-		*/
 		onOevModelsLoaded();
 	}
 
@@ -241,8 +194,6 @@ const OpenEarthViewer = (function() {
 })();
 
 function onOevTexturesLoaded() {
-	console.log('All default textures loaded');
-	// NET_TEXTURES.texture('skydome').mapping = THREE.EquirectangularReflectionMapping;
 	OEV.loadShaders();
 }
 
@@ -251,7 +202,6 @@ function onOevShadersLoaded() {
 }
 
 function onOevModelsLoaded() {
-	console.log('All default models loaded');
 	UI.closeModal();
 	OEV.start();
 }

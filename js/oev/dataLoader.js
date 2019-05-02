@@ -3,6 +3,13 @@ import * as OLD_UI from '../UI.js';
 export const Params = {};
 const DataLoader = {};
 
+const registeredLoaders = {};
+
+export function registerLoader(_type, _class) {
+	console.log('registerLoader', _type);
+	registeredLoaders[_type] = _class;
+}
+
 export class Proxy {
 	constructor(_type) {
 		this._type = _type;
@@ -58,8 +65,8 @@ export class Proxy {
 		for (let i = 0; i < this._simulLoad; i ++) {
 			if (this._type == 'TILE2D') {
 				loader = new LoaderTile2D(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
-			} else if (this._type == 'ELE') {
-				loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
+			// } else if (this._type == 'ELE') {
+			// 	loader = new LoaderElevation(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'BUILDINGS') {
 				loader = new LoaderBuilding(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'NORMAL') {
@@ -68,6 +75,9 @@ export class Proxy {
 				loader = new DataLoader.Planes(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (this._type == 'OVERPASS_CACHE') {
 				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
+			} else if (registeredLoaders[this._type]) {
+				console.log('Init registered loader', this._type);
+				loader = new registeredLoaders[this._type](function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			}
 			this._loaders.push(loader);
 		}
@@ -183,70 +193,8 @@ DataLoader.Ajax.prototype = {
 }
 
 
-DataLoader.Canvas = (function() {
-	const canvas = document.createElement('canvas');
-	canvas.width = '64';
-	canvas.height = '64';
-	const context = canvas.getContext('2d');
-	
-	var api = {
-		extractElevation : function(_img, _imgWidth, _imgHeight) {
-			context.drawImage(_img, 0, 0, _imgWidth, _imgHeight);
-			const imageData = context.getImageData(0, 0, _imgWidth, _imgHeight).data;
-			const eleBuffer = new Uint16Array(imageData.length / 4);
-			let bufferIndex = 0;
-			for (let x = 0; x < _imgWidth; ++x) {
-				for (let y = 0; y < _imgHeight; ++y) {
-					let index = (y * _imgWidth + x) * 4;
-					const red = imageData[index];
-					index ++;
-					const blue = imageData[++index];
-					const alt = red * 256 + blue;
-					eleBuffer[bufferIndex] = alt;
-					bufferIndex ++;
-				}
-			}
-			return eleBuffer;
-		}
-	};
-	
-	return api;
-})();
-
-
 Params.Elevation = {
 	definition : 4, 
-}
-
-class LoaderElevation {
-
-	constructor(_callback) {
-		this.definition = Params.Elevation.definition;
-		this.isLoading = false;
-		this.callback = _callback;
-		this.params = {};
-		var loader = this;
-		this.imageObj = new Image();
-		this.imageObj.crossOrigin = 'Anonymous';
-		this.imageObj.onload = function() {
-			loader.onImgReady(this);
-		};
-		this.serverUrl = 'https://val.openearthview.net';
-	}
-
-	load(_params) {
-		this.isLoading = true;
-		this.params = _params;
-		this.imageObj.src = this.serverUrl + '/api/index.php?ressource=elevation&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
-	}
-	
-	onImgReady(_img) {
-		var res = DataLoader.Canvas.extractElevation(_img, _img.width, _img.height);
-		this.isLoading = false;
-		if (this.callback) {
-			this.callback(res, this.params);
-		}
-	}
 }
 
 class LoaderTile2D {
@@ -322,7 +270,7 @@ DataLoader.Normal.prototype = {
 
 
 DataLoader.BuildingWorker = (function() {
-	const workerParser = new Worker('js/oev/workers/buildingJsonParser.js');
+	const workerParser = new Worker('js/oev/tileExtensions/building/buildingJsonParser.js');
 	const loaders = [];
 	
 	var api = {
@@ -354,10 +302,9 @@ class LoaderBuilding {
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		var loader = this;
 		this.ajax.load(
 			this.serverUrl + "/api/index.php?ressource=building&z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y, 
-			_datas => loader.onDataLoadSuccess(_datas)
+			_datas => this.onDataLoadSuccess(_datas)
 		);
 	}
 	

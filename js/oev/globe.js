@@ -7,7 +7,7 @@ import * as TILE from './tile.js';
 import * as GEO from './geo.js';
 import MATH from './math.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
-import ElevationDatas from './globeElevation.js';
+import ElevationDatas from './tileExtensions/elevation/globeElevation.js';
 
 let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
@@ -64,14 +64,11 @@ const api = {
 	init : function() {
 		api.evt = new Evt();
 		api.meshe = new THREE.Mesh(new THREE.Geometry());
-		// api.providersLoadManager = new DatasMng("OBJECTS");
-		// api.nodesLoadManager = new DatasMng('NODES');
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
 		DataLoader.Params.Elevation.definition = api.tilesDefinition;
 		api.loaderTile2D = new DataLoader.Proxy('TILE2D');
 		
-		api.loaderEle = new DataLoader.Proxy('ELE');
 		api.loaderBuilding = new DataLoader.Proxy('BUILDINGS');
 		api.loaderNormal = new DataLoader.Proxy('NORMAL');
 		api.loaderPlane = new DataLoader.Proxy('PLANE');

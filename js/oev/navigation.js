@@ -1,5 +1,6 @@
 import * as UI from './ui.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
+import GLOBE from './globe.js';
 
 let waypointMat;
 const waypointsList = [];
@@ -71,12 +72,12 @@ class WayPoint {
 		if (this.showSprite) {
 			this.material = waypointMat;
 			this.sprite = new THREE.Sprite(this.material);
-			var ele = OEV.earth.getElevationAtCoords(this.lon, this.lat);
-			var pos = OEV.earth.coordToXYZ(_lon, _lat, ele);
+			var ele = GLOBE.getElevationAtCoords(this.lon, this.lat);
+			var pos = GLOBE.coordToXYZ(_lon, _lat, ele);
 			this.sprite.position.x = pos.x;
 			this.sprite.position.y = pos.y;
 			this.sprite.position.z = pos.z;
-			var wpScale = (OEV.camCtrl.coordCam.z / OEV.earth.radius) * 1000;
+			var wpScale = (OEV.camCtrl.coordCam.z / GLOBE.radius) * 1000;
 			this.sprite.scale.x = wpScale;
 			this.sprite.scale.y = wpScale;
 			this.sprite.scale.z = wpScale;
@@ -86,7 +87,7 @@ class WayPoint {
 
 	updatePos() {
 		if (this.showSprite) {
-			var pos = OEV.earth.coordToXYZ(this.lon, this.lat, (OEV.earth.meter * 64) * OEV.earth.globalScale);
+			var pos = GLOBE.coordToXYZ(this.lon, this.lat, (GLOBE.meter * 64) * GLOBE.globalScale);
 			this.sprite.position.x = pos.x;
 			this.sprite.position.y = pos.y;
 			this.sprite.position.z = pos.z;

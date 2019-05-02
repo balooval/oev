@@ -1,11 +1,11 @@
-import GLOBE from '../globe.js';
-import * as TileExtension from './tileExtension.js';
-import ElevationDatas from '../globeElevation.js';
-import Evt from '../event.js';
-import * as BuildingsDatas from '../globeBuildings.js';
+import GLOBE from '../../globe.js';
+import * as TileExtension from '../tileExtension.js';
+import ElevationDatas from '../elevation/globeElevation.js';
+import Evt from '../../event.js';
+import * as BuildingsDatas from './globeBuildings.js';
 
 const workerEvent = new Evt();
-const worker = new Worker('js/oev/workers/buildingMaker.js');
+const worker = new Worker('js/oev/tileExtensions/building/buildingMaker.js');
 worker.onmessage = onWorkerMessage;
 
 function onWorkerMessage(_res) {

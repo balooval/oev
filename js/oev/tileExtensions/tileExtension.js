@@ -34,7 +34,7 @@ export function desactivateExtension(_extensionId) {
 	evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
 	if (_extensionId == 'LANDUSE') {
 		console.warn('CLEAR tilesLandusesMng');
-		OEV.earth.tilesLandusesMng.clearAll();
+		GLOBE.tilesLandusesMng.clearAll();
 	}
 	for (var i = 0; i < GLOBE.tilesBase.length; i ++) {
 		GLOBE.tilesBase[i].removeExtension(_extensionId);
@@ -148,5 +148,5 @@ export class DefaultExt {
 
 Params.actives['ACTIV_ELEVATION'] = true;
 
-export {Elevation} from './tileExtElevation.js';
-export * from './tileExtBuilding.js';
+export {Elevation} from './elevation/tileExtElevation.js';
+export * from './building/tileExtBuilding.js';

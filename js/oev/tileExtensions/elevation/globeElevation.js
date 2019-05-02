@@ -1,4 +1,4 @@
-import GLOBE from './globe.js';
+import GLOBE from '../../globe.js';
 
 const store = [{
 	zoom : 1, 
@@ -169,10 +169,10 @@ function structContainCoord(_struct, _lon, _lat) {
 
 function debug() {
 	// console.log(store);
-	searchCoord(4.2289, 43.7981, 16);
+	// searchCoord(4.2289, 43.7981, 16);
 
-	// let count = toto(0, store[0]);
-	// console.log('COUNT', count);
+	let count = toto(0, store[0]);
+	console.log('COUNT', count);
 }
 
 function toto(_count, _struct) {

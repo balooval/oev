@@ -1,6 +1,8 @@
-import * as TileExtension from './tileExtension.js';
-import GLOBE from '../globe.js';
-import ElevationDatas from '../globeElevation.js';
+import * as TileExtension from '../tileExtension.js';
+import GLOBE from '../../globe.js';
+import ElevationDatas from './globeElevation.js';
+import * as Loader from './elevationLoader.js';
+
 
 export class Elevation {
 	constructor(_tile) {
@@ -45,7 +47,7 @@ export class Elevation {
 		if (this.tile.zoom > 15) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
-		OEV.earth.loaderEle.getData(
+		Loader.loaderEle.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -68,7 +70,7 @@ export class Elevation {
 	}
 	
 	hide() {
-		OEV.earth.loaderEle.abort({
+		Loader.loaderEle.abort({
 			z : this.tile.zoom, 
 			x : this.tile.tileX, 
 			y : this.tile.tileY

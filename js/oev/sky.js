@@ -465,7 +465,6 @@ const api = {
 };
 
 function updateShadow() {
-	console.log('updateShadow');
 	var factor = 0.002;
 	lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
 	lightSun.shadow.camera.near = 1;

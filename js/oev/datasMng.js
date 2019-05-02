@@ -1,4 +1,5 @@
 import * as OLD_UI from '../UI.js';
+import GLOBE from './globe.js';
 
 class DatasMng {
 	constructor(_type) {
@@ -313,7 +314,7 @@ class DatasMng {
 		console.log('loadTile2d');
 		var mng = this;
 		var tileLoader = new THREE.TextureLoader();
-		tileLoader.load( 'libs/remoteImg.php?'+OEV.earth.tilesProvider+'=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
+		tileLoader.load( 'libs/remoteImg.php?' + GLOBE.tilesProvider + '=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
 		// tileLoader.load( 'libs/remoteImg.php?tileEle=1&z='+_loadInfos["z"]+'&x='+_loadInfos["x"]+'&y='+_loadInfos["y"]+'', 
 				function(t){
 					mng.datasLoaded[_loadInfos["key"]] = t;
