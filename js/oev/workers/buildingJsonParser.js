@@ -27,7 +27,7 @@ function readJson(_datas) {
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
-			nodes : verticesCoord, 
+			coords : wayNodes, 
 			centroid : centroid, 
 		});
 	});

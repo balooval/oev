@@ -18,9 +18,16 @@ export class Proxy {
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
+
+		this.clientsWaiting = [];
+
 		this._loaders = [];
 		this.serverUrl = 'https://val.openearthview.net';
 		this._initLoaders();
+
+		window.debugLoader = () => {
+			console.log('debugLoader', this._datasWaiting);
+		}
 	}
 
 	getData(_params, _callback) {
@@ -28,9 +35,16 @@ export class Proxy {
 		_params.key = this._genKey(_params);
 		_params.callback = _callback;
 		if (this._sendCachedData(_params) === true) return true;
-		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) return false;
+		// if (this._isWaiting(_params.key) || this._isLoading(_params.key)) return false;
+		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
+			const waiting = this._datasWaiting.some(w => w.key == _params.key);
+			const loading = this._datasLoading.some(w => w.key == _params.key);
+			// console.log('WAITING', this._type, _params.key, waiting, loading);
+			this.clientsWaiting.push(_params);
+			return false;
+		};
 		this._addSorted(_params);
-		this._checkForNextLoad();
+		const test = this._checkForNextLoad();
 	}
 	
 	_genKey(_params) {
@@ -64,8 +78,13 @@ export class Proxy {
 			console.warn('Error loading ressource');
 			return false;
 		}
+
 		this._datasLoading = this._datasLoading.filter(l => l.key != _params.key);
 		_params.callback(_data);
+
+		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
+		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
+
 		if (_params.dropDatas === undefined || _params.dropDatas == false) {
 			this._datasLoaded[_params.key] = _data;
 		}
@@ -85,7 +104,7 @@ export class Proxy {
 	}
 	
 	_sendCachedData(_params) {
-		if (this._datasLoaded[_params.key] === undefined) return false;
+		if (!this._datasLoaded[_params.key]) return false;
 		_params.callback(this._datasLoaded[_params.key]);
 		return true;
 	}
@@ -95,12 +114,15 @@ export class Proxy {
 			_params.key = this._genKey(_params);
 		}
 		this._datasWaiting = this._datasWaiting.filter(w => w.key != _params.key);
+		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
 	}
 	
 	clear() {
+		console.warn('CLEAR LOADER', this._type);
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
+		this.clientsWaiting = [];
 	}
 	
 	_checkForNextLoad() {

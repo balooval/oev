@@ -2,6 +2,7 @@ import GLOBE from '../globe.js';
 import * as TileExtension from './tileExtension.js';
 import ElevationDatas from '../globeElevation.js';
 import Evt from '../event.js';
+import * as BuildingsDatas from '../globeBuildings.js';
 
 const workerEvent = new Evt();
 const worker = new Worker('js/oev/workers/buildingMaker.js');
@@ -24,6 +25,7 @@ export class BuildingExtension {
 		this.meshRoof = undefined;
 		this.waiting = false;
 		this.tile = _tile;
+		this.isActive = this.tile.zoom == 15;
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		if (TileExtension.Params.actives['ACTIV_' + this.id] === undefined) {
 			TileExtension.Params.actives['ACTIV_' + this.id] = false;
@@ -51,14 +53,21 @@ export class BuildingExtension {
 
 	onTileReady(_evt) {
 		if (!this.tile.onStage) return false;
-		if (this.tile.zoom != 15) return false;
+		if (!this.isActive) return false;
 		var bbox = { 
 			minLon : this.tile.startCoord.x, 
 			maxLon : this.tile.endCoord.x, 
 			minLat : this.tile.endCoord.y, 
 			maxLat : this.tile.startCoord.y
 		};
+		
 		this.waiting = true;
+		BuildingsDatas.store.get(this.tile.zoom, this.tile.tileX, this.tile.tileY, bbox, this.tile.distToCam, _datas => {
+			this.waiting = false;
+			this.onBuildingsLoaded(_datas);
+		});
+
+		/*
 		loaderBuilding.getData(
 			{
 				z : this.tile.zoom, 
@@ -72,6 +81,7 @@ export class BuildingExtension {
 				this.onBuildingsLoaded(_datas);
 			}
 		);
+		*/
 	}
 	
 	show() {
@@ -108,6 +118,7 @@ export class BuildingExtension {
 			tileKey : this.tileKey,
 			buildingsDatas : this.datas,  
 			bbox : bbox, 
+			zoom : this.tile.zoom, 
 		});
 		
 	}
@@ -186,12 +197,14 @@ export class BuildingExtension {
 	}
 
 	dispose() {
+		if (!this.isActive) return false;
 		if (!this.dataLoaded){
-			loaderBuilding.abort({
-				z : this.tile.zoom, 
-				x : this.tile.tileX, 
-				y : this.tile.tileY
-			});
+			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
+			// loaderBuilding.abort({
+			// 	z : this.tile.zoom, 
+			// 	x : this.tile.tileX, 
+			// 	y : this.tile.tileY
+			// });
 		}
 		if (this.meshWalls != undefined) {
 			OEV.scene.remove(this.meshWalls);

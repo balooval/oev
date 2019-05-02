@@ -280,7 +280,7 @@ const api = {
 	}, 
 
 	setProjection : function(_mode) {
-		console.log('setProjection', _mode);
+		// console.log('setProjection', _mode);
 		if (_mode == "PLANE") {
 			SKY.activSky(true);
 			api.coordToXYZ = api.coordToXYZPlane;
@@ -391,7 +391,7 @@ const api = {
 					OEV.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
 				}
 				SKY.updateCloudsPos();
-				api.evt.fireEvent( "LOD_CHANGED" );
+				api.evt.fireEvent('LOD_CHANGED');
 			}
 		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
 			if (api.curLOD != api.LOD_PLANET) {

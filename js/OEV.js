@@ -11,6 +11,7 @@ import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
 import * as TileExtension from './oev/tileExtensions/tileExtension.js';
 import * as DataLoader from './oev/dataLoader.js';
+import * as BuildingsDatas from './oev/globeBuildings.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -56,6 +57,7 @@ const OpenEarthViewer = (function() {
 		api.scene = new THREE.Scene();
 		api.camera = new THREE.PerspectiveCamera( 90, api.sceneWidth / api.sceneHeight, 0.1, 20000);
 		TileExtension.setBuildingLoader(new DataLoader.Proxy('BUILDINGS'));
+		BuildingsDatas.setBuildingLoader(new DataLoader.Proxy('BUILDINGS'));
 		api.earth = GLOBE;
 		api.earth.init();
 		api.scene.add(api.earth.meshe);

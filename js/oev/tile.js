@@ -28,6 +28,7 @@ export class Basic {
 		this.tileY = _tileY;
 		this.zoom = _zoom;
 		this.childTiles = [];
+		this.textureLoading = false;
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
 		this.meshe = undefined;
@@ -202,6 +203,7 @@ export class Basic {
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
 		if (!this.textureLoaded) {
+			this.textureLoading = false;
 			GLOBE.loaderTile2D.abort({
 				z : this.zoom, 
 				x : this.tileX, 
@@ -281,6 +283,7 @@ export class Basic {
 
 	reloadTexture() {
 		this.textureLoaded = false;
+		this.textureLoading = false;
 		this.remoteTex = undefined;
 		this.childTiles.forEach(t => t.reloadTexture());
 		this.loadImage();
@@ -288,6 +291,7 @@ export class Basic {
 
 	setTexture(_texture) {
 		this.textureLoaded = true;
+		this.textureLoading = false;
 		this.remoteTex = _texture;
 		this.applyTexture({
 			map : this.remoteTex, 
@@ -303,6 +307,8 @@ export class Basic {
 			this.setTexture(this.remoteTex);
 			return true;
 		}
+		if (this.textureLoading) return false;
+		this.textureLoading = true;
 		GLOBE.loaderTile2D.getData(
 			{
 				z : this.zoom, 
@@ -310,7 +316,9 @@ export class Basic {
 				y : this.tileY, 
 				priority : this.distToCam
 			}, 
-			_texture => this.setTexture(_texture)
+			_texture => {
+				this.setTexture(_texture);
+			}
 		);
 		return false;
 	}

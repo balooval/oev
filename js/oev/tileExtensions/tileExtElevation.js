@@ -5,6 +5,7 @@ import ElevationDatas from '../globeElevation.js';
 export class Elevation {
 	constructor(_tile) {
 		this.id = 'ELEVATION';
+		this.dataLoading = false;
 		this.dataLoaded = false;
 		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
 		this.tile = _tile;
@@ -42,6 +43,8 @@ export class Elevation {
 		if (this.dataLoaded) return false;
 		this.applyElevationToGeometry(this.nearestElevationDatas());
 		if (this.tile.zoom > 15) return false;
+		if (this.dataLoading) return false;
+		this.dataLoading = true;
 		OEV.earth.loaderEle.getData(
 			{
 				z : this.tile.zoom, 
@@ -77,12 +80,13 @@ export class Elevation {
 		const buffer = new Uint16Array(def * def);
 		const vertCoords = this.tile.getVerticesPlaneCoords();
 		vertCoords.forEach((c, i) => {
-			buffer[i] = ElevationDatas.get(c[0], c[1]);
+			buffer[i] = ElevationDatas.get(c[0], c[1], this.tile.zoom);
 		});
 		return buffer;
 	}
 	
 	onElevationLoaded(_datas) {
+		this.dataLoading = false;
 		if (!this.tile.isReady) return false;
 		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
 		this.dataLoaded = true;
@@ -113,6 +117,7 @@ export class Elevation {
 	dispose() {
 		if (this.dataLoaded) ElevationDatas.delete(this.tile);
 		this.dataLoaded = false;
+		this.dataLoading = false;
 		this.elevationBuffer = null;
 		OEV.MUST_RENDER = true;
 	}
