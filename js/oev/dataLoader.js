@@ -295,17 +295,16 @@ class LoaderBuilding {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.ajax = new DataLoader.Ajax();
 		this.serverUrl = 'https://val.openearthview.net';
 	}	
 
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		this.ajax.load(
-			this.serverUrl + "/api/index.php?ressource=building&z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y, 
-			_datas => this.onDataLoadSuccess(_datas)
-		);
+		const url = this.serverUrl + "/api/index.php?ressource=building&z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y;
+		fetch(url)
+		.then(res => res.text())
+		.then(text => this.onDataLoadSuccess(text));
 	}
 	
 	onDataLoadSuccess(_data) {
