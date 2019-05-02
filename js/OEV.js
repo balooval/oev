@@ -1,4 +1,5 @@
 import Evt from './oev/utils/event.js';
+import Renderer from './oev/renderer.js';
 import * as UI from './oev/ui.js';
 import * as OLD_UI from './UI.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
@@ -9,9 +10,6 @@ import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
-import * as TileExtension from './oev/tileExtensions/tileExtension.js';
-import * as DataLoader from './oev/dataLoader.js';
-import * as BuildingsDatas from './oev/tileExtensions/building/globeBuildings.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -51,6 +49,8 @@ const OpenEarthViewer = (function() {
 		api.clock = new THREE.Clock();
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
 		document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
+
+
 		const intElemClientWidth = elmtHtmlContainer.clientWidth;
 		const intElemClientHeight = document.getElementById( "tools" ).clientHeight;
 		api.sceneWidth = Math.min(intElemClientWidth, 13000);

@@ -324,12 +324,6 @@ export class Basic {
 		return false;
 	}
 
-	update() {
-		this.material.uniforms.time.value = ( OEV.globalTime - 1456688420000 ) / 10;
-		this.material.uniforms.time.value.needsUpdate = true;
-		OEV.MUST_RENDER = true;
-	}
-	
 	dispose() {
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		this.clearChildrens();

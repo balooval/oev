@@ -32,7 +32,6 @@ Oev.Rtt = (function(){
 			cube.position.x = 1;
 			cube.rotation.y = 0.5;
 			renderer.render(bufferScene, camera, bufferTexture, false);
-			// renderer.setViewport(0, 0, OEV.sceneWidth, OEV.sceneHeight);
 			renderer.setClearColor( 0x101020, 1 );
 		}, 
 		
