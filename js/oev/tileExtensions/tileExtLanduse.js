@@ -1,3 +1,4 @@
+import Renderer from '../renderer.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
 Oev.Tile.Extension.LanduseWorker = (function() {
@@ -405,7 +406,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		this.bufferMesh = new THREE.Mesh(bufferGeometry, Oev.Globe.grassMat);
 		this.bufferMesh.receiveShadow = true;
 		this.bufferMesh.castShadow = true;
-		OEV.scene.add(this.bufferMesh);
+		Renderer.scene.add(this.bufferMesh);
 	}
 	
 	ext.buildNodesGeometry = function() {
@@ -607,7 +608,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 		this.bufferMesh = new THREE.Mesh(bufferGeometry, Oev.Globe.landuseSpritesMat);
 		// this.bufferMesh.receiveShadow = true;
 		// this.bufferMesh.castShadow = true;
-		OEV.scene.add(this.bufferMesh);
+		Renderer.scene.add(this.bufferMesh);
 	}
 
 	ext.construct = function() {
@@ -638,7 +639,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 			ext.surfacesCoords = [];
 			ext.surfacesTypes = [];
 			ext.surfacesClipped = [];
-			OEV.MUST_RENDER = true;
+			Renderer.MUST_RENDER = true;
 		} else if (this.constructStep != 'WAITING') {
 			Oev.Tile.ProcessQueue.addWaiting(this);
 		}
@@ -647,7 +648,7 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.show = function() {
 		if (this.dataLoaded) {
 			if (this.bufferMesh != undefined) {
-				OEV.scene.add(this.bufferMesh);
+				Renderer.scene.add(this.bufferMesh);
 			}
 		}else{
 			this.tileReady();
@@ -657,12 +658,12 @@ Oev.Tile.Extension.Landuse = function(_tile) {
 	ext.hide = function() {
 		if (this.dataLoaded) {
 			if (this.bufferMesh != undefined) {
-				OEV.scene.remove(this.bufferMesh);
+				Renderer.scene.remove(this.bufferMesh);
 			}
 			this.tile.material.normalMap = null;
 			this.tile.material.needsUpdate = true;
 			this.tile.loadImage();
-			OEV.MUST_RENDER = true;
+			Renderer.MUST_RENDER = true;
 		}
 	}
 	

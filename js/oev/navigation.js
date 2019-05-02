@@ -1,3 +1,4 @@
+import Renderer from './renderer.js';
 import * as UI from './ui.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import GLOBE from './globe.js';
@@ -81,7 +82,7 @@ class WayPoint {
 			this.sprite.scale.x = wpScale;
 			this.sprite.scale.y = wpScale;
 			this.sprite.scale.z = wpScale;
-			OEV.scene.add(this.sprite);
+			Renderer.scene.add(this.sprite);
 		}
 	}
 
@@ -106,17 +107,17 @@ class WayPoint {
 		if (this.showSprite){
 			if (this.onStage && _state){
 				this.onStage = false;
-				OEV.scene.remove(this.sprite);
+				Renderer.scene.remove(this.sprite);
 			}else if (!this.onStage && !_state) {
 				this.onStage = true;
-				OEV.scene.add(this.sprite);
+				Renderer.scene.add(this.sprite);
 			}
 		}
 	}
 
 	dispose() {
 		if( this.showSprite ){
-			OEV.scene.remove(this.sprite);
+			Renderer.scene.remove(this.sprite);
 		}
 	}
 };

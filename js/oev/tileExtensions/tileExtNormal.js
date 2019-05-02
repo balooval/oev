@@ -39,14 +39,14 @@ Oev.Tile.Extension.Normal = function(_tile) {
 		this.dataLoaded = true;
 		this.tile.material.normalMap = _normalMap;
 		this.tile.material.needsUpdate = true;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 	
 	ext.dispose = function() {
 		this.hide();
 		this.tile.material.normalMap = null;
 		this.tile.material.needsUpdate = true;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 	
 	ext.init(_tile);

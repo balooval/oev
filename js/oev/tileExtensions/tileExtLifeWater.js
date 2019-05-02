@@ -60,7 +60,7 @@ Oev.Tile.Extension.LifeWater = function(_tile) {
 		// ext.tile.material.map.repeat.y = 1;
 		ext.tile.material.map.offset.y += 0.0001;
 		// ext.tile.material.map.needsUpdate = true;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		// ext.tile.material.normalMap.offset.x += 0.01;
 		// ext.tile.material.normalMap.needsUpdate = true;
 	}

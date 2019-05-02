@@ -8,7 +8,6 @@ const Renderer = (function() {
 		scene : undefined, 
 		camera : undefined, 
 		MUST_RENDER : true, 
-		raycaster : undefined, 
         shadowsEnabled : true, 
         
         init : function(_htmlContainer) {
@@ -20,10 +19,8 @@ const Renderer = (function() {
             api.scene = new THREE.Scene();
             api.camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
             webGlRenderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
-            api.raycaster = new THREE.Raycaster();
             webGlRenderer.setSize(sceneWidth, sceneHeight);
             elmtHtmlContainer.appendChild(webGlRenderer.domElement);
-            containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
             api.camera.position.x = 0;
             api.camera.position.y = 0;
             api.camera.position.z = 500;	
@@ -32,7 +29,7 @@ const Renderer = (function() {
                 webGlRenderer.shadowMap.enabled = true;
                 webGlRenderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
             }
-        }, 
+        },  
 
         domContainer : function() {
             return webGlRenderer.domElement;

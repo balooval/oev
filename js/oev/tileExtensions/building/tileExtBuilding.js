@@ -1,3 +1,4 @@
+import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as TileExtension from '../tileExtension.js';
 import ElevationDatas from '../elevation/globeElevation.js';
@@ -119,13 +120,13 @@ export class BuildingExtension {
 		this.meshRoof = new THREE.Mesh(bufferGeometry, GLOBE.buildingsRoofMat);
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
-		OEV.scene.add(this.meshRoof);
+		Renderer.scene.add(this.meshRoof);
 	}
 
 	construct(_datas) {
 		if (_datas.buildings.length == 0) return false;
 		if (this.meshWalls != undefined) {
-			OEV.scene.add(this.meshWalls);
+			Renderer.scene.add(this.meshWalls);
 			return false;
 		}
 		this.buildRoof(_datas);
@@ -140,8 +141,8 @@ export class BuildingExtension {
 		this.meshWalls = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
 		this.meshWalls.receiveShadow = true;
 		this.meshWalls.castShadow = true;
-		OEV.scene.add(this.meshWalls);
-		OEV.MUST_RENDER = true;
+		Renderer.scene.add(this.meshWalls);
+		Renderer.MUST_RENDER = true;
 	}
 
 	applyElevationToVertices(_buildings, _geometry, _prop) {
@@ -181,14 +182,14 @@ export class BuildingExtension {
 			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
 		}
 		if (this.meshWalls != undefined) {
-			OEV.scene.remove(this.meshWalls);
-			OEV.scene.remove(this.meshRoof);
+			Renderer.scene.remove(this.meshWalls);
+			Renderer.scene.remove(this.meshRoof);
 			this.meshWalls.geometry.dispose();
 			this.meshWalls = undefined;
 			this.meshRoof.geometry.dispose();
 			this.meshRoof = undefined;
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 
 }

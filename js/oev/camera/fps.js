@@ -1,3 +1,4 @@
+import Renderer from '../renderer.js';
 
 var CamCtrlFps = function () {
 	this.name = 'FPS';
@@ -93,11 +94,11 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 	this.planet = _planet;
 	this.camera.up.set( 0, -1, 0 );
 	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
-	OEV.scene.add(this.pointer);
+	Renderer.scene.add(this.pointer);
 	this.clicPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x0000ff }) );
-	OEV.scene.add( this.clicPointer );
+	Renderer.scene.add( this.clicPointer );
 	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
-	OEV.scene.add( this.debugPointer );
+	Renderer.scene.add( this.debugPointer );
 	if( location.hash != '' ){
 		var urlParamsLoc = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
 		this.zoomCur = parseFloat( urlParamsLoc[0] );
@@ -382,7 +383,7 @@ CamCtrlFps.prototype.updateCamera = function() {
 	this.debugPointer.scale.y = wpScale;
 	this.debugPointer.scale.z = wpScale;
 	
-	OEV.MUST_RENDER = true;
+	Renderer.MUST_RENDER = true;
 	
 	
 	if (SKY != undefined) {

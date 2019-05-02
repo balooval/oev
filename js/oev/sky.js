@@ -1,3 +1,4 @@
+import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import * as SHADER from './shader.js';
@@ -113,12 +114,12 @@ function createCloudNew() {
 		curCloudMesh.scale.z = curScale;
 		cloudsMesh.geometry.mergeMesh(curCloudMesh);
 	}
-	OEV.scene.add(cloudsMesh);
+	Renderer.scene.add(cloudsMesh);
 }
 
 function removeSkyNew() {
-	OEV.scene.add(skyMeshNew);
-	OEV.scene.add(sunMeshNew);
+	Renderer.scene.add(skyMeshNew);
+	Renderer.scene.add(sunMeshNew);
 	skyMeshNew.geometry.dispose();
 	skyMeshNew.material.dispose();
 	sunMeshNew.geometry.dispose();
@@ -146,7 +147,7 @@ function createSkyNew(_skyRadius) {
 	};
 	const materialSky = new THREE.ShaderMaterial(parametersSky);
 	skyMeshNew = new THREE.Mesh(new THREE.SphereGeometry(_skyRadius, 16, 16 ), materialSky);
-	OEV.scene.add(skyMeshNew);
+	Renderer.scene.add(skyMeshNew);
 	// Sun
 	const sunRadius = _skyRadius / 20;
 	const vertexShaderSun = SHADER.get('vert_sun');
@@ -163,7 +164,7 @@ function createSkyNew(_skyRadius) {
 	};
 	const materialSun = new THREE.ShaderMaterial(parametersSun);
 	sunMeshNew = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 16, 16 ), materialSun);
-	OEV.scene.add(sunMeshNew);
+	Renderer.scene.add(sunMeshNew);
 }
 
 
@@ -207,13 +208,13 @@ const api = {
 	onAppStart : function() {
 		destTime = api.normalizedTime;
 		if( fogActive ){
-			OEV.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
+			Renderer.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
 		}
 		colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
 		lightSun = new THREE.DirectionalLight(0xffffff, 1);
-		OEV.scene.add(lightSun);
+		Renderer.scene.add(lightSun);
 		lightAmbiant = new THREE.AmbientLight(0x25282d);
-		OEV.scene.add(lightAmbiant);
+		Renderer.scene.add(lightAmbiant);
 		if (OEV.shadowsEnabled) {
 			lightSun.castShadow = true;
 			updateShadow();
@@ -257,7 +258,7 @@ const api = {
 	testLuminosity : function(_value) {
 		skyMeshNew.material.uniforms.sunLuminosity.value = _value;
 		console.log('skyParamsNew.sunLuminosity', _value);
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}, 
 
 	setSunTime : function(_time) {
@@ -303,9 +304,9 @@ const api = {
 		lightAmbiant.color.g = rampColorLight.g / 400;
 		lightAmbiant.color.b = rampColorLight.b / 400;
 		if (fogActive) {
-			OEV.scene.fog.color = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
+			Renderer.scene.fog.color = new THREE.Color("rgb("+rampColorFog.r+","+rampColorFog.g+","+rampColorFog.b+")");
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		api.evt.fireEvent("SUN_CHANGED");
 	},
 	
@@ -323,11 +324,11 @@ const api = {
 	clearClouds : function() {
 		if (particleSystem != undefined) {
 			particleSystem.geometry.dispose();
-			OEV.scene.remove(particleSystem);
+			Renderer.scene.remove(particleSystem);
 			particleSystem = undefined;
 		}
 		api.cloudsActiv = false;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}, 
 	
 	updateCloudsPos : function() {
@@ -395,8 +396,8 @@ const api = {
 		particleSystem.position.x = api.posCenter.x;
 		particleSystem.position.y = api.posCenter.y;
 		particleSystem.position.z = api.posCenter.z;
-		OEV.scene.add(particleSystem);
-		OEV.MUST_RENDER = true;
+		Renderer.scene.add(particleSystem);
+		Renderer.MUST_RENDER = true;
 	},
 	
 	makeStars : function() {
@@ -428,7 +429,7 @@ const api = {
 		stars.position.x = api.posCenter.x;
 		stars.position.y = api.posCenter.y;
 		stars.position.z = api.posCenter.z;
-		OEV.scene.add( stars );
+		Renderer.scene.add( stars );
 	}, 
 	
 	loadWeather : function(_zoom, _tileX, _tileY) {

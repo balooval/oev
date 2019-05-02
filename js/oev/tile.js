@@ -1,3 +1,4 @@
+import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import * as GEO from './utils/geo.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
@@ -188,7 +189,7 @@ export class Basic {
 		this.meshe.geometry.dispose();
 		this.buildGeometry();
 		this.childTiles.forEach(t => t.updateVertex());
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 
 	show() {
@@ -300,7 +301,7 @@ export class Basic {
 			offsetX : 0, 
 			offsetY : 0, 
 		});
-		OEV.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
+		Renderer.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
 	}
 
 	loadImage() {

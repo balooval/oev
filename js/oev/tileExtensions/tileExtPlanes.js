@@ -185,12 +185,12 @@ Oev.Tile.Extension.Planes = function(_tile) {
 			OEV.earth.removeMeshe(existingPlanes[planeId].mesh);
 		}
 		existingPlanes = {};
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 	
 	ext.onPlaneVoid = function() {
 		// console.warn('onPlaneVoid');
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		for (var planeId in planes) {
 			OEV.earth.removeMeshe(planes[planeId].mesh);
 			delete planes[planeId];

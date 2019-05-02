@@ -1,3 +1,4 @@
+import Renderer from './oev/renderer.js';
 import * as INPUT from './oev/input/input.js';
 import GLOBE from './oev/globe.js';
 
@@ -23,7 +24,7 @@ export function initUi(){
 	document.getElementById( "cfg_load_nodes" ).addEventListener("click", switchNodes );
 	document.getElementById( "cfg_fog_near" ).addEventListener("input", onFogNearChanged );
 	document.getElementById( "cfg_fog_far" ).addEventListener("input", onFogFarChanged );
-	const domContainer = OEV.domContainer();
+	const domContainer = Renderer.domContainer();
 	domContainer.addEventListener('mousedown',INPUT.Mouse.onMouseDown,false);
 	domContainer.addEventListener('mouseup',INPUT.Mouse.onMouseUp,true);
 	domContainer.addEventListener('contextmenu', function(e){e.preventDefault();}, true);
@@ -77,19 +78,19 @@ function setElementActiv( _elm, _state ){
 }
 
 function onFogNearChanged(){
-	OEV.scene.fog.near = ( ( ( GLOBE.radius / 4 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
-	if( OEV.scene.fog.near > OEV.scene.fog.far ){
-		OEV.scene.fog.far = OEV.scene.fog.near;
+	Renderer.scene.fog.near = ( ( ( GLOBE.radius / 4 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
+	if( Renderer.scene.fog.near > Renderer.scene.fog.far ){
+		Renderer.scene.fog.far = Renderer.scene.fog.near;
 	}
-	OEV.MUST_RENDER = true;
+	Renderer.MUST_RENDER = true;
 }
 
 function onFogFarChanged(){
-	OEV.scene.fog.far = ( ( ( GLOBE.radius / 50 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
-	if( OEV.scene.fog.far < OEV.scene.fog.near ){
-		OEV.scene.fog.near = OEV.scene.fog.far;
+	Renderer.scene.fog.far = ( ( ( GLOBE.radius / 50 ) * GLOBE.globalScale ) * ( this.value / 100 ) );
+	if( Renderer.scene.fog.far < Renderer.scene.fog.near ){
+		Renderer.scene.fog.near = Renderer.scene.fog.far;
 	}
-	OEV.MUST_RENDER = true;
+	Renderer.MUST_RENDER = true;
 }
 
 function changeTilesLayer(){

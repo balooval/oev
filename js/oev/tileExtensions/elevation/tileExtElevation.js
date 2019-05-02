@@ -1,3 +1,4 @@
+import Renderer from '../../renderer.js';
 import * as TileExtension from '../tileExtension.js';
 import GLOBE from '../../globe.js';
 import ElevationDatas from './globeElevation.js';
@@ -113,7 +114,7 @@ export class Elevation {
 		this.tile.meshe.geometry.uvsNeedUpdate = true;
 		this.tile.meshe.geometry.computeFaceNormals();
 		this.tile.meshe.geometry.computeVertexNormals();
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	} 
 	
 	dispose() {
@@ -121,7 +122,7 @@ export class Elevation {
 		this.dataLoaded = false;
 		this.dataLoading = false;
 		this.elevationBuffer = null;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 	
 }

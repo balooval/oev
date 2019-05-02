@@ -66,7 +66,7 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 		if (meshNodes !== undefined) {
 			Oev.Globe.removeMeshe(meshNodes);
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}
 	
 	ext.onCachedDatasLoaded = function(_cachedNodesList) {
@@ -109,7 +109,7 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 			meshNodes.receiveShadow = true;
 			Oev.Globe.addMeshe(meshNodes);
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 	}, 
 	
 	ext.parseDatas = function(_nodesList) {
@@ -134,7 +134,7 @@ Oev.Tile.Extension.Overpass = function(_tile) {
 			meshNodes.receiveShadow = true;
 			Oev.Globe.addMeshe(meshNodes);
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		*/
 	}
 	

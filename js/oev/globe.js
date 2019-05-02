@@ -1,3 +1,4 @@
+import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
@@ -132,7 +133,6 @@ const api = {
 				}
 			}
 		}
-		api.matWayPoints = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false});
 	}, 
 
 	isCoordOnGround : function(_lon, _lat, _marge = 0) {
@@ -254,11 +254,11 @@ const api = {
 		if (_mode == "PLANE") {
 			SKY.activSky(true);
 			api.coordToXYZ = api.coordToXYZPlane;
-			OEV.camera.up.set(0, 0, 1);
+			Renderer.camera.up.set(0, 0, 1);
 		} else if (_mode == "SPHERE") {
 			SKY.activSky(false);
 			api.coordToXYZ = api.coordToXYZSphere;
-			OEV.camera.up.set(0, 1, 0);
+			Renderer.camera.up.set(0, 1, 0);
 		}
 		api.projection = _mode;
 		api.tilesBase.forEach(t => t.updateVertex());
@@ -332,13 +332,13 @@ const api = {
 				api.curLOD = api.LOD_STREET;
 				api.updateLOD();
 				api.setProjection("PLANE");
-				OEV.camera.far = api.radius * api.globalScale;
-				OEV.camera.near = (api.radius * api.globalScale) / 10000000;
-				OEV.camera.updateProjectionMatrix();
+				Renderer.camera.far = api.radius * api.globalScale;
+				Renderer.camera.near = (api.radius * api.globalScale) / 10000000;
+				Renderer.camera.updateProjectionMatrix();
 				SKY.initSunPos();
-				if (OEV.scene.fog) {
-					OEV.scene.fog.near = api.radius * (0.01 * api.globalScale);
-					OEV.scene.fog.far = api.radius * (0.9 * api.globalScale);
+				if (Renderer.scene.fog) {
+					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
+					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
 				}
 				SKY.updateCloudsPos();
 				api.evt.fireEvent("LOD_CHANGED");
@@ -352,13 +352,13 @@ const api = {
 				api.curLOD = api.LOD_CITY;
 				api.updateLOD();
 				api.setProjection("PLANE");
-				OEV.camera.far = api.radius * api.globalScale;
-				OEV.camera.near = (api.radius * api.globalScale ) / 1000000;
-				OEV.camera.updateProjectionMatrix();
+				Renderer.camera.far = api.radius * api.globalScale;
+				Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
+				Renderer.camera.updateProjectionMatrix();
 				SKY.initSunPos();
-				if (OEV.scene.fog) {
-					OEV.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
-					OEV.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
+				if (Renderer.scene.fog) {
+					Renderer.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
+					Renderer.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
 				}
 				SKY.updateCloudsPos();
 				api.evt.fireEvent('LOD_CHANGED');
@@ -372,13 +372,13 @@ const api = {
 				api.curLOD = api.LOD_PLANET;
 				api.setProjection("SPHERE");
 				api.updateLOD();
-				OEV.camera.far = (api.radius * 2 ) * api.globalScale;
-				OEV.camera.near = (api.radius * api.globalScale) / 1000000;
-				OEV.camera.updateProjectionMatrix();
+				Renderer.camera.far = (api.radius * 2 ) * api.globalScale;
+				Renderer.camera.near = (api.radius * api.globalScale) / 1000000;
+				Renderer.camera.updateProjectionMatrix();
 				SKY.initSunPos();
-				if (OEV.scene.fog) {
-					OEV.scene.fog.near = api.radius * (0.01 * api.globalScale);
-					OEV.scene.fog.far = api.radius * (0.9 * api.globalScale);
+				if (Renderer.scene.fog) {
+					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
+					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
 				}
 				SKY.updateCloudsPos();
 				api.evt.fireEvent("LOD_CHANGED");

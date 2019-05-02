@@ -1,4 +1,4 @@
-'use strict';
+import Renderer from './renderer.js';
 
 Oev.Tile.Surface = function (_tile, _tileX, _tileY, _zoom) {
 	this.tile = _tile;
@@ -168,7 +168,7 @@ Oev.Tile.Surface.prototype = {
 				matTwoSide = OEV.earth.testForestMat;
 			}
 			this.partMeshes[type] = new THREE.Points(partGeom[type], mat);
-			OEV.scene.add(this.partMeshes[type]);
+			Renderer.scene.add(this.partMeshes[type]);
 			
 			this.twoSideGeos[type].computeFaceNormals();
 			this.twoSideGeos[type].computeVertexNormals();
@@ -176,14 +176,14 @@ Oev.Tile.Surface.prototype = {
 			this.twoSideMeshes[type] = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeos[type]), matTwoSide);
 			this.twoSideMeshes[type].receiveShadow = true;
 			this.twoSideMeshes[type].castShadow = true;
-			OEV.scene.add(this.twoSideMeshes[type]);
+			Renderer.scene.add(this.twoSideMeshes[type]);
 		}
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		/*
 		this.twoSideMesh = new THREE.Mesh(new THREE.BufferGeometry().fromGeometry(this.twoSideGeo), OEV.earth.testForestMat);
 		this.twoSideMesh.receiveShadow = true;
 		this.twoSideMesh.castShadow = true;
-		OEV.scene.add(this.twoSideMesh);
+		Renderer.scene.add(this.twoSideMesh);
 		*/
 	}, 
 	
@@ -250,10 +250,10 @@ Oev.Tile.Surface.prototype = {
 				for( var type in this.partMeshes ){
 					if( !this.partMeshes.hasOwnProperty( type ) ) continue;
 					if( this.partMeshes[type] != undefined ){
-						OEV.scene.remove( this.partMeshes[type] );
+						Renderer.scene.remove( this.partMeshes[type] );
 					}
 					if( this.twoSideMeshes != undefined ){
-						OEV.scene.remove(this.twoSideMeshes[type]);
+						Renderer.scene.remove(this.twoSideMeshes[type]);
 					}
 				}
 			}
@@ -263,10 +263,10 @@ Oev.Tile.Surface.prototype = {
 				for( var type in this.partMeshes ){
 					if( !this.partMeshes.hasOwnProperty( type ) ) continue;
 					if( this.partMeshes[type] != undefined ){
-						OEV.scene.add( this.partMeshes[type] );
+						Renderer.scene.add( this.partMeshes[type] );
 					}
 					if( this.twoSideMeshes != undefined ){
-						OEV.scene.remove(this.twoSideMeshes[type]);
+						Renderer.scene.remove(this.twoSideMeshes[type]);
 					}
 				}
 			}else{
@@ -284,7 +284,7 @@ Oev.Tile.Surface.prototype = {
 			if( !this.partMeshes.hasOwnProperty( type ) ) continue;
 			if( this.partMeshes[type] != undefined ){
 				this.partMeshes[type].geometry.dispose();
-				OEV.scene.remove( this.partMeshes[type] );
+				Renderer.scene.remove( this.partMeshes[type] );
 			}
 			if( this.twoSideMeshes[type] != undefined ){
 				this.twoSideMeshes[type].geometry.dispose();

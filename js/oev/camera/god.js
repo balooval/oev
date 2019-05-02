@@ -1,3 +1,4 @@
+import Renderer from '../renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../utils/event.js';
 import * as INPUT from '../input/input.js';
@@ -44,11 +45,11 @@ export class CamCtrlGod {
 	onAppStart() {
 		this.camera.up.set(0, -1, 0);
 		this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-		OEV.scene.add(this.pointer);
+		Renderer.scene.add(this.pointer);
 		this.clicPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0x0000ff}));
-		OEV.scene.add(this.clicPointer);
+		Renderer.scene.add(this.clicPointer);
 		this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
-		OEV.scene.add(this.debugPointer);
+		Renderer.scene.add(this.debugPointer);
 		if (location.hash != '') {
 			var urlParamsLoc = location.hash.substr(location.hash.search('=') + 1).split('/');
 			this.zoomCur = parseFloat(urlParamsLoc[0]);
@@ -197,7 +198,7 @@ export class CamCtrlGod {
 		this.debugPointer.scale.x = wpScale;
 		this.debugPointer.scale.y = wpScale;
 		this.debugPointer.scale.z = wpScale;
-		OEV.MUST_RENDER = true;
+		Renderer.MUST_RENDER = true;
 		this.evt.fireEvent('CAM_UPDATED');
 		SKY.updateCameraLookat(posLookat);
 		SKY.globalScale = this.globe.globalScale;

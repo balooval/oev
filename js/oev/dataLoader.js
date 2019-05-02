@@ -6,7 +6,6 @@ const DataLoader = {};
 const registeredLoaders = {};
 
 export function registerLoader(_type, _class) {
-	console.log('registerLoader', _type);
 	registeredLoaders[_type] = _class;
 }
 
