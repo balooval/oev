@@ -1,5 +1,4 @@
 import Evt from './event.js';
-import DatasMng from './datasMng.js';
 import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
@@ -24,8 +23,6 @@ const api = {
 	LOD_STREET : 19, 
 	curLOD : 0, 
 	tilesDetailsMarge : 2, 
-	loaderTile2D : null, 
-	loaderEle : null, 
 	coordDetails : new THREE.Vector2( 0, 0 ), 
 	tileExtensions : {}, 
 	radius : 10000, 
@@ -37,12 +34,10 @@ const api = {
 	globalScale : 1, 
 	providersLoadManager : null, 
 	nodesLoadManager : null, 
-	tilesBuildingsMng : null,
 	tilesWeatherMng : null,
 	tilesLandusesMng : null,
 	vineyardMat : undefined, 
 	forestMat : undefined, 
-	loaderBuilding : null, 
 	loaderNormal : null, 
 	loaderPlane : null, 
 	meshe : null, 
@@ -67,26 +62,12 @@ const api = {
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
 		DataLoader.Params.Elevation.definition = api.tilesDefinition;
-		api.loaderTile2D = new DataLoader.Proxy('TILE2D');
-		
-		api.loaderBuilding = new DataLoader.Proxy('BUILDINGS');
 		api.loaderNormal = new DataLoader.Proxy('NORMAL');
 		api.loaderPlane = new DataLoader.Proxy('PLANE');
 		api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
-		
-		// api.tileExtensions['NORMAL'] = Oev.Tile.Extension.Normal;
-		// api.tileExtensions['PLANE'] = Oev.Tile.Extension.Planes;
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
-		// api.tileExtensions['OVERPASS'] = Oev.Tile.Extension.Overpass;
-		// api.tileExtensions['LANDUSE'] = Oev.Tile.Extension.Landuse;
 		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
-		// api.tileExtensions['LIFE'] = Oev.Tile.Extension.Life;
-		// api.tileExtensions['DUMMY'] = Oev.Tile.Extension.Dummy;
-		
-		api.setProjection( "PLANE" );
-		api.tilesBuildingsMng = new DatasMng( "BUILDINGS" );
-		api.tilesWeatherMng = new DatasMng( "WEATHER" );
-		api.tilesLandusesMng = new DatasMng( "SURFACE" );
+		api.setProjection('PLANE');
 		api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
 		api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
 		api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
@@ -214,16 +195,8 @@ const api = {
 		api.meshe.remove(_meshe);
 	}, 
 
-	updateTilesModelProvider : function( _added, _name ) {
-		api.tilesBase.forEach(t => t.updateDatasProviders(_added, _name));
-	}, 
-
 	setTilesProvider : function( _provider ) {
-		if (api.tilesProvider != _provider) {
-			api.loaderTile2D.clear();
-			api.tilesBase.forEach(t => t.reloadTexture());
-		}
-		api.tilesProvider = _provider;
+		
 	}, 
 
 	activLanduse : function(_state) {

@@ -1,6 +1,7 @@
 import Evt from './event.js';
 import * as GEO from './geo.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
+import * as MapLoader from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
@@ -204,7 +205,7 @@ export class Basic {
 		GLOBE.removeMeshe(this.meshe);
 		if (!this.textureLoaded) {
 			this.textureLoading = false;
-			GLOBE.loaderTile2D.abort({
+			MapLoader.loader.abort({
 				z : this.zoom, 
 				x : this.tileX, 
 				y : this.tileY
@@ -309,7 +310,7 @@ export class Basic {
 		}
 		if (this.textureLoading) return false;
 		this.textureLoading = true;
-		GLOBE.loaderTile2D.getData(
+		MapLoader.loader.getData(
 			{
 				z : this.zoom, 
 				x : this.tileX, 
