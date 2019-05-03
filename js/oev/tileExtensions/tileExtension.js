@@ -105,5 +105,5 @@ export class DefaultExt {
 
 Params.actives['ACTIV_ELEVATION'] = true;
 
-export {Elevation} from './elevation/tileExtElevation.js';
-export * from './building/tileExtBuilding.js';
+export {Elevation} from './elevation/extension.js';
+export * from './building/extension.js';

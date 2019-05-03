@@ -283,14 +283,6 @@ export class Basic {
 		return true;
 	}
 
-	reloadTexture() {
-		this.textureLoaded = false;
-		this.textureLoading = false;
-		this.remoteTex = undefined;
-		this.childTiles.forEach(t => t.reloadTexture());
-		this.loadImage();
-	}
-
 	setTexture(_texture) {
 		this.textureLoaded = true;
 		this.textureLoading = false;
