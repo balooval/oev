@@ -8,28 +8,6 @@ let elmtCoord;
 let elmtPlugins;
 export let dragSun = false;
 
-function onMouseDownLeft() {
-	var coordOnGround = OEV.checkMouseWorldPos();
-	if (coordOnGround === undefined){
-		dragSun = true;
-	}
-}
-function onMouseUpLeft() {
-	dragSun = false;
-}
-
-export function setCamera(_camCtrl) {
-	_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
-}
-
-export function showUICoords(){
-	elmtCoord.innerHTML = "Lon : " + (Math.round(OEV.camCtrl.coordLookat.x * 1000) / 1000) + "<br>Lat : " + (Math.round(OEV.camCtrl.coordLookat.y * 1000) / 1000) + "<br>Elevation : " + Math.round(OEV.camCtrl.coordLookat.z);
-}
-
-function onCamRotate(_evt) {
-	elmtCamHeading.style.transform = "rotate("+(180 + (180 * _evt / Math.PI))+"deg)";
-}
-
 export function init() {
 	TilesExtension.init();
 	document.getElementById('cfg_sun_time').addEventListener('input', function() {
@@ -47,13 +25,12 @@ export function init() {
 	OEV.evt.addEventListener('APP_INIT', null, onAppInit);
 }
 
-function onAppInit() {
-	OEV.evt.removeEventListener('APP_INIT', null, onAppInit);
-	Globe.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
+export function setCamera(_camCtrl) {
+	_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
 }
 
-function onCurTileChanged(_evt) {
-	elmtPlugins.innerText = 'Z : ' + _evt.z + ', X : ' + _evt.x + ', Y : ' + _evt.y;
+export function showUICoords(_lon, _lat, _ele){
+	elmtCoord.innerHTML = 'Lon : ' + (Math.round(_lon * 1000) / 1000) + '<br>Lat : ' + (Math.round(_lat * 1000) / 1000) + '<br>Elevation : ' + Math.round(_ele);
 }
 
 export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {
@@ -86,15 +63,39 @@ export function updateWaypointsList( _waysPts ){
 		.forEach((w, i) => {
 			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
 	});
-
 }
 
+function onCamRotate(_evt) {
+	elmtCamHeading.style.transform = "rotate("+(180 + (180 * _evt / Math.PI))+"deg)";
+}
+
+
+function onAppInit() {
+	OEV.evt.removeEventListener('APP_INIT', null, onAppInit);
+	Globe.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
+}
+
+function onCurTileChanged(_evt) {
+	elmtPlugins.innerText = 'Z : ' + _evt.z + ', X : ' + _evt.x + ', Y : ' + _evt.y;
+}
+
+function onMouseDownLeft() {
+	var coordOnGround = OEV.checkMouseWorldPos();
+	if (coordOnGround === undefined){
+		dragSun = true;
+	}
+}
+function onMouseUpLeft() {
+	dragSun = false;
+}
+
+
 const TilesExtension = (function(){
-	'use strict';
 	var api = {
 		
 		init : function() {
 			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+			TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivated);
 		}, 
 		
 		onAppStart : function() {
@@ -116,10 +117,18 @@ const TilesExtension = (function(){
 		
 	};
 	
+	function onExtensionActivated(_key) {
+		console.log('onExtensionActivated', _key);
+		// const elmt = document.getElementById('cfg_load_' + _key);
+		// console.log('elmt', elmt);
+		// elmt.checked = true;
+	}
+
 	function addExtensionsSwitchs() {
 		var btnExtensions = '';
 		for (var key in Globe.tileExtensions) {
-			btnExtensions += '<input id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
+			const checked = TileExtension.Params.activated.includes(key) ? 'checked' : '';
+			btnExtensions += '<input ' + checked + ' id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
 		}
 		document.getElementById('toolsContent_datasToLoad').innerHTML += btnExtensions;
 	}

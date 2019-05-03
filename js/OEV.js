@@ -129,7 +129,7 @@ const OpenEarthViewer = (function() {
 
 	api.render = function() {
 		if (Renderer.MUST_RENDER) {
-			UI.showUICoords();
+			UI.showUICoords(api.camCtrl.coordLookat.x, api.camCtrl.coordLookat.y, api.camCtrl.coordLookat.y);
 		}
 		Renderer.render();
 		api.camCtrl.update();

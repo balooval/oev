@@ -72,6 +72,7 @@ export class Proxy {
 	}
 	
 	onDataLoaded(_data, _params) {
+		OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
 		if (_data === null) {
 			console.warn('Error loading ressource');
 			return false;
@@ -135,7 +136,6 @@ export class Proxy {
 		if (!freeLoader) return false;
 		const currentLoadingParams = this._datasWaiting.shift();
 		this._datasLoading.push(currentLoadingParams);
-		OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
 		freeLoader.load(currentLoadingParams);
 	}
 	
