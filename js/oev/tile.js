@@ -30,7 +30,6 @@ export class Basic {
 		this.tileY = _tileY;
 		this.zoom = _zoom;
 		this.childTiles = [];
-		this.textureLoading = false;
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
 		this.meshe = undefined;
@@ -179,7 +178,6 @@ export class Basic {
 		this.meshe.receiveShadow = true;
 		let parentTexture = this.nearestTextures();
 		this.applyTexture(parentTexture);
-		this.loadImage();
 		this.isReady = true;
 		this.evt.fireEvent('TILE_READY');
 	}
@@ -196,7 +194,6 @@ export class Basic {
 		if (this.onStage) return false;
 		this.onStage = true;
 		GLOBE.addMeshe(this.meshe);
-		this.loadImage();
 		this.evt.fireEvent('SHOW');
 	}
 	
@@ -205,7 +202,6 @@ export class Basic {
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
 		if (!this.textureLoaded) {
-			this.textureLoading = false;
 			MapLoader.loader.abort({
 				z : this.zoom, 
 				x : this.tileX, 
@@ -285,7 +281,6 @@ export class Basic {
 
 	setTexture(_texture) {
 		this.textureLoaded = true;
-		this.textureLoading = false;
 		this.remoteTex = _texture;
 		this.applyTexture({
 			map : this.remoteTex, 
@@ -294,27 +289,6 @@ export class Basic {
 			offsetY : 0, 
 		});
 		Renderer.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
-	}
-
-	loadImage() {
-		if(this.textureLoaded) {
-			this.setTexture(this.remoteTex);
-			return true;
-		}
-		if (this.textureLoading) return false;
-		this.textureLoading = true;
-		MapLoader.loader.getData(
-			{
-				z : this.zoom, 
-				x : this.tileX, 
-				y : this.tileY, 
-				priority : this.distToCam
-			}, 
-			_texture => {
-				this.setTexture(_texture);
-			}
-		);
-		return false;
 	}
 
 	dispose() {
@@ -337,35 +311,3 @@ export class Basic {
 		this.evt.fireEvent('DISPOSE');
 	}
 }
-	
-
-export const TileProcessQueue = (function(){
-	var waitingsObj = [];
-	
-	var api = {
-		addWaiting : function(_caller) {
-			waitingsObj.push(_caller);
-			OEV.addObjToUpdate(api);
-			Oev.Ui.setQueueNb(waitingsObj.length);
-		}, 
-		
-		processNext : function() {
-			if (waitingsObj.length == 0) {
-				OEV.removeObjToUpdate(api);
-				Oev.Ui.setQueueNb('0');
-				return null;
-			}
-			return waitingsObj.shift();
-		}, 
-		
-		update : function() {
-			var caller = api.processNext();
-			if (caller === null) {
-				return false;
-			}
-			caller.construct();
-		}, 
-	};
-	
-	return api;
-})();

@@ -66,6 +66,7 @@ const api = {
 		api.loaderNormal = new DataLoader.Proxy('NORMAL');
 		api.loaderPlane = new DataLoader.Proxy('PLANE');
 		api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
+		api.tileExtensions['TILE2D'] = TileExtension.MapExtension;
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
 		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
 		api.setProjection('PLANE');
@@ -90,6 +91,7 @@ const api = {
 		api.grassMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xe0e0e0, side: THREE.DoubleSide});
 		api.grassMat.alphaTest = 0.9;
 		// api.grassMat.opacity = 0.99;
+		TileExtension.activateExtension('TILE2D');
 		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 	}, 
 	
@@ -193,11 +195,7 @@ const api = {
 
 	removeMeshe : function(_meshe) {
 		api.meshe.remove(_meshe);
-	}, 
-
-	setTilesProvider : function( _provider ) {
-		
-	}, 
+	},  
 
 	activLanduse : function(_state) {
 		if (_state && !api.loadLanduse) {
