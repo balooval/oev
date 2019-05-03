@@ -1,7 +1,6 @@
 import Evt from './oev/utils/event.js';
 import Renderer from './oev/renderer.js';
-import * as UI from './oev/ui.js';
-import * as OLD_UI from './UI.js';
+import UI from './oev/ui.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
 import * as INPUT from './oev/input/input.js';
@@ -30,7 +29,7 @@ const OpenEarthViewer = (function() {
 	}
 
 	api.init = function(_htmlContainer) {
-		UI.init();
+		Renderer.init(_htmlContainer);
 		NET_TEXTURES.init('assets/textures');
 		NET_MODELS.init();
 		INPUT.init();
@@ -38,7 +37,6 @@ const OpenEarthViewer = (function() {
 		Navigation.init();
 		api.clock = new THREE.Clock();
 		document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
-		Renderer.init(_htmlContainer);
 		api.earth = GLOBE;
 		api.earth.init();
 		Renderer.scene.add(api.earth.meshe);
@@ -46,13 +44,13 @@ const OpenEarthViewer = (function() {
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
 		api.camCtrl = new CamCtrl.CamCtrlGod();
+		UI.init();
 		UI.setCamera(api.camCtrl);
 		api.evt.fireEvent('APP_INIT');	
 		api.loadTextures();
 	}
 
 	api.start = function() {
-		OLD_UI.initUi();
 		const debugGeo = new THREE.SphereGeometry(api.earth.meter * 100, 16, 7); 
 		const debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
 		api.geoDebug = new THREE.Mesh(debugGeo, debugMat);

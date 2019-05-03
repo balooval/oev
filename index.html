@@ -29,9 +29,8 @@
 					<div class="toolsContent activ" id="toolsContent_navigation">
 						<div class="heading" id="camHeading" onclick="resetHeading();"></div>
 						<br>
-						<input type="button" value="Zoom -" onclick="zoomOut();" title="-">
-						<span id="zoom_level" style="display:inline-block;width:20px;overflow:hidden;">0</span>
-						<input type="button" value="Zoom +" onclick="zoomIn();" title="+">
+						<input id="btn-zoom-out" type="button" value="Zoom -">
+						<input id="btn-zoom-in" type="button" value="Zoom +">
 					</div>
 				</div>
 				
@@ -88,8 +87,7 @@
 			</div>
 		</div>
 		<div id="footer">
-			<a href="credits.html" onclick="showCredits();return false;">Credits</a> | 
-			<a id="contactLink" href="mailto:toto@toto.com">Contact</a>
+			<a href="https://github.com/balooval/oev/">Source on Github</a>
 		</div>
 
 		<script>

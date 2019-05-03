@@ -111,12 +111,20 @@ export class CamCtrlGod {
 		this.MUST_UPDATE = true;
 	}
 
+	zoomIn() {
+		this.setZoomDest(Math.ceil(this.zoomCur + 0.1), 200);
+	}
+	
+	zoomOut() {
+		this.setZoomDest(Math.floor(this.zoomCur - 0.1), 200);
+	}
+
 	zoom() {
 		const d = new Date();
 		this.setCurZoom( this.tweens.zoom.getValueAtTime( d.getTime() ) );
 	}
 
-	setCurZoom( _value ) {
+	setCurZoom(_value) {
 		this.zoomCur = _value;
 		this.globe.updateZoom(this.zoomCur);
 		const wpScale = (this.coordCam.z / this.globe.radius) * 1000;

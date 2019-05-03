@@ -1,72 +1,87 @@
 import * as INPUT from './input/input.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import Globe from './globe.js';
+import MATH from './utils/math.js';
 
 let elmtCamHeading;
-let elmtComputingQUeue;
 let elmtCoord;
 let elmtPlugins;
-export let dragSun = false;
+let htmlElmtLoadingDatas;
+let lastTimeLoadingUpdated = 0;
 
-export function init() {
-	TilesExtension.init();
-	document.getElementById('cfg_sun_time').addEventListener('input', function() {
-		Oev.Sky.setSunTime(this.value / 100);
-	});
-	document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
-		Oev.Sky.testLuminosity(this.value / 50);
-	});
-	elmtCamHeading = document.getElementById("camHeading");
-	elmtComputingQUeue = document.getElementById('computingQueue');
-	elmtCoord = document.getElementById("overlayUICoords");
-	elmtPlugins = document.getElementById("overlayPlugins");
-	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
-	INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
-	OEV.evt.addEventListener('APP_INIT', null, onAppInit);
-}
+const apiUi = {
+	dragSun : false, 
 
-export function setCamera(_camCtrl) {
-	_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
-}
+	init : function() {
+		TilesExtension.init();
+		const elmtLoading = [
+			'TILE2D', 
+			'ELE', 
+			'BUILDINGS', 
+		];
+		htmlElmtLoadingDatas = elmtLoading.map(id => document.getElementById('loading_' + id));
+		document.getElementById('cfg_sun_time').addEventListener('input', function() {
+			Oev.Sky.setSunTime(this.value / 100);
+		});
+		document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
+			Oev.Sky.testLuminosity(this.value / 50);
+		});
+		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.camCtrl.zoomIn());
+		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.camCtrl.zoomOut());
+		elmtCamHeading = document.getElementById("camHeading");
+		elmtCoord = document.getElementById("overlayUICoords");
+		elmtPlugins = document.getElementById("overlayPlugins");
+		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
+		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
+		OEV.evt.addEventListener('APP_INIT', null, onAppInit);
+	}, 
 
-export function showUICoords(_lon, _lat, _ele){
-	elmtCoord.innerHTML = 'Lon : ' + (Math.round(_lon * 1000) / 1000) + '<br>Lat : ' + (Math.round(_lat * 1000) / 1000) + '<br>Elevation : ' + Math.round(_ele);
-}
+	updateLoadingDatas : function(_type, _nb){
+		var curTime = OEV.clock.getElapsedTime();
+		if (_nb > 0 && curTime - lastTimeLoadingUpdated <= 1) return false;
+		lastTimeLoadingUpdated = curTime;
+		htmlElmtLoadingDatas.filter(e => e.id == 'loading_' + _type).forEach(e => e.innerText = _nb + ' ' + _type + ' to load');
+	}, 
+		
+	setCamera : function(_camCtrl) {
+		_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
+	}, 
 
-export function listenOnChildsClass(_parentId, _event, _childsClass, _callback) {
-	var childClass = _childsClass;
-	document.getElementById(_parentId).addEventListener(_event, function(_evt) {
-		if (_evt.target.classList.contains(childClass)) {
-			_callback(_evt);
-		}
-	}, false);
-}
+	showUICoords : function(_lon, _lat, _ele){
+		elmtCoord.innerHTML = 'Lon : ' + (Math.round(_lon * 1000) / 1000) + '<br>Lat : ' + (Math.round(_lat * 1000) / 1000) + '<br>Elevation : ' + Math.round(_ele);
+	}, 
 
-export function setQueueNb(_nb) {
-	elmtComputingQUeue.innerHTML = 'compute waiting : ' + _nb;
-}
+	listenOnChildsClass : function(_parentId, _event, _childsClass, _callback) {
+		var childClass = _childsClass;
+		document.getElementById(_parentId).addEventListener(_event, function(_evt) {
+			if (_evt.target.classList.contains(childClass)) {
+				_callback(_evt);
+			}
+		}, false);
+	}, 
 
-export function openModal( _content ){
-	document.getElementById( "modalContent" ).innerHTML = _content;
-	document.getElementById( "modalContainer" ).classList.add( "activ" );
-}
+	openModal : function( _content ){
+		document.getElementById( "modalContent" ).innerHTML = _content;
+		document.getElementById( "modalContainer" ).classList.add( "activ" );
+	}, 
 
-export function closeModal(){
-	document.getElementById( "modalContainer" ).classList.remove( "activ" );
-	document.getElementById( "modalContent" ).innerHTML = '';
-}
+	closeModal : function(){
+		document.getElementById( "modalContainer" ).classList.remove( "activ" );
+		document.getElementById( "modalContent" ).innerHTML = '';
+	}, 
 
-export function updateWaypointsList( _waysPts ){
-	document.getElementById( "waypointsInfos" ).innerHTML = "";
-	_waysPts
-		.filter(w => w.showList)
-		.forEach((w, i) => {
-			document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
-	});
-}
+	updateWaypointsList : function( _waysPts ){
+		document.getElementById( "waypointsInfos" ).innerHTML = "";
+		_waysPts
+			.filter(w => w.showList)
+			.forEach((w, i) => {
+				document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
+		});
+	}, 
+};
 
-function onCamRotate(_evt) {
-	elmtCamHeading.style.transform = "rotate("+(180 + (180 * _evt / Math.PI))+"deg)";
+function onCamRotate(_radian) {
+	elmtCamHeading.style.transform = 'rotate(' + (180 + MATH.degree(_radian)) + 'deg)';
 }
 
 
@@ -82,11 +97,11 @@ function onCurTileChanged(_evt) {
 function onMouseDownLeft() {
 	var coordOnGround = OEV.checkMouseWorldPos();
 	if (coordOnGround === undefined){
-		dragSun = true;
+		apiUi.dragSun = true;
 	}
 }
 function onMouseUpLeft() {
-	dragSun = false;
+	apiUi.dragSun = false;
 }
 
 
@@ -99,7 +114,7 @@ const TilesExtension = (function(){
 		}, 
 		
 		onAppStart : function() {
-			listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', api._onExtensionChange);
+			apiUi.listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', api._onExtensionChange);
 			addExtensionsSwitchs();
 		}, 
 		
@@ -135,3 +150,5 @@ const TilesExtension = (function(){
 	
 	return api;
 })();
+
+export {apiUi as default}

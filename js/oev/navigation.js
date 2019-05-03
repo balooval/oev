@@ -1,5 +1,5 @@
 import Renderer from './renderer.js';
-import * as UI from './ui.js';
+import UI from './ui.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import GLOBE from './globe.js';
 

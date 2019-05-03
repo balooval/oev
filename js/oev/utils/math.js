@@ -1,8 +1,12 @@
 const api = {
 
-		radians : function(_degres){
-			return Math.PI * _degres / 180;
-		}, 
+	radians : function(_degres){
+		return Math.PI * _degres / 180;
+	}, 
+
+	degree : function(radians){
+		return 180 * radians / Math.PI;
+	}, 
 		
 		angle2D : function(x1, y1, x2, y2) {
 			var dtheta,theta1,theta2;

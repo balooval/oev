@@ -1,14 +1,12 @@
-import * as OLD_UI from '../UI.js';
+import UI from './ui.js';
 
 export const Params = {};
 const DataLoader = {};
-
 const registeredLoaders = {};
 
 export function registerLoader(_type, _class) {
 	registeredLoaders[_type] = _class;
 }
-
 export class Proxy {
 	constructor(_type) {
 		this._type = _type;
@@ -72,7 +70,7 @@ export class Proxy {
 	}
 	
 	onDataLoaded(_data, _params) {
-		OLD_UI.updateLoadingDatas(this._type, this._datasWaiting.length);
+		UI.updateLoadingDatas(this._type, this._datasWaiting.length);
 		if (_data === null) {
 			console.warn('Error loading ressource');
 			return false;
