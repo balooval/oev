@@ -1,11 +1,14 @@
 import * as INPUT from './input/input.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import Globe from './globe.js';
+import SKY from './sky.js';
+import Navigation from './navigation.js';
+import * as DataLoader from './dataLoader.js';
 import MATH from './utils/math.js';
 
 let elmtCamHeading;
 let elmtCoord;
-let elmtPlugins;
+let elmtCurTile;
 let htmlElmtLoadingDatas;
 let lastTimeLoadingUpdated = 0;
 
@@ -21,26 +24,27 @@ const apiUi = {
 		];
 		htmlElmtLoadingDatas = elmtLoading.map(id => document.getElementById('loading_' + id));
 		document.getElementById('cfg_sun_time').addEventListener('input', function() {
-			Oev.Sky.setSunTime(this.value / 100);
+			SKY.setSunTime(this.value / 100);
 		});
 		document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
-			Oev.Sky.testLuminosity(this.value / 50);
+			SKY.testLuminosity(this.value / 50);
 		});
-		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.camCtrl.zoomIn());
-		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.camCtrl.zoomOut());
+		document.getElementById('btn-saveWaypoint').addEventListener('click', () => {
+			const lon = OEV.cameraCtrl.coordLookat.x;
+			const lat = OEV.cameraCtrl.coordLookat.y;
+			const zoom = OEV.cameraCtrl.zoomCur;
+			Navigation.saveWaypoint(lon, lat, zoom);
+		});
+		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.cameraCtrl.zoomIn());
+		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.cameraCtrl.zoomOut());
 		elmtCamHeading = document.getElementById("camHeading");
 		elmtCoord = document.getElementById("overlayUICoords");
-		elmtPlugins = document.getElementById("overlayPlugins");
+		elmtCurTile = document.getElementById("overlayCurtile");
 		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
 		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
+		DataLoader.evt.addEventListener('DATA_LOADED', null, updateLoadingDatas);
 		OEV.evt.addEventListener('APP_INIT', null, onAppInit);
-	}, 
-
-	updateLoadingDatas : function(_type, _nb){
-		var curTime = OEV.clock.getElapsedTime();
-		if (_nb > 0 && curTime - lastTimeLoadingUpdated <= 1) return false;
-		lastTimeLoadingUpdated = curTime;
-		htmlElmtLoadingDatas.filter(e => e.id == 'loading_' + _type).forEach(e => e.innerText = _nb + ' ' + _type + ' to load');
+		OEV.evt.addEventListener('APP_START', null, onAppStart);
 	}, 
 		
 	setCamera : function(_camCtrl) {
@@ -69,29 +73,42 @@ const apiUi = {
 		document.getElementById( "modalContainer" ).classList.remove( "activ" );
 		document.getElementById( "modalContent" ).innerHTML = '';
 	}, 
-
-	updateWaypointsList : function( _waysPts ){
-		document.getElementById( "waypointsInfos" ).innerHTML = "";
-		_waysPts
-			.filter(w => w.showList)
-			.forEach((w, i) => {
-				document.getElementById( "waypointsInfos" ).innerHTML = document.getElementById( "waypointsInfos" ).innerHTML + '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
-		});
-	}, 
 };
+
+function updateLoadingDatas(_evt){
+	var curTime = OEV.clock.getElapsedTime();
+	if (_evt.nb > 0 && curTime - lastTimeLoadingUpdated <= 1) return false;
+	lastTimeLoadingUpdated = curTime;
+	htmlElmtLoadingDatas.filter(e => e.id == 'loading_' + _evt.type).forEach(e => e.innerText = _evt.nb + ' ' + _evt.type + ' to load');
+}
 
 function onCamRotate(_radian) {
 	elmtCamHeading.style.transform = 'rotate(' + (180 + MATH.degree(_radian)) + 'deg)';
 }
-
 
 function onAppInit() {
 	OEV.evt.removeEventListener('APP_INIT', null, onAppInit);
 	Globe.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
 }
 
+function onAppStart() {
+	onWaypointsChanged(Navigation.waypoints());
+	Navigation.evt.addEventListener('WAYPOINT_ADDED', null, onWaypointsChanged);
+}
+
+function onWaypointsChanged(_waypoints) {
+	const elmt = document.getElementById('waypointsInfos');
+	let html = '';
+	_waypoints
+	.filter(w => w.showList)
+	.forEach((w, i) => {
+		html += '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
+	});
+	elmt.innerHTML = html;
+}
+
 function onCurTileChanged(_evt) {
-	elmtPlugins.innerText = 'Z : ' + _evt.z + ', X : ' + _evt.x + ', Y : ' + _evt.y;
+	elmtCurTile.innerText = 'Z : ' + _evt.z + ', X : ' + _evt.x + ', Y : ' + _evt.y;
 }
 
 function onMouseDownLeft() {
@@ -110,7 +127,6 @@ const TilesExtension = (function(){
 		
 		init : function() {
 			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
-			TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivated);
 		}, 
 		
 		onAppStart : function() {
@@ -131,13 +147,6 @@ const TilesExtension = (function(){
 		}, 
 		
 	};
-	
-	function onExtensionActivated(_key) {
-		console.log('onExtensionActivated', _key);
-		// const elmt = document.getElementById('cfg_load_' + _key);
-		// console.log('elmt', elmt);
-		// elmt.checked = true;
-	}
 
 	function addExtensionsSwitchs() {
 		var btnExtensions = '';

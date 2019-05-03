@@ -4,10 +4,10 @@ import * as DataLoader from './dataLoader.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
-import * as GEO from './utils/geo.js';
+import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
-import ElevationDatas from './tileExtensions/elevation/globeElevation.js';
+import ElevationStore from './tileExtensions/elevation/elevationStore.js';
 
 let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
@@ -28,13 +28,7 @@ const api = {
 	tileExtensions : {}, 
 	radius : 10000, 
 	meter : 1, 
-	eleActiv : false, 
-	loadLanduse : false, 
-	loadNodes : false, 
-	tilesProvider : "tileOsm", 
 	globalScale : 1, 
-	providersLoadManager : null, 
-	nodesLoadManager : null, 
 	tilesWeatherMng : null,
 	tilesLandusesMng : null,
 	vineyardMat : undefined, 
@@ -62,10 +56,9 @@ const api = {
 		api.meshe = new THREE.Mesh(new THREE.Geometry());
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
-		DataLoader.Params.Elevation.definition = api.tilesDefinition;
-		api.loaderNormal = new DataLoader.Proxy('NORMAL');
-		api.loaderPlane = new DataLoader.Proxy('PLANE');
-		api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
+		// api.loaderNormal = new DataLoader.Proxy('NORMAL');
+		// api.loaderPlane = new DataLoader.Proxy('PLANE');
+		// api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
 		api.tileExtensions['TILE2D'] = TileExtension.MapExtension;
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
 		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
@@ -117,7 +110,7 @@ const api = {
 		api.vineyardMat.needsUpdate = true;
 		api.grassMat.map = NET_TEXTURES.texture('grass');
 		api.grassMat.needsUpdate = true;
-		loadCoastline();
+		// loadCoastline();
 		api.construct();
 	}, 
 	
@@ -196,33 +189,6 @@ const api = {
 	removeMeshe : function(_meshe) {
 		api.meshe.remove(_meshe);
 	},  
-
-	activLanduse : function(_state) {
-		if (_state && !api.loadLanduse) {
-			api.loadLanduse = true;
-		}else if( !_state && api.loadLanduse ){
-			api.loadLanduse = false;
-		}
-		api.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
-	}, 
-
-	activNodes : function( _state ) {
-		if (_state && !api.loadNodes) {
-			api.loadNodes = true;
-		}else if( !_state && api.loadNodes ){
-			api.loadNodes = false;
-		}
-		api.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
-	}, 
-
-	activElevation : function( _state ) {
-		if (_state && !api.eleActiv) {
-			api.eleActiv = true;
-		} else if (!_state && api.eleActiv) {
-			api.eleActiv = false;
-		}
-		api.evt.fireEvent( "DATAS_TO_LOAD_CHANGED" );
-	}, 
 
 	update : function() {
 		
@@ -389,9 +355,9 @@ const api = {
 	}, 
 
 	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
-		let ele = ElevationDatas.get(_lon, _lat) || 0;
-		if (!_inMeters) ele *= (api.meter * eleFactor);
-		return ele;
+		let ele = ElevationStore.get(_lon, _lat) || 0;
+		if (_inMeters) return ele;
+		return ele *= (api.meter * eleFactor);
 	}, 
 	
 	getCurTile : function() {

@@ -1,5 +1,5 @@
 import Renderer from './renderer.js';
-import UI from './ui.js';
+import Evt from './utils/event.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import GLOBE from './globe.js';
 
@@ -8,7 +8,10 @@ const waypointsList = [];
 let WpStored = [];
 
 var api = {
+	evt : null, 
+
 	init : function() {
+		api.evt = new Evt();
 		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 	}, 
 	
@@ -24,17 +27,21 @@ var api = {
 			}
 		}
 	}, 
+
+	waypoints : function() {
+		return waypointsList;
+	}, 
 	
 	getWaypointById : function(_index) {
 		return waypointsList[_index];
 	}, 
 	
-	saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore) {
+	saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore = false) {
 		_name = _name || "WP " + waypointsList.length;
-		_localStore = _localStore || false;
-		const wp = new WayPoint( _lon, _lat, _zoom, _name);
+		const wp = new WayPoint(_lon, _lat, _zoom, _name);
 		waypointsList.push(wp);
-		UI.updateWaypointsList(waypointsList);
+		api.evt.fireEvent('WAYPOINT_ADDED', waypointsList)
+		// UI.updateWaypointsList(waypointsList);
 		if (_localStore) {
 			WpStored.push({name : _name, lon : _lon, lat : _lat, zoom : _zoom});
 			localStorage.setItem("waypoints", JSON.stringify(WpStored));
@@ -73,12 +80,12 @@ class WayPoint {
 		if (this.showSprite) {
 			this.material = waypointMat;
 			this.sprite = new THREE.Sprite(this.material);
-			var ele = GLOBE.getElevationAtCoords(this.lon, this.lat);
+			var ele = GLOBE.getElevationAtCoords(this.lon, this.lat, true);
 			var pos = GLOBE.coordToXYZ(_lon, _lat, ele);
 			this.sprite.position.x = pos.x;
 			this.sprite.position.y = pos.y;
 			this.sprite.position.z = pos.z;
-			var wpScale = (OEV.camCtrl.coordCam.z / GLOBE.radius) * 1000;
+			var wpScale = (OEV.cameraCtrl.coordCam.z / GLOBE.radius) * 1000;
 			this.sprite.scale.x = wpScale;
 			this.sprite.scale.y = wpScale;
 			this.sprite.scale.z = wpScale;

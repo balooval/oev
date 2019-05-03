@@ -9,11 +9,8 @@ export const Params = {
 };
 
 export function activateExtension(_extensionId) {
-	console.log('activateExtension', _extensionId);
 	Params.activated.push(_extensionId);
-	for (var i = 0; i < GLOBE.tilesBase.length; i ++) {
-		GLOBE.tilesBase[i].addExtension(_extensionId);
-	}
+	GLOBE.tilesBase.forEach(t => t.addExtension(_extensionId));
 	evt.fireEvent('TILE_EXTENSION_ACTIVATE', _extensionId);
 	evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 }
@@ -31,9 +28,7 @@ export function desactivateExtension(_extensionId) {
 		console.warn('CLEAR tilesLandusesMng');
 		GLOBE.tilesLandusesMng.clearAll();
 	}
-	for (var i = 0; i < GLOBE.tilesBase.length; i ++) {
-		GLOBE.tilesBase[i].removeExtension(_extensionId);
-	}
+	GLOBE.tilesBase.forEach(t => t.removeExtension(_extensionId));
 }
 
 export class DefaultExt {
@@ -105,6 +100,6 @@ export class DefaultExt {
 
 Params.actives['ACTIV_ELEVATION'] = true;
 
-export {Elevation} from './elevation/extension.js';
-export * from './building/extension.js';
-export * from './map/extension.js';
+export {Elevation} from './elevation/elevationExtension.js';
+export * from './building/buildingExtension.js';
+export * from './map/mapExtension.js';

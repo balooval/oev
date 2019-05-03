@@ -1,8 +1,16 @@
-import UI from './ui.js';
+import Evt from './utils/event.js';
 
-export const Params = {};
 const DataLoader = {};
 const registeredLoaders = {};
+export let evt;
+
+export function init() {
+	evt = new Evt();
+}
+
+function onRessourceLoaded(_type, _nb) {
+	evt.fireEvent('DATA_LOADED', {type:_type, nb:_nb});
+}
 
 export function registerLoader(_type, _class) {
 	registeredLoaders[_type] = _class;
@@ -26,7 +34,6 @@ export class Proxy {
 		this.clientsWaiting = [];
 
 		this._loaders = [];
-		this.serverUrl = 'https://val.openearthview.net';
 		this._initLoaders();
 
 		window.debugLoader = () => {
@@ -70,7 +77,8 @@ export class Proxy {
 	}
 	
 	onDataLoaded(_data, _params) {
-		UI.updateLoadingDatas(this._type, this._datasWaiting.length);
+		// UI.updateLoadingDatas(this._type, this._datasWaiting.length);
+		onRessourceLoaded(this._type, this._datasWaiting.length);
 		if (_data === null) {
 			console.warn('Error loading ressource');
 			return false;
@@ -178,10 +186,6 @@ DataLoader.Ajax.prototype = {
 	}, 
 }
 
-Params.Elevation = {
-	definition : 4, 
-}
-
 DataLoader.Normal = function(_callback) {
 	this.isLoading = false;
 	this.callback = _callback;
@@ -225,7 +229,7 @@ DataLoader.OverpassCache = function(_callback) {
 	this.callback = _callback;
 	this.params = {};
 	this.ajax = new DataLoader.Ajax();
-	this.serverUrl = 'https://val.openearthview.net';
+	this.serverUrl = 'https://val.openearthview.net/libs/remoteImg.php?overpassClient=1&';
 }
 
 DataLoader.OverpassCache.prototype = {
@@ -233,7 +237,7 @@ DataLoader.OverpassCache.prototype = {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.ajax.load(this.serverUrl + '/libs/remoteImg.php?overpassClient=1&type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
+		this.ajax.load(this.serverUrl + 'type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
 			function(_datas, _xhr){
 				loader.onDataLoadSuccess(_datas, _xhr);
 			}

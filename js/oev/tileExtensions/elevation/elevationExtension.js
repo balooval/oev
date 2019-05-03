@@ -1,7 +1,7 @@
 import Renderer from '../../renderer.js';
 import * as TileExtension from '../tileExtension.js';
 import GLOBE from '../../globe.js';
-import ElevationDatas from './globeElevation.js';
+import ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
 
@@ -83,7 +83,7 @@ export class Elevation {
 		const buffer = new Uint16Array(def * def);
 		const vertCoords = this.tile.getVerticesPlaneCoords();
 		vertCoords.forEach((c, i) => {
-			buffer[i] = ElevationDatas.get(c[0], c[1], this.tile.zoom);
+			buffer[i] = ElevationStore.get(c[0], c[1], this.tile.zoom);
 		});
 		return buffer;
 	}
@@ -94,7 +94,7 @@ export class Elevation {
 		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
 		this.dataLoaded = true;
 		this.elevationBuffer = _datas;
-		ElevationDatas.set(this.tile, this.elevationBuffer);
+		ElevationStore.set(this.tile, this.elevationBuffer);
 		this.applyElevationToGeometry(this.elevationBuffer);
 	}
 	
@@ -118,7 +118,7 @@ export class Elevation {
 	} 
 	
 	dispose() {
-		if (this.dataLoaded) ElevationDatas.delete(this.tile);
+		if (this.dataLoaded) ElevationStore.delete(this.tile);
 		this.dataLoaded = false;
 		this.dataLoading = false;
 		this.elevationBuffer = null;

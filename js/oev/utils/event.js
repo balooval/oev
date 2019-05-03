@@ -1,4 +1,4 @@
-export class Evt {
+class Evt {
 
 	constructor() {
 		this.events = {};
@@ -15,41 +15,31 @@ export class Evt {
 	}
 
 	removeEventListener(_evtName, _listener, _callback) {
-		var i;
 		var index = -1;
-		if (!this.events.hasOwnProperty(_evtName)){
-			return false;
-		}
-		for (i = 0; i < this.listeners[_evtName].length; i ++) {
+		if (!this.events.hasOwnProperty(_evtName)) return false;
+		for (let i = 0; i < this.listeners[_evtName].length; i ++) {
 			if (this.listeners[_evtName][i] == _listener && this.events[_evtName][i] == _callback) {
 				index = i;
 				break;
 			}
 		}
 		if (index < 0){
-			console.error('removeEventListener "' + _evtName + '" NOT found');
+			// console.error('removeEventListener "' + _evtName + '" NOT found');
 			return false;
 		}
 		this.events[_evtName].splice(index, 1);
 		this.listeners[_evtName].splice(index, 1);
 	}
 
-	fireEvent(_evtName, _args) {
-		var i;
-		if (!this.events.hasOwnProperty(_evtName)){
-			return false;
-		}
-		if (_args === undefined) {
-			_args = [];
-		}
+	fireEvent(_evtName, _args = []) {
+		if (!this.events.hasOwnProperty(_evtName)) return false;
 		var evs = this.events[_evtName].slice(0);
 		var lst = this.listeners[_evtName].slice(0);
 		var listenerNb = evs.length;
-		for (i = 0; i < listenerNb; i++) {
+		for (let i = 0; i < listenerNb; i++) {
 			evs[i].call(lst[i], _args);
 		}
 	}
 }
-
 
 export { Evt as default}

@@ -20,7 +20,7 @@ export function loadFile(_id, _url, _callback) {
 }
 
 export function loadBatch(_list, _callback) {
-	var batch = {
+	const batch = {
 		callback : _callback, 
 		list : _list, 
 	};
@@ -40,7 +40,7 @@ function loadNextBatch() {
 }
 
 function loadNextModel() {
-	var nextModel = curBatch.list.shift();
+	const nextModel = curBatch.list.shift();
 	objectLoader.load(
 		'assets/models/' + nextModel.url, 
 		object => {

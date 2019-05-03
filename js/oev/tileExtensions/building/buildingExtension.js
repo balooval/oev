@@ -1,12 +1,12 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as TileExtension from '../tileExtension.js';
-import ElevationDatas from '../elevation/globeElevation.js';
+import ElevationStore from '../elevation/elevationStore.js';
 import Evt from '../../utils/event.js';
-import * as BuildingsDatas from './globeBuildings.js';
+import * as BuildingsDatas from './buildingStore.js';
 
 const workerEvent = new Evt();
-const worker = new Worker('js/oev/tileExtensions/building/buildingMaker.js');
+const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
 worker.onmessage = onWorkerMessage;
 
 function onWorkerMessage(_res) {
@@ -150,7 +150,7 @@ export class BuildingExtension {
 		const buffer = new Float32Array(_geometry.bufferCoord);
 		for (let b = 0; b < _buildings.length; b ++) {
 			const curBuilding = _buildings[b];
-			const alt = ElevationDatas.get(curBuilding.centroid[0], curBuilding.centroid[1]);
+			const alt = ElevationStore.get(curBuilding.centroid[0], curBuilding.centroid[1]);
 			for (let v = 0; v < curBuilding[_prop]; v ++) {
 				buffer[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;

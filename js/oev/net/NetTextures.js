@@ -22,7 +22,7 @@ export function loadFile(_id, _url, _callback) {
 }
 
 export function loadBatch(_list, _callback) {
-	var batch = {
+	const batch = {
 		callback : _callback, 
 		list : _list, 
 	};
@@ -40,7 +40,7 @@ function loadNextBatch() {
 }
 
 function loadNextTexture() {
-	var nextText = curBatch.list.shift();
+	const nextText = curBatch.list.shift();
 	textureLoader.load(
 		serveurUrl + '/' + nextText.url, 
 		t => {

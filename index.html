@@ -44,7 +44,7 @@
 				<div class="toolsBox">
 					<h3 data-content="waypoints" class="activ"> Waypoints</h3>
 					<br>
-					<div class="btn" onclick="showWPDialog();" title="Save current location">Add waypoint</div>
+					<div class="btn" id="btn-saveWaypoint" title="Save current location">Add waypoint</div>
 					<div class="toolsContent activ" id="toolsContent_waypoints">
 						<div id="waypointsInfos"></div>
 					</div>
@@ -52,17 +52,9 @@
 				<div class="toolsBox">
 					<h3 data-content="tools" class="activ"> Tools</h3>
 					<div class="toolsContent activ" id="toolsContent_tools">
-						<div class="btn" id="btnPlugins" onclick="openPlugins();" title="more tools">Plugins</div>
-						<div class="btn" id="btnDof" onclick="OEV.switchDof();" title="switch depth of field">DOF</div>
-						<div class="btn" id="btnClouds" onclick="OEV.switchClouds();" title="switch clouds">Clouds</div>
-						<br>
 						Sun time <input type="range" id="cfg_sun_time" min="20" max="80" step="0.1" value="50">
 						<br>
 						Sun luminosity <input type="range" id="cfg_sun_luminosity" min="0" max="100" step="0.1" value="50">
-						<br>
-						Fog Near <input type="range" id="cfg_fog_near">
-						<br>
-						Fog Far <input type="range" id="cfg_fog_far">
 					</div>
 				</div>
 			</div>
@@ -81,7 +73,7 @@
 					<div id="loading_SURFACE"></div>
 					<div id="loading_NODES"></div>
 				</div>
-				<div class="overlayUI" id="overlayPlugins">
+				<div class="overlayUI" id="overlayCurtile">
 					
 				</div>
 			</div>

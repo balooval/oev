@@ -2,11 +2,11 @@ import Renderer from '../renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../utils/event.js';
 import * as INPUT from '../input/input.js';
-import * as GEO from '../utils/geo.js';
+import GEO from '../utils/geo.js';
 import SKY from '../sky.js';
 import MATH from '../utils/math.js';
 
-export class CamCtrlGod {
+export class CameraGod {
 	constructor() {
 		this.camera = undefined;
 		this.globe = undefined;
@@ -84,9 +84,9 @@ export class CamCtrlGod {
 		this.mouseLastPos[1] = INPUT.Mouse.curMouseY;
 	}
 
-	setDestination( _lon, _lat, _duration ) {
+	setDestination( _lon, _lat, _duration) {
 		if (_duration == undefined) {
-			var distance = GEO.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
+			const distance = GEO.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
 			_duration = Math.min(5000, distance / 10);
 		}	
 		this.tweens.lon.value = this.coordLookat.x;

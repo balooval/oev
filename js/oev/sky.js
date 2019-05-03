@@ -1,5 +1,6 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
+import GLOBE from './globe.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 import * as SHADER from './shader.js';
 
@@ -208,7 +209,7 @@ const api = {
 	onAppStart : function() {
 		destTime = api.normalizedTime;
 		if( fogActive ){
-			Renderer.scene.fog = new THREE.Fog(0xc5d3ea, OEV.earth.radius , OEV.earth.radius * 2);
+			Renderer.scene.fog = new THREE.Fog(0xc5d3ea, GLOBE.radius , GLOBE.radius * 2);
 		}
 		colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
 		lightSun = new THREE.DirectionalLight(0xffffff, 1);
@@ -224,8 +225,8 @@ const api = {
 			api.makeClouds();
 		}
 		api.makeStars();
-		OEV.earth.evt.addEventListener( 'CURTILE_CHANGED', api, api.onCurTileChanged );
-		OEV.earth.evt.addEventListener( 'LOD_CHANGED', api, api.onLodChanged );
+		GLOBE.evt.addEventListener( 'CURTILE_CHANGED', api, api.onCurTileChanged );
+		GLOBE.evt.addEventListener( 'LOD_CHANGED', api, api.onLodChanged );
 		api.onLodChanged();
 		api.setSunTime(0.5);
 	}, 
@@ -243,7 +244,7 @@ const api = {
 			api.updateSun();
 			if (destTime == api.normalizedTime) {
 				console.log( "sunTime END" );
-				OEV.earth.walkRecorder.endCmdStep( "sunTime" );
+				GLOBE.walkRecorder.endCmdStep( "sunTime" );
 			}
 		}
 		updateStarsPos();
@@ -251,7 +252,7 @@ const api = {
 	
 	
 	initSunPos : function() {
-		var sunPos = OEV.earth.coordToXYZ(0, 0, OEV.earth.radius);
+		var sunPos = GLOBE.coordToXYZ(0, 0, GLOBE.radius);
 	},
 	
 	
@@ -269,7 +270,7 @@ const api = {
 	}, 	
 
 	updateSun : function() {
-		lightSun.target = OEV.camCtrl.pointer;
+		lightSun.target = OEV.cameraCtrl.pointer;
 		sunRotation = 2.0 + (api.normalizedTime * 5);
 		var gradientValue = Math.round((Math.min(Math.max(api.normalizedTime, 0), 1)) * 127);
 		var rampColorSky = getPixel(colorsGradient, 1, gradientValue);
@@ -297,9 +298,9 @@ const api = {
 		if (api.cloudsActiv){
 			pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		}
-		OEV.earth.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-		OEV.earth.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-		OEV.earth.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+		GLOBE.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+		GLOBE.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
+		GLOBE.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		lightAmbiant.color.r = rampColorLight.r / 400;
 		lightAmbiant.color.g = rampColorLight.g / 400;
 		lightAmbiant.color.b = rampColorLight.b / 400;
@@ -313,7 +314,7 @@ const api = {
 	activSky : function(_state) {
 		if (OEV.appStarted === false) return false;
 		if (_state) {
-			createSkyNew(OEV.earth.radius * 0.7);
+			createSkyNew(GLOBE.radius * 0.7);
 			api.setSunTime(0.5);
 			updateSkyNew();
 		} else {
@@ -336,23 +337,23 @@ const api = {
 			particleSystem.position.x = api.posCenter.x;
 			particleSystem.position.y = api.posCenter.y;
 			particleSystem.position.z = api.posCenter.z;
-			particleSystem.scale.x = OEV.earth.globalScale;
-			particleSystem.scale.y = OEV.earth.globalScale;
-			particleSystem.scale.z = OEV.earth.globalScale;
-			pMaterial.size = 800 * OEV.earth.globalScale;
+			particleSystem.scale.x = GLOBE.globalScale;
+			particleSystem.scale.y = GLOBE.globalScale;
+			particleSystem.scale.z = GLOBE.globalScale;
+			pMaterial.size = 800 * GLOBE.globalScale;
 		}
 		stars.position.x = api.posCenter.x;
 		stars.position.y = api.posCenter.y;
 		stars.position.z = api.posCenter.z;
-		stars.scale.x = OEV.earth.globalScale;
-		stars.scale.y = OEV.earth.globalScale;
-		stars.scale.z = OEV.earth.globalScale;
-		starsMat.size = 30 * OEV.earth.globalScale;
+		stars.scale.x = GLOBE.globalScale;
+		stars.scale.y = GLOBE.globalScale;
+		stars.scale.z = GLOBE.globalScale;
+		starsMat.size = 30 * GLOBE.globalScale;
 	}, 
 
 	makeClouds : function() {
 		api.cloudsActiv = true;
-		var ptDist = OEV.earth.radius * 0.8;
+		var ptDist = GLOBE.radius * 0.8;
 		var particleCount = 1000;
 		var particles = new THREE.Geometry();
 		if (pMaterial == undefined){
@@ -371,18 +372,18 @@ const api = {
 		for (var p = 0; p < particleCount; p++) {
 			if( nbInGroup % ptByGroup == 0 ){
 				ptByGroup = Math.round( 50 + ( 300 * Math.random() ) );
-				distToCenter = ( OEV.earth.radius * 0.1 ) + ( ( OEV.earth.radius * 0.6 ) * Math.random() );
+				distToCenter = ( GLOBE.radius * 0.1 ) + ( ( GLOBE.radius * 0.6 ) * Math.random() );
 				groupAngX = Math.random() * 6.28;
-				groupPos = new THREE.Vector3( Math.cos( groupAngX ) * distToCenter, 0 - ( ( OEV.earth.radius * 0.8 ) - distToCenter ) * 0.2, Math.sin( groupAngX ) * distToCenter );
+				groupPos = new THREE.Vector3( Math.cos( groupAngX ) * distToCenter, 0 - ( ( GLOBE.radius * 0.8 ) - distToCenter ) * 0.2, Math.sin( groupAngX ) * distToCenter );
 				groupHeight = ( Math.random() * 0.6 ) + 0.1;
 			}
 			var ptAngX = Math.random() * 6.28;
-			var ptDist = ( Math.random() * ( OEV.earth.meter * 1000000 ) ) + ( OEV.earth.meter * 10000 );
+			var ptDist = ( Math.random() * ( GLOBE.meter * 1000000 ) ) + ( GLOBE.meter * 10000 );
 			ptPos.x = Math.cos( ptAngX ) * ( ptDist * Math.random() );
 			if( Math.random() < 0.5 ){
-				ptPos.y = ( ( OEV.earth.meter * 1000000 ) - ptDist ) * ( groupHeight * Math.random() );
+				ptPos.y = ( ( GLOBE.meter * 1000000 ) - ptDist ) * ( groupHeight * Math.random() );
 			}else{
-				ptPos.y = 0 - ( ( OEV.earth.meter * 1000000 ) - ptDist ) * ( groupHeight * Math.random() );
+				ptPos.y = 0 - ( ( GLOBE.meter * 1000000 ) - ptDist ) * ( groupHeight * Math.random() );
 			}
 			ptPos.z = Math.sin( ptAngX ) * ( ptDist * Math.random() );
 			nbInGroup ++;
@@ -404,7 +405,7 @@ const api = {
 		var starsGeom = new THREE.Geometry();
 		var angleH = 0;
 		var angleV = 0;
-		var dist = OEV.earth.radius * 0.75;
+		var dist = GLOBE.radius * 0.75;
 		var grounpNb = 20;
 		var nbStars = 0;
 		for( var i = 0; i < 200; i++ ){
@@ -433,13 +434,13 @@ const api = {
 	}, 
 	
 	loadWeather : function(_zoom, _tileX, _tileY) {
-		OEV.earth.tilesWeatherMng.getDatas(api, _zoom+'/'+_tileX+'/'+_tileY, _tileX, _tileY, _zoom, 0);
+		GLOBE.tilesWeatherMng.getDatas(api, _zoom+'/'+_tileX+'/'+_tileY, _tileX, _tileY, _zoom, 0);
 	},
 	
 	onCurTileChanged : function() {
 		if (weatherEnabled) {
-			if( OEV.earth.CUR_ZOOM >= 11 ){
-				var newTile = Oev.Geo.coordsToTile(OEV.earth.coordDetails.x, OEV.earth.coordDetails.y, 11);
+			if( GLOBE.CUR_ZOOM >= 11 ){
+				var newTile = Oev.Geo.coordsToTile(GLOBE.coordDetails.x, GLOBE.coordDetails.y, 11);
 				loadWeather(11, newTile.x, newTile.y);
 			}
 		}
@@ -447,7 +448,7 @@ const api = {
 	
 	onLodChanged : function() {
 		/*
-		if (OEV.earth.curLOD == OEV.earth.LOD_CITY) {
+		if (GLOBE.curLOD == GLOBE.LOD_CITY) {
 			snowEmiter = new RainEmiter(api);
 		}else if (snowEmiter != undefined) {
 			snowEmiter.dispose();
@@ -467,11 +468,10 @@ const api = {
 
 function updateShadow() {
 	var factor = 0.002;
-	lightSun.shadow.camera.far = OEV.earth.radius * OEV.earth.globalScale;
+	lightSun.shadow.camera.far = GLOBE.radius * GLOBE.globalScale;
 	lightSun.shadow.camera.near = 1;
 	lightSun.shadow.mapSize.width = 2048;
 	lightSun.shadow.mapSize.height = 2048;
-	
 	lightSun.shadow.camera.left = lightSun.shadow.camera.far * factor * -1;
 	lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
 	lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;

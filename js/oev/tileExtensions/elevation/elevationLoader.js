@@ -38,13 +38,13 @@ class LoaderElevation {
 		this.imageObj.onload = function() {
 			loader.onImgReady(this);
 		};
-		this.serverUrl = 'https://val.openearthview.net';
+		this.serverUrl = 'https://val.openearthview.net/api/index.php?ressource=elevation&';
 	}
 
 	load(_params) {
 		this.isLoading = true;
 		this.params = _params;
-		this.imageObj.src = this.serverUrl + '/api/index.php?ressource=elevation&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+		this.imageObj.src = this.serverUrl + 'def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
 	}
 	
 	onImgReady(_img) {
