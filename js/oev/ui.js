@@ -21,6 +21,7 @@ const apiUi = {
 			'TILE2D', 
 			'ELE', 
 			'BUILDINGS', 
+			'LANDUSE', 
 		];
 		htmlElmtLoadingDatas = elmtLoading.map(id => document.getElementById('loading_' + id));
 		document.getElementById('cfg_sun_time').addEventListener('input', function() {

@@ -22,7 +22,6 @@ function readJson(_datas) {
 	.forEach(w => {
 		const props = cleanTags(w.tags);
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
-		const verticesCoord = wayNodes.flat();
 		const centroid = getPolygonCentroid(wayNodes);
 		buildingsList.push({
 			id : w.id, 

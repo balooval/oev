@@ -24,7 +24,7 @@ export class Proxy {
 			BUILDINGS : 2, 
 			NORMAL : 1, 
 			PLANE : 1, 
-			OVERPASS_CACHE : 1, 
+			LANDUSE : 1, 
 		};
 		this._simulLoad = simulByType[this._type];
 		this._datasLoaded = {};
