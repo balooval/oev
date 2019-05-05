@@ -110,7 +110,7 @@ export class LanduseExtension {
                 const vertPos = GLOBE.coordToXYZ(
                     c[0], 
                     c[1], 
-                    elevationDatas[i] + (2 * layer)
+                    elevationDatas[i] + (1 * layer)
                 );
                 bufferVertices[curVertId + 0] = vertPos.x;
                 bufferVertices[curVertId + 1] = vertPos.y;
@@ -165,32 +165,55 @@ export class LanduseExtension {
 		geoBuffer.computeFaceNormals();
         geoBuffer.computeVertexNormals();
         geoBuffer.attributes.uv.needsUpdate = true;
-        const material = new THREE.MeshPhongMaterial({map:_texture, shininess:0.2,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
+        const material = new THREE.MeshPhongMaterial({map:_texture, shininess:0.5,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
         if (this.meshTile !== undefined) {
             GLOBE.removeMeshe(this.meshTile);
             this.meshTile.geometry.dispose();
 		}
         this.meshTile = new THREE.Mesh(geoBuffer, material);
         GLOBE.addMeshe(this.meshTile);
-		this.meshTile.castShadow = true;
+		// this.meshTile.castShadow = true;
         this.meshTile.receiveShadow = true;
     }
     
     makeTexture(_landuses) {
-        const patterns = [
-            'shell_grass_1', 
-            'shell_grass_2', 
-            'shell_grass_3', 
-            'shell_grass_4', 
-        ];
+        // const patterns = [
+        //     'shell_tree_1', 
+        //     'shell_tree_2', 
+        //     'shell_tree_3', 
+        //     'shell_tree_4', 
+        // ];
+
+        const patternsTextures = {
+            other : [
+                'shell_tree_1', 
+                'shell_tree_2', 
+                'shell_tree_3', 
+                'shell_tree_4', 
+            ], 
+            vineyard : [
+                'shell_vine_1', 
+                'shell_vine_2', 
+                'shell_vine_3', 
+                'shell_vine_5', 
+            ], 
+            scrub : [
+                'shell_scrub_1', 
+                'shell_scrub_2', 
+                'shell_vine_5', 
+                'shell_vine_5', 
+            ], 
+        };
+
         const colors = [
             'rgba(255,0,0,0.2)', 
             'rgba(0,255,0,0.2)', 
             'rgba(0,0,255,0.2)', 
             'rgba(255,0,255,0.2)', 
         ];
+        const layerNb = 4;
         const tileSize = 512;
-        const canvasWidth = tileSize * patterns.length;
+        const canvasWidth = tileSize * layerNb;
         const canvasHeight = tileSize;
         const canvas = document.createElement('canvas');
         canvas.width = canvasWidth;
@@ -204,32 +227,47 @@ export class LanduseExtension {
                 ];
             });
         });
-        let tileOffset = canvasWidth / patterns.length;
-        patterns.forEach((pattern, p) => {
-        // colors.forEach((color, p) => {
-            context.fillStyle = context.createPattern(NET_TEXTURES.texture(pattern).image, 'repeat');
-            // context.fillStyle = color;
-            landusesPixels.forEach(landuse => {
+
+        const specificTextures = ['vineyard', 'scrub'];
+        const landusesCanvasInfos = _landuses.map(landuse => {
+            let textureType = 'other';
+            if (specificTextures.includes(landuse.props.type)) textureType = landuse.props.type;
+            return {
+                texture : textureType, 
+                positions: landuse.coords.map(pos => {
+                    return [
+                        this.mapValue(pos[0], this.tile.startCoord.x, this.tile.endCoord.x) * tileSize, 
+                        this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
+                    ];
+                }), 
+            };
+        });
+
+        let tileOffset = canvasWidth / layerNb;
+        landusesCanvasInfos.forEach(infos => {
+            patternsTextures[infos.texture].forEach((texture, layer) => {
+                context.fillStyle = context.createPattern(NET_TEXTURES.texture(texture).image, 'repeat');
+                const positions = [...infos.positions];
                 context.beginPath();
-                const start = landuse.shift();
-                const test = tileOffset * p;
+                const start = positions.shift();
                 context.moveTo(
-                    Math.min((tileOffset * (p + 1)), Math.max(0, start[0]) + (tileOffset * p)), 
+                    Math.min((tileOffset * (layer + 1)), Math.max(0, start[0]) + (tileOffset * layer)), 
                     tileSize - start[1]
                 );
-                landuse.forEach(pos => {
+                positions.forEach(pos => {
                     context.lineTo(
-                        Math.min((tileOffset * (p + 1)), Math.max(0, pos[0]) + (tileOffset * p)), 
+                        Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
                         tileSize - pos[1]
                     );
                 })
                 context.fill();
             });
-            
         });
        const texture = new THREE.Texture(canvas);
        texture.wrapS = THREE.RepeatWrapping;
        texture.wrapT = THREE.RepeatWrapping;
+    //    texture.magFilter = THREE.NearestFilter;
+    //    texture.minFilter = THREE.NearestMipMapLinearFilter;
        texture.needsUpdate = true;
        return texture;
     }

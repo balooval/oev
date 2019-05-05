@@ -216,7 +216,7 @@ const api = {
 		Renderer.scene.add(lightSun);
 		lightAmbiant = new THREE.AmbientLight(0x25282d);
 		Renderer.scene.add(lightAmbiant);
-		if (OEV.shadowsEnabled) {
+		if (Renderer.shadowsEnabled) {
 			lightSun.castShadow = true;
 			updateShadow();
 		}

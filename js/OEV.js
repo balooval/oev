@@ -69,10 +69,18 @@ const APP = {
 			['sky_gradient', 'sky_gradient.png'], 
 			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
-			['shell_grass_1', 'shell_grass_1_256.png'], 
-			['shell_grass_2', 'shell_grass_2_256.png'], 
-			['shell_grass_3', 'shell_grass_3_256.png'], 
-			['shell_grass_4', 'shell_grass_4_256.png'], 
+			['shell_tree_1', 'shell_tree_1_256.png'], 
+			['shell_tree_2', 'shell_tree_2_256.png'], 
+			['shell_tree_3', 'shell_tree_3_256.png'], 
+			['shell_tree_4', 'shell_tree_4_256.png'], 
+
+			['shell_vine_1', 'shell_vine_1_32.png'], 
+			['shell_vine_2', 'shell_vine_2_32.png'], 
+			['shell_vine_3', 'shell_vine_3_32.png'], 
+			['shell_vine_5', 'shell_vine_5_32.png'], 
+
+			['shell_scrub_1', 'shell_scrub_1_256_noise.png'], 
+			['shell_scrub_2', 'shell_scrub_2_256.png'], 
 
 			['water_color', 'water_color.jpg'], 
 			['landuse_vineyard', 'landuse_vineyard.png'], 
