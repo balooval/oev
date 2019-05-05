@@ -18,6 +18,7 @@ function readJson(_datas) {
 	.filter(e => e.type == 'way')
 	.forEach(w => {
 		const props = cleanTags(w.tags);
+		if (props.type == 'residential') return;
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		const centroid = getPolygonCentroid(wayNodes);
 		landusesList.push({
