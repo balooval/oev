@@ -1,9 +1,9 @@
 import Renderer from '../../renderer.js';
 import * as LanduseLoader from './landuseLoader.js';
+import ShellTexture from './landuseShellTexture.js';
 import Evt from '../../utils/event.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import GLOBE from '../../globe.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 const loadersWaiting = [];
 
@@ -19,14 +19,6 @@ function onWorkerMessage(_res) {
 
 const workerParser = new Worker('js/oev/tileExtensions/landuse/workerLanduseJsonParser.js');
 workerParser.onmessage = onWorkerMessage;
-
-const workerBuilderEvent = new Evt();
-const workerBuilder = new Worker('js/oev/tileExtensions/landuse/workerLanduseMaker.js');
-workerBuilder.onmessage = onWorkerBuilderMessage;
-
-function onWorkerBuilderMessage(_res) {
-	workerBuilderEvent.fireEvent('LANDUSE_READY_' + _res.data.tileKey, _res.data.result);
-}
 
 export class LanduseExtension {
 	constructor(_tile) {
@@ -75,20 +67,33 @@ export class LanduseExtension {
 		this.dataLoading = false;
 		this.dataLoaded = true;
         if (!this.tile.isReady) return false;
-        parseJson(this, {json : this.json});
+
+
+        const bbox = {
+            startX : this.tile.startCoord.x, 
+            startY : this.tile.endCoord.y, 
+            endX : this.tile.endCoord.x, 
+            endY : this.tile.startCoord.y, 
+        };
+
+        parseJson(this, {
+            json : this.json,
+            bbox : bbox, 
+            definition : ShellTexture.definition(), 
+        });
     }
     
     jsonParsed(_datas) {
-        // console.log('jsonParsed', _datas);
         if (_datas.length == 0) return false;
-        const texture = this.makeTexture(_datas);
-        this.testGeomTexture(texture);
+        const texture = ShellTexture.drawTexture(_datas, ShellTexture.definition());
+        this.buildGeometry(texture);
         Renderer.MUST_RENDER = true;
     }
 
-    testGeomTexture(_texture) {
+    buildGeometry(_texture) {
         const layersNb = 16;
         let curVertId = 0;
+        const meterBetweenLayers = 1;
         const nbVerticesByLayer = (GLOBE.tilesDefinition + 1) * (GLOBE.tilesDefinition + 1);
         const verticesNb = nbVerticesByLayer * layersNb;
 		const bufferVertices = new Float32Array(verticesNb * 3);
@@ -99,7 +104,7 @@ export class LanduseExtension {
                 const vertPos = GLOBE.coordToXYZ(
                     c[0], 
                     c[1], 
-                    elevationDatas[i] + (1 * layer)
+                    elevationDatas[i] + (meterBetweenLayers * layer)
                 );
                 bufferVertices[curVertId + 0] = vertPos.x;
                 bufferVertices[curVertId + 1] = vertPos.y;
@@ -129,23 +134,25 @@ export class LanduseExtension {
             verticeOffset += nbVerticesByLayer;
         }
         const bufferUvs = new Float32Array(verticesNb * 2);
-        let stepUvX = 0.25 / GLOBE.tilesDefinition;
-        // let stepUvX = 1 / GLOBE.tilesDefinition;
-        let stepUvY = 1 / GLOBE.tilesDefinition;
+        let stepUvX = 0.5 / GLOBE.tilesDefinition;
+        let stepUvY = 0.5 / GLOBE.tilesDefinition;
         let uvIndex = 0;
         verticeOffset = 0;
         let uvOffsetX = 0;
-        let layerByTextureTile = layersNb / 4;
+        let uvOffsetY = 0;
+        let layerByTextureTile = layersNb / ShellTexture.tilesNb();
+        const layersOffset = ShellTexture.tilesOffset();
         for (let layer = 0; layer < layersNb; layer ++) {
             for (let x = 0; x < vertBySide; x ++) {
                 for (let y = 0; y < vertBySide; y ++) {
                     uvIndex = (x * vertBySide) + y + verticeOffset;
                     bufferUvs[uvIndex * 2 + 0] = (stepUvX * x) + uvOffsetX;
-                    bufferUvs[uvIndex * 2 + 1] = 1 - (stepUvY * y);
+                    bufferUvs[uvIndex * 2 + 1] = 1 - ((stepUvY * y) + uvOffsetY);
                 }
             }
             verticeOffset += nbVerticesByLayer;
-            uvOffsetX = Math.floor(layer / layerByTextureTile) * 0.25;
+            uvOffsetX = layersOffset[Math.floor(layer / layerByTextureTile)][0];
+            uvOffsetY = layersOffset[Math.floor(layer / layerByTextureTile)][1];
         }
 		const geoBuffer = new THREE.BufferGeometry();
 		geoBuffer.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
@@ -161,122 +168,9 @@ export class LanduseExtension {
 		}
         this.meshTile = new THREE.Mesh(geoBuffer, material);
         GLOBE.addMeshe(this.meshTile);
-		// this.meshTile.castShadow = true;
         this.meshTile.receiveShadow = true;
     }
     
-    makeTexture(_landuses) {
-        const patternsTextures = {
-            other : [
-                'shell_tree_1', 
-                'shell_tree_2', 
-                'shell_tree_3', 
-                'shell_tree_4', 
-            ], 
-            vineyard : [
-                'shell_vine_1', 
-                'shell_vine_2', 
-                'shell_vine_3', 
-                'shell_vine_5', 
-            ], 
-            scrub : [
-                'shell_scrub_1', 
-                'shell_scrub_2', 
-                'shell_vine_5', 
-                'shell_vine_5', 
-            ], 
-        };
-
-        const colors = [
-            'rgba(255,0,0,0.2)', 
-            'rgba(0,255,0,0.2)', 
-            'rgba(0,0,255,0.2)', 
-            'rgba(255,0,255,0.2)', 
-        ];
-        const layerNb = 4;
-        const tileSize = 512;
-        const canvasWidth = tileSize * layerNb;
-        const canvasHeight = tileSize;
-        const canvas = document.createElement('canvas');
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        const context = canvas.getContext('2d');
-
-        const specificTextures = ['vineyard', 'scrub'];
-        // TODO: virer les polygones qui ne sont pas dans ma bbox
-        const landusesCanvasInfos = _landuses.map(landuse => {
-            let textureType = 'other';
-            if (specificTextures.includes(landuse.props.type)) textureType = landuse.props.type;
-            return {
-                texture : textureType, 
-                positions: landuse.coords.map(pos => {
-                    return [
-                        this.mapValue(pos[0], this.tile.startCoord.x, this.tile.endCoord.x) * tileSize, 
-                        this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
-                    ];
-                }), 
-                holes: landuse.holes.map(hole => {
-                    return hole.map(pos => {
-                        return [
-                            this.mapValue(pos[0], this.tile.startCoord.x, this.tile.endCoord.x) * tileSize, 
-                            this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
-                        ];
-                    });
-                }), 
-            };
-        });
-
-        let tileOffset = canvasWidth / layerNb;
-        landusesCanvasInfos.forEach(infos => {
-            patternsTextures[infos.texture].forEach((texture, layer) => {
-                const positions = [...infos.positions];
-                context.beginPath();
-                const start = positions.shift();
-                context.moveTo(
-                    Math.min((tileOffset * (layer + 1)), Math.max(0, start[0]) + (tileOffset * layer)), 
-                    tileSize - start[1]
-                );
-                positions.forEach(pos => {
-                context.lineTo(
-                    Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
-                    tileSize - pos[1]
-                    );
-                });
-                context.closePath();
-                infos.holes.forEach(hole => {
-                    const positions = [...hole];
-                    const start = positions.shift();
-                    context.moveTo(
-                        Math.min((tileOffset * (layer + 1)), Math.max(0, start[0]) + (tileOffset * layer)), 
-                        tileSize - start[1]
-                    );
-                    positions.forEach(pos => {
-                        context.lineTo(
-                            Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
-                            tileSize - pos[1]
-                        );
-                    });
-                    context.closePath();
-                });
-                context.fillStyle = context.createPattern(NET_TEXTURES.texture(texture).image, 'repeat');
-                context.fill('evenodd');
-            });
-        });
-       const texture = new THREE.Texture(canvas);
-       texture.wrapS = THREE.RepeatWrapping;
-       texture.wrapT = THREE.RepeatWrapping;
-    //    texture.magFilter = THREE.NearestFilter;
-    //    texture.minFilter = THREE.NearestMipMapLinearFilter;
-       texture.needsUpdate = true;
-       return texture;
-    }
-
-    mapValue(_value, _min, _max) {
-        const length = Math.abs(_max - _min);
-        if (length == 0) return _value;
-        return (_value - _min) / length;
-    }
-	
 	onTileDispose() {
         this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);

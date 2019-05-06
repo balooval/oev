@@ -1,5 +1,6 @@
 onmessage = function(_evt) {
-	const datas = readJson(_evt.data.json);
+	let datas = readJson(_evt.data.json);
+	datas = makeTexture(datas, _evt.data.bbox, _evt.data.definition);
 	postMessage(datas);
 }
 
@@ -14,15 +15,12 @@ function readJson(_datas) {
 		];
 	});
 	const landusesList = [];
-
 	const ways = {};
 	json.elements
 	.filter(e => e.type == 'way')
 	.forEach(way => {
 		ways['WAY_' + way.id] = way;
 	});
-	// console.log('ways', ways);
-
 	const relations = {};
 	json.elements
 	.filter(e => e.type == 'relation')
@@ -41,14 +39,12 @@ function readJson(_datas) {
 		.map(innerMember => {
 			return ways['WAY_' + innerMember.ref].nodes.map(nodeId => nodesList['NODE_' + nodeId])
 		});
-		
 		const wayNodes = [];
 		const outerMembers = rel.members.filter(member => member.role == 'outer');
 		outerMembers.forEach(member => {
 			const outerWay = ways['WAY_' + member.ref];
 			wayNodes.push(...outerWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]));
 		});
-
 		const relation = {
 			id : rel.id, 
 			props : props, 
@@ -57,9 +53,6 @@ function readJson(_datas) {
 		};
 		landusesList.push(relation);
 	});
-
-
-
 	json.elements
 	.filter(e => e.type == 'way')
 	.filter(way => way.tags)
@@ -67,7 +60,6 @@ function readJson(_datas) {
 		const props = cleanTags(way.tags);
 		if (props.type == 'residential') return;
 		const wayNodes = way.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
-		const centroid = getPolygonCentroid(wayNodes);
 		landusesList.push({
 			id : way.id, 
 			props : props, 
@@ -87,22 +79,35 @@ function cleanTags(_tags) {
 	return tags;
 }
 
-function getPolygonCentroid(pts) {
-	const first = pts[0];
-	const last = pts[pts.length-1];
-	if (first[0] != last[0] || first[1] != last[1]) pts.push(first);
-	let twicearea = 0;
-	let lon = 0;
-	let lat = 0;
-	const nPts = pts.length;
-	for (let i = 0, j = nPts - 1; i < nPts; j = i++) {
-		const p1 = pts[i];
-		const p2 = pts[j];
-		const f = p1[0] * p2[1] - p2[0] * p1[1];
-		twicearea += f;          
-		lon += (p1[0] + p2[0]) * f;
-		lat += (p1[1] + p2[1]) * f;
-	}
-	f = twicearea * 3;
-	return [lon / f, lat / f];
+function makeTexture(_landuses, _bbox, _definition) {
+	const specificTextures = ['vineyard', 'scrub'];
+	// TODO: virer les polygones qui ne sont pas dans ma bbox
+	const landusesCanvasInfos = _landuses.map(landuse => {
+		let textureType = 'other';
+		if (specificTextures.includes(landuse.props.type)) textureType = landuse.props.type;
+		return {
+			texture : textureType, 
+			positions: landuse.coords.map(pos => {
+				return [
+					mapValue(pos[0], _bbox.startX, _bbox.endX) * _definition, 
+					mapValue(pos[1], _bbox.startY, _bbox.endY) * _definition
+				];
+			}), 
+			holes: landuse.holes.map(hole => {
+				return hole.map(pos => {
+					return [
+						this.mapValue(pos[0], _bbox.startX, _bbox.endX) * _definition, 
+						this.mapValue(pos[1], _bbox.startY, _bbox.endY) * _definition
+					];
+				});
+			}), 
+		};
+	});
+	return landusesCanvasInfos;
+}
+
+function mapValue(_value, _min, _max) {
+	const length = Math.abs(_max - _min);
+	if (length == 0) return _value;
+	return (_value - _min) / length;
 }
