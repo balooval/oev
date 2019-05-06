@@ -14,25 +14,74 @@ function readJson(_datas) {
 		];
 	});
 	const landusesList = [];
+
+	const ways = {};
 	json.elements
 	.filter(e => e.type == 'way')
-	.forEach(w => {
-		const props = cleanTags(w.tags);
+	.forEach(way => {
+		ways['WAY_' + way.id] = way;
+	});
+	// console.log('ways', ways);
+
+	const relations = {};
+	json.elements
+	.filter(e => e.type == 'relation')
+	.forEach(rel => {
+		relations['REL_' + rel.id] = rel.members;
+	});
+
+	json.elements
+	.filter(e => e.type == 'relation')
+	.forEach(rel => {
+		const props = cleanTags(rel.tags);
 		if (props.type == 'residential') return;
-		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
-		const centroid = getPolygonCentroid(wayNodes);
-		landusesList.push({
-			id : w.id, 
+		
+		const innersCoords = rel.members
+		.filter(member => member.role == 'inner')
+		.map(innerMember => {
+			return ways['WAY_' + innerMember.ref].nodes.map(nodeId => nodesList['NODE_' + nodeId])
+		});
+		
+		const wayNodes = [];
+		const outerMembers = rel.members.filter(member => member.role == 'outer');
+		outerMembers.forEach(member => {
+			const outerWay = ways['WAY_' + member.ref];
+			wayNodes.push(...outerWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]));
+		});
+
+		const relation = {
+			id : rel.id, 
 			props : props, 
 			coords : wayNodes, 
-			centroid : centroid, 
+			holes : innersCoords, 
+		};
+		landusesList.push(relation);
+	});
+
+
+
+	json.elements
+	.filter(e => e.type == 'way')
+	.filter(way => way.tags)
+	.forEach(way => {
+		const props = cleanTags(way.tags);
+		if (props.type == 'residential') return;
+		const wayNodes = way.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+		const centroid = getPolygonCentroid(wayNodes);
+		landusesList.push({
+			id : way.id, 
+			props : props, 
+			coords : wayNodes, 
+			holes : [], 
 		});
 	});
 	return landusesList;
 }
 
 function cleanTags(_tags) {
-	const tags = {};
+	const tags = {
+		type : 'residential', 
+	};
 	if (_tags.landuse) tags.type = _tags.landuse;
 	if (_tags.natural) tags.type = _tags.natural;
 	return tags;

@@ -34,8 +34,6 @@ export class LanduseExtension {
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.meshTile = undefined;
-        this.meshWalls = undefined;
-		this.meshRoof = undefined;
         this.json = null;
         this.tile = _tile;
         this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
@@ -86,15 +84,6 @@ export class LanduseExtension {
         const texture = this.makeTexture(_datas);
         this.testGeomTexture(texture);
         Renderer.MUST_RENDER = true;
-        /*
-        workerBuilderEvent.addEventListener('LANDUSE_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
-		workerBuilder.postMessage({
-			tileKey : this.tileKey,
-			landusesDatas : _datas,  
-			bbox : this.bbox, 
-			zoom : this.tile.zoom, 
-        });
-        */
     }
 
     testGeomTexture(_texture) {
@@ -177,13 +166,6 @@ export class LanduseExtension {
     }
     
     makeTexture(_landuses) {
-        // const patterns = [
-        //     'shell_tree_1', 
-        //     'shell_tree_2', 
-        //     'shell_tree_3', 
-        //     'shell_tree_4', 
-        // ];
-
         const patternsTextures = {
             other : [
                 'shell_tree_1', 
@@ -219,16 +201,9 @@ export class LanduseExtension {
         canvas.width = canvasWidth;
         canvas.height = canvasHeight;
         const context = canvas.getContext('2d');
-        const landusesPixels = _landuses.map(l => l.coords).map(coords => {
-            return coords.map(pos => {
-                return [
-                    this.mapValue(pos[0], this.tile.startCoord.x, this.tile.endCoord.x) * tileSize, 
-                    this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
-                ];
-            });
-        });
 
         const specificTextures = ['vineyard', 'scrub'];
+        // TODO: virer les polygones qui ne sont pas dans ma bbox
         const landusesCanvasInfos = _landuses.map(landuse => {
             let textureType = 'other';
             if (specificTextures.includes(landuse.props.type)) textureType = landuse.props.type;
@@ -240,13 +215,20 @@ export class LanduseExtension {
                         this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
                     ];
                 }), 
+                holes: landuse.holes.map(hole => {
+                    return hole.map(pos => {
+                        return [
+                            this.mapValue(pos[0], this.tile.startCoord.x, this.tile.endCoord.x) * tileSize, 
+                            this.mapValue(pos[1], this.tile.endCoord.y, this.tile.startCoord.y) * tileSize
+                        ];
+                    });
+                }), 
             };
         });
 
         let tileOffset = canvasWidth / layerNb;
         landusesCanvasInfos.forEach(infos => {
             patternsTextures[infos.texture].forEach((texture, layer) => {
-                context.fillStyle = context.createPattern(NET_TEXTURES.texture(texture).image, 'repeat');
                 const positions = [...infos.positions];
                 context.beginPath();
                 const start = positions.shift();
@@ -255,12 +237,29 @@ export class LanduseExtension {
                     tileSize - start[1]
                 );
                 positions.forEach(pos => {
-                    context.lineTo(
-                        Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
-                        tileSize - pos[1]
+                context.lineTo(
+                    Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
+                    tileSize - pos[1]
                     );
-                })
-                context.fill();
+                });
+                context.closePath();
+                infos.holes.forEach(hole => {
+                    const positions = [...hole];
+                    const start = positions.shift();
+                    context.moveTo(
+                        Math.min((tileOffset * (layer + 1)), Math.max(0, start[0]) + (tileOffset * layer)), 
+                        tileSize - start[1]
+                    );
+                    positions.forEach(pos => {
+                        context.lineTo(
+                            Math.min((tileOffset * (layer + 1)), Math.max(0, pos[0]) + (tileOffset * layer)), 
+                            tileSize - pos[1]
+                        );
+                    });
+                    context.closePath();
+                });
+                context.fillStyle = context.createPattern(NET_TEXTURES.texture(texture).image, 'repeat');
+                context.fill('evenodd');
             });
         });
        const texture = new THREE.Texture(canvas);
@@ -277,79 +276,6 @@ export class LanduseExtension {
         if (length == 0) return _value;
         return (_value - _min) / length;
     }
-
-    onWorkerFinishedBuild(_res) {
-        workerBuilderEvent.removeEventListener('LANDUSE_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
-		this.construct(_res);
-    }
-
-    construct(_datas) {
-		if (_datas.landuses.length == 0) return false;
-		if (this.meshWalls != undefined) {
-			Renderer.scene.add(this.meshWalls);
-			return false;
-		}
-		this.buildRoof(_datas);
-		let bufferVertices = this.applyElevationToVertices(_datas.landuses, _datas.geometryWalls, 'nbVert');
-		bufferVertices = this.convertCoordToPosition(bufferVertices);
-		const bufferGeometry = new THREE.BufferGeometry();
-		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_datas.geometryWalls.bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.geometryWalls.bufferFaces, 1));
-		bufferGeometry.computeFaceNormals();
-        bufferGeometry.computeVertexNormals();
-		this.meshWalls = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
-		this.meshWalls.receiveShadow = true;
-		this.meshWalls.castShadow = true;
-		Renderer.scene.add(this.meshWalls);
-		Renderer.MUST_RENDER = true;
-    }
-    
-    buildRoof(_datas) {
-		let bufferVertices = this.applyElevationToVertices(_datas.landuses, _datas.geometryRoofs, 'nbVertRoof');
-		bufferVertices = this.convertCoordToPosition(bufferVertices);
-		const bufferGeometry = new THREE.BufferGeometry();
-		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_datas.geometryRoofs.bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.geometryRoofs.bufferFaces, 1));
-		bufferGeometry.computeFaceNormals();
-        bufferGeometry.computeVertexNormals();
-		this.meshRoof = new THREE.Mesh(bufferGeometry, GLOBE.buildingsRoofMat);
-		this.meshRoof.receiveShadow = true;
-		this.meshRoof.castShadow = true;
-		Renderer.scene.add(this.meshRoof);
-	}
-
-	applyElevationToVertices(_landuses, _geometry, _prop) {
-		let bufferVertIndex = 0;
-		const buffer = new Float32Array(_geometry.bufferCoord);
-		for (let b = 0; b < _landuses.length; b ++) {
-			const curBuilding = _landuses[b];
-			const alt = ElevationStore.get(curBuilding.centroid[0], curBuilding.centroid[1]);
-			for (let v = 0; v < curBuilding[_prop]; v ++) {
-				buffer[bufferVertIndex + 2] += alt;
-				bufferVertIndex += 3;
-			}
-		}
-		return buffer;
-	}
-
-	convertCoordToPosition(_bufferCoord) {
-		const bufferPos = new Float32Array(_bufferCoord);
-		let bufferVertIndex = 0;
-		for (let c = 0; c < _bufferCoord.length; c ++) {
-			const vertPos = GLOBE.coordToXYZ(
-				_bufferCoord[bufferVertIndex + 0], 
-				_bufferCoord[bufferVertIndex + 1], 
-				_bufferCoord[bufferVertIndex + 2]
-			);
-			bufferPos[bufferVertIndex + 0] = vertPos.x;
-			bufferPos[bufferVertIndex + 1] = vertPos.y;
-			bufferPos[bufferVertIndex + 2] = vertPos.z;
-			bufferVertIndex += 3;
-		}
-		return bufferPos;
-	}
 	
 	onTileDispose() {
         this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
@@ -374,14 +300,6 @@ export class LanduseExtension {
             GLOBE.removeMeshe(this.meshTile);
 			this.meshTile.geometry.dispose();
 			this.meshTile = undefined;
-		}
-        if (this.meshWalls != undefined) {
-			Renderer.scene.remove(this.meshWalls);
-			Renderer.scene.remove(this.meshRoof);
-			this.meshWalls.geometry.dispose();
-			this.meshWalls = undefined;
-			this.meshRoof.geometry.dispose();
-			this.meshRoof = undefined;
 		}
         this.json = null;
 		this.dataLoaded = false;

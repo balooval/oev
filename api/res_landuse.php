@@ -24,6 +24,9 @@ class Api_landuse extends Api_default {
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
+
+        // $this->fetchDatas($this->params, $filePath);
+
         if (!is_file($filePath)) $this->fetchDatas($this->params, $filePath);
         return $this->loadCachedFile($filePath);
     }
@@ -69,15 +72,16 @@ class Api_landuse extends Api_default {
         $query = '(';
         foreach ($this->_tags as $tag) {
             $query .= 'way[' . $tag . '](' . $bbox . ');';
+            $query .= 'rel[' . $tag . '](' . $bbox . ');';
         }
         $query .= ');(._;>;);out;';
         $url .= $query;
+        // echo $url;
+        // exit();
         $response = @file_get_contents($url);
         // $obj = json_decode($response, true);
         // $obj['url'] = $url;
         // $response = json_encode($obj, JSON_PRETTY_PRINT);
-        // echo $response;
-        // exit();
 		file_put_contents($_filePath, $response);
     }
 
