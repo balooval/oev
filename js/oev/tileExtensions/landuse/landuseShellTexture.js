@@ -2,12 +2,29 @@ import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 const tilesNb = 4;
 const nbTileBySide = Math.sqrt(tilesNb);
-const tileDefinition = 512;
-// const tileDefinition = 1024;
+// const tileDefinition = 512;
+const tileDefinition = 1024;
 const canvasList = createCanvas(tilesNb, tileDefinition);
 
 const patternsTextures = {
     other : [
+        // 'shell_tree_1', 
+        // 'shell_tree_2', 
+        // 'shell_tree_3', 
+        // 'shell_tree_4', 
+
+        'shell_grass_1', 
+        'shell_grass_2', 
+        'shell_void', 
+        'shell_void', 
+    ], 
+    wood : [
+        'shell_tree_1', 
+        'shell_tree_2', 
+        'shell_tree_3', 
+        'shell_tree_4', 
+    ], 
+    forest : [
         'shell_tree_1', 
         'shell_tree_2', 
         'shell_tree_3', 

@@ -161,7 +161,8 @@ export class LanduseExtension {
 		geoBuffer.computeFaceNormals();
         geoBuffer.computeVertexNormals();
         geoBuffer.attributes.uv.needsUpdate = true;
-        const material = new THREE.MeshPhongMaterial({map:_texture, shininess:0.5,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
+        // const material = new THREE.MeshPhongMaterial({map:_texture, shininess:20.0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
+        const material = new THREE.MeshPhysicalMaterial({map:_texture, roughness:1,metalness:0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
         if (this.meshTile !== undefined) {
             GLOBE.removeMeshe(this.meshTile);
             this.meshTile.geometry.dispose();
@@ -192,6 +193,8 @@ export class LanduseExtension {
         if (!this.isActive) return false;
         if (this.meshTile != undefined) {
             GLOBE.removeMeshe(this.meshTile);
+			this.meshTile.material.map.dispose();
+			this.meshTile.material.dispose();
 			this.meshTile.geometry.dispose();
 			this.meshTile = undefined;
 		}

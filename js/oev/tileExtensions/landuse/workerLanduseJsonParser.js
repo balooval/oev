@@ -32,7 +32,7 @@ function readJson(_datas) {
 	.filter(e => e.type == 'relation')
 	.forEach(rel => {
 		const props = cleanTags(rel.tags);
-		if (props.type == 'residential') return;
+		if (props.type == 'unsupported') return;
 		
 		const innersCoords = rel.members
 		.filter(member => member.role == 'inner')
@@ -58,7 +58,7 @@ function readJson(_datas) {
 	.filter(way => way.tags)
 	.forEach(way => {
 		const props = cleanTags(way.tags);
-		if (props.type == 'residential') return;
+		if (props.type == 'unsupported') return;
 		const wayNodes = way.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		landusesList.push({
 			id : way.id, 
@@ -72,15 +72,68 @@ function readJson(_datas) {
 
 function cleanTags(_tags) {
 	const tags = {
-		type : 'residential', 
+		type : 'unsupported', 
 	};
 	if (_tags.landuse) tags.type = _tags.landuse;
 	if (_tags.natural) tags.type = _tags.natural;
+	const supported = [
+		'vineyard', 
+		'forest', 
+		'wood', 
+		'scrub', 
+
+		'farmyard', 
+		'farmland', 
+		'grass', 
+		'grassland', 
+		'orchard', 
+		'meadow', 
+		'greenfield', 
+		'village_green', 
+	];
+
+	const excluded = [
+		'residential', 
+		'industrial', 
+		'retail', 
+		'cemetery', 
+		'construction', 
+		'quarry', 
+		'commercial', 
+		'water', 
+		'recreation_ground', 
+		'railway', 
+		'heath', 
+		'basin', 
+		'allotments', 
+		'spring', 
+		'unsupported', 
+		'cliff', 
+		'beach', 
+		'allotments', 
+		'brownfield', 
+		'military', 
+		'tree_row', 
+		'education', 
+		'plant_nursery', 
+		'yes', 
+		'tourism', 
+		'wetland', 
+		'reservoir', 
+		'coastline', 
+		'bare_rock', 
+		'greenhouse_horticulture', 
+	];
+
+	if (!supported.includes(tags.type)) {
+		if (!excluded.includes(tags.type)) console.log('tags.type', tags.type);
+		tags.type = 'unsupported';
+	}
 	return tags;
 }
 
 function makeTexture(_landuses, _bbox, _definition) {
-	const specificTextures = ['vineyard', 'scrub'];
+	const specificTextures = ['vineyard', 'scrub', 'wood', 'forest'];
 	// TODO: virer les polygones qui ne sont pas dans ma bbox
 	const landusesCanvasInfos = _landuses.map(landuse => {
 		let textureType = 'other';

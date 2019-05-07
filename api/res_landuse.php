@@ -10,11 +10,13 @@ class Api_landuse extends Api_default {
     ];
 
     private $_tags = [
-        '"landuse"="vineyard"', 
-        '"landuse"="forest"', 
-        '"landuse"="residential"', 
-        '"natural"="wood"', 
-        '"natural"="scrub"', 
+        '"landuse"', 
+        '"natural"', 
+        // '"landuse"="vineyard"', 
+        // '"landuse"="forest"', 
+        // '"landuse"="residential"', 
+        // '"natural"="wood"', 
+        // '"natural"="scrub"', 
     ];
 
     public function __construct($_params) {
