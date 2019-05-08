@@ -17,7 +17,8 @@ export default class NormalExtension {
 	onTileReady() {
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		if (this.dataLoaded) {
-            this.tile.setTexture(this.texture);
+            this.tile.material.normalMap = this.texture;
+            this.tile.material.needsUpdate = true;
             return true;
         }
         if (this.tile.zoom < 11) return false;
@@ -58,8 +59,6 @@ export default class NormalExtension {
             x : this.tile.tileX, 
             y : this.tile.tileY
         });
-        this.tile.material.normalMap = null;
-        this.tile.material.needsUpdate = true;
     }
 	
 	dispose() {
