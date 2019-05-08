@@ -53,8 +53,9 @@ const APP = {
 		Renderer.scene.add(APP.geoDebug);
 		APP.cameraCtrl.init(Renderer.camera, GLOBE);
 		Navigation.saveWaypoint(4.231021, 43.795594, 13);
-		Navigation.saveWaypoint(3.854188, 43.958125, 13);
-		Navigation.saveWaypoint(2.383138,48.880945, 13);
+		Navigation.saveWaypoint(3.854188, 43.958125, 13, 'St Hippo');
+		Navigation.saveWaypoint(2.383138,48.880945, 13, 'Paris');
+		Navigation.saveWaypoint(5.7333, 43.1637, 15, 'St Cyr');
 		APP.appStarted = true;
 		console.log('OEV.START');
 		APP.evt.fireEvent('APP_START');
@@ -72,22 +73,35 @@ const APP = {
 			
 			['shell_void', 'shell_void_16.png'], 
 
-			['shell_tree_1', 'shell_tree_ground_1_256.png'], 
-			// ['shell_tree_1', 'shell_tree_1_256.png'], 
-			['shell_tree_2', 'shell_tree_2_256.png'], 
-			['shell_tree_3', 'shell_tree_3_256.png'], 
-			['shell_tree_4', 'shell_tree_4_256.png'], 
+			['shell_scrub_normal', 'shell_scrub_1_256_normal.png'], 
+			['shell_tree_normal', 'shell_tree_normal_256.png'], 
 
-			['shell_vine_1', 'shell_vine_1_32.png'], 
-			['shell_vine_2', 'shell_vine_2_32.png'], 
-			['shell_vine_3', 'shell_vine_3_32.png'], 
-			['shell_vine_5', 'shell_vine_5_32.png'], 
+			// ['shell_tree_1', 'shell_tree_ground_1_256.png'], 
+			// ['shell_tree_1', 'shell_tree_1_256.png'], 
+			// ['shell_tree_2', 'shell_tree_2_256.png'], 
+			// ['shell_tree_3', 'shell_tree_3_256.png'], 
+			// ['shell_tree_4', 'shell_tree_4_256.png'], 
+
+			['shell_tree_1', 'shell_tree_512_1.png'], 
+			['shell_tree_2', 'shell_tree_512_2.png'], 
+			['shell_tree_3', 'shell_tree_512_3.png'], 
+			['shell_tree_4', 'shell_tree_512_4.png'], 
+
+			['shell_vine_1', 'shell_vine_32_1.png'], 
+			['shell_vine_2', 'shell_vine_32_2.png'], 
+			// ['shell_vine_1', 'shell_vine_1_32.png'], 
+			// ['shell_vine_2', 'shell_vine_2_32.png'], 
+			// ['shell_vine_3', 'shell_vine_3_32.png'], 
+			// ['shell_vine_5', 'shell_vine_5_32.png'], 
 
 			['shell_grass_1', 'shell_grass_1_512.png'], 
 			['shell_grass_2', 'shell_grass_2_512.png'], 
 
-			['shell_scrub_1', 'shell_scrub_1_256_noise.png'], 
-			['shell_scrub_2', 'shell_scrub_2_256.png'], 
+			// ['shell_scrub_1', 'shell_scrub_1_256_noise.png'], 
+			// ['shell_scrub_2', 'shell_scrub_2_256.png'], 
+
+			['shell_scrub_1', 'shell_scrub_256_1.png'], 
+			['shell_scrub_2', 'shell_scrub_256_2.png'], 
 
 			['water_color', 'water_color.jpg'], 
 			['landuse_vineyard', 'landuse_vineyard.png'], 

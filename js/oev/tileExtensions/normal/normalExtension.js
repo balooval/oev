@@ -1,9 +1,9 @@
 import Renderer from '../../renderer.js';
-import * as MapLoader from './mapLoader.js';
+import * as NormalLoader from './normalLoader.js';
 
-export class MapExtension {
+export class NormalExtension {
 	constructor(_tile) {
-		this.id = 'TILE2D';
+		this.id = 'NORMAL';
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.texture = null;
@@ -20,9 +20,10 @@ export class MapExtension {
             this.tile.setTexture(this.texture);
             return true;
         }
+        if (this.tile.zoom != 12) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
-		MapLoader.loader.getData(
+		NormalLoader.loader.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -37,8 +38,12 @@ export class MapExtension {
         this.texture = _datas;
 		this.dataLoading = false;
 		this.dataLoaded = true;
-		if (!this.tile.isReady) return false;
-		this.tile.setTexture(this.texture);
+        if (!this.tile.isReady) return false;
+        
+        // this.tile.setTexture(this.texture);
+        this.tile.material.normalMap = this.texture;
+        this.tile.material.needsUpdate = true;
+        Renderer.MUST_RENDER = true;
 	}
 	
 	onTileDispose() {
@@ -51,7 +56,7 @@ export class MapExtension {
 	
 	hide() {
 		this.dataLoading = false;
-		MapLoader.loader.abort({
+		NormalLoader.loader.abort({
             z : this.tile.zoom, 
             x : this.tile.tileX, 
             y : this.tile.tileY
@@ -59,7 +64,7 @@ export class MapExtension {
     }
 	
 	dispose() {
-		if (this.texture) this.texture.dispose();
+        if (this.texture) this.texture.dispose();
         this.texture = null;
 		this.dataLoaded = false;
 		this.dataLoading = false;

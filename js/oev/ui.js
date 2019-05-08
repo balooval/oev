@@ -22,6 +22,7 @@ const apiUi = {
 			'ELE', 
 			'BUILDINGS', 
 			'LANDUSE', 
+			'NORMAL', 
 		];
 		htmlElmtLoadingDatas = elmtLoading.map(id => document.getElementById('loading_' + id));
 		document.getElementById('cfg_sun_time').addEventListener('input', function() {

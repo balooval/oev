@@ -26,11 +26,15 @@ class Api_landuse extends Api_default {
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
-
-        // $this->fetchDatas($this->params, $filePath);
-
-        if (!is_file($filePath)) $this->fetchDatas($this->params, $filePath);
+        if ($this->mustFetchData($filePath)) $this->fetchDatas($this->params, $filePath);
         return $this->loadCachedFile($filePath);
+    }
+
+    private function mustFetchData($_filePath) {
+        if (!is_file($_filePath)) return true;
+        $fileDate = filemtime($_filePath);
+        if ($fileDate < 1557187200) return true;
+        return false;
     }
 
     private function loadCachedFile($_filePath) {

@@ -5,14 +5,10 @@ const nbTileBySide = Math.sqrt(tilesNb);
 // const tileDefinition = 512;
 const tileDefinition = 1024;
 const canvasList = createCanvas(tilesNb, tileDefinition);
+const canvasNormals = createCanvas(1, tileDefinition).pop();
 
 const patternsTextures = {
     other : [
-        // 'shell_tree_1', 
-        // 'shell_tree_2', 
-        // 'shell_tree_3', 
-        // 'shell_tree_4', 
-
         'shell_grass_1', 
         'shell_grass_2', 
         'shell_void', 
@@ -33,15 +29,21 @@ const patternsTextures = {
     vineyard : [
         'shell_vine_1', 
         'shell_vine_2', 
-        'shell_vine_3', 
-        'shell_vine_5', 
+        'shell_void', 
+        'shell_void', 
     ], 
     scrub : [
         'shell_scrub_1', 
         'shell_scrub_2', 
-        'shell_vine_5', 
-        'shell_vine_5', 
+        'shell_void', 
+        'shell_void', 
     ], 
+};
+
+const patternsNormals = {
+    wood : 'shell_tree_normal', 
+    forest : 'shell_tree_normal',  
+    scrub : 'shell_scrub_normal', 
 };
 
 const api = {
@@ -77,9 +79,18 @@ function build(_landusesDatas) {
         const layerContext = layerCanvas.getContext('2d');
         layerContext.clearRect(0, 0, tileDefinition, tileDefinition);
         _landusesDatas.forEach(landuse => {
-            drawLanduse(landuse, layerContext, layer);
+            const pattern = patternsTextures[landuse.texture][layer]
+            drawLanduse(landuse, layerContext, pattern);
         });
     });
+
+    const normalContext = canvasNormals.getContext('2d');
+    _landusesDatas.forEach(landuse => {
+        const pattern = patternsNormals[landuse.texture]
+        if (!pattern)  return false;
+        drawLanduse(landuse, normalContext, pattern);
+    });
+
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = nbTileBySide * tileDefinition;
     finalCanvas.height = nbTileBySide * tileDefinition;
@@ -98,14 +109,21 @@ function build(_landusesDatas) {
             curCanvasId ++;
         }
     }
+    const textureNormal = new THREE.Texture(canvasNormals);
+    textureNormal.wrapS = THREE.RepeatWrapping;
+    textureNormal.wrapT = THREE.RepeatWrapping;
+    textureNormal.needsUpdate = true;
     const texture = new THREE.Texture(finalCanvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.needsUpdate = true;
-    return texture;
+    return {
+        diffuse : texture, 
+        normal : textureNormal, 
+    };
 }
 
-function drawLanduse(_landuse, _context, layer) {
+function drawLanduse(_landuse, _context, _pattern) {
     _context.beginPath();
     drawPolygon(_landuse.positions, _context);
     _context.closePath();
@@ -113,7 +131,7 @@ function drawLanduse(_landuse, _context, layer) {
         drawPolygon(hole, _context);
         _context.closePath();
     });
-    const tileTexture = NET_TEXTURES.texture(patternsTextures[_landuse.texture][layer]).image
+    const tileTexture = NET_TEXTURES.texture(_pattern).image
     _context.fillStyle = _context.createPattern(tileTexture, 'repeat');
     _context.fill('evenodd');
 }

@@ -103,4 +103,5 @@ Params.actives['ACTIV_ELEVATION'] = true;
 export {Elevation} from './elevation/elevationExtension.js';
 export * from './building/buildingExtension.js';
 export * from './map/mapExtension.js';
+export * from './normal/normalExtension.js';
 export * from './landuse/landuseExtension.js';

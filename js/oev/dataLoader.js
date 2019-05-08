@@ -45,9 +45,7 @@ export class Proxy {
 		let loader;
 		const _self = this;
 		for (let i = 0; i < this._simulLoad; i ++) {
-			if (this._type == 'NORMAL') {
-				loader = new DataLoader.Normal(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
-			} else if (this._type == 'OVERPASS_CACHE') {
+			if (this._type == 'OVERPASS_CACHE') {
 				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			} else if (registeredLoaders[this._type]) {
 				loader = new registeredLoaders[this._type](function(_datas, _params){_self.onDataLoaded(_datas, _params)});
@@ -183,44 +181,6 @@ DataLoader.Ajax.prototype = {
 		if (this.request.readyState==4){
 			this.callback(this.request.responseText, this.request);
 		}
-	}, 
-}
-
-DataLoader.Normal = function(_callback) {
-	this.isLoading = false;
-	this.callback = _callback;
-	this.params = {};
-	this.tileLoader = new THREE.TextureLoader();
-	this.serverUrl = 'https://val.openearthview.net';
-}
-
-DataLoader.Normal.prototype = {
-	load : function(_params) {
-		this.params = _params;
-		this.isLoading = true;
-		var loader = this;
-		var url = this.serverUrl + '/libs/remoteImg.php?tileNormal';
-		this.tileLoader.load(url + '=1&def=64&z='+_params.z+'&x='+_params.x+'&y='+_params.y, 
-			function(_texture){
-				loader.onDataLoadSuccess(_texture);
-			}, 
-			function(xhr) {
-			},
-			function(xhr) {
-				loader.onDataLoadError(xhr);
-			}
-		);
-	}, 
-	
-	onDataLoadSuccess : function(_data) {
-		this.isLoading = false;
-		this.callback(_data, this.params);
-	}, 
-	
-	onDataLoadError : function(_evt) {
-		this.isLoading = false;
-		console.warn( 'DataLoader.Normal error', this.params, _evt);
-		this.callback(null);
 	}, 
 }
 

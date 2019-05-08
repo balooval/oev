@@ -1,9 +1,9 @@
 import Renderer from '../../renderer.js';
 import * as LanduseLoader from './landuseLoader.js';
 import ShellTexture from './landuseShellTexture.js';
-import Evt from '../../utils/event.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import GLOBE from '../../globe.js';
+import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 const loadersWaiting = [];
 
@@ -85,12 +85,12 @@ export class LanduseExtension {
     
     jsonParsed(_datas) {
         if (_datas.length == 0) return false;
-        const texture = ShellTexture.drawTexture(_datas, ShellTexture.definition());
-        this.buildGeometry(texture);
+        const textures = ShellTexture.drawTexture(_datas, ShellTexture.definition());
+        this.buildGeometry(textures);
         Renderer.MUST_RENDER = true;
     }
 
-    buildGeometry(_texture) {
+    buildGeometry(_textures) {
         const layersNb = 16;
         let curVertId = 0;
         const meterBetweenLayers = 1;
@@ -161,8 +161,8 @@ export class LanduseExtension {
 		geoBuffer.computeFaceNormals();
         geoBuffer.computeVertexNormals();
         geoBuffer.attributes.uv.needsUpdate = true;
-        // const material = new THREE.MeshPhongMaterial({map:_texture, shininess:20.0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
-        const material = new THREE.MeshPhysicalMaterial({map:_texture, roughness:1,metalness:0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
+        // const material = new THREE.MeshPhysicalMaterial({map:_textures.diffuse, roughness:1,metalness:0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2, normalMap:_textures.normal});
+        const material = new THREE.MeshPhysicalMaterial({map:_textures.diffuse, roughness:1,metalness:0, transparent:true, alphaTest:0.2});
         if (this.meshTile !== undefined) {
             GLOBE.removeMeshe(this.meshTile);
             this.meshTile.geometry.dispose();
@@ -194,6 +194,7 @@ export class LanduseExtension {
         if (this.meshTile != undefined) {
             GLOBE.removeMeshe(this.meshTile);
 			this.meshTile.material.map.dispose();
+			// this.meshTile.material.normalMap.dispose();
 			this.meshTile.material.dispose();
 			this.meshTile.geometry.dispose();
 			this.meshTile = undefined;

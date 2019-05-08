@@ -61,8 +61,9 @@ const api = {
 		// api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
 		api.tileExtensions['TILE2D'] = TileExtension.MapExtension;
 		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
-		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
+		api.tileExtensions['NORMAL'] = TileExtension.NormalExtension;
 		api.tileExtensions['LANDUSE'] = TileExtension.LanduseExtension;
+		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
 		api.setProjection('PLANE');
 		api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
 		api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
