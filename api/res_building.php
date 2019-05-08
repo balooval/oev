@@ -11,16 +11,20 @@ class Api_building extends Api_default {
 
     public function __construct($_params) {
         $this->params = $_params;
+        parent::__construct($_params);
     }
     
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
-
-        // $this->fetchDatas($this->params, $filePath);
-
-        if (!is_file($filePath)) $this->fetchDatas($this->params, $filePath);
+        if ($this->mustFetchDatas($filePath)) $this->fetchDatas($this->params, $filePath);
         return $this->loadCachedFile($filePath);
+    }
+
+    private function mustFetchDatas($_filePath) {
+        if (!$this->useCache) return true;
+        if (!is_file($_filePath)) return true;
+        return false;
     }
 
     private function loadCachedFile($_filePath) {

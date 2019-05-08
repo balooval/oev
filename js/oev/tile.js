@@ -44,7 +44,7 @@ export class Basic {
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 		
 		// this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: NET_TEXTURES.texture("checker")});
-		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: NET_TEXTURES.texture('checker')});
+		this.material = new THREE.MeshPhysicalMaterial({color: 0x909090, roughness:1,metalness:0, map: NET_TEXTURES.texture('checker')});
 
 		this.extensions = [];
 		TileExtension.Params.activated.forEach(p => this.addExtension(p));

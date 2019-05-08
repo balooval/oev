@@ -12,13 +12,20 @@ class Api_osm extends Api_default {
 
     public function __construct($_params) {
         $this->params = $_params;
+        parent::__construct($_params);
     }
     
     public function process() {
         $filePath = $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x']]);
-        if (!is_file($this->localFilePath($filePath))) $this->loadImage($filePath);
+        if ($this->mustFetchDatas($this->localFilePath($filePath))) $this->loadImage($filePath);
         return file_get_contents($this->localFilePath($filePath));
+    }
+
+    private function mustFetchDatas($_filePath) {
+        if (!$this->useCache) return true;
+        if (!is_file($_filePath)) return true;
+        return false;
     }
 
     private function loadImage($_filePath) {

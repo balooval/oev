@@ -5,16 +5,24 @@ class Api_normal extends Api_default {
     protected $dirCache = PATH_CACHE . 'normal';
     private $dirRaw = PATH_CACHE . '../srtm_unpack';
     private $params;
+    private $differenceReduction = 100;
 
     public function __construct($_params) {
         $this->params = $_params;
+        parent::__construct($_params);
     }
     
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
-        if (!is_file($filePath)) $this->buildNormalImage($filePath);
+        if ($this->mustFetchDatas($filePath)) $this->buildNormalImage($filePath);
         return file_get_contents($filePath);
+    }
+
+    private function mustFetchDatas($_filePath) {
+        if (!$this->useCache) return true;
+        if (!is_file($_filePath)) return true;
+        return false;
     }
 
     private function buildFilePath($_param) {
@@ -26,11 +34,22 @@ class Api_normal extends Api_default {
         ]);
     }
 
+    private function colorFromSlope($_eleA, $_eleB) {
+        $difference = $_eleA - $_eleB;
+        $difference = ($difference / $this->differenceReduction) * 127;
+        $difference = max(-127, $difference);
+        $difference = min(127, $difference);
+        $color = 128 + round($difference);
+        return $color;
+    }
+
     private function buildNormalImage($_filePath) {
         $x = $this->params['x'];
         $y = $this->params['y'];
         $z = $this->params['z'];
         $multiplier = 8;
+        if ($z == 14) $multiplier = 4;
+        if ($z == 15) $multiplier = 2;
         $def = $this->params['def'] * $multiplier;
         $startC = $this->tileToCoords($x, $y, $z);
         $endC = $this->tileToCoords($x + 1, $y + 1, $z);
@@ -43,104 +62,126 @@ class Api_normal extends Api_default {
         $imageObject = imagecreatetruecolor($def, $def);
         $storedVect = [];
         $storedMaxLen = 1;
-        for ($j = 0; $j <= $def; $j ++) {
-            $storedVect[] = [];
-            for ($i = 0; $i <= $def; $i ++) {
-                $curLon = ($east + ($j * $stepLon));
-                $curLat = ($north - ($i * $stepLat));
-                $elevation = $this->extractElevation($curLat, $curLon);
-                
-                $lonXA = ($east + (($j - ($multiplier / 2)) * $stepLon));
-                $elevationXA = $this->extractElevation($curLat, $lonXA);
-                $lonXB = ($east + (($j + ($multiplier / 2)) * $stepLon));
-                $elevationXB = $this->extractElevation($curLat, $lonXB);
-                
-                $latYA = ($north - (($i - ($multiplier / 2)) * $stepLat));
-                $elevationYA = $this->extractElevation($latYA, $curLon);
-                $latYB = ($north - (($i + ($multiplier / 2)) * $stepLat));
-                $elevationYB = $this->extractElevation($latYB, $curLon);
-
-                $vecX = [
-                    1, 
-                    0, 
-                    $elevationXA - $elevationXB
+        $imgColors = [];
+        for ($x = 0; $x <= $def; $x ++) {
+            $imgColors[] = [];
+            for ($y = 0; $y <= $def; $y ++) {
+                $imgColors[$x][] = [
+                    127, 
+                    127, 
                 ];
-                $vecY = [
-                    0, 
-                    1, 
-                    $elevationYA - $elevationYB
-                ];
-                $vector = [
-                    ($vecX[1] * $vecY[2]) - ($vecX[2] * $vecY[1]), 
-                    ($vecX[2] * $vecY[0]) - ($vecX[0] * $vecY[2]), 
-                    ($vecX[0] * $vecY[1]) - ($vecX[1] * $vecY[0])
-                ];
-                $vectLen = sqrt($vector[0] * $vector[0] + $vector[1] * $vector[1]);
-                $storedMaxLen = max($storedMaxLen, $vectLen);
-                $storedVect[$j][$i] = $vector;
             }
         }
 
-        for ($x = 0; $x < $def; $x ++) {
-            for ($y = 0; $y < $def; $y ++) {
-                $vect = $storedVect[$x][$y];
-                $vect[0] /= $storedMaxLen;
-                $vect[1] /= $storedMaxLen;
-                $vect[2] /= $storedMaxLen;
-                $red = 255 - round((($vect[0] + 1) / 2) * 255);
-                $green = 255 - round((($vect[1] + 1) / 2) * 255);
-                // $blue = round((($vect[2] + 1) / 2) * 255);
-                $pixColor = imagecolorallocate($imageObject, $red, $green, 255);
+        for ($x = 0; $x <= $def; $x ++) {
+            for ($y = 0; $y <= $def; $y ++) {
+                $curLon = ($east + ($x * $stepLon));
+                $curLat = ($north - ($y * $stepLat));
+                $curStartPosition = $this->calcFileReadStartPosition($curLat, $curLon);
+                $curElevation = $this->extractElevation($curLat, $curLon);
+                $searchY = 0;
+                while (true) {
+                    $searchY ++;
+                    if ($searchY > 10) {
+                        die ('overflow');
+                        $searchElevation = $curElevation;
+                        break;
+                    }
+                    $searchLon = ($east + ($x * $stepLon));
+                    $searchLat = ($north - (($y + $searchY) * $stepLat));
+                    $searchStartPosition = $this->calcFileReadStartPosition($searchLat, $searchLon);
+                    if ($searchStartPosition == $curStartPosition) continue;
+                    $searchElevation = $this->extractElevation($searchLat, $searchLon);
+                    break;
+                }
+                $imgColors[$x][$y][1] = $this->colorFromSlope($curElevation, $searchElevation);
+            }
+        }
+
+        for ($y = 0; $y <= $def; $y ++) {
+            for ($x = 0; $x <= $def; $x ++) {
+                $curLon = ($east + ($x * $stepLon));
+                $curLat = ($north - ($y * $stepLat));
+                $curStartPosition = $this->calcFileReadStartPosition($curLat, $curLon);
+                $curElevation = $this->extractElevation($curLat, $curLon);
+                $searchX = 0;
+                while (true) {
+                    $searchX ++;
+                    if ($searchX > 10) {
+                        die ('overflow');
+                        $searchElevation = $curElevation;
+                        break;
+                    }
+                    $searchLon = ($east + (($x + $searchX) * $stepLon));
+                    $searchLat = ($north - ($y * $stepLat));
+                    $searchStartPosition = $this->calcFileReadStartPosition($searchLat, $searchLon);
+                    if ($searchStartPosition == $curStartPosition) continue;
+                    $searchElevation = $this->extractElevation($searchLat, $searchLon);
+                    break;
+                }
+                $imgColors[$x][$y][0] = $this->colorFromSlope($curElevation, $searchElevation);
+            }
+        }
+
+        foreach ($imgColors as $x => $row) {
+            foreach ($row as $y => $pixel) {
+                $pixColor = imagecolorallocate($imageObject, $pixel[0], $pixel[1], 255);
                 imagesetpixel($imageObject, $x, $y, $pixColor);
             }
         }
+
+
+        // print_r($startPositions);
+        // exit();
+
         imagepng($imageObject, $_filePath, 9);
         imagedestroy($imageObject);
     }
 
-    private function extractElevation($_lat, $_lon) {
-        set_time_limit(30);
+    private function calcFileReadStartPosition($_lat, $_lon) {
         $measPerDeg = 1201; // 3 second data
-        $hgtfile = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
-        if (!is_file( $hgtfile)) return 0;
-        $fh = fopen($hgtfile, 'rb') or die("Error opening $hgtfile. Aborting!");
-        $hgtfile = basename($hgtfile);
-        $starty = substr($hgtfile, 1, 2);
-        if (substr($hgtfile, 0, 1) == "S") {
-            $starty = -$starty;
-        }
-        $startx = +substr($hgtfile, 4, 3);
-        if (substr($hgtfile, 3, 1) == "W") {
-            $startx = -$startx;
-        }
+        $filePath = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
+        if (!is_file($filePath)) die('File ' . $filePath . ' not exist.');
+        $fileName = basename($filePath);
+        $starty = substr($fileName, 1, 2);
+        if (substr($fileName, 0, 1) == "S") $starty = -$starty;
+        $startx = +substr($fileName, 4, 3);
+        if (substr($fileName, 3, 1) == "W") $startx = -$startx;
         $colStep = 1 / $measPerDeg;
         $colDest = floor((($starty + 1) - $_lat) / $colStep);
         $rowDest = floor(($_lon - $startx) / $colStep);
-        $offset = $colDest * (2 * $measPerDeg);
-        $offset += $rowDest * 2;
-        fseek($fh, $offset);
-        $tmp = fread($fh, 2);
-        $res = unpack("n*", $tmp);
-        $res = reset($res);
-        if ($res > 30000) {
-            $offset = max(0, $offset - 2 * 50);
+        $readStartPosition = $colDest * (2 * $measPerDeg);
+        $readStartPosition += $rowDest * 2;
+        return $readStartPosition;
+    }
+
+    private function extractElevation($_lat, $_lon) {
+        $readStartPosition = $this->calcFileReadStartPosition($_lat, $_lon);
+        $filePath = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
+        $fileRessource = fopen($filePath, 'rb') or die('Error opening ' . $filePath . '. Aborting!');
+        fseek($fileRessource, $readStartPosition);
+        $binaryDatas = fread($fileRessource, 2);
+        $parsedDatas = unpack("n*", $binaryDatas);
+        $altitude = array_shift($parsedDatas);
+        if ($altitude > 30000) {
+            $readStartPosition = max(0, $readStartPosition - 2 * 50);
             for ($i = 0; $i < 100; $i ++) {
-                if ($res > 30000) {
-                    $offset += 2;
-                    fseek($fh, $offset);
-                    $tmp = fread($fh, 2);
-                    $res = unpack("n*", $tmp);
-                    $res = reset($res);
+                if ($altitude > 30000) {
+                    $readStartPosition += 2;
+                    fseek($fileRessource, $readStartPosition);
+                    $binaryDatas = fread($fileRessource, 2);
+                    $parsedDatas = unpack("n*", $binaryDatas);
+                    $altitude = array_shift($parsedDatas);
                 } else {
                     break;
                 }
             }
         }
-        fclose($fh);
-        if ($res > 10000) {
-            $res = 0;
+        fclose($fileRessource);
+        if ($altitude > 10000) {
+            $altitude = 0;
         }
-        return $res;
+        return $altitude;
     }
 
     private function getEleFileFromCoord($_lat, $_lon) {

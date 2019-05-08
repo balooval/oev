@@ -21,6 +21,7 @@ class Api_landuse extends Api_default {
 
     public function __construct($_params) {
         $this->params = $_params;
+        parent::__construct($_params);
     }
     
     public function process() {
@@ -31,6 +32,7 @@ class Api_landuse extends Api_default {
     }
 
     private function mustFetchData($_filePath) {
+        if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
         $fileDate = filemtime($_filePath);
         if ($fileDate < 1557187200) return true;
