@@ -10,6 +10,12 @@ import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
+import * as TileExtension from './oev/tileExtensions/tileExtension.js';
+import MapExtension from './oev/tileExtensions/map/mapExtension.js';
+import ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
+import BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
+import NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
+import LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -22,6 +28,7 @@ const APP = {
 	clock : null, 
 	cameraCtrl : null, 
 	waypoints : [], 
+	tileExtensions : {}, 
 
 	init : function(_htmlContainer) {
 		APP.evt = new Evt();
@@ -34,7 +41,15 @@ const APP = {
 		Navigation.init();
 		APP.clock = new THREE.Clock();
 		document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
+
+		TileExtension.register('TILE2D', MapExtension);
+		TileExtension.register('ELEVATION', ElevationExtension);
+		TileExtension.register('NORMAL', NormalExtension);
+		TileExtension.register('LANDUSE', LanduseExtension);
+		TileExtension.register('BUILDING', BuildingExtension);
+		TileExtension.activate('TILE2D');
 		GLOBE.init();
+
 		Renderer.scene.add(GLOBE.meshe);
 		APP.raycaster = new THREE.Raycaster();
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
@@ -52,12 +67,11 @@ const APP = {
 		APP.geoDebug = new THREE.Mesh(debugGeo, debugMat);
 		Renderer.scene.add(APP.geoDebug);
 		APP.cameraCtrl.init(Renderer.camera, GLOBE);
-		Navigation.saveWaypoint(4.231021, 43.795594, 13);
+		Navigation.saveWaypoint(4.231021, 43.795594, 13, 'Vaunage');
 		Navigation.saveWaypoint(3.854188, 43.958125, 13, 'St Hippo');
 		Navigation.saveWaypoint(2.383138,48.880945, 13, 'Paris');
 		Navigation.saveWaypoint(5.7333, 43.1637, 15, 'St Cyr');
 		APP.appStarted = true;
-		console.log('OEV.START');
 		APP.evt.fireEvent('APP_START');
 		render();
 	}, 
@@ -110,7 +124,6 @@ const APP = {
 		NET_TEXTURES.loadBatch(textList, APP.loadShaders);
 	}, 
 	
-	
 	loadShaders : function() {
 		SHADER.loadList([
 			'cloud', 
@@ -120,16 +133,6 @@ const APP = {
 			UI.closeModal();
 			APP.start();
 		});
-	}, 
-
-	switchClouds : function() {
-		if (SKY.cloudsActiv) {
-			SKY.clearClouds();
-			setElementActiv( document.getElementById( "btnClouds" ), false );
-		} else {
-			SKY.makeClouds();
-			setElementActiv( document.getElementById( "btnClouds" ), true );
-		}
 	}, 
 
 	checkMouseWorldPos : function() {

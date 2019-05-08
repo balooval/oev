@@ -1,9 +1,11 @@
 import Renderer from '../../renderer.js';
-import GLOBE from '../../globe.js';
-import * as TileExtension from '../tileExtension.js';
-import ElevationStore from '../elevation/elevationStore.js';
 import Evt from '../../utils/event.js';
+import GLOBE from '../../globe.js';
+import ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
+
+const materialWalls = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
+const materialRoof = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
 
 const workerEvent = new Evt();
 const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
@@ -13,7 +15,7 @@ function onWorkerMessage(_res) {
 	workerEvent.fireEvent('BUILDING_READY_' + _res.data.tileKey, _res.data.result);
 }
 
-export class BuildingExtension {
+export default class BuildingExtension {
 	constructor(_tile) {
 		this.id = 'BUILDING';
 		this.datas = undefined;
@@ -79,7 +81,7 @@ export class BuildingExtension {
 		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.roofsGeometry.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		this.meshRoof = new THREE.Mesh(bufferGeometry, GLOBE.buildingsRoofMat);
+		this.meshRoof = new THREE.Mesh(bufferGeometry, materialRoof);
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
@@ -100,7 +102,7 @@ export class BuildingExtension {
 		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.geometry.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		this.meshWalls = new THREE.Mesh(bufferGeometry, GLOBE.buildingsWallMatBuffer);
+		this.meshWalls = new THREE.Mesh(bufferGeometry, materialWalls);
 		this.meshWalls.receiveShadow = true;
 		this.meshWalls.castShadow = true;
 		Renderer.scene.add(this.meshWalls);

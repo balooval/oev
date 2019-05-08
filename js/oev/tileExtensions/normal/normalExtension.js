@@ -1,8 +1,7 @@
-import * as TileExtension from '../tileExtension.js';
 import Renderer from '../../renderer.js';
 import * as NormalLoader from './normalLoader.js';
 
-export class NormalExtension {
+export default class NormalExtension {
 	constructor(_tile) {
         this.id = 'NORMAL';
 		this.dataLoading = false;

@@ -1,18 +1,13 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
-import * as DataLoader from './dataLoader.js';
-import * as TileExtension from './tileExtensions/tileExtension.js';
 import SKY from './sky.js';
 import * as TILE from './tile.js';
 import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
-import * as NET_TEXTURES from './net/NetTextures.js';
 import ElevationStore from './tileExtensions/elevation/elevationStore.js';
 
 let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
-let coastDatas = null;
-const coastPxlRatio = 2048 / (20037508 * 2);
 const eleFactor = 1;
 
 const api = {
@@ -29,159 +24,32 @@ const api = {
 	radius : 10000, 
 	meter : 1, 
 	globalScale : 1, 
-	tilesWeatherMng : null,
-	tilesLandusesMng : null,
-	vineyardMat : undefined, 
-	forestMat : undefined, 
-	loaderNormal : null, 
-	loaderPlane : null, 
 	meshe : null, 
 	tilesDefinition : 16, 
-	grassMat : undefined, 
-	modelsMesheMat : {
-		"TREE":new THREE.MeshPhongMaterial({color: 0xa0a0a0, shininess: 0}), 
-		"LAMP":new THREE.MeshLambertMaterial({color: 0x103c4f }), 
-		"HYDRANT":new THREE.MeshLambertMaterial({color: 0x9f0101 }), 
-		"CAPITELLE":new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
-		"default" : new THREE.MeshLambertMaterial({color: 0xFF0000 }), 
-		"fountain" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
-		"statue" : new THREE.MeshLambertMaterial({color: 0xefeed9 }), 
-		"poubelle" : new THREE.MeshLambertMaterial({color: 0x9fc091 }), 
-		'recycling' : new THREE.MeshLambertMaterial({color: 0x546e10 }), 
-		'pylone' : new THREE.MeshPhongMaterial({color: 0x909090, transparent:true})
-	}, 
 	
 	init : function() {
 		api.evt = new Evt();
 		api.meshe = new THREE.Mesh(new THREE.Geometry());
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
-		// api.loaderNormal = new DataLoader.Proxy('NORMAL');
-		// api.loaderPlane = new DataLoader.Proxy('PLANE');
-		// api.loaderOverpassCache = new DataLoader.Proxy('OVERPASS_CACHE');
-		api.tileExtensions['TILE2D'] = TileExtension.MapExtension;
-		api.tileExtensions['ELEVATION'] = TileExtension.Elevation;
-		api.tileExtensions['NORMAL'] = TileExtension.NormalExtension;
-		api.tileExtensions['LANDUSE'] = TileExtension.LanduseExtension;
-		api.tileExtensions['BUILDING'] = TileExtension.BuildingExtension;
 		api.setProjection('PLANE');
-		api.buildingsWallMatBuffer = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-		api.buildingsWallMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xa0a0a0, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-		api.buildingsRoofMat = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
-		api.testForestMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
-		api.testForestMat.alphaTest = 0.1;
-		api.landuseSpritesMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xffffff, side: THREE.DoubleSide});
-		api.landuseSpritesMat.alphaTest = 0.1;
-		api.testScrubMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
-		api.testScrubMat.alphaTest = 0.1;
-		api.testVineyardMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xA0A0A0, side: THREE.DoubleSide});
-		api.testVineyardMat.alphaTest = 0.1;
-		api.forestMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
-		api.forestMat.alphaTest = 0.4;
-		api.forestMat.transparent = true;
-		api.vineyardMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 1000});
-		api.vineyardMat.alphaTest = 0.4;
-		api.vineyardMat.transparent = true;
-		// api.grassMat = new THREE.PointsMaterial({ color: 0xFFFFFF, size: api.meter * 2000});
-		api.grassMat = new THREE.MeshLambertMaterial({transparent: true, color: 0xe0e0e0, side: THREE.DoubleSide});
-		api.grassMat.alphaTest = 0.9;
-		// api.grassMat.opacity = 0.99;
-		TileExtension.activateExtension('TILE2D');
 		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 	}, 
 	
 	onAppStart : function() {
-		api.modelsMesheMat['pylone'].map = NET_TEXTURES.texture('pylone');
-		api.modelsMesheMat['pylone'].needsUpdate = true;
-		// api.modelsMesheMat['TREE'].map = NET_TEXTURES.texture('tree_procedural');
-		api.modelsMesheMat['TREE'].map = NET_TEXTURES.texture('tree_top');
-		api.modelsMesheMat['TREE'].alphaTest = 0.9;
-		api.modelsMesheMat['TREE'].side = THREE.DoubleSide;
-		api.modelsMesheMat['TREE'].needsUpdate = true;
-		api.testForestMat.map = NET_TEXTURES.texture('tree_side');
-		api.testForestMat.needsUpdate = true;
-		api.landuseSpritesMat.map = NET_TEXTURES.texture('landuse_sprites');
-		api.landuseSpritesMat.needsUpdate = true;
-		api.testScrubMat.map = NET_TEXTURES.texture('scrub');
-		api.testScrubMat.needsUpdate = true;
-		api.testVineyardMat.map = NET_TEXTURES.texture('vineyard');
-		api.testVineyardMat.needsUpdate = true;
-		api.forestMat.map = NET_TEXTURES.texture('scrub');
-		api.forestMat.needsUpdate = true;
-		api.vineyardMat.map = NET_TEXTURES.texture('vineyard');
-		api.vineyardMat.needsUpdate = true;
-		api.grassMat.map = NET_TEXTURES.texture('grass');
-		api.grassMat.needsUpdate = true;
-		// loadCoastline();
 		api.construct();
 	}, 
 	
 	construct : function() {
 		const zoomBase = 4;
 		const nbTiles = Math.pow(2, zoomBase);
-		for (let curTileY = 0; curTileY < nbTiles + 1; curTileY ++) {
-			if (curTileY > 0) {
-				for (let curTileX = 0; curTileX < nbTiles + 1; curTileX ++) {
-					if (curTileX > 0) {
-						const tile = new TILE.Basic(curTileX - 1, curTileY - 1, zoomBase);
-						api.tilesBase.push(tile);
-						tile.buildGeometry();
-					}
-				}
+		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
+			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
+				const tile = new TILE.Basic(curTileX, curTileY, zoomBase);
+				api.tilesBase.push(tile);
+				tile.buildGeometry();
 			}
 		}
-	}, 
-
-	isCoordOnGround : function(_lon, _lat, _marge = 0) {
-		if (coastDatas === null) return false;
-		const mercX = GEO.mercatorLonToX(_lon);
-		const mercY = GEO.mercatorLatToY(_lat);
-		const pxlX = Math.round(mercX * coastPxlRatio) + 1024;
-		const pxlY = Math.round(mercY * coastPxlRatio) + 1024;
-		pxlY = Math.abs(2048 - pxlY);
-		let bufferIndex;
-		for (let i = 0; i < _marge * 2; i ++) {
-			for (let j = 0; j < _marge * 2; j ++) {
-				bufferIndex = ((pxlX - _marge + i) * 2048 + (pxlY - _marge + j));
-				if (coastDatas[bufferIndex] == 1) {
-					return 1;
-				}
-			}
-		}
-		bufferIndex = (pxlX * 2048 + pxlY);
-		return coastDatas[bufferIndex];
-	}, 
-
-	_onCoastLineLoaded : function(_img) {
-		const imgW = 2048;
-		const imgH = 2048;
-		const canvas = document.createElement('canvas');
-		canvas.width = imgW;
-		canvas.height = imgH;
-		const context = canvas.getContext('2d');
-		context.drawImage(_img, 0, 0, imgW, imgH);
-		const img = context.getImageData(0, 0, imgW, imgH); 
-		const imageData = context.getImageData(0, 0, imgW, imgH);
-		const data = imageData.data;
-		coastDatas = new Int8Array(data.length / 4);
-		let x, y;
-		let index;
-		let red;
-		let isGround;
-		let bufferIndex = 0;
-		for (x = 0; x < imgW; ++x) {
-			for (y = 0; y < imgH; ++y) {
-				index = (y * imgW + x) * 4;
-				red = data[index];
-				isGround = 0;
-				if (red > 0) {
-					isGround = 1;
-				}
-				coastDatas[bufferIndex] = isGround;
-				bufferIndex ++;
-			}
-		}
-		console.log('Coastline parsed');
 	}, 
 
 	addMeshe : function(_meshe) {
@@ -208,20 +76,19 @@ const api = {
 	}, 
 
 	switchProjection : function(){
-		if (api.projection == "SPHERE") {
-			api.setProjection("PLANE");
-		} else if (api.projection == "PLANE") {
-			api.setProjection( "SPHERE" );
+		if (api.projection == 'SPHERE') {
+			api.setProjection('PLANE');
+		} else if (api.projection == 'PLANE') {
+			api.setProjection('SPHERE');
 		}
 	}, 
 
 	setProjection : function(_mode) {
-		// console.log('setProjection', _mode);
-		if (_mode == "PLANE") {
+		if (_mode == 'PLANE') {
 			SKY.activSky(true);
 			api.coordToXYZ = api.coordToXYZPlane;
 			Renderer.camera.up.set(0, 0, 1);
-		} else if (_mode == "SPHERE") {
+		} else if (_mode == 'SPHERE') {
 			SKY.activSky(false);
 			api.coordToXYZ = api.coordToXYZSphere;
 			Renderer.camera.up.set(0, 1, 0);
@@ -250,7 +117,6 @@ const api = {
 		const pos = new THREE.Vector3(0, 0, 0);
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
-		// console.log('coordToXYZSphere', MATH.radians(lat * -1), MATH.radians((lon - 180) * -1));
 		pos.x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
 		pos.y = Math.sin(radX) * _elevation * -1;
 		pos.z = Math.sin(radY) * (_elevation * Math.cos(radX));
@@ -405,13 +271,5 @@ const api = {
 		return GEO.getAltitude(_zoomlevel, api.radius);
 	}, 
 };
-
-function loadCoastline() {
-	const imgCoast = new Image();
-	imgCoast.onload = function() {
-		api._onCoastLineLoaded(this);
-	};
-	imgCoast.src = 'libs/remoteImg.php?coastLine';
-}
 
 export { api as default}

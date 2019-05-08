@@ -30,12 +30,9 @@ export class Proxy {
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
-
 		this.clientsWaiting = [];
-
 		this._loaders = [];
 		this._initLoaders();
-
 		window.debugLoader = () => {
 			console.log('debugLoader', this._datasWaiting);
 		}
@@ -45,11 +42,7 @@ export class Proxy {
 		let loader;
 		const _self = this;
 		for (let i = 0; i < this._simulLoad; i ++) {
-			if (this._type == 'OVERPASS_CACHE') {
-				loader = new DataLoader.OverpassCache(function(_datas, _params){_self.onDataLoaded(_datas, _params)});
-			} else if (registeredLoaders[this._type]) {
-				loader = new registeredLoaders[this._type](function(_datas, _params){_self.onDataLoaded(_datas, _params)});
-			}
+			loader = new registeredLoaders[this._type](function(_datas, _params){_self.onDataLoaded(_datas, _params)});
 			this._loaders.push(loader);
 		}
 	}
@@ -60,8 +53,6 @@ export class Proxy {
 		_params.callback = _callback;
 		if (this._sendCachedData(_params) === true) return true;
 		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
-			const waiting = this._datasWaiting.some(w => w.key == _params.key);
-			const loading = this._datasLoading.some(w => w.key == _params.key);
 			this.clientsWaiting.push(_params);
 			return false;
 		};
@@ -75,19 +66,15 @@ export class Proxy {
 	}
 	
 	onDataLoaded(_data, _params) {
-		// UI.updateLoadingDatas(this._type, this._datasWaiting.length);
 		onRessourceLoaded(this._type, this._datasWaiting.length);
 		if (_data === null) {
 			console.warn('Error loading ressource');
 			return false;
 		}
-
 		this._datasLoading = this._datasLoading.filter(l => l.key != _params.key);
 		_params.callback(_data);
-
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
-
 		if (_params.dropDatas === undefined || _params.dropDatas == false) {
 			this._datasLoaded[_params.key] = _data;
 		}
@@ -154,61 +141,4 @@ export class Proxy {
 	_isLoading(_key) {
 		return this._datasLoading.some(w => w.key == _key);
 	}
-}
-
-
-
-DataLoader.Ajax = function () {
-	this.request = new XMLHttpRequest();
-	this.request.onreadystatechange = this.bindFunction(this.stateChange, this);
-}
-
-DataLoader.Ajax.prototype = {
-	load : function(url, _callback) {
-		this.url = url;
-		this.callback = _callback;
-		this.request.open("GET", url, true);
-		this.request.send();
-	}, 
-	
-	bindFunction : function(caller, object) {
-		return function() {
-			return caller.apply(object, [object]);
-		};
-	}, 
-
-	stateChange : function() {
-		if (this.request.readyState==4){
-			this.callback(this.request.responseText, this.request);
-		}
-	}, 
-}
-
-DataLoader.OverpassCache = function(_callback) {
-	this.isLoading = false;
-	this.callback = _callback;
-	this.params = {};
-	this.ajax = new DataLoader.Ajax();
-	this.serverUrl = 'https://val.openearthview.net/libs/remoteImg.php?overpassClient=1&';
-}
-
-DataLoader.OverpassCache.prototype = {
-	load : function(_params) {
-		this.params = _params;
-		this.isLoading = true;
-		var loader = this;
-		this.ajax.load(this.serverUrl + 'type=' + _params.nodeType + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y,  
-			function(_datas, _xhr){
-				loader.onDataLoadSuccess(_datas, _xhr);
-			}
-		);
-	}, 
-	
-	onDataLoadSuccess : function(_data, _xhr) {
-		this.isLoading = false;
-		if (_xhr.status == 206) {
-			this.params.dropDatas = true;
-		}
-		this.callback(_data, this.params);
-	}, 
 }

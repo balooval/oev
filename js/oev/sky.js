@@ -9,13 +9,12 @@ let sunRotation = -1.5;
 let particleSystem = undefined;
 let pMaterial = undefined;
 let colorsGradient = undefined;
-let fogActive = true;
+let fogActive = false;
 let stars = null;
 let starsMat = null;
 let destTime = 0;
 const destTimeSpeed = 0.01;
 const rainEnabled = false;
-const weatherEnabled = false;
 let lightSun;
 let materialCloudNew;
 let skyMeshNew = null;
@@ -225,8 +224,8 @@ const api = {
 			api.makeClouds();
 		}
 		api.makeStars();
-		GLOBE.evt.addEventListener( 'CURTILE_CHANGED', api, api.onCurTileChanged );
-		GLOBE.evt.addEventListener( 'LOD_CHANGED', api, api.onLodChanged );
+		GLOBE.evt.addEventListener('CURTILE_CHANGED', api, api.onCurTileChanged);
+		GLOBE.evt.addEventListener('LOD_CHANGED', api, api.onLodChanged);
 		api.onLodChanged();
 		api.setSunTime(0.5);
 	}, 
@@ -298,9 +297,6 @@ const api = {
 		if (api.cloudsActiv){
 			pMaterial.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		}
-		GLOBE.forestMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-		GLOBE.vineyardMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
-		GLOBE.grassMat.color = new THREE.Color("rgb("+rampColorClouds.r+","+rampColorClouds.g+","+rampColorClouds.b+")");
 		lightAmbiant.color.r = rampColorLight.r / 400;
 		lightAmbiant.color.g = rampColorLight.g / 400;
 		lightAmbiant.color.b = rampColorLight.b / 400;
@@ -433,17 +429,8 @@ const api = {
 		Renderer.scene.add( stars );
 	}, 
 	
-	loadWeather : function(_zoom, _tileX, _tileY) {
-		GLOBE.tilesWeatherMng.getDatas(api, _zoom+'/'+_tileX+'/'+_tileY, _tileX, _tileY, _zoom, 0);
-	},
-	
 	onCurTileChanged : function() {
-		if (weatherEnabled) {
-			if( GLOBE.CUR_ZOOM >= 11 ){
-				var newTile = Oev.Geo.coordsToTile(GLOBE.coordDetails.x, GLOBE.coordDetails.y, 11);
-				loadWeather(11, newTile.x, newTile.y);
-			}
-		}
+		
 	}, 
 	
 	onLodChanged : function() {

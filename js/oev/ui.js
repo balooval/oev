@@ -142,9 +142,9 @@ const TilesExtension = (function(){
 				return false;
 			}
 			if (_evt.target.checked === true) {
-				TileExtension.activateExtension(extension);
+				TileExtension.activate(extension);
 			} else {
-				TileExtension.desactivateExtension(extension);
+				TileExtension.desactivate(extension);
 			}
 		}, 
 		
@@ -153,7 +153,7 @@ const TilesExtension = (function(){
 	function addExtensionsSwitchs() {
 		var btnExtensions = '';
 		const extensionsActives = TileExtension.listActives();
-		for (var key in Globe.tileExtensions) {
+		for (var key in TileExtension.extensions) {
 			const checked = extensionsActives.includes(key) ? 'checked' : '';
 			btnExtensions += '<input ' + checked + ' id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
 		}

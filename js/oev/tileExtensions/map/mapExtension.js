@@ -1,7 +1,7 @@
 import Renderer from '../../renderer.js';
 import * as MapLoader from './mapLoader.js';
 
-export class MapExtension {
+export default class MapExtension {
 	constructor(_tile) {
 		this.id = 'TILE2D';
 		this.dataLoading = false;

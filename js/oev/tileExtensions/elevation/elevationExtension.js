@@ -1,11 +1,10 @@
 import Renderer from '../../renderer.js';
-import * as TileExtension from '../tileExtension.js';
 import GLOBE from '../../globe.js';
 import ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
 
-export class Elevation {
+export default class ElevationExtension {
 	constructor(_tile) {
 		this.id = 'ELEVATION';
 		this.dataLoading = false;

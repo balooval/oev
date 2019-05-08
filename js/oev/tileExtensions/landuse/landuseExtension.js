@@ -1,8 +1,8 @@
 import Renderer from '../../renderer.js';
+import GLOBE from '../../globe.js';
 import * as LanduseLoader from './landuseLoader.js';
 import ShellTexture from './landuseShellTexture.js';
 import ElevationStore from '../elevation/elevationStore.js';
-import GLOBE from '../../globe.js';
 
 const loadersWaiting = [];
 
@@ -19,7 +19,7 @@ function onWorkerMessage(_res) {
 const workerParser = new Worker('js/oev/tileExtensions/landuse/workerLanduseJsonParser.js');
 workerParser.onmessage = onWorkerMessage;
 
-export class LanduseExtension {
+export default class LanduseExtension {
 	constructor(_tile) {
 		this.id = 'LANDUSE';
 		this.dataLoading = false;
