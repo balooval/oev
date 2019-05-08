@@ -29,7 +29,7 @@ class LoaderNormal {
 	onDataLoadError() {
 		this.isLoading = false;
 		console.warn( 'LoaderNormal error', this.params);
-		this.callback(null);
+		this.callback(null, this.params);
 	}
 }
 

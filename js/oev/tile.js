@@ -44,15 +44,20 @@ export class Basic {
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 		
 		// this.material = new THREE.MeshPhongMaterial({color: 0xA0A0A0, wireframe:false, shininess: 0, map: NET_TEXTURES.texture("checker")});
-		this.material = new THREE.MeshPhysicalMaterial({color: 0x909090, roughness:1,metalness:0, map: NET_TEXTURES.texture('checker')});
+		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: NET_TEXTURES.texture('checker')});
 
 		this.extensions = [];
-		TileExtension.Params.activated.forEach(p => this.addExtension(p));
+		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
+		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.onExtensionDisabled);
 	}
 	
 	onExtensionActivation(_extensionId) {
 		this.addExtension(_extensionId);
+	}
+
+	onExtensionDisabled(_extensionId) {
+		this.removeExtension(_extensionId);
 	}
 	
 	addExtension(_extensionId) {
@@ -68,6 +73,8 @@ export class Basic {
 	}
 	
 	removeExtension(_id) {
+		const extensionsToRemove = this.extensions.filter(e => e.id == _id);
+		extensionsToRemove.forEach(e => e.dispose());
 		this.extensions = this.extensions.filter(e => e.id != _id);
 		this.childTiles.forEach(t => t.removeExtension(_id));
 	}

@@ -152,8 +152,9 @@ const TilesExtension = (function(){
 
 	function addExtensionsSwitchs() {
 		var btnExtensions = '';
+		const extensionsActives = TileExtension.listActives();
 		for (var key in Globe.tileExtensions) {
-			const checked = TileExtension.Params.activated.includes(key) ? 'checked' : '';
+			const checked = extensionsActives.includes(key) ? 'checked' : '';
 			btnExtensions += '<input ' + checked + ' id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
 		}
 		document.getElementById('toolsContent_datasToLoad').innerHTML += btnExtensions;

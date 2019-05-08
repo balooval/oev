@@ -17,38 +17,20 @@ export class BuildingExtension {
 	constructor(_tile) {
 		this.id = 'BUILDING';
 		this.datas = undefined;
+		this.dataLoaded = false;
 		this.meshWalls = undefined;
 		this.meshRoof = undefined;
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
-		if (TileExtension.Params.actives['ACTIV_' + this.id] === undefined) {
-			TileExtension.Params.actives['ACTIV_' + this.id] = false;
-		}
-		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
-		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this.id, this, this.onDesactivate);
-		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-		if (TileExtension.Params.actives['ACTIV_' + this.id]) {
-			this.onActivate();
-		}
-	}
-
-	onActivate() {
-		TileExtension.Params.actives['ACTIV_' + this.id] = true;
-		this.dataLoaded = false;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
-		if (this.tile.isReady) {
-			this.onTileReady();
-		}
-	}
-
-	onDesactivate() {
-		TileExtension.Params.actives['ACTIV_' + this.id] = false;
+		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
+		if (this.tile.isReady) this.onTileReady();
 	}
 
 	onTileReady(_evt) {
-		if (!this.tile.onStage) return false;
+		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		if (!this.isActive) return false;
 		var bbox = { 
 			minLon : this.tile.startCoord.x, 
@@ -56,35 +38,15 @@ export class BuildingExtension {
 			minLat : this.tile.endCoord.y, 
 			maxLat : this.tile.startCoord.y
 		};
-		
 		this.waiting = true;
 		BuildingsDatas.store.get(this.tile.zoom, this.tile.tileX, this.tile.tileY, bbox, this.tile.distToCam, _datas => {
 			this.waiting = false;
 			this.onBuildingsLoaded(_datas);
 		});
 	}
-	
-	show() {
-		if (this.dataLoaded) {
-			Oev.Tile.ProcessQueue.addWaiting(this);
-		} else {
-			this.tileReady();
-		}
-	}
 
-	onTileDispose() {
-		if (TileExtension.Params.actives['ACTIV_' + this.id] === true) {
-			this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-		}
-		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
-		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
-		TileExtension.evt.removeEventListener('TILE_EXTENSION_DESACTIVATE_' + this.id, this, this.onDesactivate);
-		this.dispose();
-	}
-	
 	onBuildingsLoaded(_datas) {
-		if (!this.tile.onStage) return false;
-		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
+		if (!this.tile) return false;
 		this.dataLoaded = true;
 		this.datas = _datas;
 		var bbox = { 
@@ -177,10 +139,12 @@ export class BuildingExtension {
 	}
 
 	dispose() {
+		this.tile.evt.removeEventListener('DISPOSE', this, this.dispose);
 		if (!this.isActive) return false;
 		if (!this.dataLoaded){
 			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
 		}
+		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
 		if (this.meshWalls != undefined) {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
@@ -189,6 +153,7 @@ export class BuildingExtension {
 			this.meshRoof.geometry.dispose();
 			this.meshRoof = undefined;
 		}
+		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
 

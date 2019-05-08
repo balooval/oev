@@ -2,8 +2,8 @@ import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 const tilesNb = 4;
 const nbTileBySide = Math.sqrt(tilesNb);
-// const tileDefinition = 512;
-const tileDefinition = 1024;
+const tileDefinition = 512;
+// const tileDefinition = 1024;
 const canvasList = createCanvas(tilesNb, tileDefinition);
 const canvasNormals = createCanvas(1, tileDefinition).pop();
 

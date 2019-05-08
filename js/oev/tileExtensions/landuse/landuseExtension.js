@@ -3,7 +3,6 @@ import * as LanduseLoader from './landuseLoader.js';
 import ShellTexture from './landuseShellTexture.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import GLOBE from '../../globe.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 const loadersWaiting = [];
 
@@ -44,10 +43,7 @@ export class LanduseExtension {
 	}
 
 	onTileReady() {
-		if (this.dataLoaded) {
-            // this.tile.setTexture(this.json);
-            return true;
-        }
+		if (this.dataLoaded) return true;
         if (this.dataLoading) return false;
         if (!this.isActive) return false;
 		this.dataLoading = true;
@@ -63,19 +59,17 @@ export class LanduseExtension {
     }
     
     onLanduseLoaded(_datas) {
+        if (!this.tile) return false;
         this.json = _datas;
 		this.dataLoading = false;
 		this.dataLoaded = true;
         if (!this.tile.isReady) return false;
-
-
         const bbox = {
             startX : this.tile.startCoord.x, 
             startY : this.tile.endCoord.y, 
             endX : this.tile.endCoord.x, 
             endY : this.tile.startCoord.y, 
         };
-
         parseJson(this, {
             json : this.json,
             bbox : bbox, 
@@ -161,7 +155,6 @@ export class LanduseExtension {
 		geoBuffer.computeFaceNormals();
         geoBuffer.computeVertexNormals();
         geoBuffer.attributes.uv.needsUpdate = true;
-        // const material = new THREE.MeshPhysicalMaterial({map:_textures.diffuse, roughness:1,metalness:0,side:THREE.DoubleSide, transparent:true, alphaTest:0.2, normalMap:_textures.normal});
         const material = new THREE.MeshPhysicalMaterial({map:_textures.diffuse, roughness:1,metalness:0, transparent:true, alphaTest:0.2});
         if (this.meshTile !== undefined) {
             GLOBE.removeMeshe(this.meshTile);
@@ -173,10 +166,6 @@ export class LanduseExtension {
     }
     
 	onTileDispose() {
-        this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
-        this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-        this.tile.evt.removeEventListener('HIDE', this, this.hide);
-		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
 		this.dispose();
 	}
 	
@@ -190,18 +179,23 @@ export class LanduseExtension {
     }
 	
 	dispose() {
+        this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
+        this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
+        this.tile.evt.removeEventListener('HIDE', this, this.hide);
+		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         if (!this.isActive) return false;
+        this.hide();
         if (this.meshTile != undefined) {
             GLOBE.removeMeshe(this.meshTile);
 			this.meshTile.material.map.dispose();
-			// this.meshTile.material.normalMap.dispose();
 			this.meshTile.material.dispose();
 			this.meshTile.geometry.dispose();
 			this.meshTile = undefined;
 		}
         this.json = null;
 		this.dataLoaded = false;
-		this.dataLoading = false;
+        this.dataLoading = false;
+        this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
 	

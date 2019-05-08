@@ -12,37 +12,13 @@ export class Elevation {
 		this.dataLoaded = false;
 		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
 		this.tile = _tile;
-		if (TileExtension.Params.actives['ACTIV_' + this.id] === undefined) {
-			TileExtension.Params.actives['ACTIV_' + this.id] = false;
-		}
-		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
-		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this.id, this, this.onDesactivate);
-		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-		if (TileExtension.Params.actives['ACTIV_' + this.id]) {
-			this.onActivate();
-		}
-	}
-
-	onActivate() {
-		TileExtension.Params.actives['ACTIV_' + this.id] = true;
-		this.dataLoaded = false;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
-		this.tile.evt.addEventListener('HIDE', this, this.hide);
-		if (this.tile.isReady) {
-			this.onTileReady();
-		}
+		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
+		if (this.tile.isReady) this.onTileReady();
 	}
 
-	onDesactivate() {
-		TileExtension.Params.actives['ACTIV_' + this.id] = false;
-		this.hide();
-		const def = GLOBE.tilesDefinition + 1;
-		const buffer = new Uint16Array(def * def);
-		buffer.fill(0);
-		this.applyElevationToGeometry(buffer);
-	}
-
-	onTileReady(_evt) {
+	onTileReady() {
+		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		if (this.dataLoaded) return false;
 		this.applyElevationToGeometry(this.nearestElevationDatas());
 		if (this.tile.zoom > 15) return false;
@@ -57,17 +33,6 @@ export class Elevation {
 			}, 
 			_datas => this.onElevationLoaded(_datas.slice(0))
 		);
-	}
-	
-	onTileDispose() {
-		if (TileExtension.Params.actives['ACTIV_' + this.id] === true) {
-			this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-			this.tile.evt.removeEventListener('HIDE', this, this.hide);
-		}
-		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
-		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_' + this.id, this, this.onActivate);
-		TileExtension.evt.removeEventListener('TILE_EXTENSION_DESACTIVATE_' + this.id, this, this.onDesactivate);
-		this.dispose();
 	}
 	
 	hide() {
@@ -91,7 +56,6 @@ export class Elevation {
 	onElevationLoaded(_datas) {
 		this.dataLoading = false;
 		if (!this.tile.isReady) return false;
-		if (!TileExtension.Params.actives['ACTIV_' + this.id]) return false;
 		this.dataLoaded = true;
 		this.elevationBuffer = _datas;
 		ElevationStore.set(this.tile, this.elevationBuffer);
@@ -118,7 +82,15 @@ export class Elevation {
 	} 
 	
 	dispose() {
-		if (this.dataLoaded) ElevationStore.delete(this.tile);
+		this.tile.evt.removeEventListener('DISPOSE', this, this.dispose);
+		this.hide();
+		if (this.dataLoaded) {
+			ElevationStore.delete(this.tile);
+			const def = GLOBE.tilesDefinition + 1;
+			const buffer = new Uint16Array(def * def);
+			buffer.fill(0);
+			this.applyElevationToGeometry(buffer);
+		}
 		this.dataLoaded = false;
 		this.dataLoading = false;
 		this.elevationBuffer = null;

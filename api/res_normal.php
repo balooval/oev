@@ -7,6 +7,10 @@ class Api_normal extends Api_default {
     private $params;
     private $differenceReduction = 100;
 
+    // Erreurs 500 :
+    // https://val.openearthview.net/api/index.php?ressource=normal&z=12&x=2094&y=1495&def=16
+    // https://val.openearthview.net/api/index.php?ressource=normal&z=11&x=1049&y=748&def=16
+
     public function __construct($_params) {
         $this->params = $_params;
         parent::__construct($_params);
@@ -44,6 +48,7 @@ class Api_normal extends Api_default {
     }
 
     private function buildNormalImage($_filePath) {
+        set_time_limit(60);
         $x = $this->params['x'];
         $y = $this->params['y'];
         $z = $this->params['z'];
@@ -72,7 +77,6 @@ class Api_normal extends Api_default {
                 ];
             }
         }
-
         for ($x = 0; $x <= $def; $x ++) {
             for ($y = 0; $y <= $def; $y ++) {
                 $curLon = ($east + ($x * $stepLon));
@@ -97,7 +101,6 @@ class Api_normal extends Api_default {
                 $imgColors[$x][$y][1] = $this->colorFromSlope($curElevation, $searchElevation);
             }
         }
-
         for ($y = 0; $y <= $def; $y ++) {
             for ($x = 0; $x <= $def; $x ++) {
                 $curLon = ($east + ($x * $stepLon));
@@ -122,18 +125,12 @@ class Api_normal extends Api_default {
                 $imgColors[$x][$y][0] = $this->colorFromSlope($curElevation, $searchElevation);
             }
         }
-
         foreach ($imgColors as $x => $row) {
             foreach ($row as $y => $pixel) {
                 $pixColor = imagecolorallocate($imageObject, $pixel[0], $pixel[1], 255);
                 imagesetpixel($imageObject, $x, $y, $pixColor);
             }
         }
-
-
-        // print_r($startPositions);
-        // exit();
-
         imagepng($imageObject, $_filePath, 9);
         imagedestroy($imageObject);
     }
