@@ -127,7 +127,6 @@ export class Basic {
 		const coords = [];
 		const def = GLOBE.tilesDefinition;
 		const vertBySide = def + 1;
-		let curVertId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / def;
 		const stepCoordY = (this.endCoord.y - this.startCoord.y) / def;
 		for (let x = 0; x < vertBySide; x ++) {

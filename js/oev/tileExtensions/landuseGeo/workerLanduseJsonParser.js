@@ -38,25 +38,32 @@ function readJson(_datas, _bbox) {
 		const innersCoords = rel.members
 		.filter(member => member.role == 'inner')
 		.map(innerMember => {
-			return ways['WAY_' + innerMember.ref].nodes.map(nodeId => nodesList['NODE_' + nodeId])
+			let innerWay = ways['WAY_' + innerMember.ref].nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+			return innerWay;
+		})
+		.map(innerWay => {
+			const cleanWay = [...innerWay];
+			cleanWay.pop();
+			return cleanWay;
 		});
-		const wayNodes = [];
+		let wayNodes = [];
 		const outerMembers = rel.members.filter(member => member.role == 'outer');
 		outerMembers.forEach(member => {
 			const outerWay = ways['WAY_' + member.ref];
 			wayNodes.push(...outerWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]));
 		});
+		const cleanWay = [...wayNodes]
+		cleanWay.pop();
 		// const centroid = getPolygonCentroid(wayNodes);
 		// if (!bboxContainCoord(_bbox, centroid)) return;
 		const relation = {
 			id : rel.id, 
 			props : props, 
-			coords : wayNodes, 
+			coords : cleanWay, 
 			holes : innersCoords, 
 		};
 		landusesList.push(relation);
 	});
-	
 	
 	json.elements
 	.filter(e => e.type == 'way')
@@ -64,17 +71,18 @@ function readJson(_datas, _bbox) {
 	.forEach(way => {
 		const props = cleanTags(way.tags);
 		if (props.type == 'unsupported') return;
-		const wayNodes = way.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+		let wayNodes = way.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+		const cleanWay = [...wayNodes]
+		cleanWay.pop();
 		// const centroid = getPolygonCentroid(wayNodes);
 		// if (!bboxContainCoord(_bbox, centroid)) return;
 		landusesList.push({
 			id : way.id, 
 			props : props, 
-			coords : wayNodes, 
+			coords : cleanWay, 
 			holes : [], 
 		});
 	});
-	
 	return landusesList;
 }
 
