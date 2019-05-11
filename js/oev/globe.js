@@ -139,18 +139,18 @@ const api = {
 		return ((_pos / api.globalScale) / (api.meter * eleFactor)) * -1;
 	}, 
 
-	coordFromPos : function( _x, _y ) {
-		const pxlStart = api.coordToXYZ( -180, 85.0511, 0 );
-		const pxlEnd = api.coordToXYZ( 180, -85.0511, 0 );
-		const pxlWidth = Math.abs( pxlEnd.x - pxlStart.x );
-		const pxlHeight = Math.abs( pxlEnd.z - pxlStart.z ) / 2;
-		const prctW = ( _x - pxlStart.x ) / pxlWidth;
-		const prctH = ( ( _y - pxlEnd.z ) / pxlHeight ) - 1;
-		const coordX = -180 + ( prctW * 360 );
-		let coordY = ( prctH * 180 );
+	coordFromPos : function(_x, _y, _eleMeter = 0) {
+		const pxlStart = api.coordToXYZ( -180, 85.0511, 0);
+		const pxlEnd = api.coordToXYZ( 180, -85.0511, 0);
+		const pxlWidth = Math.abs( pxlEnd.x - pxlStart.x);
+		const pxlHeight = Math.abs( pxlEnd.z - pxlStart.z) / 2;
+		const prctW = (_x - pxlStart.x) / pxlWidth;
+		const prctH = ((_y - pxlEnd.z) / pxlHeight) - 1;
+		const coordX = -180 + (prctW * 360);
+		let coordY = (prctH * 180);
 		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
 		const ele = api.getElevationAtCoords(coordX, coordY, true);
-		return new THREE.Vector3( coordX, coordY, ele );
+		return new THREE.Vector3(coordX, coordY, ele + _eleMeter);
 	}, 
 
 	checkLOD : function(){
@@ -267,7 +267,7 @@ const api = {
 		return Math.min( Math.max( z + 6 ), 19 );
 	}, 
 
-	altitude : function( _zoomlevel ) { // return altitude in opengl unit
+	altitude : function(_zoomlevel) { // return altitude in opengl unit
 		return GEO.getAltitude(_zoomlevel, api.radius);
 	}, 
 };

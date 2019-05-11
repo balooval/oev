@@ -1,8 +1,8 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as LanduseLoader from './landuseLoader.js';
-import ShellTexture from './landuseShellTexture.js';
 import ElevationStore from '../elevation/elevationStore.js';
+import ShellTexture from './landuseShellTexture.js';
 
 const loadersWaiting = [];
 

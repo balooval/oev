@@ -15,7 +15,7 @@ import MapExtension from './oev/tileExtensions/map/mapExtension.js';
 import ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
 import BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
 import NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
-import LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
+import LanduseExtension from './oev/tileExtensions/landuseGeo/landuseExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -48,6 +48,9 @@ const APP = {
 		TileExtension.register('LANDUSE', LanduseExtension);
 		TileExtension.register('BUILDING', BuildingExtension);
 		TileExtension.activate('TILE2D');
+		// TileExtension.activate('ELEVATION');
+		// TileExtension.activate('NORMAL');
+		TileExtension.activate('LANDUSE');
 		GLOBE.init();
 
 		Renderer.scene.add(GLOBE.meshe);
@@ -85,43 +88,30 @@ const APP = {
 			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
 			
-			['shell_void', 'shell_void_16.png'], 
+			['shell_void', 'shell_void.png'], 
 
-			['shell_scrub_normal', 'shell_scrub_1_256_normal.png'], 
-			['shell_tree_normal', 'shell_tree_normal_256.png'], 
+			['shell_tree_1', 'shell_tree_1.png'], 
+			['shell_tree_2', 'shell_tree_2.png'], 
+			['shell_tree_3', 'shell_tree_3.png'], 
+			['shell_tree_4', 'shell_tree_4.png'], 
 
-			// ['shell_tree_1', 'shell_tree_ground_1_256.png'], 
-			// ['shell_tree_1', 'shell_tree_1_256.png'], 
-			// ['shell_tree_2', 'shell_tree_2_256.png'], 
-			// ['shell_tree_3', 'shell_tree_3_256.png'], 
-			// ['shell_tree_4', 'shell_tree_4_256.png'], 
+			['shell_vine_1', 'shell_vine_1.png'], 
+			['shell_vine_2', 'shell_vine_2.png'], 
+			['shell_vine_3', 'shell_vine_3.png'], 
+			['shell_vine_4', 'shell_vine_4.png'], 
 
-			['shell_tree_1', 'shell_tree_512_1.png'], 
-			['shell_tree_2', 'shell_tree_512_2.png'], 
-			['shell_tree_3', 'shell_tree_512_3.png'], 
-			['shell_tree_4', 'shell_tree_512_4.png'], 
+			['shell_grass_1', 'shell_grass_1.png'], 
+			['shell_grass_2', 'shell_grass_2.png'], 
 
-			['shell_vine_1', 'shell_vine_32_1.png'], 
-			['shell_vine_2', 'shell_vine_32_2.png'], 
-			// ['shell_vine_1', 'shell_vine_1_32.png'], 
-			// ['shell_vine_2', 'shell_vine_2_32.png'], 
-			// ['shell_vine_3', 'shell_vine_3_32.png'], 
-			// ['shell_vine_5', 'shell_vine_5_32.png'], 
-
-			['shell_grass_1', 'shell_grass_1_512.png'], 
-			['shell_grass_2', 'shell_grass_2_512.png'], 
-
-			// ['shell_scrub_1', 'shell_scrub_1_256_noise.png'], 
-			// ['shell_scrub_2', 'shell_scrub_2_256.png'], 
-
-			['shell_scrub_1', 'shell_scrub_256_1.png'], 
-			['shell_scrub_2', 'shell_scrub_256_2.png'], 
-
-			['water_color', 'water_color.jpg'], 
-			['landuse_vineyard', 'landuse_vineyard.png'], 
+			['shell_scrub_1', 'shell_scrub_1.png'], 
+			['shell_scrub_2', 'shell_scrub_2.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
-		NET_TEXTURES.loadBatch(textList, APP.loadShaders);
+		NET_TEXTURES.loadBatch(textList, () => {
+			console.log('TEXTURES_LOADED');
+			APP.evt.fireEvent('TEXTURES_LOADED');
+			APP.loadShaders();
+		});
 	}, 
 	
 	loadShaders : function() {

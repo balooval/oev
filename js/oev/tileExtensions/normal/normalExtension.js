@@ -23,7 +23,6 @@ export default class NormalExtension {
         }
         if (this.tile.zoom < 11) return false;
         if (this.tile.zoom > 15) return false;
-        // if (this.tile.zoom != 13) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
 		NormalLoader.loader.getData(
@@ -70,6 +69,8 @@ export default class NormalExtension {
         this.texture = null;
 		this.dataLoaded = false;
         this.dataLoading = false;
+        this.tile.material.normalMap = this.texture;
+        this.tile.material.needsUpdate = true;
         this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
