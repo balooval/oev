@@ -94,6 +94,7 @@ function calcBbox(_border) {
 
 function coordGrid(_bbox, _border) {
 
+    /*
     const lon = _border.map(point => point[0]);
     const lat = _border.map(point => point[1]);
 
@@ -107,14 +108,13 @@ function coordGrid(_bbox, _border) {
         toto.minLon + (toto.maxLon - toto.minLon) / 2, 
         toto.minLat + (toto.maxLat - toto.minLat) / 2, 
     ]];
-
+*/
 
 
 
     const zoom = 15;
     const tileA = GEO.coordsToTile(_bbox.minLon, _bbox.minLat, zoom);
     const tileB = GEO.coordsToTile(_bbox.maxLon, _bbox.maxLat, zoom);
-    
     
     const tmp = [];
     for (let x = tileA.x; x <= tileB.x; x ++) {
@@ -127,18 +127,15 @@ function coordGrid(_bbox, _border) {
         console.log('tileB', tileB);
         console.log('tmp', tmp);
     }
-    // if (tmp.length > 0) console.log('tmp', tmp);
     const grid = [];
     tmp.forEach(tilePos => {
         const startCoord = GEO.tileToCoordsVect(tilePos[0], tilePos[1], zoom);
         const endCoord = GEO.tileToCoordsVect(tilePos[0] + 1, tilePos[1] + 1, zoom);
-
         const def = GLOBE.tilesDefinition;
-		const vertBySide = def + 1;
 		const stepCoordX = (endCoord.x - startCoord.x) / def;
 		const stepCoordY = (endCoord.y - startCoord.y) / def;
-		for (let x = 0; x < vertBySide; x ++) {
-			for (let y = 0; y < vertBySide; y ++) {
+		for (let x = 0; x < def; x ++) {
+			for (let y = 0; y < def; y ++) {
                 const coord = [
 					startCoord.x + (stepCoordX * x), 
 					startCoord.y + (stepCoordY * y)
@@ -288,12 +285,16 @@ function buildRelation(_relation, _waysList, _nodesList) {
         .forEach(member => {
 			const outerWay = _waysList['WAY_' + member.ref];
 			wayNodes.push(...outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]));
-		});
+        });
+        
+        const border = wayNodes.slice(1);
+        const bbox = calcBbox(border);
+        const grid = coordGrid(bbox, border);
 		return {
 			id : _relation.id, 
 			type : extractType(_relation), 
-			border : wayNodes.slice(1), 
-            fillPoints : [], 
+			border : border, 
+            fillPoints : grid, 
 			holes : innersCoords, 
 		};
 }
