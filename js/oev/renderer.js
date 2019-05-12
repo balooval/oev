@@ -13,7 +13,7 @@ const Renderer = (function() {
         init : function(_htmlContainer) {
             const elmtHtmlContainer = document.getElementById(_htmlContainer);
             const intElemClientWidth = elmtHtmlContainer.clientWidth;
-            const intElemClientHeight = document.getElementById('tools').clientHeight;
+            const intElemClientHeight = document.getElementById('main').clientHeight;
             sceneWidth = Math.min(intElemClientWidth, 13000);
             sceneHeight = Math.min(intElemClientHeight, 800);
             api.scene = new THREE.Scene();

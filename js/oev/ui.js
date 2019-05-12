@@ -25,18 +25,15 @@ const apiUi = {
 			'NORMAL', 
 		];
 		htmlElmtLoadingDatas = elmtLoading.map(id => document.getElementById('loading_' + id));
-		document.getElementById('cfg_sun_time').addEventListener('input', function() {
-			SKY.setSunTime(this.value / 100);
-		});
-		document.getElementById('cfg_sun_luminosity').addEventListener('input', function() {
-			SKY.testLuminosity(this.value / 50);
-		});
+
+		/*
 		document.getElementById('btn-saveWaypoint').addEventListener('click', () => {
 			const lon = OEV.cameraCtrl.coordLookat.x;
 			const lat = OEV.cameraCtrl.coordLookat.y;
 			const zoom = OEV.cameraCtrl.zoomCur;
 			Navigation.saveWaypoint(lon, lat, zoom);
 		});
+		*/
 		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.cameraCtrl.zoomIn());
 		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.cameraCtrl.zoomOut());
 		elmtCamHeading = document.getElementById("camHeading");
@@ -99,6 +96,7 @@ function onAppStart() {
 }
 
 function onWaypointsChanged(_waypoints) {
+	/*
 	const elmt = document.getElementById('waypointsInfos');
 	let html = '';
 	_waypoints
@@ -107,6 +105,7 @@ function onWaypointsChanged(_waypoints) {
 		html += '<span class="hand" onclick="Oev.Navigation.removeWaypoint(' + i + ')">X</span> ' + (i + 1) + ' : <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
 	});
 	elmt.innerHTML = html;
+	*/
 }
 
 function onCurTileChanged(_evt) {
@@ -132,32 +131,31 @@ const TilesExtension = (function(){
 		}, 
 		
 		onAppStart : function() {
-			apiUi.listenOnChildsClass('tools', 'click', 'oev-btn-dataToLoad', api._onExtensionChange);
+			apiUi.listenOnChildsClass('extensions-switchs', 'click', 'extension-switch', api._onExtensionChange);
 			addExtensionsSwitchs();
 		}, 
 		
 		_onExtensionChange : function(_evt) {
 			var extension = _evt.target.dataset.extension;
-			if (extension === undefined) {
-				return false;
-			}
-			if (_evt.target.checked === true) {
-				TileExtension.activate(extension);
-			} else {
+			if (extension === undefined) return false;
+			if (_evt.target.classList.contains('active')) {
 				TileExtension.desactivate(extension);
+			} else {
+				TileExtension.activate(extension);
 			}
+			_evt.target.classList.toggle('active');
 		}, 
 		
 	};
 
 	function addExtensionsSwitchs() {
-		var btnExtensions = '';
+		var iconsExtensions = '';
 		const extensionsActives = TileExtension.listActives();
 		for (var key in TileExtension.extensions) {
-			const checked = extensionsActives.includes(key) ? 'checked' : '';
-			btnExtensions += '<input ' + checked + ' id="cfg_load_' + key + '" data-extension="' + key + '" class="oev-btn-dataToLoad" type="checkbox" value="1"> <label for="cfg_load_' + key + '">' + key + '</label><br>';
+			const active = extensionsActives.includes(key) ? 'active' : '';
+			iconsExtensions += '<span title="' + key + '" class="floating-btn extension-switch ' + active + '" data-extension="' + key + '" id="btn-zoom-in"><img src="img/extension-' + key.toLocaleLowerCase() + '.png"/></span><br>';
 		}
-		document.getElementById('toolsContent_datasToLoad').innerHTML += btnExtensions;
+		document.getElementById('extensions-switchs').innerHTML += iconsExtensions;
 	}
 	
 	return api;

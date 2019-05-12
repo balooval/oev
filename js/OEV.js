@@ -40,7 +40,7 @@ const APP = {
 		SKY.init();
 		Navigation.init();
 		APP.clock = new THREE.Clock();
-		document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
+		// document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
 
 		TileExtension.register('TILE2D', MapExtension);
 		TileExtension.register('ELEVATION', ElevationExtension);

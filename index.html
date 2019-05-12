@@ -20,50 +20,12 @@
 			</div>
 		</div>
 		
-		<div id="boxNotification">
-		</div>
-		
 		<div id="header">OpenEarthViewer</div>
 		<div id="main">
-			<div id="tools">
-				<div class="toolsBox">
-					<h3 data-content="navigation" class="activ"> Navigation</h3>
-					<div class="toolsContent activ" id="toolsContent_navigation">
-						<div class="heading" id="camHeading" onclick="resetHeading();"></div>
-						<br>
-						<input id="btn-zoom-out" type="button" value="Zoom -">
-						<input id="btn-zoom-in" type="button" value="Zoom +">
-					</div>
-				</div>
-				
-				<div class="toolsBox">
-					<h3 data-content="datasToLoad" class="activ"> Datas to load</h3>
-					<div class="toolsContent activ" id="toolsContent_datasToLoad">
-						<div id="models_switch"></div>
-					</div>
-				</div>	
-				
-				<div class="toolsBox">
-					<h3 data-content="waypoints" class="activ"> Waypoints</h3>
-					<br>
-					<div class="btn" id="btn-saveWaypoint" title="Save current location">Add waypoint</div>
-					<div class="toolsContent activ" id="toolsContent_waypoints">
-						<div id="waypointsInfos"></div>
-					</div>
-				</div>
-				<div class="toolsBox">
-					<h3 data-content="tools" class="activ"> Tools</h3>
-					<div class="toolsContent activ" id="toolsContent_tools">
-						Sun time <input type="range" id="cfg_sun_time" min="20" max="80" step="0.1" value="50">
-						<br>
-						Sun luminosity <input type="range" id="cfg_sun_luminosity" min="0" max="100" step="0.1" value="50">
-					</div>
-				</div>
-			</div>
 			
 			<div id="threeContainer">
 				<div class="overlayUI" id="overlayUICoords">
-					--
+
 				</div>
 				<div class="overlayUI" id="overlayUILoading">
 					<div id="computingQueue"></div>
@@ -79,10 +41,37 @@
 				<div class="overlayUI" id="overlayCurtile">
 					
 				</div>
+
+				<div class="overlayUI" id="overlayTools">
+					<span class="floating-btn">
+						<div class="heading" id="camHeading"></div>
+					</span>
+					<br>	
+					<span class="floating-btn" id="btn-zoom-out">
+						<img src="img/icon_zoom_out.png"/>
+					</span>
+					<br>	
+					<span class="floating-btn" id="btn-zoom-in">
+						<img src="img/icon_zoom_in.png"/>
+					</span>
+					<br>
+
+					<div id="extensions-switchs">
+
+					</div>
+					
+					<!-- <div class="toolsBox">
+						<h3 data-content="waypoints" class="activ"> Waypoints</h3>
+						<br>
+						<div class="btn" id="btn-saveWaypoint" title="Save current location">Add waypoint</div>
+						<div class="toolsContent activ" id="toolsContent_waypoints">
+							<div id="waypointsInfos"></div>
+						</div>
+					</div>
+					 -->
+				</div>
+
 			</div>
-		</div>
-		<div id="footer">
-			<a href="https://github.com/balooval/oev/">Source on Github</a>
 		</div>
 
 		<script>
