@@ -171,12 +171,11 @@ function simplifyLanduse(_landuse) {
 
 function drawLanduse(_landuse, _tile) {
     let lastMaterialLayer = 0;
-    let layersGeometries = [];
-    let curLayerGeometry = new THREE.Geometry();
+    let layersBuffers = [];
+    let curLayerBuffersGeos = [];
     const layerInfos = getLayerInfos(_landuse.type);
     const trianglesResult = triangulate(_landuse);
     if (trianglesResult === null) return false;
-    layersGeometries.push(curLayerGeometry);
     const elevationsDatas = getElevationsDatas(_landuse);
 
     for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
@@ -234,12 +233,16 @@ function drawLanduse(_landuse, _tile) {
         const curLayerMap = Math.floor(layer / layerInfos.layersByMap);
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
-            curLayerGeometry = new THREE.Geometry();
-            layersGeometries.push(curLayerGeometry);
+            const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
+            layersBuffers.push(mergedLayersBuffer);
+            curLayerBuffersGeos = [];
         }
-        curLayerGeometry.merge(geometry);
+        const curBufferGeo = new THREE.BufferGeometry().fromGeometry(geometry);
+        curLayerBuffersGeos.push(curBufferGeo);
     }
-    saveLanduseGeometries(_landuse.id, layersGeometries, _landuse.type);       
+    const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
+    layersBuffers.push(mergedLayersBuffer);
+    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);       
 }
 
 function redrawMeshes() {
@@ -265,17 +268,16 @@ function saveLanduseGeometries(_id, _geometries, _type) {
         const layerInfos = getLayerInfos(_type);
         const meshes = [];
         for (let l = 0; l < layerInfos.materialNb; l ++) {
-            meshes.push(new THREE.Mesh(new THREE.Geometry(), materials[_type][l]));
+            meshes.push(new THREE.Mesh(new THREE.BufferGeometry(), materials[_type][l]));
         }
         typedGeometries[_type] = {
             meshes : meshes, 
             list : [], 
         };
     }
-    const buffers = _geometries.map(geo => new THREE.BufferGeometry().fromGeometry(geo));
     typedGeometries[_type].list.push({
         id : _id, 
-        geometries : buffers, 
+        geometries : _geometries, 
     });
 }
 
