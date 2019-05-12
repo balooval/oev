@@ -105,6 +105,7 @@ const APP = {
 
 			['shell_scrub_1', 'shell_scrub_1.png'], 
 			['shell_scrub_2', 'shell_scrub_2.png'], 
+			['shell_scrub_3', 'shell_scrub_3.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {

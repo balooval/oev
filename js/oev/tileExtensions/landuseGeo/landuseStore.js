@@ -152,10 +152,10 @@ function getLayerInfos(_type) {
         nbLayers = 8;
     }
     if (_type == 'scrub') {
-        meterBetweenLayers = 1;
-        uvFactor = 1;
-        materialNb = 2;
-        nbLayers = 8;
+        meterBetweenLayers = 0.8;
+        uvFactor = 2;
+        materialNb = 3;
+        nbLayers = 9;
     }
     if (_type == 'vineyard') {
         meterBetweenLayers = 0.4;
@@ -167,7 +167,7 @@ function getLayerInfos(_type) {
         meterBetweenLayers : meterBetweenLayers, 
         uvFactor : uvFactor, 
         nbLayers : nbLayers, 
-        groundOffset : 0, 
+        groundOffset : 1, 
         materialNb : materialNb, 
         layersByMap : nbLayers / materialNb, 
     }
@@ -179,6 +179,13 @@ function drawLanduse(_landuse, _tile) {
     let curLayerGeometry = new THREE.Geometry();
 
     const layerInfos = getLayerInfos(_landuse.type);
+
+    const uvAngle = Math.random() * 3.14;
+    const uvRatioX = Math.cos(uvAngle);
+    const uvRatioY = Math.sin(uvAngle);
+
+    const trianglesResult = triangulate(_landuse);
+    if (trianglesResult === null) return false;
 
     layersGeometries.push(curLayerGeometry);
     const elevationsDatas = getElevationsDatas(_landuse);
@@ -194,8 +201,10 @@ function drawLanduse(_landuse, _tile) {
                 layerInfos.groundOffset + elevationsDatas.border[i] + layer * layerInfos.meterBetweenLayers
             );
             geometry.vertices.push(vertPos);
-            const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-            const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
+            let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
+            let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
+            // uvX *= layerInfos.uvFactor;
+            // uvY *= layerInfos.uvFactor;
             uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
         });
         _landuse.holes.forEach((hole, h) => {
@@ -223,7 +232,6 @@ function drawLanduse(_landuse, _tile) {
             uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
         });
         
-        const trianglesResult = triangulate(_landuse);
         trianglesResult.forEach(t => {
             const points = t.getPoints();
             geometry.faceVertexUvs[0].push([
@@ -255,6 +263,7 @@ function redrawMeshes() {
             const datasGeometries = curTypedGeos.list.map(data => data.geometries[l]);
             if (datasGeometries.length == 0) continue;
             mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
+            mesh.receiveShadow = true;
             GLOBE.addMeshe(mesh);
         }
     });
@@ -298,19 +307,25 @@ function deleteLanduseGeometry(_id, _type) {
 function triangulate(_landuse) {
     let nbPoints = 0;
     const border = _landuse.border.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
-    const swctx = new poly2tri.SweepContext(border);
-    nbPoints += _landuse.border.length;
-    _landuse.holes.forEach(hole => {
-        const swcHole = hole.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
-        swctx.addHole(swcHole);
-        nbPoints += hole.length;
-    });
-    _landuse.fillPoints.forEach((point, i) => {
-        swctx.addPoint(new poly2tri.Point(point[0], point[1], i + nbPoints));
-    });
-    nbPoints += _landuse.fillPoints.length;
-    swctx.triangulate();
-    return swctx.getTriangles();
+    try {
+        const swctx = new poly2tri.SweepContext(border);
+    
+        nbPoints += _landuse.border.length;
+        _landuse.holes.forEach(hole => {
+            const swcHole = hole.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
+            swctx.addHole(swcHole);
+            nbPoints += hole.length;
+        });
+        _landuse.fillPoints.forEach((point, i) => {
+            swctx.addPoint(new poly2tri.Point(point[0], point[1], i + nbPoints));
+        });
+        nbPoints += _landuse.fillPoints.length;
+        swctx.triangulate();
+        return swctx.getTriangles();
+    } catch (error) {
+        console.warn('Error :', error);
+        return null;
+    }
 }
 
 function getElevationsDatas(_landuse) {
@@ -519,6 +534,7 @@ const materials = {
     ], 
     scrub : [
         new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
         new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
     ], 
     grass : [
@@ -541,6 +557,7 @@ function initTextures() {
         materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
         materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
         materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
+        materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
         materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_1');
         materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
         materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
