@@ -14,15 +14,10 @@ class LoaderLanduse {
 		const url = this.serverUrl + "z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y;
 		fetch(url)
 		.then(res => res.text())
-		.then(text => this.onDataLoadSuccess(text))
-		.catch(e => console.log('Load landuse error', e););
+		.then(text => this.onDataLoadSuccess(text));
 	}
 	
 	onDataLoadSuccess(_data) {
-		// compute(this, {
-		// 	json : _data, 
-		// 	bbox : this.params.bbox
-        // });
         this.datasReady(_data);
 	}
 	

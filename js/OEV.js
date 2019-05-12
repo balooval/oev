@@ -15,7 +15,7 @@ import MapExtension from './oev/tileExtensions/map/mapExtension.js';
 import ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
 import BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
 import NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
-import LanduseExtension from './oev/tileExtensions/landuseGeo/landuseExtension.js';
+import LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];

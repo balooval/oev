@@ -3,7 +3,7 @@ import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
-import * as Simplify from '../../../utils/simplify.js';
+import * as Simplify from '../../../libs/simplify.js';
 
 let knowIds = [];
 const tileToLanduses = {};
@@ -251,11 +251,10 @@ function redrawMeshes() {
         const curTypedGeos = typedGeometries[type]; 
         for (let l = 0; l < layerInfos.materialNb; l ++) {
             const mesh = curTypedGeos.meshes[l];
-            if (mesh.geometry) mesh.geometry.dispose();
+            mesh.geometry.dispose();
             const datasGeometries = curTypedGeos.list.map(data => data.geometries[l]);
-            if (datasGeometries.length == 0) continue;
+            if (datasGeometries.length == 0) continue; // TODO: vu le test au dessus c'est débile
             mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
-            mesh.receiveShadow = true;
             GLOBE.addMeshe(mesh);
         }
     });
@@ -268,7 +267,9 @@ function saveLanduseGeometries(_id, _geometries, _type) {
         const layerInfos = getLayerInfos(_type);
         const meshes = [];
         for (let l = 0; l < layerInfos.materialNb; l ++) {
-            meshes.push(new THREE.Mesh(new THREE.BufferGeometry(), materials[_type][l]));
+            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), materials[_type][l]);
+            mesh.receiveShadow = true;
+            meshes.push(mesh);
         }
         typedGeometries[_type] = {
             meshes : meshes, 
@@ -556,6 +557,8 @@ function initTextures() {
         materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
         materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
 
+        materials.forest[3].normalMap = NET_TEXTURES.texture('normal_noise');
+        materials.scrub[2].normalMap = NET_TEXTURES.texture('normal_noise');
         materials.grass[1].normalMap = NET_TEXTURES.texture('normal_noise');
         materialsInit = true;
     }
