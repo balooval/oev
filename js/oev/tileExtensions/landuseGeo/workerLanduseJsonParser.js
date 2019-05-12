@@ -54,8 +54,6 @@ function readJson(_datas, _bbox) {
 		});
 		const cleanWay = [...wayNodes]
 		cleanWay.pop();
-		// const centroid = getPolygonCentroid(wayNodes);
-		// if (!bboxContainCoord(_bbox, centroid)) return;
 		const relation = {
 			id : rel.id, 
 			props : props, 

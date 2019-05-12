@@ -203,9 +203,13 @@ function drawLanduse(_landuse, _tile) {
             geometry.vertices.push(vertPos);
             let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
             let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
+            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
+            
             // uvX *= layerInfos.uvFactor;
             // uvY *= layerInfos.uvFactor;
-            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
+            // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
+            // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
+            // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
         });
         _landuse.holes.forEach((hole, h) => {
             hole.forEach((point, i) => {
@@ -215,9 +219,15 @@ function drawLanduse(_landuse, _tile) {
                     layerInfos.groundOffset + elevationsDatas.holes[h][i] + layer * layerInfos.meterBetweenLayers
                 );
                 geometry.vertices.push(vertPos);
-                const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-                const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
+                let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
+                let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
                 uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
+
+                // uvX *= layerInfos.uvFactor;
+                // uvY *= layerInfos.uvFactor;
+                // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
+                // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
+                // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
             });
         });
         _landuse.fillPoints.forEach((point, i) => {
@@ -227,9 +237,15 @@ function drawLanduse(_landuse, _tile) {
                 layerInfos.groundOffset + elevationsDatas.fill[i] + layer * layerInfos.meterBetweenLayers
             );
             geometry.vertices.push(vertPos);
-            const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-            const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
+            let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
+            let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
             uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
+
+            // uvX *= layerInfos.uvFactor;
+            // uvY *= layerInfos.uvFactor;
+            // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
+            // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
+            // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
         });
         
         trianglesResult.forEach(t => {
@@ -323,7 +339,7 @@ function triangulate(_landuse) {
         swctx.triangulate();
         return swctx.getTriangles();
     } catch (error) {
-        console.warn('Error :', error);
+        console.warn('Error on landuse', _landuse.id, error);
         return null;
     }
 }
@@ -361,8 +377,15 @@ function buildRelation(_relation, _waysList, _nodesList) {
 		let wayNodes = [];
         _relation.members.filter(member => member.role == 'outer')
         .forEach(member => {
-			const outerWay = _waysList['WAY_' + member.ref];
-			wayNodes.push(...outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]));
+            const outerWay = _waysList['WAY_' + member.ref];
+
+
+            const cleanWay = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+            cleanWay.pop();
+            
+
+			wayNodes.push(...cleanWay.slice(1));
+			// wayNodes.push(...outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]));
         });
         
         const border = wayNodes.slice(1);
@@ -564,6 +587,8 @@ function initTextures() {
         materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
         materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
         materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
+
+        materials.grass[1].normalMap = NET_TEXTURES.texture('normal_noise');
         materialsInit = true;
     }
 }

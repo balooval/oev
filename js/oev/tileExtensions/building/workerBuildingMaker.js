@@ -1,5 +1,5 @@
 importScripts('./Earcut.js');
-importScripts('./simplify.js');
+importScripts('../../../utils/simplify.js');
 
 onmessage = function(_msg) {
 

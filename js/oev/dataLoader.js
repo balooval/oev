@@ -15,6 +15,15 @@ function onRessourceLoaded(_type, _nb) {
 export function registerLoader(_type, _class) {
 	registeredLoaders[_type] = _class;
 }
+
+const keepCacheByType = {
+	TILE2D : true, 
+	ELE : true, 
+	BUILDINGS : true, 
+	NORMAL : true, 
+	LANDUSE : false, 
+};
+
 export class Proxy {
 	constructor(_type) {
 		this._type = _type;
@@ -23,7 +32,6 @@ export class Proxy {
 			ELE : 4, 
 			BUILDINGS : 2, 
 			NORMAL : 1, 
-			PLANE : 1, 
 			LANDUSE : 1, 
 		};
 		this._simulLoad = simulByType[this._type];
@@ -75,9 +83,7 @@ export class Proxy {
 		_params.callback(_data);
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
-		if (_params.dropDatas === undefined || _params.dropDatas == false) {
-			this._datasLoaded[_params.key] = _data;
-		}
+		if (keepCacheByType[this._type]) this._datasLoaded[_params.key] = _data;
 		this._checkForNextLoad();
 	}
 	

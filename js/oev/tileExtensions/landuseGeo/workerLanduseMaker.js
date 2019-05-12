@@ -1,5 +1,5 @@
 importScripts('../building/Earcut.js');
-importScripts('../building/simplify.js');
+importScripts('../../../utils/simplify.js');
 
 onmessage = function(_msg) {
 	let landuses = _msg.data.landusesDatas;

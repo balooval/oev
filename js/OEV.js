@@ -87,6 +87,7 @@ const APP = {
 			['sky_gradient', 'sky_gradient.png'], 
 			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
+			['normal_noise', 'normal_noise.jpg'], 
 			
 			['shell_void', 'shell_void.png'], 
 
@@ -103,9 +104,9 @@ const APP = {
 			['shell_grass_1', 'shell_grass_1.png'], 
 			['shell_grass_2', 'shell_grass_2.png'], 
 
-			['shell_scrub_1', 'shell_scrub_1.png'], 
-			['shell_scrub_2', 'shell_scrub_2.png'], 
-			['shell_scrub_3', 'shell_scrub_3.png'], 
+			['shell_scrub_1', 'shell_scrub_mix_1.png'], 
+			['shell_scrub_2', 'shell_scrub_mix_2.png'], 
+			['shell_scrub_3', 'shell_scrub_mix_3.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {
