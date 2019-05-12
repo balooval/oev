@@ -33,6 +33,7 @@ export class Basic {
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
 		this.meshe = undefined;
+		this.key = this.tileX + '_' + this.tileY + '_' + this.zoom;
 		this.verticesNb = (GLOBE.tilesDefinition + 1) * (GLOBE.tilesDefinition + 1);
 		this.startCoord = GEO.tileToCoordsVect(this.tileX, this.tileY, this.zoom);
 		this.endCoord = GEO.tileToCoordsVect(this.tileX + 1, this.tileY + 1, this.zoom);

@@ -1,5 +1,6 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
+import LanduseStore from './landuseStore.js';
 import * as LanduseLoader from './landuseLoader.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
@@ -131,17 +132,7 @@ export default class LanduseExtension {
 		this.dataLoading = false;
 		this.dataLoaded = true;
         if (!this.tile.isReady) return false;
-        const bbox = {
-            minLon : this.tile.startCoord.x, 
-            minLat : this.tile.endCoord.y, 
-            maxLon : this.tile.endCoord.x, 
-            maxLat : this.tile.startCoord.y, 
-        };
-        parseJson(this, {
-            json : _datas,
-            bbox : bbox, 
-            definition : ShellTexture.definition(), 
-        });
+        LanduseStore.setDatas(_datas, this.tile);
     }
 
     jsonParsed(_datas) {
@@ -409,6 +400,7 @@ export default class LanduseExtension {
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         if (!this.isActive) return false;
+        LanduseStore.tileRemoved(this.tile);
         this.hide();
         this.destroyMeshes();
         this.drawedLanduses.forEach(id => {
