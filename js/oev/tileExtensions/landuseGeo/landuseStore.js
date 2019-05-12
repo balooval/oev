@@ -2,23 +2,26 @@ import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
 import ElevationStore from '../elevation/elevationStore.js';
+import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 let knowIds = [];
 const tileToLanduses = {};
 let storedLanduses = {};
-let landusesMeshes = {};
+const typedGeometries = {};
 
 const debugMaterial = new THREE.MeshPhysicalMaterial({wireframe:true, roughness:1,metalness:0, color:0xff0000, side:THREE.DoubleSide});
+
+let schdeduleNb = 0;
 
 
 const api = {
     setDatas : function(_json, _tile) {
+        initTextures();
         const parsedJson = JSON.parse(_json);
         const nodesList = extractNodes(parsedJson);
         const waysList = extractWays(parsedJson);
-
+        let landuseAdded = false;
         tileToLanduses[_tile.key] = [];
-
         const extractedRelations = extractElements(parsedJson, 'relation');
         extractedRelations
         .filter(rel => knowLanduse(rel.id))
@@ -37,6 +40,7 @@ const api = {
                 refNb : 1
             };
             drawLanduse(relBuilded, _tile);
+            landuseAdded = true;
         });
 
         const extractedWays = extractElements(parsedJson, 'way');
@@ -45,7 +49,6 @@ const api = {
         .forEach(way => {
             storedLanduses['LANDUSE_' + way.id].refNb ++;
         });
-
         tileToLanduses[_tile.key].push(...extractedWays.map(way => way.id));
 
         extractedWays
@@ -58,8 +61,10 @@ const api = {
                 refNb : 1
             };
             drawLanduse(wayBuilded, _tile);
+            landuseAdded = true;
         });
 
+        if (landuseAdded) scheduleDraw();
         Renderer.MUST_RENDER = true;
     }, 
 
@@ -72,13 +77,21 @@ const api = {
             stored.refNb --;
             if (stored.refNb <= 0) {
                 forgotLanduse(landuseId);
-                clearLanduse(landuseId);
+                // clearLanduse(landuseId);
+                deleteLanduseGeometry(stored.data.id, stored.data.type);
                 delete storedLanduses['LANDUSE_' + landuseId];
             }
         });
+        scheduleDraw();
     }
 };
 
+
+function scheduleDraw() {
+    if (schdeduleNb > 0) return false;
+    schdeduleNb ++;
+    setTimeout(redrawMeshes, 1000);
+}
 
 
 function calcBbox(_border) {
@@ -93,39 +106,14 @@ function calcBbox(_border) {
 }
 
 function coordGrid(_bbox, _border) {
-
-    /*
-    const lon = _border.map(point => point[0]);
-    const lat = _border.map(point => point[1]);
-
-    const toto = {
-        minLon : Math.min(...lon), 
-        maxLon : Math.max(...lon), 
-        minLat : Math.min(...lat), 
-        maxLat : Math.max(...lat), 
-    }
-    return [[
-        toto.minLon + (toto.maxLon - toto.minLon) / 2, 
-        toto.minLat + (toto.maxLat - toto.minLat) / 2, 
-    ]];
-*/
-
-
-
     const zoom = 15;
     const tileA = GEO.coordsToTile(_bbox.minLon, _bbox.minLat, zoom);
     const tileB = GEO.coordsToTile(_bbox.maxLon, _bbox.maxLat, zoom);
-    
     const tmp = [];
     for (let x = tileA.x; x <= tileB.x; x ++) {
         for (let y = tileB.y; y <= tileA.y; y ++) {
             tmp.push([x, y]);
         }
-    }
-    if (tmp.length == 0) {
-        console.log('tileA', tileA);
-        console.log('tileB', tileB);
-        console.log('tmp', tmp);
     }
     const grid = [];
     tmp.forEach(tilePos => {
@@ -148,66 +136,92 @@ function coordGrid(_bbox, _border) {
     return grid;
 }
 
+function getLayerInfos(_type) {
+    let nbLayers = 16;
+    let materialNb = 4;
+    let uvFactor = 1;
+    let meterBetweenLayers = 1.5;
 
-
-
-function clearLanduse(_landuseId) {
-    const mesh = landusesMeshes['MESH_' + _landuseId];
-    if (!mesh) {
-        delete landusesMeshes['MESH_' + _landuseId];
-        console.warn('MESH', _landuseId, 'unknow');
-        return false;
+    if (_type == 'forest') {
+        meterBetweenLayers = 1;
+        uvFactor = 3;
     }
-    GLOBE.removeMeshe(mesh);
-    mesh.geometry.dispose();
-    delete landusesMeshes['MESH_' + _landuseId];
+    if (_type == 'grass') {
+        meterBetweenLayers = 0.4;
+        uvFactor = 2;
+        materialNb = 2;
+        nbLayers = 8;
+    }
+    if (_type == 'scrub') {
+        meterBetweenLayers = 1;
+        uvFactor = 1;
+        materialNb = 2;
+        nbLayers = 8;
+    }
+    if (_type == 'vineyard') {
+        meterBetweenLayers = 0.4;
+        uvFactor = 32;
+        materialNb = 4;
+        nbLayers = 12;
+    }
+    return {
+        meterBetweenLayers : meterBetweenLayers, 
+        uvFactor : uvFactor, 
+        nbLayers : nbLayers, 
+        groundOffset : 0, 
+        materialNb : materialNb, 
+        layersByMap : nbLayers / materialNb, 
+    }
 }
 
 function drawLanduse(_landuse, _tile) {
-    let meterBetweenLayers = 10;
-    let uvFactor = 1;
-    let nbLayers = 1;
-    let groundOffset = 10;
+    let lastMaterialLayer = 0;
+    let layersGeometries = [];
+    let curLayerGeometry = new THREE.Geometry();
 
+    const layerInfos = getLayerInfos(_landuse.type);
+
+    layersGeometries.push(curLayerGeometry);
     const elevationsDatas = getElevationsDatas(_landuse);
-    for (let layer = 0; layer < nbLayers; layer ++) {
-        var geometry = new THREE.Geometry();
+    for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
+        const curLayerMap = Math.floor(layer / layerInfos.layersByMap);
+        const geometry = new THREE.Geometry();
         const uvDatas = [];
         geometry.faceVertexUvs[0] = [];
         _landuse.border.forEach((point, i) => {
             const vertPos = GLOBE.coordToXYZ(
                 point[0], 
                 point[1], 
-                groundOffset + elevationsDatas.border[i] + layer * meterBetweenLayers
+                layerInfos.groundOffset + elevationsDatas.border[i] + layer * layerInfos.meterBetweenLayers
             );
             geometry.vertices.push(vertPos);
             const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
             const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-            uvDatas.push(new THREE.Vector2(uvX * uvFactor, uvY * uvFactor));
+            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
         });
         _landuse.holes.forEach((hole, h) => {
             hole.forEach((point, i) => {
                 const vertPos = GLOBE.coordToXYZ(
                     point[0], 
                     point[1], 
-                    groundOffset + elevationsDatas.holes[h][i] + layer * meterBetweenLayers
+                    layerInfos.groundOffset + elevationsDatas.holes[h][i] + layer * layerInfos.meterBetweenLayers
                 );
                 geometry.vertices.push(vertPos);
                 const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
                 const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-                uvDatas.push(new THREE.Vector2(uvX * uvFactor, uvY * uvFactor));
+                uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
             });
         });
         _landuse.fillPoints.forEach((point, i) => {
             const vertPos = GLOBE.coordToXYZ(
                 point[0], 
                 point[1], 
-                groundOffset + elevationsDatas.fill[i] + layer * meterBetweenLayers
+                layerInfos.groundOffset + elevationsDatas.fill[i] + layer * layerInfos.meterBetweenLayers
             );
             geometry.vertices.push(vertPos);
             const uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
             const uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-            uvDatas.push(new THREE.Vector2(uvX * uvFactor, uvY * uvFactor));
+            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
         });
         
         const trianglesResult = triangulate(_landuse);
@@ -220,11 +234,66 @@ function drawLanduse(_landuse, _tile) {
             ]);
             geometry.faces.push(new THREE.Face3(points[0].id, points[1].id, points[2].id));
         });
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+        // saveLanduseGeometry(_landuse.id, geometry, _landuse.type);
         
-        const mesh = new THREE.Mesh(geometry, debugMaterial);
-        mesh.receiveShadow = true;
-        GLOBE.addMeshe(mesh);
-        landusesMeshes['MESH_' + _landuse.id] = mesh;
+        if (curLayerMap != lastMaterialLayer) {
+            lastMaterialLayer = curLayerMap;
+            curLayerGeometry = new THREE.Geometry();
+            layersGeometries.push(curLayerGeometry);
+        }
+        curLayerGeometry.merge(geometry);
+    }
+    saveLanduseGeometry(_landuse.id, layersGeometries, _landuse.type);       
+}
+
+function redrawMeshes() {
+    Object.keys(typedGeometries).forEach(type => {
+        const layerInfos = getLayerInfos(type);
+        const curTypedGeos = typedGeometries[type]; 
+        for (let l = 0; l < layerInfos.materialNb; l ++) {
+            const mesh = curTypedGeos.meshes[l];
+            if (mesh.geometry) mesh.geometry.dispose();
+            mesh.geometry = new THREE.Geometry();
+            curTypedGeos.list.forEach(data => {
+                mesh.geometry.merge(data.geometries[l]);
+            });
+            GLOBE.addMeshe(mesh);
+        }
+    });
+    schdeduleNb --;
+}
+
+function saveLanduseGeometry(_id, _geometries, _type) {
+    if (!typedGeometries[_type]) {
+        const layerInfos = getLayerInfos(_type);
+        const meshes = [];
+        for (let l = 0; l < layerInfos.materialNb; l ++) {
+            meshes.push(new THREE.Mesh(new THREE.Geometry(), materials[_type][l]));
+        }
+        typedGeometries[_type] = {
+            meshes : meshes, 
+            list : [], 
+        };
+    }
+    typedGeometries[_type].list.push({
+        id : _id, 
+        geometries : _geometries, 
+    });
+    // console.log('typedGeometries', typedGeometries);
+}
+
+function deleteLanduseGeometry(_id, _type) {
+    const curTypedGeos = typedGeometries[_type]; 
+    for (let i = 0; i < curTypedGeos.list.length; i ++) {
+        if (curTypedGeos.list[i].id != _id) continue;
+        curTypedGeos.list[i].geometries.forEach(geo => geo.dispose());
+        curTypedGeos.list.splice(i, 1);
+        break;
+    }
+    if (curTypedGeos.list.length == 0) {
+        curTypedGeos.meshes.forEach(mesh => GLOBE.removeMeshe(mesh));
     }
 }
 
@@ -265,10 +334,6 @@ function getElevationsDatas(_landuse) {
     }
 }
 
-
-
-
-
 function buildRelation(_relation, _waysList, _nodesList) {
 		const innersCoords = _relation.members
 		.filter(member => member.role == 'inner')
@@ -301,13 +366,9 @@ function buildRelation(_relation, _waysList, _nodesList) {
 
 function buildWay(_way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
-
     const border = wayNodes.slice(1);
     const bbox = calcBbox(border);
     const grid = coordGrid(bbox, border);
-    // console.log('border', border);
-    // console.log('grid', grid);
-
     return {
         id : _way.id, 
         type : extractType(_way), 
@@ -352,11 +413,10 @@ function extractElements(_datas, _type) {
     return _datas.elements
 	.filter(e => e.type == _type)
 	.filter(way => way.tags)
-    .filter(way => isSupported(way));
+    .filter(way => isTagSupported(way));
 }
 
-
-function isSupported(_element) {
+function isTagSupported(_element) {
     if (extractType(_element)) return true;
 	return false;
 }
@@ -373,6 +433,7 @@ function extractType(_element) {
             return null;
         })
     })
+    if (equalsTags[elementType]) return equalsTags[elementType];
 	return elementType;
 }
 
@@ -398,15 +459,26 @@ function mapValue(_value, _min, _max) {
 	return (_value - _min) / length;
 }
 
+const equalsTags = {
+    wood : 'forest', 
+    farmyard : 'grass', 
+    farmland : 'grass', 
+    grassland : 'grass', 
+    orchard : 'grass', 
+    meadow : 'grass', 
+    greenfield : 'grass', 
+    village_green : 'grass', 
+};
+
 const supportedTags = [
     {
         key : 'landuse', 
         values : [
             'vineyard', 
             'forest', 
-            'wood', 
             'scrub', 
             
+            'wood', 
             'grass', 
             'farmyard', 
             'farmland', 
@@ -437,5 +509,48 @@ const supportedTags = [
     }, 
 ];
 
+let materialsInit = false;
+// const debugWireframe = true;
+const debugWireframe = false;
+const materials = {
+    forest : [
+        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.6}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.7}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.8}), 
+    ], 
+    scrub : [
+        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+    grass : [
+        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+    vineyard : [
+        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+};
+
+function initTextures() {
+    if (!materialsInit) {
+        materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
+        materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
+        materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
+        materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
+        materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
+        materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
+        materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_1');
+        materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
+        materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
+        materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
+        materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
+        materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
+        materialsInit = true;
+    }
+}
 
 export {api as default};

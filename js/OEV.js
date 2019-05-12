@@ -48,7 +48,7 @@ const APP = {
 		TileExtension.register('LANDUSE', LanduseExtension);
 		TileExtension.register('BUILDING', BuildingExtension);
 		TileExtension.activate('TILE2D');
-		// TileExtension.activate('ELEVATION');
+		TileExtension.activate('ELEVATION');
 		// TileExtension.activate('NORMAL');
 		TileExtension.activate('LANDUSE');
 		GLOBE.init();
