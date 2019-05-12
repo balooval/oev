@@ -3,16 +3,13 @@ import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
+import * as Simplify from '../../../utils/simplify.js';
 
 let knowIds = [];
 const tileToLanduses = {};
 let storedLanduses = {};
 const typedGeometries = {};
-
-const debugMaterial = new THREE.MeshPhysicalMaterial({wireframe:true, roughness:1,metalness:0, color:0xff0000, side:THREE.DoubleSide});
-
 let schdeduleNb = 0;
-
 
 const api = {
     setDatas : function(_json, _tile) {
@@ -20,51 +17,17 @@ const api = {
         const parsedJson = JSON.parse(_json);
         const nodesList = extractNodes(parsedJson);
         const waysList = extractWays(parsedJson);
-        let landuseAdded = false;
         tileToLanduses[_tile.key] = [];
+        
         const extractedRelations = extractElements(parsedJson, 'relation');
-        extractedRelations
-        .filter(rel => knowLanduse(rel.id))
-        .forEach(rel => {
-            storedLanduses['LANDUSE_' + rel.id].refNb ++;
-        });
-        tileToLanduses[_tile.key].push(...extractedRelations.map(rel => rel.id));
-
-        extractedRelations
-        .filter(way => !knowLanduse(way.id))
-        .forEach(newRel => {
-            knowIds.push(newRel.id);
-            const relBuilded = buildRelation(newRel, waysList, nodesList);
-            storedLanduses['LANDUSE_' + relBuilded.id] = {
-                data : relBuilded, 
-                refNb : 1
-            };
-            drawLanduse(relBuilded, _tile);
-            landuseAdded = true;
-        });
-
         const extractedWays = extractElements(parsedJson, 'way');
-        extractedWays
-        .filter(way => knowLanduse(way.id))
-        .forEach(way => {
-            storedLanduses['LANDUSE_' + way.id].refNb ++;
-        });
-        tileToLanduses[_tile.key].push(...extractedWays.map(way => way.id));
-
-        extractedWays
-        .filter(way => !knowLanduse(way.id))
-        .forEach(newWay => {
-            knowIds.push(newWay.id);
-            const wayBuilded = buildWay(newWay, nodesList);
-            storedLanduses['LANDUSE_' + wayBuilded.id] = {
-                data : wayBuilded, 
-                refNb : 1
-            };
-            drawLanduse(wayBuilded, _tile);
-            landuseAdded = true;
-        });
-
-        if (landuseAdded) scheduleDraw();
+        registerDatas(_tile, extractedRelations);
+        registerDatas(_tile, extractedWays);
+        
+        let landuseAdded = 0;
+        landuseAdded += buildLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
+        landuseAdded += buildLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
+        if (landuseAdded > 0) scheduleDraw();
     }, 
 
     tileRemoved : function(_tile) {
@@ -76,14 +39,42 @@ const api = {
             stored.refNb --;
             if (stored.refNb <= 0) {
                 forgotLanduse(landuseId);
-                // clearLanduse(landuseId);
-                deleteLanduseGeometry(stored.data.id, stored.data.type);
+                deleteLanduseGeometry(stored.id, stored.type);
                 delete storedLanduses['LANDUSE_' + landuseId];
             }
         });
+        delete tileToLanduses[_tile.key];
         scheduleDraw();
     }
 };
+
+function registerDatas(_tile, _extractedDatas) {
+    _extractedDatas
+    .filter(landuse => isLanduseKnowed(landuse.id))
+    .forEach(landuse => {
+        storedLanduses['LANDUSE_' + landuse.id].refNb ++;
+    });
+    tileToLanduses[_tile.key].push(..._extractedDatas.map(landuse => landuse.id));
+}
+
+function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
+    let landuseAdded = 0;
+    _extractedDatas
+    .filter(way => !isLanduseKnowed(way.id))
+    .forEach(landuseDatas => {
+        knowIds.push(landuseDatas.id);
+        const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
+        storedLanduses['LANDUSE_' + landuseBuilded.id] = {
+            id : landuseBuilded.id, 
+            type : landuseBuilded.type, 
+            refNb : 1
+        };
+        simplifyLanduse(landuseBuilded);
+        drawLanduse(landuseBuilded, _tile);
+        landuseAdded ++;
+    });
+    return landuseAdded;
+}
 
 
 function scheduleDraw() {
@@ -108,17 +99,17 @@ function coordGrid(_bbox, _border) {
     const zoom = 15;
     const tileA = GEO.coordsToTile(_bbox.minLon, _bbox.minLat, zoom);
     const tileB = GEO.coordsToTile(_bbox.maxLon, _bbox.maxLat, zoom);
-    const tmp = [];
+    const tilesPos = [];
     for (let x = tileA.x; x <= tileB.x; x ++) {
         for (let y = tileB.y; y <= tileA.y; y ++) {
-            tmp.push([x, y]);
+            tilesPos.push([x, y]);
         }
     }
     const grid = [];
-    tmp.forEach(tilePos => {
+    const def = GLOBE.tilesDefinition;
+    tilesPos.forEach(tilePos => {
         const startCoord = GEO.tileToCoordsVect(tilePos[0], tilePos[1], zoom);
         const endCoord = GEO.tileToCoordsVect(tilePos[0] + 1, tilePos[1] + 1, zoom);
-        const def = GLOBE.tilesDefinition;
 		const stepCoordX = (endCoord.x - startCoord.x) / def;
 		const stepCoordY = (endCoord.y - startCoord.y) / def;
 		for (let x = 0; x < def; x ++) {
@@ -127,8 +118,7 @@ function coordGrid(_bbox, _border) {
 					startCoord.x + (stepCoordX * x), 
 					startCoord.y + (stepCoordY * y)
 				];
-                if (pointIntoPolygon(coord, _border))
-				grid.push(coord);
+                if (pointIntoPolygon(coord, _border)) grid.push(coord);
 			}
 		}
     });
@@ -173,79 +163,61 @@ function getLayerInfos(_type) {
     }
 }
 
+function simplifyLanduse(_landuse) {
+    const factor = 0.00001;
+    _landuse.border = simplify(_landuse.border, factor, true);
+    _landuse.holes = simplify(_landuse.holes, factor, true);
+}
+
 function drawLanduse(_landuse, _tile) {
     let lastMaterialLayer = 0;
     let layersGeometries = [];
     let curLayerGeometry = new THREE.Geometry();
-
     const layerInfos = getLayerInfos(_landuse.type);
-
-    const uvAngle = Math.random() * 3.14;
-    const uvRatioX = Math.cos(uvAngle);
-    const uvRatioY = Math.sin(uvAngle);
-
     const trianglesResult = triangulate(_landuse);
     if (trianglesResult === null) return false;
-
     layersGeometries.push(curLayerGeometry);
     const elevationsDatas = getElevationsDatas(_landuse);
+
     for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
-        const curLayerMap = Math.floor(layer / layerInfos.layersByMap);
         const geometry = new THREE.Geometry();
         const uvDatas = [];
+        const layerGroundElevation = layerInfos.groundOffset + (layer * layerInfos.meterBetweenLayers);
         geometry.faceVertexUvs[0] = [];
         _landuse.border.forEach((point, i) => {
             const vertPos = GLOBE.coordToXYZ(
                 point[0], 
                 point[1], 
-                layerInfos.groundOffset + elevationsDatas.border[i] + layer * layerInfos.meterBetweenLayers
+                layerGroundElevation + elevationsDatas.border[i]
             );
             geometry.vertices.push(vertPos);
             let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
             let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
             uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-            
-            // uvX *= layerInfos.uvFactor;
-            // uvY *= layerInfos.uvFactor;
-            // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
-            // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
-            // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
         });
         _landuse.holes.forEach((hole, h) => {
             hole.forEach((point, i) => {
                 const vertPos = GLOBE.coordToXYZ(
                     point[0], 
                     point[1], 
-                    layerInfos.groundOffset + elevationsDatas.holes[h][i] + layer * layerInfos.meterBetweenLayers
+                    layerGroundElevation + elevationsDatas.holes[h][i]
                 );
                 geometry.vertices.push(vertPos);
                 let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
                 let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
                 uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-
-                // uvX *= layerInfos.uvFactor;
-                // uvY *= layerInfos.uvFactor;
-                // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
-                // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
-                // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
             });
         });
         _landuse.fillPoints.forEach((point, i) => {
             const vertPos = GLOBE.coordToXYZ(
                 point[0], 
                 point[1], 
-                layerInfos.groundOffset + elevationsDatas.fill[i] + layer * layerInfos.meterBetweenLayers
+                layerGroundElevation + elevationsDatas.fill[i]
             );
             geometry.vertices.push(vertPos);
             let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
             let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
             uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-
-            // uvX *= layerInfos.uvFactor;
-            // uvY *= layerInfos.uvFactor;
-            // const tmpX = uvX * uvRatioX - uvY * uvRatioY;
-            // const tmpY = uvX * uvRatioX + uvY * uvRatioY;
-            // uvDatas.push(new THREE.Vector2(tmpX, tmpY));
         });
         
         trianglesResult.forEach(t => {
@@ -259,6 +231,7 @@ function drawLanduse(_landuse, _tile) {
         });
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
+        const curLayerMap = Math.floor(layer / layerInfos.layersByMap);
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
             curLayerGeometry = new THREE.Geometry();
@@ -266,7 +239,7 @@ function drawLanduse(_landuse, _tile) {
         }
         curLayerGeometry.merge(geometry);
     }
-    saveLanduseGeometry(_landuse.id, layersGeometries, _landuse.type);       
+    saveLanduseGeometries(_landuse.id, layersGeometries, _landuse.type);       
 }
 
 function redrawMeshes() {
@@ -287,7 +260,7 @@ function redrawMeshes() {
     Renderer.MUST_RENDER = true;
 }
 
-function saveLanduseGeometry(_id, _geometries, _type) {
+function saveLanduseGeometries(_id, _geometries, _type) {
     if (!typedGeometries[_type]) {
         const layerInfos = getLayerInfos(_type);
         const meshes = [];
@@ -304,7 +277,6 @@ function saveLanduseGeometry(_id, _geometries, _type) {
         id : _id, 
         geometries : buffers, 
     });
-    // console.log('typedGeometries', typedGeometries);
 }
 
 function deleteLanduseGeometry(_id, _type) {
@@ -325,7 +297,6 @@ function triangulate(_landuse) {
     const border = _landuse.border.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
     try {
         const swctx = new poly2tri.SweepContext(border);
-    
         nbPoints += _landuse.border.length;
         _landuse.holes.forEach(hole => {
             const swcHole = hole.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
@@ -340,6 +311,7 @@ function triangulate(_landuse) {
         return swctx.getTriangles();
     } catch (error) {
         console.warn('Error on landuse', _landuse.id, error);
+        console.log('_landuse', _landuse);
         return null;
     }
 }
@@ -363,41 +335,35 @@ function getElevationsDatas(_landuse) {
     }
 }
 
-function buildRelation(_relation, _waysList, _nodesList) {
-		const innersCoords = _relation.members
-		.filter(member => member.role == 'inner')
-		.map(innerMember => {
-			return _waysList['WAY_' + innerMember.ref].nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
-		})
-		.map(innerWay => {
-			const cleanWay = [...innerWay];
-			cleanWay.pop();
-			return cleanWay;
-		});
-		let wayNodes = [];
-        _relation.members.filter(member => member.role == 'outer')
-        .forEach(member => {
-            const outerWay = _waysList['WAY_' + member.ref];
-
-
-            const cleanWay = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
-            cleanWay.pop();
-            
-
-			wayNodes.push(...cleanWay.slice(1));
-			// wayNodes.push(...outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]));
-        });
-        
-        const border = wayNodes.slice(1);
-        const bbox = calcBbox(border);
-        const grid = coordGrid(bbox, border);
-		return {
-			id : _relation.id, 
-			type : extractType(_relation), 
-			border : border, 
-            fillPoints : grid, 
-			holes : innersCoords, 
-		};
+function buildRelation(_relation, _nodesList, _waysList) {
+    const innersCoords = _relation.members
+    .filter(member => member.role == 'inner')
+    .map(innerMember => {
+        return _waysList['WAY_' + innerMember.ref].nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+    })
+    .map(innerWay => {
+        const cleanWay = [...innerWay];
+        cleanWay.pop();
+        return cleanWay;
+    });
+    let wayNodes = [];
+    _relation.members.filter(member => member.role == 'outer')
+    .forEach(member => {
+        const outerWay = _waysList['WAY_' + member.ref];
+        const cleanWay = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+        cleanWay.pop();
+        wayNodes.push(...cleanWay.slice(1));
+    });
+    const border = wayNodes.slice(1);
+    const bbox = calcBbox(border);
+    const grid = coordGrid(bbox, border);
+    return {
+        id : _relation.id, 
+        type : extractType(_relation), 
+        border : border, 
+        fillPoints : grid, 
+        holes : innersCoords, 
+    };
 }
 
 function buildWay(_way, _nodesList) {
@@ -437,7 +403,7 @@ function extractWays(_datas) {
     return ways;
 }
 
-function knowLanduse(_id) {
+function isLanduseKnowed(_id) {
     return knowIds.includes(_id);
 }
 
