@@ -65,7 +65,6 @@ const api = {
         });
 
         if (landuseAdded) scheduleDraw();
-        Renderer.MUST_RENDER = true;
     }, 
 
     tileRemoved : function(_tile) {
@@ -236,8 +235,6 @@ function drawLanduse(_landuse, _tile) {
         });
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
-        // saveLanduseGeometry(_landuse.id, geometry, _landuse.type);
-        
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
             curLayerGeometry = new THREE.Geometry();
@@ -255,14 +252,14 @@ function redrawMeshes() {
         for (let l = 0; l < layerInfos.materialNb; l ++) {
             const mesh = curTypedGeos.meshes[l];
             if (mesh.geometry) mesh.geometry.dispose();
-            mesh.geometry = new THREE.Geometry();
-            curTypedGeos.list.forEach(data => {
-                mesh.geometry.merge(data.geometries[l]);
-            });
+            const datasGeometries = curTypedGeos.list.map(data => data.geometries[l]);
+            if (datasGeometries.length == 0) continue;
+            mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
             GLOBE.addMeshe(mesh);
         }
     });
     schdeduleNb --;
+    Renderer.MUST_RENDER = true;
 }
 
 function saveLanduseGeometry(_id, _geometries, _type) {
@@ -277,9 +274,10 @@ function saveLanduseGeometry(_id, _geometries, _type) {
             list : [], 
         };
     }
+    const buffers = _geometries.map(geo => new THREE.BufferGeometry().fromGeometry(geo));
     typedGeometries[_type].list.push({
         id : _id, 
-        geometries : _geometries, 
+        geometries : buffers, 
     });
     // console.log('typedGeometries', typedGeometries);
 }
