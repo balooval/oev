@@ -5,18 +5,23 @@ const PARAMS = {
 	useCache : true, 
 };
 
+let API_URL = '';
+
+export function setApiUrl(_url) {
+	API_URL = _url;
+}
+
 class LoaderLanduse {
 	constructor(_callback) {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.serverUrl = 'https://val.openearthview.net/api/index.php?ressource=landuse&';
 	}	
 
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		const url = this.serverUrl + "z=" + _params.z + "&x=" + _params.x + "&y=" + _params.y;
+		const url = API_URL + '&z=' + _params.z + '&x=' + _params.x + '&y=' + _params.y;
 		fetch(url)
 		.then(res => res.text())
 		.then(text => this.onDataLoadSuccess(text));

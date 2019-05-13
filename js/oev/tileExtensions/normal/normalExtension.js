@@ -1,7 +1,13 @@
 import Renderer from '../../renderer.js';
 import * as NormalLoader from './normalLoader.js';
 
-export default class NormalExtension {
+export {setApiUrl} from './normalLoader.js';
+
+export function extensionClass() {
+	return NormalExtension;
+}
+
+class NormalExtension {
 	constructor(_tile) {
         this.id = 'NORMAL';
 		this.dataLoading = false;
@@ -69,7 +75,7 @@ export default class NormalExtension {
         this.texture = null;
 		this.dataLoaded = false;
         this.dataLoading = false;
-        this.tile.material.normalMap = this.texture;
+        this.tile.material.normalMap = null;
         this.tile.material.needsUpdate = true;
         this.tile = null;
 		Renderer.MUST_RENDER = true;

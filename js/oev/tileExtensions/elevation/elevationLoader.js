@@ -6,9 +6,47 @@ const PARAMS = {
 	useCache : true, 
 };
 
+let API_URL = '';
+
+export function setApiUrl(_url) {
+	API_URL = _url;
+}
+
+class LoaderElevation {
+
+	constructor(_callback) {
+		this.definition = GLOBE.tilesDefinition;
+		this.isLoading = false;
+		this.callback = _callback;
+		this.params = {};
+		var loader = this;
+		this.imageObj = new Image();
+		this.imageObj.crossOrigin = 'Anonymous';
+		this.imageObj.onload = function() {
+			loader.onImgReady(this);
+		};
+	}
+
+	load(_params) {
+		this.isLoading = true;
+		this.params = _params;
+		this.imageObj.src = API_URL + '&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+	}
+	
+	onImgReady(_img) {
+		var res = extractElevation(_img, _img.width, _img.height);
+		this.isLoading = false;
+		if (this.callback) {
+			this.callback(res, this.params);
+		}
+	}
+}
+
+
 const canvas = document.createElement('canvas');
-canvas.width = '64';
-canvas.height = '64';
+const canvasSize = GLOBE.tilesDefinition + 1;
+canvas.width = canvasSize;
+canvas.height = canvasSize;
 const context = canvas.getContext('2d');
 
 function extractElevation(_img, _imgWidth, _imgHeight) {
@@ -28,37 +66,6 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
         }
     }
     return eleBuffer;
-}
-
-class LoaderElevation {
-
-	constructor(_callback) {
-		this.definition = GLOBE.tilesDefinition;
-		this.isLoading = false;
-		this.callback = _callback;
-		this.params = {};
-		var loader = this;
-		this.imageObj = new Image();
-		this.imageObj.crossOrigin = 'Anonymous';
-		this.imageObj.onload = function() {
-			loader.onImgReady(this);
-		};
-		this.serverUrl = 'https://val.openearthview.net/api/index.php?ressource=elevation&';
-	}
-
-	load(_params) {
-		this.isLoading = true;
-		this.params = _params;
-		this.imageObj.src = this.serverUrl + 'def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
-	}
-	
-	onImgReady(_img) {
-		var res = extractElevation(_img, _img.width, _img.height);
-		this.isLoading = false;
-		if (this.callback) {
-			this.callback(res, this.params);
-		}
-	}
 }
 
 DataLoader.registerLoader('ELEVATION', LoaderElevation, PARAMS);

@@ -4,6 +4,12 @@ import GLOBE from '../../globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
 
+export {setApiUrl} from './buildingLoader.js';
+
+export function extensionClass() {
+	return BuildingExtension;
+}
+
 const materialWalls = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
 const materialRoof = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
 
@@ -15,7 +21,7 @@ function onWorkerMessage(_res) {
 	workerEvent.fireEvent('BUILDING_READY_' + _res.data.tileKey, _res.data.result);
 }
 
-export default class BuildingExtension {
+class BuildingExtension {
 	constructor(_tile) {
 		this.id = 'BUILDING';
 		this.datas = undefined;

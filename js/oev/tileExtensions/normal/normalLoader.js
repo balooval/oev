@@ -6,23 +6,27 @@ const PARAMS = {
 	useCache : true, 
 };
 
+let API_URL = '';
+
+export function setApiUrl(_url) {
+	API_URL = _url;
+}
+
 class LoaderNormal {
 	constructor(_callback) {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.serverUrl = 'https://val.openearthview.net/api/index.php?ressource=normal';
 		this.textureLoader = new THREE.TextureLoader();
 	}
 
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		var loader = this;
-		this.textureLoader.load(this.serverUrl + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + GLOBE.tilesDefinition, 
-			_texture => loader.onDataLoadSuccess(_texture), 
+		this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + GLOBE.tilesDefinition, 
+			_texture => this.onDataLoadSuccess(_texture), 
 			xhr => {},
-			xhr => loader.onDataLoadError()
+			xhr => this.onDataLoadError()
 		);
 	}
 	

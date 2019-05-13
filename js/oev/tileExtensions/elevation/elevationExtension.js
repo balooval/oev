@@ -3,8 +3,13 @@ import GLOBE from '../../globe.js';
 import ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
+export {setApiUrl} from './elevationLoader.js';
 
-export default class ElevationExtension {
+export function extensionClass() {
+	return ElevationExtension;
+}
+
+class ElevationExtension {
 	constructor(_tile) {
 		this.id = 'ELEVATION';
 		this.dataLoading = false;

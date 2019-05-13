@@ -5,12 +5,17 @@ const PARAMS = {
 	useCache : true, 
 };
 
+let API_URL = '';
+
+export function setApiUrl(_url) {
+	API_URL = _url;
+}
+
 class LoaderTile2D {
 	constructor(_callback) {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.serverUrl = 'https://val.openearthview.net/api/index.php?ressource=osm&';
 		this.textureLoader = new THREE.TextureLoader();
 	}
 
@@ -18,7 +23,7 @@ class LoaderTile2D {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.textureLoader.load(this.serverUrl + 'z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
+		this.textureLoader.load(API_URL + '&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
 			_texture => loader.onDataLoadSuccess(_texture), 
 			xhr => {},
 			xhr => loader.onDataLoadError()

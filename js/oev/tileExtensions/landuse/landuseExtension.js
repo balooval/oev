@@ -2,7 +2,13 @@ import Renderer from '../../renderer.js';
 import LanduseStore from './landuseStore.js';
 import * as LanduseLoader from './landuseLoader.js';
 
-export default class LanduseExtension {
+export {setApiUrl} from './landuseLoader.js';
+
+export function extensionClass() {
+	return LanduseExtension;
+}
+
+class LanduseExtension {
 	constructor(_tile) {
 		this.id = 'LANDUSE';
 		this.dataLoading = false;

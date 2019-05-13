@@ -11,11 +11,11 @@ import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
 import * as SHADER from './oev/shader.js';
 import * as TileExtension from './oev/tileExtensions/tileExtension.js';
-import MapExtension from './oev/tileExtensions/map/mapExtension.js';
-import ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
-import BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
-import NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
-import LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
+import * as MapExtension from './oev/tileExtensions/map/mapExtension.js';
+import * as ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
+import * as BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
+import * as NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
+import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -40,16 +40,23 @@ const APP = {
 		SKY.init();
 		Navigation.init();
 		APP.clock = new THREE.Clock();
-		// document.getElementById('tools').style['max-height'] = document.getElementById('main').clientHeight + 'px';
 
-		TileExtension.register('TILE2D', MapExtension);
-		TileExtension.register('ELEVATION', ElevationExtension);
-		TileExtension.register('NORMAL', NormalExtension);
-		TileExtension.register('LANDUSE', LanduseExtension);
-		TileExtension.register('BUILDING', BuildingExtension);
+		const serverURL = 'https://val.openearthview.net/api/';
+		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
+		ElevationExtension.setApiUrl(serverURL + 'index.php?ressource=elevation');
+		NormalExtension.setApiUrl(serverURL + 'index.php?ressource=normal');
+		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
+		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
+
+		TileExtension.register('TILE2D', MapExtension.extensionClass());
+		TileExtension.register('ELEVATION', ElevationExtension.extensionClass());
+		TileExtension.register('NORMAL', NormalExtension.extensionClass());
+		TileExtension.register('LANDUSE', LanduseExtension.extensionClass());
+		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
+
 		TileExtension.activate('TILE2D');
 		TileExtension.activate('ELEVATION');
-		// TileExtension.activate('NORMAL');
+		TileExtension.activate('NORMAL');
 		TileExtension.activate('LANDUSE');
 		GLOBE.init();
 
