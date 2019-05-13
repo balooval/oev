@@ -21,4 +21,5 @@ export function activate(_extensionId) {
 export function desactivate(_extensionId) {
 	activesExtensions = activesExtensions.filter(extId => extId != _extensionId);
 	evt.fireEvent('TILE_EXTENSION_DESACTIVATE', _extensionId);
+	evt.fireEvent('TILE_EXTENSION_DESACTIVATE_' + _extensionId);
 }

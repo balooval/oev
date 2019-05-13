@@ -1,5 +1,10 @@
 import * as DataLoader from '../../dataLoader.js';
 
+const PARAMS = {
+	nbLoaders : 4, 
+	useCache : true, 
+};
+
 class LoaderTile2D {
 	constructor(_callback) {
 		this.isLoading = false;
@@ -32,5 +37,5 @@ class LoaderTile2D {
 	}
 }
 
-DataLoader.registerLoader('TILE2D', LoaderTile2D);
+DataLoader.registerLoader('TILE2D', LoaderTile2D, PARAMS);
 export const loader = new DataLoader.Proxy('TILE2D');

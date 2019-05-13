@@ -1,6 +1,11 @@
 import * as DataLoader from '../../dataLoader.js';
 import GLOBE from '../../globe.js';
 
+const PARAMS = {
+	nbLoaders : 1, 
+	useCache : true, 
+};
+
 class LoaderNormal {
 	constructor(_callback) {
 		this.isLoading = false;
@@ -33,5 +38,5 @@ class LoaderNormal {
 	}
 }
 
-DataLoader.registerLoader('NORMAL', LoaderNormal);
+DataLoader.registerLoader('NORMAL', LoaderNormal, PARAMS);
 export const loader = new DataLoader.Proxy('NORMAL');

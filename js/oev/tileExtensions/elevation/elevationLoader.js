@@ -1,6 +1,11 @@
 import * as DataLoader from '../../dataLoader.js';
 import GLOBE from '../../globe.js';
 
+const PARAMS = {
+	nbLoaders : 4, 
+	useCache : true, 
+};
+
 const canvas = document.createElement('canvas');
 canvas.width = '64';
 canvas.height = '64';
@@ -56,5 +61,5 @@ class LoaderElevation {
 	}
 }
 
-DataLoader.registerLoader('ELEVATION', LoaderElevation);
+DataLoader.registerLoader('ELEVATION', LoaderElevation, PARAMS);
 export const loader = new DataLoader.Proxy('ELEVATION');

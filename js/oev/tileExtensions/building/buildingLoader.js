@@ -1,5 +1,10 @@
 import * as DataLoader from '../../dataLoader.js';
 
+const PARAMS = {
+	nbLoaders : 2, 
+	useCache : true, 
+};
+
 const loadersWaiting = [];
 
 function compute(_loader, _datas) {
@@ -46,5 +51,5 @@ class LoaderBuilding {
 	}
 }
 
-DataLoader.registerLoader('BUILDING', LoaderBuilding);
+DataLoader.registerLoader('BUILDING', LoaderBuilding, PARAMS);
 export const loader = new DataLoader.Proxy('BUILDING');

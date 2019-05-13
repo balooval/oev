@@ -557,9 +557,16 @@ function initTextures() {
         materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
         materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
 
-        materials.forest[3].normalMap = NET_TEXTURES.texture('normal_noise');
         materials.scrub[2].normalMap = NET_TEXTURES.texture('normal_noise');
         materials.grass[1].normalMap = NET_TEXTURES.texture('normal_noise');
+        
+        materials.forest[1].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+        materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+        materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+        materials.forest[1].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+        materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+        materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+
         materialsInit = true;
     }
 }

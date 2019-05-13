@@ -95,6 +95,9 @@ const APP = {
 			['shell_tree_2', 'shell_tree_2.png'], 
 			['shell_tree_3', 'shell_tree_3.png'], 
 			['shell_tree_4', 'shell_tree_4.png'], 
+			
+			['shell_tree_normal', 'shell_tree_normal.png'], 
+			['shell_tree_specular', 'shell_tree_specular.png'], 
 
 			['shell_vine_1', 'shell_vine_1.png'], 
 			['shell_vine_2', 'shell_vine_2.png'], 

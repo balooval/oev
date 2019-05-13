@@ -1,5 +1,10 @@
 import * as DataLoader from '../../dataLoader.js';
 
+const PARAMS = {
+	nbLoaders : 1, 
+	useCache : true, 
+};
+
 class LoaderLanduse {
 	constructor(_callback) {
 		this.isLoading = false;
@@ -27,5 +32,5 @@ class LoaderLanduse {
 	}
 }
 
-DataLoader.registerLoader('LANDUSE', LoaderLanduse);
+DataLoader.registerLoader('LANDUSE', LoaderLanduse, PARAMS);
 export const loader = new DataLoader.Proxy('LANDUSE');

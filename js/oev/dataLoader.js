@@ -1,7 +1,8 @@
 import Evt from './utils/event.js';
+import * as TileExtension from './tileExtensions/tileExtension.js';
 
-const DataLoader = {};
 const registeredLoaders = {};
+const loadersParams = {};
 export let evt;
 
 export function init() {
@@ -12,47 +13,30 @@ function onRessourceLoaded(_type, _nb) {
 	evt.fireEvent('DATA_LOADED', {type:_type, nb:_nb});
 }
 
-export function registerLoader(_type, _class) {
+export function registerLoader(_type, _class, _params) {
 	registeredLoaders[_type] = _class;
+	loadersParams[_type] = _params;
 }
-
-const keepCacheByType = {
-	TILE2D : true, 
-	ELE : true, 
-	BUILDINGS : true, 
-	NORMAL : true, 
-	LANDUSE : false, 
-};
 
 export class Proxy {
 	constructor(_type) {
 		this._type = _type;
-		const simulByType = {
-			TILE2D : 4, 
-			ELE : 4, 
-			BUILDINGS : 2, 
-			NORMAL : 1, 
-			LANDUSE : 1, 
-		};
-		this._simulLoad = simulByType[this._type];
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
 		this.clientsWaiting = [];
-		this._loaders = [];
-		this._initLoaders();
-		window.debugLoader = () => {
-			console.log('debugLoader', this._datasWaiting);
-		}
+		this.loaderParams = loadersParams[_type];
+		this._loaders = this._initLoaders(this.loaderParams.nbLoaders);
+		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this._type, this, this.clear);
 	}
 
-	_initLoaders() {
-		let loader;
-		const _self = this;
-		for (let i = 0; i < this._simulLoad; i ++) {
-			loader = new registeredLoaders[this._type](function(_datas, _params){_self.onDataLoaded(_datas, _params)});
-			this._loaders.push(loader);
+	_initLoaders(_nb) {
+		const loaders = [];
+		for (let i = 0; i < _nb; i ++) {
+			const loader = new registeredLoaders[this._type]((_datas, _params) => this.onDataLoaded(_datas, _params));
+			loaders.push(loader);
 		}
+		return loaders;
 	}
 
 	getData(_params, _callback) {
@@ -65,7 +49,7 @@ export class Proxy {
 			return false;
 		};
 		this._addSorted(_params);
-		const test = this._checkForNextLoad();
+		this._checkForNextLoad();
 	}
 	
 	_genKey(_params) {
@@ -83,7 +67,7 @@ export class Proxy {
 		_params.callback(_data);
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
-		if (keepCacheByType[this._type]) this._datasLoaded[_params.key] = _data;
+		if (this.loaderParams.useCache) this._datasLoaded[_params.key] = _data;
 		this._checkForNextLoad();
 	}
 	
@@ -106,15 +90,12 @@ export class Proxy {
 	}
 	
 	abort(_params) {
-		if (_params.key === undefined) {
-			_params.key = this._genKey(_params);
-		}
+		if (_params.key === undefined) _params.key = this._genKey(_params);
 		this._datasWaiting = this._datasWaiting.filter(w => w.key != _params.key);
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
 	}
 	
 	clear() {
-		console.warn('CLEAR LOADER', this._type);
 		this._datasLoaded = {};
 		this._datasWaiting = [];
 		this._datasLoading = [];
@@ -122,7 +103,7 @@ export class Proxy {
 	}
 	
 	_checkForNextLoad() {
-		if (this._datasLoading.length >= this._simulLoad) return false;
+		if (this._datasLoading.length >= this.loaderParams.nbLoaders) return false;
 		this._loadNext();
 		return true;
 	}
