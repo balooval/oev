@@ -46,5 +46,5 @@ class LoaderBuilding {
 	}
 }
 
-DataLoader.registerLoader('BUILDINGS', LoaderBuilding);
-export const loader = new DataLoader.Proxy('BUILDINGS');
+DataLoader.registerLoader('BUILDING', LoaderBuilding);
+export const loader = new DataLoader.Proxy('BUILDING');

@@ -74,26 +74,32 @@ a{
 	color: #000;
 }
 
-#overlayTools{
-	top: 100px;
+#overlayWaypoints {
+	top: 10px;
+	right: 0;
+	text-align: left;
+	padding-left: 4px;
+	width: 150px;
+	border-radius: 4px 0 0 4px;
+	padding: 4px;
+}
+
+#overlayNavigation{
+	top: 10px;
 	left: 0;
 	text-align: left;
+	padding: 0;
+	border-radius: 0 4px 4px 0;
 }
 
-.toolsBox{
-	background-color: #f5f5f5;
-    color: #666;
+#overlayExtensions{
+	top: 140px;
+	left: 0;
+	text-align: left;
+	padding: 0;
+	border-radius: 0 4px 4px 0;
 }
 
-.toolsBox > h3{
-	font-weight: normal;
-	font-size: 13px;
-	background-color: hsl(217, 73%, 65%);
-	color: #fff;
-	border-top: 1px solid #bbb;
-	padding: 4px;
-	margin: 0;
-}
 
 .toolsContent{
 	margin-top: 0;
@@ -157,20 +163,32 @@ a{
 	height: 40px;
 	text-align: center;
 	line-height: 40px;
+	display: flex;
 }
 
+.floating-btn:first-child {
+	border-radius: 0 4px 0 0;
+}
+
+.floating-btn > * {
+	margin: auto
+}
+
+.floating-btn:hover {
+	background-color: rgba(0, 0, 0, 0.4);
+}
 .overlayUI{
 	position: absolute;
 	color: white;
-	background-color: rgba( 0, 0, 0, 0.5 );
+	background-color: rgba(0, 0, 0, 0.6);
 	padding: 2px;
 	cursor: auto;
 }
 
 #overlayUICoords{
-	top: 0;
-	left: 0;
-	text-align: left;
+	bottom: 0;
+	right: 0;
+	text-align: right;
 }
 
 #overlayUILoading{
@@ -181,8 +199,8 @@ a{
 
 #overlayCurtile{
 	width: 256px;
-	top: 0;
-	right: 0;
+	bottom: 0;
+	left: 0;
 	text-align: left;
 	cursor: auto;
 }
@@ -190,15 +208,6 @@ a{
 #params_planes{
 	max-height: 300px;
 	overflow: scroll;
-}
-
-#overlayMinimap{
-	width: 256px;
-	height: 256px;
-	bottom: 0;
-	right: 0;
-	background-image: url( /img/minimap.png );
-	display: none;
 }
 
 #minimapMarkerCam{
@@ -235,21 +244,38 @@ h2{
 
 .heading{
 	border-radius: 50%;
-	width: 10px;
-	height: 10px;
-	background-color: silver;
-	border: 10px solid silver;
-	border-top: 10px solid red;
-	margin: auto;
+    width: 10px;
+    height: 10px;
+    background-color: white;
+    border: 10px solid white;
+    border-top: 10px solid #4f88e3;
+    margin: auto;
+}
+
+.extension-switch {
+	position: relative;
+}
+
+.extension-switch::after {
+	content: attr(data-loading_nb);
+    display: inline-block;
+    position: absolute;
+    bottom: 0px;
+    right: 0;
+    line-height: normal;
+	color: #a7a7a7;
+	font-size: 9px;
+    width: 100%;
 }
 
 .extension-switch>img {
 	pointer-events: none;
 }
 
-.extension-switch.active>img {
-	box-shadow: 0px 0px 5px 2px #00dffd;
+.extension-switch.active {
+	background-color: rgba(0, 0, 0, 0.6);
 }
+
 
 .ws_user_entry{
 	cursor: pointer;

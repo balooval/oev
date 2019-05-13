@@ -56,5 +56,5 @@ class LoaderElevation {
 	}
 }
 
-DataLoader.registerLoader('ELE', LoaderElevation);
-export const loader = new DataLoader.Proxy('ELE');
+DataLoader.registerLoader('ELEVATION', LoaderElevation);
+export const loader = new DataLoader.Proxy('ELEVATION');
