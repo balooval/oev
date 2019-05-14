@@ -42,7 +42,8 @@ const APP = {
 		APP.clock = new THREE.Clock();
 
 		const serverURL = 'https://val.openearthview.net/api/';
-		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
+		// MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
+		MapExtension.setApiUrl(serverURL + 'index.php?ressource=satellite');
 		ElevationExtension.setApiUrl(serverURL + 'index.php?ressource=elevation');
 		NormalExtension.setApiUrl(serverURL + 'index.php?ressource=normal');
 		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
@@ -79,8 +80,10 @@ const APP = {
 		APP.cameraCtrl.init(Renderer.camera, GLOBE);
 		Navigation.saveWaypoint(4.231021, 43.795594, 13, 'Vaunage');
 		Navigation.saveWaypoint(3.854188, 43.958125, 13, 'St Hippo');
+		Navigation.saveWaypoint(3.8139,43.7925, 13, 'Pic St Loup');
+		Navigation.saveWaypoint(5.2659, 44.1747, 13, 'Mt Ventoux');
+		Navigation.saveWaypoint(5.7333, 43.1637, 14, 'St Cyr');
 		Navigation.saveWaypoint(2.383138,48.880945, 13, 'Paris');
-		Navigation.saveWaypoint(5.7333, 43.1637, 15, 'St Cyr');
 		APP.appStarted = true;
 		APP.evt.fireEvent('APP_START');
 		render();
@@ -110,13 +113,19 @@ const APP = {
 			['shell_vine_2', 'shell_vine_2.png'], 
 			['shell_vine_3', 'shell_vine_3.png'], 
 			['shell_vine_4', 'shell_vine_4.png'], 
+			['shell_vine_normal', 'vine_normal.png'], 
+			['shell_vine_specular', 'shell_vine_specular.png'], 
 
 			['shell_grass_1', 'shell_grass_1.png'], 
 			['shell_grass_2', 'shell_grass_2.png'], 
+			['shell_grass_normal', 'shell_grass_normal.png'], 
+			['shell_grass_specular', 'shell_grass_specular.png'], 
 
 			['shell_scrub_1', 'shell_scrub_mix_1.png'], 
 			['shell_scrub_2', 'shell_scrub_mix_2.png'], 
 			['shell_scrub_3', 'shell_scrub_mix_3.png'], 
+			['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
+			['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {
