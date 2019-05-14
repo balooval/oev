@@ -122,9 +122,11 @@ const UiTilesExtension = (function(){
 			if (extension === undefined) return false;
 			if (_evt.target.classList.contains('active')) {
 				TileExtension.desactivate(extension);
+				document.getElementById('extension-icon-' + extension).src = 'img/extension-' + extension.toLocaleLowerCase() + '.png';
 			} else {
 				TileExtension.activate(extension);
 				api.updateLoadingDatas({type:extension, nb:'...'})
+				document.getElementById('extension-icon-' + extension).src = 'img/extension-' + extension.toLocaleLowerCase() + '-active.png';
 			}
 			_evt.target.classList.toggle('active');
 		}, 
@@ -144,7 +146,8 @@ const UiTilesExtension = (function(){
 		const extensionsActives = TileExtension.listActives();
 		for (var key in TileExtension.extensions) {
 			const active = extensionsActives.includes(key) ? 'active' : '';
-			iconsExtensions += '<span title="' + key + '" class="floating-btn extension-switch ' + active + '" data-extension="' + key + '" id="btn-extension-switch-' + key + '" data-loading_nb=""><img src="img/extension-' + key.toLocaleLowerCase() + '.png"/></span>';
+			const activeImg = extensionsActives.includes(key) ? '-active' : '';
+			iconsExtensions += '<span title="' + key + '" class="floating-btn extension-switch ' + active + '" data-extension="' + key + '" id="btn-extension-switch-' + key + '" data-loading_nb=""><img id="extension-icon-' + key + '" src="img/extension-' + key.toLocaleLowerCase() + activeImg + '.png"/></span>';
 		}
 		document.getElementById('overlayExtensions').innerHTML += iconsExtensions;
 	}
