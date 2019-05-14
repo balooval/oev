@@ -3,7 +3,7 @@ import GLOBE from '../../globe.js';
 
 const PARAMS = {
 	nbLoaders : 4, 
-	useCache : true, 
+	useCache : false, 
 };
 
 let API_URL = '';

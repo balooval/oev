@@ -34,6 +34,8 @@ const apiUi = {
 		DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
 		OEV.evt.addEventListener('APP_INIT', null, onAppInit);
 		OEV.evt.addEventListener('APP_START', null, onAppStart);
+		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionActivate);
+		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionDesctivate);
 	}, 
 		
 	setCamera : function(_camCtrl) {
@@ -117,16 +119,21 @@ const UiTilesExtension = (function(){
 			addExtensionsSwitchs();
 		}, 
 		
+		onExtensionDesctivate : function(_evt) {
+			document.getElementById('extension-icon-' + _evt).src = 'img/extension-' + _evt.toLocaleLowerCase() + '.png';
+		}, 
+		onExtensionActivate : function(_evt) {
+			document.getElementById('extension-icon-' + _evt).src = 'img/extension-' + _evt.toLocaleLowerCase() + '-active.png';
+		}, 
+
 		_onClickExtensionSwitch : function(_evt) {
 			var extension = _evt.target.dataset.extension;
 			if (extension === undefined) return false;
 			if (_evt.target.classList.contains('active')) {
 				TileExtension.desactivate(extension);
-				document.getElementById('extension-icon-' + extension).src = 'img/extension-' + extension.toLocaleLowerCase() + '.png';
 			} else {
 				TileExtension.activate(extension);
 				api.updateLoadingDatas({type:extension, nb:'...'})
-				document.getElementById('extension-icon-' + extension).src = 'img/extension-' + extension.toLocaleLowerCase() + '-active.png';
 			}
 			_evt.target.classList.toggle('active');
 		}, 

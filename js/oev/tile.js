@@ -298,6 +298,12 @@ export class Basic {
 		Renderer.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
 	}
 
+	unsetTexture() {
+		this.textureLoaded = false;
+		this.remoteTex = undefined;
+		this.material.map = NET_TEXTURES.texture('checker');
+	}
+
 	dispose() {
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		this.clearChildrens();

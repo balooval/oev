@@ -16,6 +16,7 @@ export function register(_id, _extension) {
 export function activate(_extensionId) {
 	activesExtensions.push(_extensionId);
 	evt.fireEvent('TILE_EXTENSION_ACTIVATE', _extensionId);
+	evt.fireEvent('TILE_EXTENSION_ACTIVATE_' + _extensionId);
 }
 
 export function desactivate(_extensionId) {

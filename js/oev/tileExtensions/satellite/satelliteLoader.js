@@ -11,7 +11,7 @@ export function setApiUrl(_url) {
 	API_URL = _url;
 }
 
-class LoaderTile2D {
+class LoaderSatellite {
 	constructor(_callback) {
 		this.isLoading = false;
 		this.callback = _callback;
@@ -37,10 +37,10 @@ class LoaderTile2D {
 	
 	onDataLoadError() {
 		this.isLoading = false;
-		console.warn( 'LoaderTile2D error', this.params);
+		console.warn( 'LoaderSatellite error', this.params);
 		this.callback(null);
 	}
 }
 
-DataLoader.registerLoader('TILE2D', LoaderTile2D, PARAMS);
-export const loader = new DataLoader.Proxy('TILE2D');
+DataLoader.registerLoader('SATELLITE', LoaderSatellite, PARAMS);
+export const loader = new DataLoader.Proxy('SATELLITE');

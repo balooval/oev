@@ -16,6 +16,7 @@ import * as ElevationExtension from './oev/tileExtensions/elevation/elevationExt
 import * as BuildingExtension from './oev/tileExtensions/building/buildingExtension.js';
 import * as NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
 import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
+import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -42,20 +43,22 @@ const APP = {
 		APP.clock = new THREE.Clock();
 
 		const serverURL = 'https://val.openearthview.net/api/';
-		// MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
-		MapExtension.setApiUrl(serverURL + 'index.php?ressource=satellite');
+		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
+		SatelliteExtension.setApiUrl(serverURL + 'index.php?ressource=satellite');
 		ElevationExtension.setApiUrl(serverURL + 'index.php?ressource=elevation');
 		NormalExtension.setApiUrl(serverURL + 'index.php?ressource=normal');
 		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
 		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
 
 		TileExtension.register('TILE2D', MapExtension.extensionClass());
+		TileExtension.register('SATELLITE', SatelliteExtension.extensionClass());
 		TileExtension.register('ELEVATION', ElevationExtension.extensionClass());
 		TileExtension.register('NORMAL', NormalExtension.extensionClass());
 		TileExtension.register('LANDUSE', LanduseExtension.extensionClass());
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
 
 		TileExtension.activate('TILE2D');
+		// TileExtension.activate('SATELLITE');
 		TileExtension.activate('ELEVATION');
 		TileExtension.activate('NORMAL');
 		TileExtension.activate('LANDUSE');

@@ -1,22 +1,22 @@
 import Renderer from '../../renderer.js';
-import * as MapLoader from './mapLoader.js';
+import * as LoaderSatellite from './satelliteLoader.js';
 import * as TileExtension from '../tileExtension.js';
 
-export {setApiUrl} from './mapLoader.js';
+export {setApiUrl} from './satelliteLoader.js';
 
 export function extensionClass() {
-	return MapExtension;
+	return SatelliteExtension;
 }
 
-TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_SATELLITE', null, onActivateSatellite);
+TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_TILE2D', null, onActivateTile2D);
 
-function onActivateSatellite() {
-    TileExtension.desactivate('TILE2D');
+function onActivateTile2D() {
+    TileExtension.desactivate('SATELLITE');
 }
 
-export class MapExtension {
+export class SatelliteExtension {
 	constructor(_tile) {
-		this.id = 'TILE2D';
+		this.id = 'SATELLITE';
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.texture = null;
@@ -35,7 +35,7 @@ export class MapExtension {
         }
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
-		MapLoader.loader.getData(
+		LoaderSatellite.loader.getData(
 			{
 				z : this.tile.zoom, 
 				x : this.tile.tileX, 
@@ -49,8 +49,8 @@ export class MapExtension {
     onMapLoaded(_datas) {
         this.texture = _datas;
 		this.dataLoading = false;
-		this.dataLoaded = true;
-		if (!this.tile) return false;
+        this.dataLoaded = true;
+        if (!this.tile) return false;
 		if (!this.tile.isReady) return false;
 		this.tile.setTexture(this.texture);
 	}
@@ -65,7 +65,7 @@ export class MapExtension {
 	
 	hide() {
 		this.dataLoading = false;
-		MapLoader.loader.abort({
+		LoaderSatellite.loader.abort({
             z : this.tile.zoom, 
             x : this.tile.tileX, 
             y : this.tile.tileY
@@ -73,16 +73,16 @@ export class MapExtension {
     }
 	
 	dispose() {
-		this.hide();
-		this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
+        this.hide();
+        this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.removeEventListener('HIDE', this, this.hide);
 		if (this.texture) this.texture.dispose();
         this.texture = null;
 		this.dataLoaded = false;
-		this.dataLoading = false;
-		this.tile.unsetTexture();
+        this.dataLoading = false;
+        this.tile.unsetTexture();
 		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
