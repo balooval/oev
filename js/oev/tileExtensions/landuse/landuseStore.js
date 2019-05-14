@@ -149,7 +149,7 @@ function getLayerInfos(_type) {
     }
     if (_type == 'vineyard') {
         meterBetweenLayers = 0.4;
-        uvFactor = 32;
+        uvFactor = 16;
         materialNb = 4;
         nbLayers = 12;
     }
@@ -530,7 +530,7 @@ const materials = {
         new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
     ], 
     grass : [
-        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
         new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
     ], 
     vineyard : [
@@ -547,25 +547,44 @@ function initTextures() {
         materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
         materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
         materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
-        materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
-        materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
-        materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
-        materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_1');
-        materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
-        materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
-        materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
-        materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
-        materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
 
-        materials.scrub[2].normalMap = NET_TEXTURES.texture('normal_noise');
-        materials.grass[1].normalMap = NET_TEXTURES.texture('normal_noise');
-        
         materials.forest[1].normalMap = NET_TEXTURES.texture('shell_tree_normal');
         materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
         materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
         materials.forest[1].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
         materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
         materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+
+        materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
+        materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
+        materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
+
+        materials.scrub[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+        materials.scrub[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+        materials.scrub[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+        materials.scrub[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+
+        materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_2');
+        materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
+        materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
+        materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
+
+        materials.vineyard[1].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+        materials.vineyard[2].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+        materials.vineyard[3].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+        materials.vineyard[1].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+        materials.vineyard[2].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+        materials.vineyard[3].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+        
+        materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
+        materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
+        
+        materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
+        materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
+        
+        
+
+        
 
         materialsInit = true;
     }
