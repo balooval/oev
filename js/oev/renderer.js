@@ -15,7 +15,7 @@ const Renderer = (function() {
             const intElemClientWidth = elmtHtmlContainer.clientWidth;
             const intElemClientHeight = document.getElementById('main').clientHeight;
             sceneWidth = Math.min(intElemClientWidth, 13000);
-            sceneHeight = Math.min(intElemClientHeight, 800);
+            sceneHeight = Math.min(intElemClientHeight, 10000);
             api.scene = new THREE.Scene();
             api.camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
             webGlRenderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
@@ -24,10 +24,10 @@ const Renderer = (function() {
             api.camera.position.x = 0;
             api.camera.position.y = 0;
             api.camera.position.z = 500;	
-            webGlRenderer.setClearColor( 0x101020, 1 );
+            webGlRenderer.setClearColor(0x101020, 1);
             if (api.shadowsEnabled) {
                 webGlRenderer.shadowMap.enabled = true;
-                webGlRenderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+                webGlRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
             }
         },  
 

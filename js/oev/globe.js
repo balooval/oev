@@ -1,6 +1,6 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
-import SKY from './sky.js';
+import ENVIRONMENT from './environment.js';
 import * as TILE from './tile.js';
 import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
@@ -85,11 +85,11 @@ const api = {
 
 	setProjection : function(_mode) {
 		if (_mode == 'PLANE') {
-			SKY.activSky(true);
+			ENVIRONMENT.activate(true);
 			api.coordToXYZ = api.coordToXYZPlane;
 			Renderer.camera.up.set(0, 0, 1);
 		} else if (_mode == 'SPHERE') {
-			SKY.activSky(false);
+			ENVIRONMENT.activate(false);
 			api.coordToXYZ = api.coordToXYZSphere;
 			Renderer.camera.up.set(0, 1, 0);
 		}
@@ -167,12 +167,10 @@ const api = {
 				Renderer.camera.far = api.radius * api.globalScale;
 				Renderer.camera.near = (api.radius * api.globalScale) / 10000000;
 				Renderer.camera.updateProjectionMatrix();
-				SKY.initSunPos();
 				if (Renderer.scene.fog) {
 					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
 					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
 				}
-				SKY.updateCloudsPos();
 				api.evt.fireEvent("LOD_CHANGED");
 			}
 		} else if (api.CUR_ZOOM >= api.LOD_CITY) {
@@ -187,12 +185,10 @@ const api = {
 				Renderer.camera.far = api.radius * api.globalScale;
 				Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
 				Renderer.camera.updateProjectionMatrix();
-				SKY.initSunPos();
 				if (Renderer.scene.fog) {
 					Renderer.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
 					Renderer.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
 				}
-				SKY.updateCloudsPos();
 				api.evt.fireEvent('LOD_CHANGED');
 			}
 		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
@@ -207,12 +203,10 @@ const api = {
 				Renderer.camera.far = (api.radius * 2 ) * api.globalScale;
 				Renderer.camera.near = (api.radius * api.globalScale) / 1000000;
 				Renderer.camera.updateProjectionMatrix();
-				SKY.initSunPos();
 				if (Renderer.scene.fog) {
 					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
 					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
 				}
-				SKY.updateCloudsPos();
 				api.evt.fireEvent("LOD_CHANGED");
 			}
 		}

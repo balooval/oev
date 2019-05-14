@@ -3,7 +3,6 @@ import * as Animation from '../utils/animation.js';
 import Evt from '../utils/event.js';
 import * as INPUT from '../input/input.js';
 import GEO from '../utils/geo.js';
-import SKY from '../sky.js';
 import MATH from '../utils/math.js';
 
 export class CameraGod {
@@ -207,10 +206,7 @@ export class CameraGod {
 		this.debugPointer.scale.y = wpScale;
 		this.debugPointer.scale.z = wpScale;
 		Renderer.MUST_RENDER = true;
-		this.evt.fireEvent('CAM_UPDATED');
-		SKY.updateCameraLookat(posLookat);
-		SKY.globalScale = this.globe.globalScale;
-		SKY.updateSun();
+		this.evt.fireEvent('CAM_UPDATED', posLookat);
 	}
 
 	updateOnSphere() {

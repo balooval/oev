@@ -5,7 +5,7 @@ import * as DataLoader from './oev/dataLoader.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
 import * as INPUT from './oev/input/input.js';
-import SKY from './oev/sky.js';
+import ENVIRONMENT from './oev/environment.js';
 import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
@@ -38,7 +38,7 @@ const APP = {
 		NET_MODELS.init();
 		DataLoader.init();
 		INPUT.init();
-		SKY.init();
+		ENVIRONMENT.init();
 		Navigation.init();
 		APP.clock = new THREE.Clock();
 
@@ -60,8 +60,8 @@ const APP = {
 		TileExtension.activate('TILE2D');
 		// TileExtension.activate('SATELLITE');
 		TileExtension.activate('ELEVATION');
-		TileExtension.activate('NORMAL');
-		TileExtension.activate('LANDUSE');
+		// TileExtension.activate('');
+		// TileExtension.activate('LANDUSE');
 		GLOBE.init();
 
 		Renderer.scene.add(GLOBE.meshe);
@@ -102,6 +102,7 @@ const APP = {
 			['waypoint', 'waypoint.png'], 
 			['normal_noise', 'normal_noise.jpg'], 
 			
+			/*
 			['shell_void', 'shell_void.png'], 
 
 			['shell_tree_1', 'shell_tree_1.png'], 
@@ -129,6 +130,7 @@ const APP = {
 			['shell_scrub_3', 'shell_scrub_mix_3.png'], 
 			['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
 			['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
+			*/
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {
@@ -179,11 +181,10 @@ const APP = {
 		APP.cameraCtrl.update();
 		if (UI.dragSun) {
 			const sceneSize = Renderer.sceneSize();
-			const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / sceneSize[0]);
-			SKY.setSunTime(mX);
+			const normalizedTIme = ((INPUT.Mouse.curMouseX - containerOffset.x) / sceneSize[0]);
+			APP.evt.fireEvent('TIME_CHANGED', normalizedTIme);	
 		}
 		GLOBE.update();
-		SKY.update();
 		objToUpdate.forEach(o => o.update());
 	}, 
 

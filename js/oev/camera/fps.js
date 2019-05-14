@@ -387,9 +387,7 @@ CamCtrlFps.prototype.updateCamera = function() {
 	
 	
 	if (SKY != undefined) {
-		SKY.posCenter = this.posLookat;
 		SKY.globalScale = this.planet.globalScale;
-		SKY.updateSun();
 	}
 	
 }
