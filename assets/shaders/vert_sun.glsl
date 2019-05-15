@@ -2,7 +2,6 @@ uniform float sunElevation;
 varying float vSunElevation;
 varying float vSunColor;
 void main() {
-	vSunElevation = sunElevation + 0.65;
 	vSunElevation = (sunElevation * 8.0) + 0.3;
 	vec3 fragPos = vec3(modelMatrix * vec4(position, 1.0));
 	vec3 camDir = normalize(cameraPosition - fragPos); 

@@ -42,7 +42,7 @@ function createSky(_skyRadius) {
 		side: THREE.DoubleSide, 
 	};
 	const materialSky = new THREE.ShaderMaterial(parametersSky);
-	meshSky = new THREE.Mesh(new THREE.SphereGeometry(_skyRadius, 16, 16 ), materialSky);
+	meshSky = new THREE.Mesh(new THREE.SphereGeometry(_skyRadius, 32, 32), materialSky);
 	Renderer.scene.add(meshSky);
 }
 

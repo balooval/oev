@@ -58,7 +58,7 @@ const api = {
 function createSun(_skyRadius) {
 	if (meshSun) return false;
 	orbitRadius = _skyRadius * 0.9;
-	const sunRadius = _skyRadius / 20;
+	const sunRadius = _skyRadius / 40;
 	const uniformsSun = {
 		sunElevation : {value : 0.5}, 
 		myModelViewMatrixInverse : {value: new THREE.Matrix4()}, 

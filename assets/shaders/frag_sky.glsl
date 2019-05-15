@@ -3,9 +3,9 @@ varying float vRedish;
 varying float vRedishFactor;
 void main() {
 	vec3 color = vec3(1.0, 1.0, 1.0);
-	color.r = 0.5;
-	color.g = 0.7;
-	color.b = 1.0;
+	color.r = 0.3;
+	color.g = 0.4;
+	color.b = 1.5;
 	color.r *= vSunLight;
 	color.g *= vSunLight;
 	color.b *= vSunLight;
@@ -15,5 +15,6 @@ void main() {
 	colorRed.b = 0.4 + vRedish * 0.3;
 	color = mix(color, colorRed, vRedishFactor);
 	vec4 colFinal = vec4(color, 1.0);
+
 	gl_FragColor = colFinal;
 }

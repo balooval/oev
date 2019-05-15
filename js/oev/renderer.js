@@ -18,7 +18,11 @@ const Renderer = (function() {
             sceneHeight = Math.min(intElemClientHeight, 10000);
             api.scene = new THREE.Scene();
             api.camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
-            webGlRenderer = new THREE.WebGLRenderer( { alpha: true, clearAlpha: 1 } );
+            webGlRenderer = new THREE.WebGLRenderer({
+                alpha: true, 
+                clearAlpha: 1, 
+                antialias: true, 
+            });
             webGlRenderer.setSize(sceneWidth, sceneHeight);
             elmtHtmlContainer.appendChild(webGlRenderer.domElement);
             api.camera.position.x = 0;
