@@ -2,7 +2,7 @@ import * as DataLoader from '../../dataLoader.js';
 
 const PARAMS = {
 	nbLoaders : 2, 
-	useCache : true, 
+	useCache : false, 
 };
 
 let API_URL = '';

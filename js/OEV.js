@@ -60,7 +60,7 @@ const APP = {
 		TileExtension.activate('TILE2D');
 		// TileExtension.activate('SATELLITE');
 		TileExtension.activate('ELEVATION');
-		// TileExtension.activate('');
+		TileExtension.activate('NORMAL');
 		// TileExtension.activate('LANDUSE');
 		GLOBE.init();
 
@@ -102,7 +102,7 @@ const APP = {
 			['waypoint', 'waypoint.png'], 
 			['normal_noise', 'normal_noise.jpg'], 
 			
-			/*
+			
 			['shell_void', 'shell_void.png'], 
 
 			['shell_tree_1', 'shell_tree_1.png'], 
@@ -130,7 +130,7 @@ const APP = {
 			['shell_scrub_3', 'shell_scrub_mix_3.png'], 
 			['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
 			['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
-			*/
+			
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {

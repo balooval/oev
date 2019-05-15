@@ -4,6 +4,7 @@ import GEO from '../../utils/geo.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
 import * as Simplify from '../../../libs/simplify.js';
+import * as GEO_BUILDER from './landuseGeometryBuilder.js';
 
 let knowIds = [];
 const tileToLanduses = {};
@@ -178,6 +179,12 @@ function drawLanduse(_landuse, _tile) {
     if (trianglesResult === null) return false;
     const elevationsDatas = getElevationsDatas(_landuse);
 
+
+    // layersBuffers = GEO_BUILDER.createLanduseGeometry(_landuse, layerInfos, elevationsDatas, trianglesResult, _tile);
+    // saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);       
+
+
+    
     for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
         const geometry = new THREE.Geometry();
         const uvDatas = [];
@@ -242,7 +249,8 @@ function drawLanduse(_landuse, _tile) {
     }
     const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
     layersBuffers.push(mergedLayersBuffer);
-    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);       
+    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);      
+    
 }
 
 function redrawMeshes() {
