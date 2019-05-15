@@ -3,7 +3,7 @@ const modelsLoaded = {};
 let objectLoader = null;
 let curBatch = null;
 
-export function model(_name) {
+export function get(_name) {
 	return modelsLoaded[_name];
 }
 
@@ -45,9 +45,9 @@ function loadNextModel() {
 		'assets/models/' + nextModel.url, 
 		object => {
 			object.rotation.x = Math.PI;
-			object.scale.x = 0.005;
-			object.scale.y = 0.005;
-			object.scale.z = 0.005;
+			// object.scale.x = 0.005;
+			// object.scale.y = 0.005;
+			// object.scale.z = 0.005;
 			modelsLoaded[nextModel.id] = object;
 			if (curBatch.list.length == 0) {
 				curBatch.callback();

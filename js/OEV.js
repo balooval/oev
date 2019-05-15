@@ -17,6 +17,7 @@ import * as BuildingExtension from './oev/tileExtensions/building/buildingExtens
 import * as NormalExtension from './oev/tileExtensions/normal/normalExtension.js';
 import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
 import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
+import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -49,6 +50,7 @@ const APP = {
 		NormalExtension.setApiUrl(serverURL + 'index.php?ressource=normal');
 		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
 		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
+		NodeExtension.setApiUrl(serverURL + 'index.php?ressource=node');
 
 		TileExtension.register('TILE2D', MapExtension.extensionClass());
 		TileExtension.register('SATELLITE', SatelliteExtension.extensionClass());
@@ -56,6 +58,7 @@ const APP = {
 		TileExtension.register('NORMAL', NormalExtension.extensionClass());
 		TileExtension.register('LANDUSE', LanduseExtension.extensionClass());
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
+		TileExtension.register('NODE', NodeExtension.extensionClass());
 
 		TileExtension.activate('TILE2D');
 		// TileExtension.activate('SATELLITE');
@@ -136,6 +139,21 @@ const APP = {
 		NET_TEXTURES.loadBatch(textList, () => {
 			console.log('TEXTURES_LOADED');
 			APP.evt.fireEvent('TEXTURES_LOADED');
+			APP.loadModels();
+		});
+	}, 
+
+	loadModels : function() {
+		UI.openModal('Loading models');
+		const modelsList = [];
+		const toLoad = [
+			['tower', 'pylone.json'], 
+			['tree', 'tree.json'], 
+		];
+		toLoad.forEach(d => NET_TEXTURES.addToList(modelsList, d[0], d[1]));
+		NET_MODELS.loadBatch(modelsList, () => {
+			console.log('MODELS_LOADED');
+			APP.evt.fireEvent('MODELS_LOADED');
 			APP.loadShaders();
 		});
 	}, 
