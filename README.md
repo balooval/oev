@@ -15,3 +15,7 @@ Tout ceci écrit en français, c'est dire !
 
 #### Dédicace
 Projet perso impulsé par http://www.openearthview.net, qui me prête gracieusement un sous-domaine, merci à toi encore Clement !
+
+#### TODO
+
+- Forme des toits (dôme, ...)
