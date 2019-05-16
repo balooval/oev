@@ -149,6 +149,7 @@ const APP = {
 		const toLoad = [
 			['tower', 'pylone.json'], 
 			['tree', 'tree.json'], 
+			['bench', 'bench.json'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(modelsList, d[0], d[1]));
 		NET_MODELS.loadBatch(modelsList, () => {
