@@ -22,19 +22,31 @@ const api = {
             type = getTreeModel(_node.props);
             // console.log('tree', type);
         }
-        return NET_MODELS.get(type).geometry.clone();
+        const geometry = NET_MODELS.get(type).geometry.clone();
+        applyTransformation(_node, geometry);
+        return geometry;
     }
 };
 
 function getTreeModel(_props) {
-    // return 'tree_needles';
-    // if (!_props.leaf_type) return 'tree_needles';
-    // if (_props.leaf_type == 'needleleaved') return 'tree_leaves';
-    // return 'tree_needles';
-
+    if (_props.diameter_crown) console.log('_props.diameter_crown', _props.diameter_crown);
     if (!_props.leaf_type) return 'tree_leaves';
     if (_props.leaf_type == 'needleleaved') return 'tree_needles';
     return 'tree_leaves';
+}
+
+function applyTransformation(_node, _geometrie) {
+    const scale = new THREE.Vector3(1, 1, 1);
+    if (_node.props.circumference) {
+        scale.x = _node.props.circumference;
+        scale.z = _node.props.circumference;
+    }
+    const minHeight = _node.props.min_height || 0;
+    if (_node.props.height) {
+        scale.y = (_node.props.height - minHeight) / 5;
+    }
+    _geometrie.scale(scale.x, scale.y, scale.z);
+    _geometrie.rotateY(Math.random() * 6);
 }
 
 function onActivateExtension() {

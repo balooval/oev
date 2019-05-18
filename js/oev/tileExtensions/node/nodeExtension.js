@@ -1,7 +1,7 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as NodeLoader from './nodeLoader.js';
-import NodeTextures from './nodeTextures.js';
+import NodeMaterial from './nodeMaterial.js';
 import NodeModels from './nodeModels.js';
 import ElevationStore from '../elevation/elevationStore.js';
 
@@ -20,11 +20,11 @@ class NodeExtension {
         this.meshes = {};
         this.mesh = null;
 
-        if (NodeTextures.isReady && NodeModels.isReady) {
+        if (NodeMaterial.isReady && NodeModels.isReady) {
             this.onRessourcesLoaded();
         }
-        if (!NodeTextures.isReady) {
-            NodeTextures.evt.addEventListener('READY', this, this.onTexturesReady);
+        if (!NodeMaterial.isReady) {
+            NodeMaterial.evt.addEventListener('READY', this, this.onTexturesReady);
         }
         if (!NodeModels.isReady) {
             NodeModels.evt.addEventListener('READY', this, this.onModelsReady);
@@ -32,7 +32,7 @@ class NodeExtension {
     }
 
     onTexturesReady() {
-        NodeTextures.evt.removeEventListener('READY', this, this.onTexturesReady);
+        NodeMaterial.evt.removeEventListener('READY', this, this.onTexturesReady);
         this.onRessourcesLoaded();
     }
     
@@ -42,7 +42,7 @@ class NodeExtension {
     }
 
     onRessourcesLoaded() {
-        if (!NodeTextures.isReady) return false;
+        if (!NodeMaterial.isReady) return false;
         if (!NodeModels.isReady) return false;
         this.isActive = this.tile.zoom == 15;
 		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
@@ -82,7 +82,6 @@ class NodeExtension {
         _nodes.forEach(node => {
             if (!typedGeometries[node.type]) typedGeometries[node.type] = [];
             const model = NodeModels.get(node);
-            applyTransformation(node, model);
             const elevation = ElevationStore.get(node.coord[0], node.coord[1]);
             const pos = GLOBE.coordToXYZ(
                 node.coord[0], 
@@ -103,7 +102,7 @@ class NodeExtension {
         });
         Object.keys(typedGeometries).forEach(type => {
             const mergedGeometrie = THREE.BufferGeometryUtils.mergeBufferGeometries(typedGeometries[type]);
-            this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeTextures.material(type));
+            this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeMaterial.material(type));
             this.meshes[type].receiveShadow = true;
             this.meshes[type].castShadow = true;
             GLOBE.addMeshe(this.meshes[type]);
@@ -141,14 +140,6 @@ class NodeExtension {
         this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
-}
-
-function applyTransformation(_node, _geometrie) {
-    if (_node.props.height) {
-        const scale = _node.props.height / 5;
-        _geometrie.scale(scale, scale, scale);
-    }
-    _geometrie.rotateY(Math.random() * 3.14);
 }
 
 function prepareNodesDatas(_datas) {
@@ -201,7 +192,7 @@ const supportedTags = [
         key : 'power', 
         values : [
             'tower', 
-            'pole', 
+            // 'pole', 
         ]
     }, 
     
