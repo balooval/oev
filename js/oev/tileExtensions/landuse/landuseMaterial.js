@@ -1,0 +1,147 @@
+import Evt from '../../utils/event.js';
+import * as TileExtension from '../tileExtension.js';
+import * as NET_TEXTURES from '../../net/NetTextures.js';
+
+TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
+
+const texturesToLoad = [
+    ['shell_void', 'shell_void.png'], 
+
+    ['shell_tree_1', 'shell_tree_1.png'], 
+    ['shell_tree_2', 'shell_tree_2.png'], 
+    ['shell_tree_3', 'shell_tree_3.png'], 
+    ['shell_tree_4', 'shell_tree_4.png'], 
+    
+    ['shell_tree_normal', 'shell_tree_normal.png'], 
+    ['shell_tree_specular', 'shell_tree_specular.png'], 
+
+    ['shell_vine_1', 'shell_vine_1.png'], 
+    ['shell_vine_2', 'shell_vine_2.png'], 
+    ['shell_vine_3', 'shell_vine_3.png'], 
+    ['shell_vine_4', 'shell_vine_4.png'], 
+    ['shell_vine_normal', 'vine_normal.png'], 
+    ['shell_vine_specular', 'shell_vine_specular.png'], 
+
+    ['shell_grass_1', 'shell_grass_1.png'], 
+    ['shell_grass_2', 'shell_grass_2.png'], 
+    ['shell_grass_normal', 'shell_grass_normal.png'], 
+    ['shell_grass_specular', 'shell_grass_specular.png'], 
+
+    ['shell_scrub_1', 'shell_scrub_mix_1.png'], 
+    ['shell_scrub_2', 'shell_scrub_mix_2.png'], 
+    ['shell_scrub_3', 'shell_scrub_mix_3.png'], 
+    ['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
+    ['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
+];
+
+const api = {
+    evt : new Evt(), 
+    isReady : false, 
+
+    material : function(_type) {
+        return materials[_type];
+    }, 
+};
+
+const materials = {
+    forest : [
+        new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.6}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.7}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.8}), 
+    ], 
+    scrub : [
+        new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+    grass : [
+        new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+    vineyard : [
+        new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
+    ], 
+};
+
+
+function onActivateExtension() {
+    TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
+    createMaterials();
+    loadTextures();
+}
+
+function createMaterials() {
+
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.6}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.7}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.8}));
+
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        
+        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+}
+
+function loadTextures() {
+    const texturesList = [];
+    texturesToLoad.forEach(d => NET_TEXTURES.addToList(texturesList, d[0], d[1]));
+    NET_TEXTURES.loadBatch(texturesList, onTexturesLoaded);
+}
+
+function onTexturesLoaded() {
+    materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
+    materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
+    materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
+    materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
+
+    materials.forest[1].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+    materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+    materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
+    materials.forest[1].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+
+    materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
+    materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
+    materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
+
+    materials.scrub[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.scrub[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.scrub[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+    materials.scrub[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+
+    materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_2');
+    materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
+    materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
+    materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
+
+    materials.vineyard[1].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+    materials.vineyard[2].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+    materials.vineyard[3].normalMap = NET_TEXTURES.texture('shell_vine_normal');
+    materials.vineyard[1].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+    materials.vineyard[2].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+    materials.vineyard[3].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
+    
+    materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
+    materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
+    
+    materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
+    materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
+
+    api.isReady = true;
+    api.evt.fireEvent('READY')
+}
+
+export {api as default};

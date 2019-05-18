@@ -103,61 +103,11 @@ const APP = {
 			['sky_gradient', 'sky_gradient.png'], 
 			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
-			['tree_leaves', 'tree_leaves.png'], 
-			['pylone', 'pylone_diffuse.png'], 
-			
-			
-			['shell_void', 'shell_void.png'], 
-
-			['shell_tree_1', 'shell_tree_1.png'], 
-			['shell_tree_2', 'shell_tree_2.png'], 
-			['shell_tree_3', 'shell_tree_3.png'], 
-			['shell_tree_4', 'shell_tree_4.png'], 
-			
-			['shell_tree_normal', 'shell_tree_normal.png'], 
-			['shell_tree_specular', 'shell_tree_specular.png'], 
-
-			['shell_vine_1', 'shell_vine_1.png'], 
-			['shell_vine_2', 'shell_vine_2.png'], 
-			['shell_vine_3', 'shell_vine_3.png'], 
-			['shell_vine_4', 'shell_vine_4.png'], 
-			['shell_vine_normal', 'vine_normal.png'], 
-			['shell_vine_specular', 'shell_vine_specular.png'], 
-
-			['shell_grass_1', 'shell_grass_1.png'], 
-			['shell_grass_2', 'shell_grass_2.png'], 
-			['shell_grass_normal', 'shell_grass_normal.png'], 
-			['shell_grass_specular', 'shell_grass_specular.png'], 
-
-			['shell_scrub_1', 'shell_scrub_mix_1.png'], 
-			['shell_scrub_2', 'shell_scrub_mix_2.png'], 
-			['shell_scrub_3', 'shell_scrub_mix_3.png'], 
-			['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
-			['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
-			
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		NET_TEXTURES.loadBatch(textList, () => {
 			console.log('TEXTURES_LOADED');
 			APP.evt.fireEvent('TEXTURES_LOADED');
-			APP.loadModels();
-		});
-	}, 
-
-	loadModels : function() {
-		UI.openModal('Loading models');
-		const modelsList = [];
-		const toLoad = [
-			['tower', 'pylone.json'], 
-			// ['tree', 'tree.json'], 
-			['tree', 'tree_leaves.json'], 
-			['bench', 'bench.json'], 
-			['street_lamp', 'lamp.json'], 
-		];
-		toLoad.forEach(d => NET_TEXTURES.addToList(modelsList, d[0], d[1]));
-		NET_MODELS.loadBatch(modelsList, () => {
-			console.log('MODELS_LOADED');
-			APP.evt.fireEvent('MODELS_LOADED');
 			APP.loadShaders();
 		});
 	}, 

@@ -1,5 +1,6 @@
 import Renderer from '../../renderer.js';
 import LanduseStore from './landuseStore.js';
+import LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
 
 export {setApiUrl} from './landuseLoader.js';
@@ -15,11 +16,22 @@ class LanduseExtension {
         this.dataLoaded = false;
         this.tile = _tile;
         this.isActive = this.tile.zoom >= 15;
-		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
-		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
-		this.tile.evt.addEventListener('HIDE', this, this.hide);
-		if (this.tile.isReady) this.onTileReady();
+
+
+        if (LanduseMaterial.isReady) {
+            this.onMaterialReady();
+        } else {
+            LanduseMaterial.evt.addEventListener('READY', this, this.onMaterialReady);
+        }
+    }
+
+    onMaterialReady() {
+        LanduseMaterial.evt.removeEventListener('READY', this, this.onMaterialReady);
+        this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
+        this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
+        this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
+        this.tile.evt.addEventListener('HIDE', this, this.hide);
+        if (this.tile.isReady) this.onTileReady();
     }
 
     onTileReady() {

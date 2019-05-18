@@ -1,8 +1,9 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as NodeLoader from './nodeLoader.js';
+import NodeTextures from './nodeTextures.js';
+import NodeModels from './nodeModels.js';
 import * as NET_MODELS from '../../net/NetModels.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
 import ElevationStore from '../elevation/elevationStore.js';
 
 export {setApiUrl} from './nodeLoader.js';
@@ -10,8 +11,6 @@ export {setApiUrl} from './nodeLoader.js';
 export function extensionClass() {
 	return NodeExtension;
 }
-
-let materialsInit = false;
 
 class NodeExtension {
 	constructor(_tile) {
@@ -21,13 +20,36 @@ class NodeExtension {
         this.tile = _tile;
         this.meshes = {};
         this.mesh = null;
-        initTextures();
+
+        if (NodeTextures.isReady && NodeModels.isReady) {
+            this.onRessourcesLoaded();
+        }
+        if (!NodeTextures.isReady) {
+            NodeTextures.evt.addEventListener('READY', this, this.onTexturesReady);
+        }
+        if (!NodeModels.isReady) {
+            NodeModels.evt.addEventListener('READY', this, this.onModelsReady);
+        }
+    }
+
+    onTexturesReady() {
+        NodeTextures.evt.removeEventListener('READY', this, this.onTexturesReady);
+        this.onRessourcesLoaded();
+    }
+    
+    onModelsReady() {
+        NodeModels.evt.removeEventListener('READY', this, this.onModelsReady);
+        this.onRessourcesLoaded();
+    }
+
+    onRessourcesLoaded() {
+        if (!NodeTextures.isReady) return false;
+        if (!NodeModels.isReady) return false;
         this.isActive = this.tile.zoom == 15;
 		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
         this.tile.evt.addEventListener('HIDE', this, this.hide);
-
 		if (this.tile.isReady) this.onTileReady();
     }
 
@@ -81,7 +103,7 @@ class NodeExtension {
         });
         Object.keys(typedGeometries).forEach(type => {
             const mergedGeometrie = THREE.BufferGeometryUtils.mergeBufferGeometries(typedGeometries[type]);
-            this.meshes[type] = new THREE.Mesh(mergedGeometrie, modelsMaterials[type]);
+            this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeTextures.material(type));
             this.meshes[type].receiveShadow = true;
             this.meshes[type].castShadow = true;
             GLOBE.addMeshe(this.meshes[type]);
@@ -168,13 +190,6 @@ function extractType(_element) {
 	return elementType;
 }
 
-const modelsMaterials = {
-    tower : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0, color:0xdddddd, side:THREE.DoubleSide, transparent:true, alphaTest:0.1}), 
-    bench : new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0x544d42, side:THREE.DoubleSide, transparent:true}), 
-    tree : new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xffffff}), 
-    street_lamp : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0x303030}), 
-}
-
 const equalsTags = {
     pole : 'tower', 
     waste_basket : 'recycling', 
@@ -215,11 +230,3 @@ const supportedTags = [
         ], 
     }, 
 ];
-
-function initTextures() {
-    if (!materialsInit) {
-        modelsMaterials.tree.map = NET_TEXTURES.texture('tree_leaves');
-        modelsMaterials.tower.map = NET_TEXTURES.texture('pylone');
-        materialsInit = true;
-    }
-}
