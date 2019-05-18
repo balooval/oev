@@ -96,7 +96,7 @@ const APP = {
 	}, 
 
 	loadTextures : function() {
-		UI.openModal('Loading textures');
+		UI.openModal('Loading common textures');
 		const textList = [];
 		const toLoad = [
 			['checker', 'loading.png'], 

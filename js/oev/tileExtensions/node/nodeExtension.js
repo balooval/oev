@@ -3,7 +3,6 @@ import GLOBE from '../../globe.js';
 import * as NodeLoader from './nodeLoader.js';
 import NodeTextures from './nodeTextures.js';
 import NodeModels from './nodeModels.js';
-import * as NET_MODELS from '../../net/NetModels.js';
 import ElevationStore from '../elevation/elevationStore.js';
 
 export {setApiUrl} from './nodeLoader.js';
@@ -82,7 +81,7 @@ class NodeExtension {
         const typedGeometries = {};
         _nodes.forEach(node => {
             if (!typedGeometries[node.type]) typedGeometries[node.type] = [];
-            const model = NET_MODELS.get(node.type).geometry.clone();
+            const model = NodeModels.get(node);
             applyTransformation(node, model);
             const elevation = ElevationStore.get(node.coord[0], node.coord[1]);
             const pos = GLOBE.coordToXYZ(
@@ -99,6 +98,7 @@ class NodeExtension {
                 verticesBuffer.array[verticeId + 2] += pos.z;
                 verticeId += 3;
             }
+            if (!model) console.warn('Model NULL', node);
             typedGeometries[node.type].push(model)
         });
         Object.keys(typedGeometries).forEach(type => {
