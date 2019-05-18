@@ -2,6 +2,7 @@ import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as NodeLoader from './nodeLoader.js';
 import * as NET_MODELS from '../../net/NetModels.js';
+import * as NET_TEXTURES from '../../net/NetTextures.js';
 import ElevationStore from '../elevation/elevationStore.js';
 
 export {setApiUrl} from './nodeLoader.js';
@@ -10,6 +11,7 @@ export function extensionClass() {
 	return NodeExtension;
 }
 
+let materialsInit = false;
 
 class NodeExtension {
 	constructor(_tile) {
@@ -19,6 +21,7 @@ class NodeExtension {
         this.tile = _tile;
         this.meshes = {};
         this.mesh = null;
+        initTextures();
         this.isActive = this.tile.zoom == 15;
 		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
@@ -119,11 +122,6 @@ class NodeExtension {
 }
 
 function applyTransformation(_node, _geometrie) {
-    const props = {
-        tree : {
-
-        }, 
-    };
     if (_node.props.height) {
         const scale = _node.props.height / 5;
         _geometrie.scale(scale, scale, scale);
@@ -171,9 +169,10 @@ function extractType(_element) {
 }
 
 const modelsMaterials = {
-    tower : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0, color:0xdddddd, side:THREE.DoubleSide, transparent:true}), 
+    tower : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0, color:0xdddddd, side:THREE.DoubleSide, transparent:true, alphaTest:0.1}), 
     bench : new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0x544d42, side:THREE.DoubleSide, transparent:true}), 
-    tree : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0, color:0x397717}), 
+    tree : new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xffffff}), 
+    street_lamp : new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0x303030}), 
 }
 
 const equalsTags = {
@@ -200,6 +199,13 @@ const supportedTags = [
             // 'waste_disposal', 
         ], 
     }, 
+
+    {
+        key : 'highway', 
+        values : [
+            'street_lamp', 
+        ], 
+    }, 
     
     {
         key : 'natural', 
@@ -209,3 +215,11 @@ const supportedTags = [
         ], 
     }, 
 ];
+
+function initTextures() {
+    if (!materialsInit) {
+        modelsMaterials.tree.map = NET_TEXTURES.texture('tree_leaves');
+        modelsMaterials.tower.map = NET_TEXTURES.texture('pylone');
+        materialsInit = true;
+    }
+}

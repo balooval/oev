@@ -103,7 +103,8 @@ const APP = {
 			['sky_gradient', 'sky_gradient.png'], 
 			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
-			['normal_noise', 'normal_noise.jpg'], 
+			['tree_leaves', 'tree_leaves.png'], 
+			['pylone', 'pylone_diffuse.png'], 
 			
 			
 			['shell_void', 'shell_void.png'], 
@@ -148,8 +149,10 @@ const APP = {
 		const modelsList = [];
 		const toLoad = [
 			['tower', 'pylone.json'], 
-			['tree', 'tree.json'], 
+			// ['tree', 'tree.json'], 
+			['tree', 'tree_leaves.json'], 
 			['bench', 'bench.json'], 
+			['street_lamp', 'lamp.json'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(modelsList, d[0], d[1]));
 		NET_MODELS.loadBatch(modelsList, () => {

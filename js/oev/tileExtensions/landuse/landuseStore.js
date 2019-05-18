@@ -20,8 +20,8 @@ const api = {
         const waysList = extractWays(parsedJson);
         tileToLanduses[_tile.key] = [];
         
-        const extractedRelations = extractElements(parsedJson, 'relation');
-        const extractedWays = extractElements(parsedJson, 'way');
+        const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
+        const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
         registerDatas(_tile, extractedRelations);
         registerDatas(_tile, extractedWays);
         
@@ -137,13 +137,13 @@ function getLayerInfos(_type) {
         uvFactor = 3;
     }
     if (_type == 'grass') {
-        meterBetweenLayers = 0.4;
+        meterBetweenLayers = 0.2;
         uvFactor = 2;
         materialNb = 2;
         nbLayers = 8;
     }
     if (_type == 'scrub') {
-        meterBetweenLayers = 0.8;
+        meterBetweenLayers = 0.6;
         uvFactor = 2;
         materialNb = 3;
         nbLayers = 9;
@@ -158,7 +158,7 @@ function getLayerInfos(_type) {
         meterBetweenLayers : meterBetweenLayers, 
         uvFactor : uvFactor, 
         nbLayers : nbLayers, 
-        groundOffset : 1, 
+        groundOffset : 0, 
         materialNb : materialNb, 
         layersByMap : nbLayers / materialNb, 
     }
@@ -179,10 +179,8 @@ function drawLanduse(_landuse, _tile) {
     if (trianglesResult === null) return false;
     const elevationsDatas = getElevationsDatas(_landuse);
 
-
     // layersBuffers = GEO_BUILDER.createLanduseGeometry(_landuse, layerInfos, elevationsDatas, trianglesResult, _tile);
     // saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);       
-
 
     
     for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
@@ -422,16 +420,18 @@ function forgotLanduse(_id) {
     knowIds = knowIds.filter(id => id != _id);
 }
 
-function extractElements(_datas, _type) {
+function extractElements(_datas, _type, _zoom) {
     return _datas.elements
 	.filter(e => e.type == _type)
 	.filter(way => way.tags)
-    .filter(way => isTagSupported(way));
+    .filter(way => isTagSupported(way, _zoom));
 }
 
-function isTagSupported(_element) {
-    if (extractType(_element)) return true;
-	return false;
+function isTagSupported(_element, _zoom) {
+    const type = extractType(_element);
+    if (!type) return false;
+    if (_zoom != tagsZoom[type]) return false;
+	return true;
 }
 
 function extractType(_element) {
@@ -481,6 +481,13 @@ const equalsTags = {
     meadow : 'grass', 
     greenfield : 'grass', 
     village_green : 'grass', 
+};
+
+const tagsZoom = {
+    forest : 15, 
+    scrub : 15, 
+    vineyard : 16, 
+    grass : 17, 
 };
 
 const supportedTags = [
@@ -590,10 +597,6 @@ function initTextures() {
         materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
         materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
         
-        
-
-        
-
         materialsInit = true;
     }
 }

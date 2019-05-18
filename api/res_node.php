@@ -13,6 +13,7 @@ class Api_node extends Api_default {
         '"amenity"', 
         '"natural"', 
         '"power"', 
+        '"highway"', 
     ];
 
     public function __construct($_params) {
@@ -31,7 +32,7 @@ class Api_node extends Api_default {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
         $fileDate = filemtime($_filePath);
-        if ($fileDate < 1557187200) return true;
+        if ($fileDate < 1558130528) return true;
         return false;
     }
 
