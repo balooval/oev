@@ -5,6 +5,7 @@ import ElevationStore from '../elevation/elevationStore.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
 import * as Simplify from '../../../libs/simplify.js';
 import * as GEO_BUILDER from './landuseGeometryBuilder.js';
+import LanduseMaterial from './landuseMaterial.js';
 
 let knowIds = [];
 const tileToLanduses = {};
@@ -14,17 +15,14 @@ let schdeduleNb = 0;
 
 const api = {
     setDatas : function(_json, _tile) {
-        initTextures();
         const parsedJson = JSON.parse(_json);
         const nodesList = extractNodes(parsedJson);
         const waysList = extractWays(parsedJson);
         tileToLanduses[_tile.key] = [];
-        
         const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
         const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
         registerDatas(_tile, extractedRelations);
         registerDatas(_tile, extractedWays);
-        
         let landuseAdded = 0;
         landuseAdded += buildLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
         landuseAdded += buildLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
@@ -83,7 +81,6 @@ function scheduleDraw() {
     schdeduleNb ++;
     setTimeout(redrawMeshes, 1000);
 }
-
 
 function calcBbox(_border) {
     const lon = _border.map(point => point[0]);
@@ -171,84 +168,12 @@ function simplifyLanduse(_landuse) {
 }
 
 function drawLanduse(_landuse, _tile) {
-    let lastMaterialLayer = 0;
-    let layersBuffers = [];
-    let curLayerBuffersGeos = [];
-    const layerInfos = getLayerInfos(_landuse.type);
     const trianglesResult = triangulate(_landuse);
     if (trianglesResult === null) return false;
+    const layerInfos = getLayerInfos(_landuse.type);
     const elevationsDatas = getElevationsDatas(_landuse);
-
-    // layersBuffers = GEO_BUILDER.createLanduseGeometry(_landuse, layerInfos, elevationsDatas, trianglesResult, _tile);
-    // saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);       
-
-    
-    for (let layer = 0; layer < layerInfos.nbLayers; layer ++) {
-        const geometry = new THREE.Geometry();
-        const uvDatas = [];
-        const layerGroundElevation = layerInfos.groundOffset + (layer * layerInfos.meterBetweenLayers);
-        geometry.faceVertexUvs[0] = [];
-        _landuse.border.forEach((point, i) => {
-            const vertPos = GLOBE.coordToXYZ(
-                point[0], 
-                point[1], 
-                layerGroundElevation + elevationsDatas.border[i]
-            );
-            geometry.vertices.push(vertPos);
-            let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-            let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-        });
-        _landuse.holes.forEach((hole, h) => {
-            hole.forEach((point, i) => {
-                const vertPos = GLOBE.coordToXYZ(
-                    point[0], 
-                    point[1], 
-                    layerGroundElevation + elevationsDatas.holes[h][i]
-                );
-                geometry.vertices.push(vertPos);
-                let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-                let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-                uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-            });
-        });
-        _landuse.fillPoints.forEach((point, i) => {
-            const vertPos = GLOBE.coordToXYZ(
-                point[0], 
-                point[1], 
-                layerGroundElevation + elevationsDatas.fill[i]
-            );
-            geometry.vertices.push(vertPos);
-            let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
-            let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-            uvDatas.push(new THREE.Vector2(uvX * layerInfos.uvFactor, uvY * layerInfos.uvFactor));
-        });
-        
-        trianglesResult.forEach(t => {
-            const points = t.getPoints();
-            geometry.faceVertexUvs[0].push([
-                uvDatas[points[0].id], 
-                uvDatas[points[1].id], 
-                uvDatas[points[2].id], 
-            ]);
-            geometry.faces.push(new THREE.Face3(points[0].id, points[1].id, points[2].id));
-        });
-        geometry.computeFaceNormals();
-        geometry.computeVertexNormals();
-        const curLayerMap = Math.floor(layer / layerInfos.layersByMap);
-        if (curLayerMap != lastMaterialLayer) {
-            lastMaterialLayer = curLayerMap;
-            const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
-            layersBuffers.push(mergedLayersBuffer);
-            curLayerBuffersGeos = [];
-        }
-        const curBufferGeo = new THREE.BufferGeometry().fromGeometry(geometry);
-        curLayerBuffersGeos.push(curBufferGeo);
-    }
-    const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
-    layersBuffers.push(mergedLayersBuffer);
-    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);      
-    
+    const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
+    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);
 }
 
 function redrawMeshes() {
@@ -273,7 +198,7 @@ function saveLanduseGeometries(_id, _geometries, _type) {
         const layerInfos = getLayerInfos(_type);
         const meshes = [];
         for (let l = 0; l < layerInfos.materialNb; l ++) {
-            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), materials[_type][l]);
+            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LanduseMaterial.material(_type)[l]);
             mesh.receiveShadow = true;
             meshes.push(mesh);
         }
@@ -450,8 +375,6 @@ function extractType(_element) {
 	return elementType;
 }
 
-
-
 function pointIntoPolygon(point, vs) {
     var x = point[0], y = point[1];
     var inside = false;
@@ -464,13 +387,6 @@ function pointIntoPolygon(point, vs) {
     }
     return inside;
 };
-
-
-function mapValue(_value, _min, _max) {
-	const length = Math.abs(_max - _min);
-	if (length == 0) return _value;
-	return (_value - _min) / length;
-}
 
 const equalsTags = {
     wood : 'forest', 
@@ -528,77 +444,5 @@ const supportedTags = [
         ], 
     }, 
 ];
-
-let materialsInit = false;
-// const debugWireframe = true;
-const debugWireframe = false;
-const materials = {
-    forest : [
-        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.6}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.7}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.8}), 
-    ], 
-    scrub : [
-        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-    ], 
-    grass : [
-        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-    ], 
-    vineyard : [
-        new THREE.MeshPhysicalMaterial({wireframe:debugWireframe, roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-        new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}), 
-    ], 
-};
-
-function initTextures() {
-    if (!materialsInit) {
-        materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
-        materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
-        materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
-        materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
-
-        materials.forest[1].normalMap = NET_TEXTURES.texture('shell_tree_normal');
-        materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
-        materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
-        materials.forest[1].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
-        materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
-        materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
-
-        materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
-        materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
-        materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
-
-        materials.scrub[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-        materials.scrub[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-        materials.scrub[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
-        materials.scrub[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
-
-        materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_2');
-        materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');
-        materials.vineyard[2].map = NET_TEXTURES.texture('shell_vine_3');
-        materials.vineyard[3].map = NET_TEXTURES.texture('shell_vine_4');
-
-        materials.vineyard[1].normalMap = NET_TEXTURES.texture('shell_vine_normal');
-        materials.vineyard[2].normalMap = NET_TEXTURES.texture('shell_vine_normal');
-        materials.vineyard[3].normalMap = NET_TEXTURES.texture('shell_vine_normal');
-        materials.vineyard[1].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
-        materials.vineyard[2].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
-        materials.vineyard[3].roughnessMap = NET_TEXTURES.texture('shell_vine_specular');
-        
-        materials.grass[0].map = NET_TEXTURES.texture('shell_grass_1');
-        materials.grass[1].map = NET_TEXTURES.texture('shell_grass_2');
-        
-        materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
-        materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
-        
-        materialsInit = true;
-    }
-}
 
 export {api as default};
