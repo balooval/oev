@@ -1,33 +1,43 @@
 import GLOBE from '../../globe.js';
 
-export function buildLanduseGeometry(_landuse, _layerInfos, _trianglesResult, _elevationsDatas, _tile) {
+export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevationsDatas, _tile) {
     let lastMaterialLayer = 0;
     let layersBuffers = [];
     let curLayerBuffersGeos = [];
     for (let layer = 0; layer < _layerInfos.nbLayers; layer ++) {
-        const geometry = new THREE.Geometry();
-        const uvDatas = [];
         const layerGroundElevation = _layerInfos.groundOffset + (layer * _layerInfos.meterBetweenLayers);
-        geometry.faceVertexUvs[0] = [];
-        addVerticesToGeometry(geometry, _landuse.border, _elevationsDatas.border, layerGroundElevation);
-        addUvToGeometry(uvDatas, _landuse.border, _layerInfos.uvFactor, _tile);
+        const bufferGeometry = new THREE.BufferGeometry();
+        let verticesNb = _landuse.border.length + _landuse.fillPoints.length;
+        _landuse.holes.forEach(hole => verticesNb += hole.length);
+        const bufferVertices = new Float32Array(verticesNb * 3);
+        let verticeId = 0;
+        verticeId = addVerticesToBuffer(verticeId, bufferVertices, _landuse.border, _elevationsDatas.border, layerGroundElevation);
         _landuse.holes.forEach((hole, h) => {
-            addVerticesToGeometry(geometry, hole, _elevationsDatas.holes[h], layerGroundElevation);
-            addUvToGeometry(uvDatas, hole, _layerInfos.uvFactor, _tile);
+            verticeId = addVerticesToBuffer(verticeId, bufferVertices, hole, _elevationsDatas.holes[h], layerGroundElevation);
         });
-        addVerticesToGeometry(geometry, _landuse.fillPoints, _elevationsDatas.fill, layerGroundElevation);
-        addUvToGeometry(uvDatas, _landuse.fillPoints, _layerInfos.uvFactor, _tile);
-        _trianglesResult.forEach(t => {
+        verticeId = addVerticesToBuffer(verticeId, bufferVertices, _landuse.fillPoints, _elevationsDatas.fill, layerGroundElevation);
+        const bufferUvs = new Float32Array(verticesNb * 2);
+        let uvId = 0;
+        uvId = addUvToBuffer(uvId, bufferUvs, _landuse.border, _layerInfos.uvFactor, _tile);
+        _landuse.holes.forEach(hole => {
+            uvId = addUvToBuffer(uvId, bufferUvs, hole, _layerInfos.uvFactor, _tile);
+        });
+        uvId = addUvToBuffer(uvId, bufferUvs, _landuse.fillPoints, _layerInfos.uvFactor, _tile);
+        const facesNb = _facesIndex.length;
+        const bufferFaces = new Uint32Array(facesNb * 3);
+        let facesId = 0;
+        _facesIndex.forEach(t => {
             const points = t.getPoints();
-            geometry.faces.push(new THREE.Face3(points[0].id, points[1].id, points[2].id));
-            geometry.faceVertexUvs[0].push([
-                uvDatas[points[0].id], 
-                uvDatas[points[1].id], 
-                uvDatas[points[2].id], 
-            ]);
+            bufferFaces[facesId + 0] = points[0].id;
+            bufferFaces[facesId + 1] = points[1].id;
+            bufferFaces[facesId + 2] = points[2].id;
+            facesId += 3;
         });
-        geometry.computeFaceNormals();
-        geometry.computeVertexNormals();
+        bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+        bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+		bufferGeometry.computeFaceNormals();
+        bufferGeometry.computeVertexNormals();
         const curLayerMap = Math.floor(layer / _layerInfos.layersByMap);
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
@@ -35,31 +45,37 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _trianglesResult, _e
             layersBuffers.push(mergedLayersBuffer);
             curLayerBuffersGeos = [];
         }
-        const curBufferGeo = new THREE.BufferGeometry().fromGeometry(geometry);
-        curLayerBuffersGeos.push(curBufferGeo);
+        curLayerBuffersGeos.push(bufferGeometry);
     }
     const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
     layersBuffers.push(mergedLayersBuffer);
     return layersBuffers;
 }
 
-function addVerticesToGeometry(_geometry, _positions, _elevationsDatas, _elevationOffset) {
+function addVerticesToBuffer(_offset, _buffer, _positions, _elevationsDatas, _elevationOffset) {
     _positions.forEach((point, i) => {
         const vertPos = GLOBE.coordToXYZ(
             point[0], 
             point[1], 
             _elevationOffset + _elevationsDatas[i]
         );
-        _geometry.vertices.push(vertPos);
+        _buffer[_offset + 0] = vertPos.x;
+        _buffer[_offset + 1] = vertPos.y;
+        _buffer[_offset + 2] = vertPos.z;
+        _offset += 3;
     });
+    return _offset;
 }
-    
-function addUvToGeometry(uvDatas, _positions, _uvFactor, _tile) {
+
+function addUvToBuffer(_offset, _buffer, _positions, _uvFactor, _tile) {
     _positions.forEach(point => {
         let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
         let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
-        uvDatas.push(new THREE.Vector2(uvX * _uvFactor, uvY * _uvFactor));
+        _buffer[_offset + 0] = uvX * _uvFactor;
+        _buffer[_offset + 1] = uvY * _uvFactor;
+        _offset += 2;
     });
+    return _offset;
 }
 
 function mapValue(_value, _min, _max) {
