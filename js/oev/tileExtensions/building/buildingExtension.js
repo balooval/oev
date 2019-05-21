@@ -100,6 +100,11 @@ class BuildingExtension {
 			return false;
 		}
 		this.buildRoof(_datas);
+		this.buildWalls(_datas);
+		Renderer.MUST_RENDER = true;
+	}
+
+	buildWalls(_datas) {
 		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.geometry, 'nbVert');
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
@@ -112,7 +117,6 @@ class BuildingExtension {
 		this.meshWalls.receiveShadow = true;
 		this.meshWalls.castShadow = true;
 		Renderer.scene.add(this.meshWalls);
-		Renderer.MUST_RENDER = true;
 	}
 
 	applyElevationToVertices(_buildings, _geometry, _prop) {

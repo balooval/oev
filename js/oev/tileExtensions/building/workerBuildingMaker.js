@@ -2,7 +2,6 @@ importScripts('./Earcut.js');
 importScripts('../../../libs/simplify.js');
 
 onmessage = function(_msg) {
-
 	let buildings = _msg.data.buildingsDatas;
 	if (_msg.data.bbox) {
 		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
@@ -12,11 +11,10 @@ onmessage = function(_msg) {
 		zoom_14 : 0.00005, 
 		zoom_15 : 0.00001, 
 	};
-	buildings.forEach(b => {
-		b.coords = simplify(b.coords, simplification['zoom_' + _msg.data.zoom], true);
-	});
+	// buildings.forEach(b => {
+	// 	b.coords = simplify(b.coords, simplification['zoom_' + _msg.data.zoom], true);
+	// });
 	buildings = buildings.filter(b => b.coords.length > 2);
-
 	const result = prepareBuildingGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
 	postMessage({
@@ -38,7 +36,7 @@ function prepareRoofsGeometry(_buildings) {
 		curBuilding.nbVertRoof = curBuilding.coords.length - 1;
 		nbVert += curBuilding.nbVertRoof;
 		const roofCoords = curBuilding.coords.slice(0, -1).flat();
-		const facesIndex = earcut(roofCoords);
+		const facesIndex = earcut(roofCoords, curBuilding.holes);
 		nbFaces += facesIndex.length;
 		roofFacesIndex.push(facesIndex);
 	}
@@ -91,7 +89,8 @@ function prepareBuildingGeometry(_buildings) {
 	const colorVertices = [];
 	_buildings.forEach(building => {
 		let buildingCoordNb = building.coords.length;
-		fondationsLat = -10;
+		fondationsEle = 0;
+		if (building.props.minAlt == 0) fondationsEle = -10;
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
 			for (let c = 0; c < buildingCoordNb; c ++) {
 				colorVertices.push(...building.props.wallColor);
@@ -115,10 +114,10 @@ function prepareBuildingGeometry(_buildings) {
 				}
 				bufferCoord[bufferVertIndex + 0] = building.coords[c][0];
 				bufferCoord[bufferVertIndex + 1] = building.coords[c][1];
-				bufferCoord[bufferVertIndex + 2] = fondationsLat + building.props.minAlt + (floor * building.props.floorHeight);
+				bufferCoord[bufferVertIndex + 2] = fondationsEle + building.props.minAlt + (floor * building.props.floorHeight);
 				bufferVertIndex += 3;
 			}
-			fondationsLat = 0;
+			fondationsEle = 0;
 		}
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
 	});

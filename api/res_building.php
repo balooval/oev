@@ -24,6 +24,8 @@ class Api_building extends Api_default {
     private function mustFetchDatas($_filePath) {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
+        $fileDate = filemtime($_filePath);
+        if ($fileDate < 1558383242) return true;
         return false;
     }
 
@@ -64,16 +66,12 @@ class Api_building extends Api_default {
 		$west = $endC[0];
 		$coord = '('.$south.','.$east.','.$north.','.$west.')';
 		$curServer = $this->getOverpassUrl();
-		$url = $curServer . '/interpreter?data=[out:json];(way' . $coord . '["building"~"."];way' . $coord . '["building:part"~"."];);(._;>;);out;';
-		// $url = $curServer . '/interpreter?data=[out:json];way' . $coord . '["building"~"."];(._;>;);out;';
-        // echo $url;
-        // exit();
+        $url = $curServer . '/interpreter?data=[out:json];(';
+        $url .= 'way' . $coord . '["building"~"."];';
+        $url .= 'way' . $coord . '["building:part"~"."];';
+        $url .= 'rel' . $coord . '["building"];';
+        $url .= ');(._;>;);out;';
         $response = @file_get_contents($url);
-        // $obj = json_decode($response, true);
-        // $obj['url'] = $url;
-        // $response = json_encode($obj, JSON_PRETTY_PRINT);
-        // echo $response;
-        // exit();
 		file_put_contents($_filePath, $response);
     }
 

@@ -2,7 +2,6 @@ import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
 import ElevationStore from '../elevation/elevationStore.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
 import * as Simplify from '../../../libs/simplify.js';
 import * as GEO_BUILDER from './landuseGeometryBuilder.js';
 import LanduseMaterial from './landuseMaterial.js';
@@ -348,8 +347,8 @@ function forgotLanduse(_id) {
 function extractElements(_datas, _type, _zoom) {
     return _datas.elements
 	.filter(e => e.type == _type)
-	.filter(way => way.tags)
-    .filter(way => isTagSupported(way, _zoom));
+	.filter(e => e.tags)
+    .filter(e => isTagSupported(e, _zoom));
 }
 
 function isTagSupported(_element, _zoom) {

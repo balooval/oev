@@ -15,10 +15,13 @@ function readJson(_datas) {
 			parseFloat(n.lat)
 		];
 	});
+	// const waysList = extractWays(json);
+	
 	const buildingsList = [];
 	json.elements
 	.filter(e => e.type == 'way')
-	.filter(w => !exculdedId.includes(w.id))
+	.filter(e => e.tags)
+	.filter(e => !e.tags['building:parts'])
 	.forEach(w => {
 		const props = cleanTags(w.tags);
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
@@ -27,10 +30,22 @@ function readJson(_datas) {
 			id : w.id, 
 			props : props, 
 			coords : wayNodes, 
+			holes : [], 
 			centroid : centroid, 
 		});
 	});
+
 	return buildingsList;
+}
+
+function extractWays(_datas) {
+    const ways = {};
+    _datas.elements
+    .filter(e => e.type == 'way')
+	.forEach(way => {
+		ways['WAY_' + way.id] = way;
+    });
+    return ways;
 }
 
 function cleanTags(_tags) {
@@ -92,16 +107,3 @@ function getPolygonCentroid(pts) {
 	f = twicearea * 3;
 	return [lon / f, lat / f];
 }
-
-var exculdedId = [23762981, 
-	226413508, 
-	19441489, 
-	201247295, 
-	150335048, 
-	309413981, 
-	249003371, 
-	249003371, 
-	112452790, 
-	3504257, 
-	227662017, 
-];
