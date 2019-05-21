@@ -6,14 +6,6 @@ onmessage = function(_msg) {
 	if (_msg.data.bbox) {
 		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
 	}
-	const simplification = {
-		zoom_13 : 0.0001, 
-		zoom_14 : 0.00005, 
-		zoom_15 : 0.00001, 
-	};
-	// buildings.forEach(b => {
-	// 	b.coords = simplify(b.coords, simplification['zoom_' + _msg.data.zoom], true);
-	// });
 	buildings = buildings.filter(b => b.coords.length > 2);
 	const result = prepareBuildingGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
@@ -33,10 +25,11 @@ function prepareRoofsGeometry(_buildings) {
 	const roofFacesIndex = [];
 	for (let b = 0; b < _buildings.length; b ++) {
 		const curBuilding = _buildings[b];
-		curBuilding.nbVertRoof = curBuilding.coords.length - 1;
+		curBuilding.nbVertRoof = curBuilding.coords.length + curBuilding.holesCoords.length;
 		nbVert += curBuilding.nbVertRoof;
-		const roofCoords = curBuilding.coords.slice(0, -1).flat();
-		const facesIndex = earcut(roofCoords, curBuilding.holes);
+		const roofCoords = curBuilding.coords.flat();
+		const roofHolesCoords = curBuilding.holesCoords.flat();
+		const facesIndex = earcut(roofCoords.concat(roofHolesCoords), curBuilding.holesIndex);
 		nbFaces += facesIndex.length;
 		roofFacesIndex.push(facesIndex);
 	}
@@ -55,9 +48,10 @@ function prepareRoofsGeometry(_buildings) {
 			bufferFaces[bufferFaceIndex] = roofFacesIndex[b][f] + (bufferVertIndex / 3);
 			bufferFaceIndex ++;
 		}
+		const roofCoords = curBuilding.coords.concat(curBuilding.holesCoords);
 		for (let v = 0; v < curBuilding.nbVertRoof; v ++) {
-			bufferCoord[bufferVertIndex + 0] = curBuilding.coords[v][0];
-			bufferCoord[bufferVertIndex + 1] = curBuilding.coords[v][1];
+			bufferCoord[bufferVertIndex + 0] = roofCoords[v][0];
+			bufferCoord[bufferVertIndex + 1] = roofCoords[v][1];
 			bufferCoord[bufferVertIndex + 2] = roofAlt;
 			bufferVertIndex += 3;
 			colorVertices.push(...curBuilding.props.roofColor);

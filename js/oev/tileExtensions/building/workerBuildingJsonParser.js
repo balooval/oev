@@ -15,9 +15,76 @@ function readJson(_datas) {
 			parseFloat(n.lat)
 		];
 	});
-	// const waysList = extractWays(json);
 	
 	const buildingsList = [];
+	
+	const waysList = extractWays(json);
+
+	json.elements
+	.filter(e => e.type == 'relation')
+	.filter(e => e.tags)
+	.filter(e => !e.tags['building:parts'])
+	// .filter(e => e.id == 3071549)
+	.forEach(rel => {
+		const props = cleanTags(rel.tags);
+		const holes = rel.members.filter(member => member.role == 'inner');
+		let holesNodes = [];
+		let holesIndex = [];
+		let holesLastId = 0;
+		holes.forEach(hole => {
+			const holeWay = waysList['WAY_' + hole.ref];
+			let curHoleNodes = holeWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
+			holesNodes.push(...curHoleNodes);
+			holesIndex.push(holesLastId);
+			holesLastId += curHoleNodes.length / 2;
+		});
+		const borders = rel.members.filter(member => member.role == 'outer');
+
+		const parts = mergeContinuousWays(borders, waysList, nodesList)
+
+		parts
+		.filter(coords => coords.length > 3)
+		.forEach(coords => {
+			// const borderWay = waysList['WAY_' + border.ref];
+			// let wayNodes = borderWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+			const wayNodesShort = removeWayDuplicateLimits([...coords]);
+			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
+			const centroid = getPolygonCentroid(coords);
+			const buildObj = {
+				id : rel.id, 
+				props : props, 
+				coords : wayNodesShort, 
+				holesCoords : holesNodes, 
+				holesIndex : holesIndex, 
+				centroid : centroid, 
+			};
+			buildingsList.push(buildObj);
+		});
+
+		/*
+			borders.forEach(border => {
+			const borderWay = waysList['WAY_' + border.ref];
+			let wayNodes = borderWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+			const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
+			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
+			const centroid = getPolygonCentroid(wayNodes);
+			const buildObj = {
+				id : borderWay.id, 
+				props : props, 
+				coords : wayNodesShort, 
+				holesCoords : holesNodes, 
+				holesIndex : holesIndex, 
+				centroid : centroid, 
+			};
+			buildingsList.push(buildObj);
+		});
+		*/
+		
+	});
+
+
+	
 	json.elements
 	.filter(e => e.type == 'way')
 	.filter(e => e.tags)
@@ -29,13 +96,74 @@ function readJson(_datas) {
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
-			coords : wayNodes, 
-			holes : [], 
+			coords : wayNodes.slice(0, -1), 
+			holesCoords : [], 
+			holesIndex : [], 
 			centroid : centroid, 
 		});
 	});
-
+	
 	return buildingsList;
+}
+
+function mergeContinuousWays(_outers, _waysList, _nodesList) {
+	const outersLimits = _outers.map(outer => {
+		const outerWay = _waysList['WAY_' + outer.ref];
+		let outerNodes = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+		return [
+			outerNodes.shift(), 
+			outerNodes.pop()
+		];
+	});
+	
+	const differentsBorders = [];
+	let curBorderPart = [];
+	let lastStart = null;
+	let lastEnd = null;
+	outersLimits.forEach((limit, i) => {
+		if (lastStart == null) {
+			curBorderPart.push(i);
+			return;
+		}
+		if (lastStart[0] == limit[0][0] && lastStart[1] == limit[0][1]) {
+			curBorderPart.push(i);
+			return;
+		}
+		if (lastStart[0] == limit[1][0] && lastStart[1] == limit[1][1]) {
+			curBorderPart.push(i);
+			return;
+		}
+		if (lastStart[1] == limit[0][0] && lastStart[1] == limit[0][1]) {
+			curBorderPart.push(i);
+			return;
+		}
+		if (lastStart[1] == limit[1][0] && lastStart[1] == limit[1][1]) {
+			curBorderPart.push(i);
+			return;
+		}
+		differentsBorders.push(curBorderPart);
+		curBorderPart = [];
+	});
+	differentsBorders.push(curBorderPart);
+	
+	const res = differentsBorders.map(contiguousWays => {
+		return contiguousWays.map(outerId => {
+			const curOuter = _outers[outerId];
+			const outerWay = _waysList['WAY_' + curOuter.ref];
+			let outerNodes = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+			return outerNodes;
+		}).flat();
+	});
+	return res;
+}
+
+function removeWayDuplicateLimits(_way) {
+	if (_way.length < 2) return _way;
+	const first = _way[0];
+	const last = _way[_way.length-1];
+	if (first[0] != last[0] || first[1] != last[1]) return _way;
+	_way.pop();
+	return _way;
 }
 
 function extractWays(_datas) {
