@@ -24,7 +24,8 @@ function readJson(_datas) {
 	.filter(e => e.type == 'relation')
 	.filter(e => e.tags)
 	.filter(e => !e.tags['building:parts'])
-	// .filter(e => e.id == 3071549)
+	// .filter(e => e.id == 536982) // palais justice paris
+	// .filter(e => e.id == 1603467) // AV
 	.filter(e => !excludedIds.includes(e.id))
 	.forEach(rel => {
 		if (rel.id == 3071549) console.log('Relation OUTER');
@@ -34,30 +35,38 @@ function readJson(_datas) {
 		let holesNodes = [];
 		let holesIndex = [];
 		let holesLastId = 0;
+		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
 		holes.forEach(hole => {
 			const holeWay = waysList['WAY_' + hole.ref];
 			let curHoleNodes = holeWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
 			holesNodes.push(...curHoleNodes);
 			holesIndex.push(holesLastId);
-			holesLastId += curHoleNodes.length / 2;
+			holesLastId += curHoleNodes.length;
 		});
 		const borders = rel.members.filter(member => member.role == 'outer');
-
 		const parts = mergeContinuousWays(borders, waysList, nodesList)
-
+		
 		parts
 		.filter(coords => coords.length > 3)
 		.forEach(coords => {
 			const wayNodesShort = removeWayDuplicateLimits([...coords]);
 			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
 			const centroid = getPolygonCentroid(coords);
+
+			let myHole = [];
+			let myHoleIndex = [];
+			if (polygonContainPolygon(wayNodesShort, holesNodes)) {
+				myHole = holesNodes;
+				myHoleIndex = holesIndex;
+			}
+
 			const buildObj = {
 				id : rel.id, 
-				props : props, 
+				props : props,  
 				coords : wayNodesShort, 
-				holesCoords : holesNodes, 
-				holesIndex : holesIndex, 
+				holesCoords : myHole, 
+				holesIndex : myHoleIndex, 
 				centroid : centroid, 
 			};
 			buildingsList.push(buildObj);
@@ -75,10 +84,11 @@ function readJson(_datas) {
 		const props = cleanTags(w.tags);
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		const centroid = getPolygonCentroid(wayNodes);
+		const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
-			coords : wayNodes.slice(0, -1), 
+			coords : wayNodesShort, 
 			holesCoords : [], 
 			holesIndex : [], 
 			centroid : centroid, 
@@ -218,6 +228,39 @@ function getPolygonCentroid(pts) {
 	f = twicearea * 3;
 	return [lon / f, lat / f];
 }
+
+function polygonContainPolygon(_polyA, _polyB) {
+	const bboxA = {
+		minX : Math.min(..._polyA.map(pt => pt[0])), 
+		minY : Math.min(..._polyA.map(pt => pt[1])), 
+		maxX : Math.max(..._polyA.map(pt => pt[0])), 
+		maxY : Math.max(..._polyA.map(pt => pt[1])), 
+	};
+	const bboxB = {
+		minX : Math.min(..._polyB.map(pt => pt[0])), 
+		minY : Math.min(..._polyB.map(pt => pt[1])), 
+		maxX : Math.max(..._polyB.map(pt => pt[0])), 
+		maxY : Math.max(..._polyB.map(pt => pt[1])), 
+	}
+	if (bboxA.minX > bboxB.minX) return false;
+	if (bboxA.minY > bboxB.minY) return false;
+	if (bboxA.maxX < bboxB.maxX) return false;
+	if (bboxA.maxY < bboxB.maxY) return false;
+	return _polyB.every(pt => pointIntoPolygon(pt, _polyA));
+}
+
+function pointIntoPolygon(point, vs) {
+    var x = point[0], y = point[1];
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+};
 
 const excludedIds = [
 	23762981, 

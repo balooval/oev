@@ -78,6 +78,17 @@ class BuildingExtension {
 		this.construct(_res);
 	}
 
+	construct(_datas) {
+		if (_datas.buildings.length == 0) return false;
+		if (this.meshWalls != undefined) {
+			Renderer.scene.add(this.meshWalls);
+			return false;
+		}
+		this.buildRoof(_datas);
+		this.buildWalls(_datas);
+		Renderer.MUST_RENDER = true;
+	}
+
 	buildRoof(_datas) {
 		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.roofsGeometry, 'nbVertRoof');
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
@@ -91,17 +102,6 @@ class BuildingExtension {
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
-	}
-
-	construct(_datas) {
-		if (_datas.buildings.length == 0) return false;
-		if (this.meshWalls != undefined) {
-			Renderer.scene.add(this.meshWalls);
-			return false;
-		}
-		this.buildRoof(_datas);
-		this.buildWalls(_datas);
-		Renderer.MUST_RENDER = true;
 	}
 
 	buildWalls(_datas) {
@@ -125,7 +125,12 @@ class BuildingExtension {
 		for (let b = 0; b < _buildings.length; b ++) {
 			const curBuilding = _buildings[b];
 			const alt = ElevationStore.get(curBuilding.centroid[0], curBuilding.centroid[1]);
-			for (let v = 0; v < curBuilding[_prop]; v ++) {
+			const length = curBuilding[_prop];
+			for (let v = 0; v < length; v ++) {
+				// if (bufferVertIndex > buffer.length) {
+					// console.log('ALT B', _prop, buffer.length, bufferVertIndex, curBuilding[_prop]);
+					// debugger;
+				// }
 				buffer[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;
 			}
@@ -136,12 +141,16 @@ class BuildingExtension {
 	convertCoordToPosition(_bufferCoord) {
 		const bufferPos = new Float32Array(_bufferCoord);
 		let bufferVertIndex = 0;
-		for (let c = 0; c < _bufferCoord.length; c ++) {
+		const length = _bufferCoord.length / 3;
+		for (let c = 0; c < length; c ++) {
 			const vertPos = GLOBE.coordToXYZ(
 				_bufferCoord[bufferVertIndex + 0], 
 				_bufferCoord[bufferVertIndex + 1], 
 				_bufferCoord[bufferVertIndex + 2]
 			);
+			if (isNaN(vertPos.x) || isNaN(vertPos.y) || isNaN(vertPos.z)) {
+				// console.log('A', _bufferCoord.length, bufferVertIndex, _bufferCoord[bufferVertIndex + 0], _bufferCoord[bufferVertIndex + 1], _bufferCoord[bufferVertIndex + 2]);
+			}
 			bufferPos[bufferVertIndex + 0] = vertPos.x;
 			bufferPos[bufferVertIndex + 1] = vertPos.y;
 			bufferPos[bufferVertIndex + 2] = vertPos.z;

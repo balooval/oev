@@ -110,6 +110,7 @@ function interpolate(_struct, _lon, _lat) {
 	const interpolXMin = slideValue(elevationMinXMinY, elevationMaxXMinY, prctX);
 	const interpolXMax = slideValue(elevationMinXMaxY, elevationMaxXMaxY, prctX);
 	const interpolY = slideValue(interpolXMin, interpolXMax, prctY);
+	if (isNaN(interpolY)) return 0;
 	return interpolY;
 }
 
