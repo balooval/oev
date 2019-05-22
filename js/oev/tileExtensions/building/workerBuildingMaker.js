@@ -7,7 +7,7 @@ onmessage = function(_msg) {
 		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
 	}
 	buildings = buildings.filter(b => b.coords.length > 2);
-	const result = prepareBuildingGeometry(buildings);
+	const result = prepareWallsGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
 	postMessage({
 		tileKey : _msg.data.tileKey, 
@@ -66,10 +66,15 @@ function prepareRoofsGeometry(_buildings) {
 	};
 }
 
-function prepareBuildingGeometry(_buildings) {
+function prepareWallsGeometry(_buildings) {
 	let nbVert = 0;
 	let nbFaces = 0;
-	_buildings.forEach(b => {
+	const walls = _buildings.filter(b => {
+		if (!b.props.wall) return true;
+		if (b.props.wall == 'no') return false;
+		return true;
+	});
+	walls.forEach(b => {
 		let buildingCoordNb = b.coords.length;
 		b.nbVert = buildingCoordNb * (b.props.floorsNb + 1)
 		nbVert += b.nbVert;
@@ -81,7 +86,7 @@ function prepareBuildingGeometry(_buildings) {
 	let bufferFaceIndex = 0;
 	let pastFaceNb = 0;
 	const colorVertices = [];
-	_buildings.forEach(building => {
+	walls.forEach(building => {
 		let buildingCoordNb = building.coords.length;
 		fondationsEle = 0;
 		if (building.props.minAlt == 0) fondationsEle = -10;

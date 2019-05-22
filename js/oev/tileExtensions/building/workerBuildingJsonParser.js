@@ -25,7 +25,10 @@ function readJson(_datas) {
 	.filter(e => e.tags)
 	.filter(e => !e.tags['building:parts'])
 	// .filter(e => e.id == 3071549)
+	.filter(e => !excludedIds.includes(e.id))
 	.forEach(rel => {
+		if (rel.id == 3071549) console.log('Relation OUTER');
+		if (rel.id == 3071552) console.log('Relation PART');
 		const props = cleanTags(rel.tags);
 		const holes = rel.members.filter(member => member.role == 'inner');
 		let holesNodes = [];
@@ -46,8 +49,6 @@ function readJson(_datas) {
 		parts
 		.filter(coords => coords.length > 3)
 		.forEach(coords => {
-			// const borderWay = waysList['WAY_' + border.ref];
-			// let wayNodes = borderWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 			const wayNodesShort = removeWayDuplicateLimits([...coords]);
 			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
 			const centroid = getPolygonCentroid(coords);
@@ -61,26 +62,6 @@ function readJson(_datas) {
 			};
 			buildingsList.push(buildObj);
 		});
-
-		/*
-			borders.forEach(border => {
-			const borderWay = waysList['WAY_' + border.ref];
-			let wayNodes = borderWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
-			const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
-			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
-			const centroid = getPolygonCentroid(wayNodes);
-			const buildObj = {
-				id : borderWay.id, 
-				props : props, 
-				coords : wayNodesShort, 
-				holesCoords : holesNodes, 
-				holesIndex : holesIndex, 
-				centroid : centroid, 
-			};
-			buildingsList.push(buildObj);
-		});
-		*/
-		
 	});
 
 
@@ -88,6 +69,7 @@ function readJson(_datas) {
 	json.elements
 	.filter(e => e.type == 'way')
 	.filter(e => e.tags)
+	.filter(e => !excludedIds.includes(e.id))
 	.filter(e => !e.tags['building:parts'])
 	.forEach(w => {
 		const props = cleanTags(w.tags);
@@ -193,6 +175,7 @@ function cleanTags(_tags) {
 
 	tags.wallColor = parseColor(tags.wallColor);
 	tags.roofColor = parseColor(tags.roofColor);
+	tags.wall = _tags.wall || '';
 
 	let height = parseFloat(_tags.height);
 	let minAlt = parseInt(_tags.min_height);
@@ -235,3 +218,9 @@ function getPolygonCentroid(pts) {
 	f = twicearea * 3;
 	return [lon / f, lat / f];
 }
+
+const excludedIds = [
+	23762981, 
+	3071549, 
+	226413508, 
+];

@@ -25,7 +25,7 @@ class Api_building extends Api_default {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
         $fileDate = filemtime($_filePath);
-        if ($fileDate < 1558383242) return true;
+        if ($fileDate < 1558506988) return true;
         return false;
     }
 
@@ -70,6 +70,7 @@ class Api_building extends Api_default {
         $url .= 'way' . $coord . '["building"~"."];';
         $url .= 'way' . $coord . '["building:part"~"."];';
         $url .= 'rel' . $coord . '["building"];';
+        $url .= 'rel' . $coord . '["building:part"];';
         $url .= ');(._;>;);out;';
         $response = @file_get_contents($url);
 		file_put_contents($_filePath, $response);
