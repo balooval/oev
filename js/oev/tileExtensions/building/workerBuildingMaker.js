@@ -7,26 +7,33 @@ onmessage = function(_msg) {
 		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
 	}
 	buildings = buildings.filter(b => b.coords.length > 2);
-	const result = prepareWallsGeometry(buildings);
+	const wallsDatas = prepareWallsGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
 	postMessage({
 		tileKey : _msg.data.tileKey, 
 		result : {
-			buildings : buildings, 
-			geometry : result, 
-			roofsGeometry : roofsDatas, 
+			wallsBuffers : wallsDatas, 
+			roofsBuffers : roofsDatas, 
 		}, 
 	});
 }
 
 function prepareRoofsGeometry(_buildings) {
-	let nbVert = 0;
+	if (_buildings.length == 0) return null;
+	let nbVertRoof = 0;
 	let nbFaces = 0;
 	const roofFacesIndex = [];
+	const verticesNbs = [];
+	const centers = [];
+	const eleOffset = [];
 	for (let b = 0; b < _buildings.length; b ++) {
 		const curBuilding = _buildings[b];
-		curBuilding.nbVertRoof = curBuilding.coords.length + curBuilding.holesCoords.length;
-		nbVert += curBuilding.nbVertRoof;
+		// console.log('roofhape', curBuilding.props.roofhape);pyramidal
+		eleOffset.push(0);
+		centers.push(curBuilding.centroid);
+		const buildingNbVert = curBuilding.coords.length + curBuilding.holesCoords.length;
+		verticesNbs.push(buildingNbVert);
+		nbVertRoof += buildingNbVert;
 		const roofCoords = curBuilding.coords.flat();
 		const roofHolesCoords = curBuilding.holesCoords.flat();
 		const facesIndex = earcut(roofCoords.concat(roofHolesCoords), curBuilding.holesIndex);
@@ -34,7 +41,7 @@ function prepareRoofsGeometry(_buildings) {
 		roofFacesIndex.push(facesIndex);
 	}
 	const bufferFaces = new Uint32Array(nbFaces);
-	const bufferCoord = new Float32Array(nbVert * 3);
+	const bufferCoord = new Float32Array(nbVertRoof * 3);
 	let bufferVertIndex = 0;
 	let bufferFaceIndex = 0;
 	const colorVertices = [];
@@ -49,7 +56,7 @@ function prepareRoofsGeometry(_buildings) {
 			bufferFaceIndex ++;
 		}
 		const roofCoords = curBuilding.coords.concat(curBuilding.holesCoords);
-		for (let v = 0; v < curBuilding.nbVertRoof; v ++) {
+		for (let v = 0; v < verticesNbs[b]; v ++) {
 			bufferCoord[bufferVertIndex + 0] = roofCoords[v][0];
 			bufferCoord[bufferVertIndex + 1] = roofCoords[v][1];
 			bufferCoord[bufferVertIndex + 2] = roofAlt;
@@ -58,8 +65,10 @@ function prepareRoofsGeometry(_buildings) {
 		}
 	}
 	return {
-		nbVert : nbVert, 
-		nbFaces : nbFaces, 
+		buildingNb : _buildings.length, 
+		eleOffset : eleOffset, 
+		centroids : centers, 
+		verticesNbs : verticesNbs, 
 		bufferCoord : bufferCoord, 
 		bufferFaces : bufferFaces, 
 		bufferColor : new Uint8Array(colorVertices), 
@@ -67,23 +76,27 @@ function prepareRoofsGeometry(_buildings) {
 }
 
 function prepareWallsGeometry(_buildings) {
-	let nbVert = 0;
-	let nbFaces = 0;
+	if (_buildings.length == 0) return null;
 	const walls = _buildings.filter(b => {
 		if (!b.props.wall) return true;
 		if (b.props.wall == 'no') return false;
 		return true;
 	});
+	let nbVertWall = 0;
+	let nbFaces = 0;
+	const centers = [];
+	const eleOffset = [];
+	const verticesNbs = [];
 	walls.forEach(building => {
+		eleOffset.push(0);
+		centers.push(building.centroid);
 		let buildingCoordNb = building.coords.length;
-		building.nbVert = buildingCoordNb * (building.props.floorsNb + 1);
-		if (building.nbVert < 0) {
-			console.log('building.nbVert', building.nbVert, buildingCoordNb, building.props.floorsNb)
-		}
-		nbVert += building.nbVert;
+		const buildingNbVert = buildingCoordNb * (building.props.floorsNb + 1);
+		verticesNbs.push(buildingNbVert);
+		nbVertWall += buildingNbVert;
 		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
 	});
-	const bufferCoord = new Float32Array(nbVert * 3);
+	const bufferCoord = new Float32Array(nbVertWall * 3);
 	const bufferFaces = new Uint32Array(nbFaces * 3);
 	let bufferVertIndex = 0;
 	let bufferFaceIndex = 0;
@@ -124,8 +137,10 @@ function prepareWallsGeometry(_buildings) {
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
 	});
 	return {
-		nbVert : nbVert, 
-		nbFaces : nbFaces, 
+		buildingNb : walls.length, 
+		eleOffset : eleOffset, 
+		centroids : centers, 
+		verticesNbs : verticesNbs, 
 		bufferCoord : bufferCoord, 
 		bufferFaces : bufferFaces, 
 		bufferColor : new Uint8Array(colorVertices), 

@@ -31,7 +31,7 @@ class BuildingExtension {
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
-		// this.isActive = this.tile.key == '16586_11267_15';
+		// this.isActive = this.tile.key == '9649_12315_15';
 
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
@@ -72,7 +72,6 @@ class BuildingExtension {
 			bbox : bbox, 
 			zoom : this.tile.zoom, 
 		});
-		
 	}
 
 	onWorkerFinishedBuild(_res) {
@@ -81,24 +80,23 @@ class BuildingExtension {
 	}
 
 	construct(_datas) {
-		if (_datas.buildings.length == 0) return false;
 		if (this.meshWalls != undefined) {
 			Renderer.scene.add(this.meshWalls);
 			return false;
 		}
-		this.buildRoof(_datas);
-		this.buildWalls(_datas);
+		this.buildRoof(_datas.roofsBuffers);
+		this.buildWalls(_datas.wallsBuffers);
 		Renderer.MUST_RENDER = true;
 	}
 
-	buildRoof(_datas) {
-		// console.log('ROOF');
-		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.roofsGeometry, 'nbVertRoof');
+	buildRoof(_buffers) {
+		if (!_buffers) return;
+		let bufferVertices = this.applyElevationToVertices(_buffers);
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
 		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_datas.roofsGeometry.bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.roofsGeometry.bufferFaces, 1));
+		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
 		this.meshRoof = new THREE.Mesh(bufferGeometry, materialRoof);
@@ -107,14 +105,14 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshRoof);
 	}
 
-	buildWalls(_datas) {
-		// console.log('WALLS');
-		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.geometry, 'nbVert');
+	buildWalls(_buffers) {
+		if (!_buffers) return;
+		let bufferVertices = this.applyElevationToVertices(_buffers);
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
 		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_datas.geometry.bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(_datas.geometry.bufferFaces, 1));
+		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
+		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
 		this.meshWalls = new THREE.Mesh(bufferGeometry, materialWalls);
@@ -123,33 +121,17 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshWalls);
 	}
 
-	applyElevationToVertices(_buildings, _geometry, _prop) {
+	applyElevationToVertices(_buffers) {
 		let bufferVertIndex = 0;
-		let totalA = 0;
-		let totalB = 0;
-		const buffer = new Float32Array(_geometry.bufferCoord);
-		_buildings = _buildings.filter(b => b[_prop]);
-		for (let b = 0; b < _buildings.length; b ++) {
-			const curBuilding = _buildings[b];
-			const alt = ElevationStore.get(curBuilding.centroid[0], curBuilding.centroid[1]);
-			const length = curBuilding[_prop];
-			if (length < 0) {
-				console.warn('length', length);
-			}
-			// console.log('totalA', totalA * 3);
-			// console.log('totalB', totalB * 3);
-			totalA += length;
-			for (let v = 0; v < length; v ++) {
-				totalB ++;
-				if (bufferVertIndex > buffer.length) {
-					console.log('ALT B', this.tile.key, _prop, buffer.length, bufferVertIndex, curBuilding[_prop]);
-				}
+		const buffer = new Float32Array(_buffers.bufferCoord);
+		for (let b = 0; b < _buffers.buildingNb; b ++) {
+			const center = _buffers.centroids[b];
+			const alt = ElevationStore.get(center[0], center[1]);
+			for (let v = 0; v < _buffers.verticesNbs[b]; v ++) {
 				buffer[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;
 			}
 		}
-		// console.warn('totalA', totalA * 3);
-		// console.warn('totalB', totalB * 3);
 		return buffer;
 	}
 
@@ -163,9 +145,6 @@ class BuildingExtension {
 				_bufferCoord[bufferVertIndex + 1], 
 				_bufferCoord[bufferVertIndex + 2]
 			);
-			if (isNaN(vertPos.x) || isNaN(vertPos.y) || isNaN(vertPos.z)) {
-				console.log('B', this.tile.key, _bufferCoord.length, bufferVertIndex, _bufferCoord[bufferVertIndex + 0], _bufferCoord[bufferVertIndex + 1], _bufferCoord[bufferVertIndex + 2]);
-			}
 			bufferPos[bufferVertIndex + 0] = vertPos.x;
 			bufferPos[bufferVertIndex + 1] = vertPos.y;
 			bufferPos[bufferVertIndex + 2] = vertPos.z;
