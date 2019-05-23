@@ -194,12 +194,15 @@ function cleanTags(_tags) {
 	if (minLevels > 0 && minAlt == 0) {
 		minAlt = minLevels * floorHeight;
 	}
-	const floorNb = (levels - minLevels);
+	const floorNb = Math.max(1, levels - minLevels);
 	if (height < 0) {
 		height = floorNb * floorHeight;
 	}
 	height -= minAlt;
 	floorHeight = height / floorNb;
+	if (floorNb < 0) {
+		console.log('floorNb', floorNb, levels, minLevels)
+	}
 	tags.floorsNb = floorNb;
 	tags.floorHeight = floorHeight;
 	tags.minAlt = minAlt;

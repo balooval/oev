@@ -31,6 +31,8 @@ class BuildingExtension {
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
+		// this.isActive = this.tile.key == '16586_11267_15';
+
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
@@ -90,6 +92,7 @@ class BuildingExtension {
 	}
 
 	buildRoof(_datas) {
+		// console.log('ROOF');
 		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.roofsGeometry, 'nbVertRoof');
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
@@ -105,6 +108,7 @@ class BuildingExtension {
 	}
 
 	buildWalls(_datas) {
+		// console.log('WALLS');
 		let bufferVertices = this.applyElevationToVertices(_datas.buildings, _datas.geometry, 'nbVert');
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
 		const bufferGeometry = new THREE.BufferGeometry();
@@ -121,20 +125,31 @@ class BuildingExtension {
 
 	applyElevationToVertices(_buildings, _geometry, _prop) {
 		let bufferVertIndex = 0;
+		let totalA = 0;
+		let totalB = 0;
 		const buffer = new Float32Array(_geometry.bufferCoord);
+		_buildings = _buildings.filter(b => b[_prop]);
 		for (let b = 0; b < _buildings.length; b ++) {
 			const curBuilding = _buildings[b];
 			const alt = ElevationStore.get(curBuilding.centroid[0], curBuilding.centroid[1]);
 			const length = curBuilding[_prop];
+			if (length < 0) {
+				console.warn('length', length);
+			}
+			// console.log('totalA', totalA * 3);
+			// console.log('totalB', totalB * 3);
+			totalA += length;
 			for (let v = 0; v < length; v ++) {
-				// if (bufferVertIndex > buffer.length) {
-					// console.log('ALT B', _prop, buffer.length, bufferVertIndex, curBuilding[_prop]);
-					// debugger;
-				// }
+				totalB ++;
+				if (bufferVertIndex > buffer.length) {
+					console.log('ALT B', this.tile.key, _prop, buffer.length, bufferVertIndex, curBuilding[_prop]);
+				}
 				buffer[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;
 			}
 		}
+		// console.warn('totalA', totalA * 3);
+		// console.warn('totalB', totalB * 3);
 		return buffer;
 	}
 
@@ -149,7 +164,7 @@ class BuildingExtension {
 				_bufferCoord[bufferVertIndex + 2]
 			);
 			if (isNaN(vertPos.x) || isNaN(vertPos.y) || isNaN(vertPos.z)) {
-				// console.log('A', _bufferCoord.length, bufferVertIndex, _bufferCoord[bufferVertIndex + 0], _bufferCoord[bufferVertIndex + 1], _bufferCoord[bufferVertIndex + 2]);
+				console.log('B', this.tile.key, _bufferCoord.length, bufferVertIndex, _bufferCoord[bufferVertIndex + 0], _bufferCoord[bufferVertIndex + 1], _bufferCoord[bufferVertIndex + 2]);
 			}
 			bufferPos[bufferVertIndex + 0] = vertPos.x;
 			bufferPos[bufferVertIndex + 1] = vertPos.y;

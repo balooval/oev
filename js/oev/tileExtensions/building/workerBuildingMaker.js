@@ -12,7 +12,7 @@ onmessage = function(_msg) {
 	postMessage({
 		tileKey : _msg.data.tileKey, 
 		result : {
-			buildings : _msg.data.buildingsDatas, 
+			buildings : buildings, 
 			geometry : result, 
 			roofsGeometry : roofsDatas, 
 		}, 
@@ -74,11 +74,14 @@ function prepareWallsGeometry(_buildings) {
 		if (b.props.wall == 'no') return false;
 		return true;
 	});
-	walls.forEach(b => {
-		let buildingCoordNb = b.coords.length;
-		b.nbVert = buildingCoordNb * (b.props.floorsNb + 1)
-		nbVert += b.nbVert;
-		nbFaces += (buildingCoordNb * 2) * b.props.floorsNb;
+	walls.forEach(building => {
+		let buildingCoordNb = building.coords.length;
+		building.nbVert = buildingCoordNb * (building.props.floorsNb + 1);
+		if (building.nbVert < 0) {
+			console.log('building.nbVert', building.nbVert, buildingCoordNb, building.props.floorsNb)
+		}
+		nbVert += building.nbVert;
+		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
 	});
 	const bufferCoord = new Float32Array(nbVert * 3);
 	const bufferFaces = new Uint32Array(nbFaces * 3);
@@ -120,7 +123,6 @@ function prepareWallsGeometry(_buildings) {
 		}
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
 	});
-
 	return {
 		nbVert : nbVert, 
 		nbFaces : nbFaces, 
