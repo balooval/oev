@@ -100,7 +100,7 @@ function readJson(_datas) {
 		});
 	});
 
-	buildingsList = buildingsList.filter(b => b.props.roofShape == 'pyramidal');
+	// buildingsList = buildingsList.filter(b => b.props.roofShape == 'dome');
 	
 	return buildingsList;
 }

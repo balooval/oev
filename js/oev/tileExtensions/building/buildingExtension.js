@@ -31,7 +31,7 @@ class BuildingExtension {
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
-		// this.isActive = this.tile.key == '16596_11272_15';
+		// this.isActive = this.tile.key == '16597_11268_15';
 
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
