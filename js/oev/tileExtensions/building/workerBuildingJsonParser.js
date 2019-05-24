@@ -16,7 +16,7 @@ function readJson(_datas) {
 		];
 	});
 	
-	const buildingsList = [];
+	let buildingsList = [];
 	
 	const waysList = extractWays(json);
 
@@ -85,6 +85,11 @@ function readJson(_datas) {
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		const centroid = getPolygonCentroid(wayNodes);
 		const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
+
+		if (w.id == 375076234) {
+			console.log('LOUVRE', props);
+		}
+
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
@@ -94,6 +99,8 @@ function readJson(_datas) {
 			centroid : centroid, 
 		});
 	});
+
+	buildingsList = buildingsList.filter(b => b.props.roofShape == 'pyramidal');
 	
 	return buildingsList;
 }
@@ -177,7 +184,7 @@ function cleanTags(_tags) {
 	_tags['min_height'] = _tags['min_height'] || '0';
 	_tags['building:levels'] = _tags['building:levels'] || '1';
 	_tags['building:min_level'] = _tags['building:min_level'] || '0';
-	tags.roofhape = _tags['roof:shape'] || 'flat';
+	tags.roofShape = _tags['roof:shape'] || 'flat';
 	
 	const mainColor = _tags['building:colour'] || 'white';
 	tags.wallColor = _tags['building:facade:colour'] || mainColor;
@@ -188,13 +195,18 @@ function cleanTags(_tags) {
 	tags.roofColor = parseColor(tags.roofColor);
 	tags.wall = _tags.wall || '';
 
-	let height = parseFloat(_tags.height);
+	tags.roofHeight = 0;
+	if (_tags['roof:height']) tags.roofHeight = parseInt(_tags['roof:height']);
+
+	let height = parseFloat(_tags.height) - tags.roofHeight;
 	let minAlt = parseInt(_tags.min_height);
 	let levels = parseInt(_tags['building:levels']);
 	if (isNaN(levels)) {
 		console.log('NAN levels', _tags['building:levels'])
 		levels = 1;
 	}
+
+	if (tags.roofHeight == 0) tags.roofHeight = 1;
 
 	let minLevels = parseInt(_tags['building:min_level']);
 	if (minLevels > 0 && minAlt == 0) {
@@ -215,9 +227,8 @@ function cleanTags(_tags) {
 	tags.floorsNb = floorNb;
 	tags.floorHeight = floorHeight;
 	tags.minAlt = minAlt;
-	if (_tags.id == 225694338) {
-		console.log('ICI', tags);
-	}
+
+	if (height == 0) tags.wall = 'no';
 	return tags;
 }
 

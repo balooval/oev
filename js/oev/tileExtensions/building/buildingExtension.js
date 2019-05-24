@@ -11,7 +11,7 @@ export function extensionClass() {
 }
 
 const materialWalls = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-const materialRoof = new THREE.MeshPhongMaterial({shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
+const materialRoof = new THREE.MeshPhongMaterial({wireframe:false,shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
 
 const workerEvent = new Evt();
 const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
@@ -31,7 +31,7 @@ class BuildingExtension {
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
-		// this.isActive = this.tile.key == '9649_12315_15';
+		// this.isActive = this.tile.key == '16596_11272_15';
 
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
@@ -89,7 +89,53 @@ class BuildingExtension {
 		Renderer.MUST_RENDER = true;
 	}
 
-	buildRoof(_buffers) {
+	buildRoof(roofsDatas) {
+		if (!roofsDatas) return;
+		const roofsGeometries = [];
+		for (let r = 0; r < roofsDatas.buildingNb; r ++) {
+			const roofBuffers = roofsDatas.buffers[r];
+			this.applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
+			this.convertCoordToPositionRoof(roofBuffers.bufferCoord);
+			const bufferGeometry = new THREE.BufferGeometry();
+			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(roofBuffers.bufferCoord, 3));
+			bufferGeometry.addAttribute('color', new THREE.BufferAttribute(roofBuffers.bufferColor, 3, true));
+			bufferGeometry.setIndex(new THREE.BufferAttribute(roofBuffers.bufferFaces, 1));
+			bufferGeometry.computeVertexNormals();
+			bufferGeometry.computeFaceNormals();
+			roofsGeometries.push(bufferGeometry);
+		}
+		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
+		this.meshRoof = new THREE.Mesh(mergedGeometry, materialRoof);
+		this.meshRoof.receiveShadow = true;
+		this.meshRoof.castShadow = true;
+		Renderer.scene.add(this.meshRoof);
+	}
+	applyElevationToVerticesRoof(_buffers, _centroid) {
+		let bufferVertIndex = 0;
+		const alt = ElevationStore.get(_centroid[0], _centroid[1]);
+		for (let v = 0; v < _buffers.verticesNb; v ++) {
+			_buffers.bufferCoord[bufferVertIndex + 2] += alt;
+			bufferVertIndex += 3;
+		}
+	}
+	convertCoordToPositionRoof(_bufferCoord) {
+		let bufferVertIndex = 0;
+		const length = _bufferCoord.length / 3;
+		for (let c = 0; c < length; c ++) {
+			const vertPos = GLOBE.coordToXYZ(
+				_bufferCoord[bufferVertIndex + 0], 
+				_bufferCoord[bufferVertIndex + 1], 
+				_bufferCoord[bufferVertIndex + 2]
+			);
+			_bufferCoord[bufferVertIndex + 0] = vertPos.x;
+			_bufferCoord[bufferVertIndex + 1] = vertPos.y;
+			_bufferCoord[bufferVertIndex + 2] = vertPos.z;
+			bufferVertIndex += 3;
+		}
+	}
+	
+	buildRoofOk(_buffers) {
+		// TODO: merger les geometrie ici
 		if (!_buffers) return;
 		let bufferVertices = this.applyElevationToVertices(_buffers);
 		bufferVertices = this.convertCoordToPosition(bufferVertices);
@@ -100,10 +146,12 @@ class BuildingExtension {
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
 		this.meshRoof = new THREE.Mesh(bufferGeometry, materialRoof);
+		console.log('bufferGeometry', bufferGeometry);
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
 	}
+	
 
 	buildWalls(_buffers) {
 		if (!_buffers) return;

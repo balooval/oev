@@ -18,18 +18,120 @@ onmessage = function(_msg) {
 	});
 }
 
+function averagePos(_coords) {
+	let lons = _coords.reduce((prev, cur) => prev + cur[0], 0);
+	let lats = _coords.reduce((prev, cur) => prev + cur[1], 0);
+	return [
+		lons / _coords.length, 
+		lats / _coords.length, 
+	]
+}
+
+function prepareRoofPyramidal(_building) {
+	console.log('prepareRoofPyramidal');
+	const facesIndex = [];
+	const centerId = _building.coords.length;
+	let lastVertId = _building.coords.length - 1;
+	_building.coords.forEach((coord, i) =>{
+		facesIndex.push(lastVertId);
+		facesIndex.push(i);
+		facesIndex.push(centerId);
+		lastVertId = i;
+	});
+	_building.coords.push(averagePos(_building.coords));
+	const buildingNbVert = _building.coords.length;
+	const bufferFaces = new Uint32Array(facesIndex.length);
+	const bufferCoord = new Float32Array(buildingNbVert * 3);
+	let bufferFaceIndex = 0;
+	const colorVertices = [];
+	for (let f = 0; f < facesIndex.length; f ++) {
+		bufferFaces[bufferFaceIndex] = facesIndex[f];
+		bufferFaceIndex ++;
+	}
+	const minAlt = _building.props.minAlt;
+	const floorsNb = _building.props.floorsNb;
+	const floorHeight = _building.props.floorHeight;
+	let roofAlt = minAlt + (floorsNb * floorHeight)
+	let bufferVertIndex = 0;
+	for (let v = 0; v < buildingNbVert; v ++) {
+		bufferCoord[bufferVertIndex + 0] = _building.coords[v][0];
+		bufferCoord[bufferVertIndex + 1] = _building.coords[v][1];
+		if (v == buildingNbVert - 1) roofAlt += _building.props.roofHeight;
+		bufferCoord[bufferVertIndex + 2] = roofAlt;
+		bufferVertIndex += 3;
+		colorVertices.push(..._building.props.roofColor);
+	}
+	return {
+		verticesNb : buildingNbVert, 
+		bufferCoord : bufferCoord, 
+		bufferFaces : bufferFaces, 
+		bufferColor : new Uint8Array(colorVertices), 
+	};
+}
+
+function prepareRoofFlat(_building) {
+	const buildingNbVert = _building.coords.length;
+	const roofCoords = _building.coords.flat();
+	const facesIndex = earcut(roofCoords);
+	const bufferFaces = new Uint32Array(facesIndex.length);
+	const bufferCoord = new Float32Array(buildingNbVert * 3);
+	let bufferFaceIndex = 0;
+	const colorVertices = [];
+	for (let f = 0; f < facesIndex.length; f ++) {
+		bufferFaces[bufferFaceIndex] = facesIndex[f];
+		bufferFaceIndex ++;
+	}
+	const minAlt = _building.props.minAlt;
+	const floorsNb = _building.props.floorsNb;
+	const floorHeight = _building.props.floorHeight;
+	const roofAlt = minAlt + (floorsNb * floorHeight)
+	let bufferVertIndex = 0;
+	for (let v = 0; v < buildingNbVert; v ++) {
+		bufferCoord[bufferVertIndex + 0] = _building.coords[v][0];
+		bufferCoord[bufferVertIndex + 1] = _building.coords[v][1];
+		bufferCoord[bufferVertIndex + 2] = roofAlt;
+		bufferVertIndex += 3;
+		colorVertices.push(..._building.props.roofColor);
+	}
+	return {
+		verticesNb : buildingNbVert, 
+		bufferCoord : bufferCoord, 
+		bufferFaces : bufferFaces, 
+		bufferColor : new Uint8Array(colorVertices), 
+	};
+}
+
 function prepareRoofsGeometry(_buildings) {
+	
+	if (_buildings.length == 0) return null;
+	const centroids = [];
+	const buffers = [];
+	for (let b = 0; b < _buildings.length; b ++) {
+		const curBuilding = _buildings[b];
+		centroids.push(curBuilding.centroid);
+		let roofBuffers;
+		if (curBuilding.props.roofShape == 'pyramidal') {
+			roofBuffers = prepareRoofPyramidal(curBuilding);
+		} else {
+			roofBuffers = prepareRoofFlat(curBuilding);
+		}
+		buffers.push(roofBuffers);
+	}
+	return {
+		buildingNb : _buildings.length, 
+		centroids : centroids, 
+		buffers : buffers, 
+	};
+
+	/*
 	if (_buildings.length == 0) return null;
 	let nbVertRoof = 0;
 	let nbFaces = 0;
 	const roofFacesIndex = [];
 	const verticesNbs = [];
 	const centers = [];
-	const eleOffset = [];
 	for (let b = 0; b < _buildings.length; b ++) {
 		const curBuilding = _buildings[b];
-		// console.log('roofhape', curBuilding.props.roofhape);pyramidal
-		eleOffset.push(0);
 		centers.push(curBuilding.centroid);
 		const buildingNbVert = curBuilding.coords.length + curBuilding.holesCoords.length;
 		verticesNbs.push(buildingNbVert);
@@ -66,13 +168,13 @@ function prepareRoofsGeometry(_buildings) {
 	}
 	return {
 		buildingNb : _buildings.length, 
-		eleOffset : eleOffset, 
 		centroids : centers, 
 		verticesNbs : verticesNbs, 
 		bufferCoord : bufferCoord, 
 		bufferFaces : bufferFaces, 
 		bufferColor : new Uint8Array(colorVertices), 
 	};
+	*/
 }
 
 function prepareWallsGeometry(_buildings) {
@@ -85,10 +187,8 @@ function prepareWallsGeometry(_buildings) {
 	let nbVertWall = 0;
 	let nbFaces = 0;
 	const centers = [];
-	const eleOffset = [];
 	const verticesNbs = [];
 	walls.forEach(building => {
-		eleOffset.push(0);
 		centers.push(building.centroid);
 		let buildingCoordNb = building.coords.length;
 		const buildingNbVert = buildingCoordNb * (building.props.floorsNb + 1);
@@ -138,7 +238,6 @@ function prepareWallsGeometry(_buildings) {
 	});
 	return {
 		buildingNb : walls.length, 
-		eleOffset : eleOffset, 
 		centroids : centers, 
 		verticesNbs : verticesNbs, 
 		bufferCoord : bufferCoord, 
