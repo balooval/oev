@@ -11,7 +11,7 @@ export function setApiUrl(_url) {
 	API_URL = _url;
 }
 
-class NodeLanduse {
+class NodeLoader {
 	constructor(_callback) {
 		this.isLoading = false;
 		this.callback = _callback;
@@ -37,5 +37,5 @@ class NodeLanduse {
 	}
 }
 
-DataLoader.registerLoader('NODE', NodeLanduse, PARAMS);
+DataLoader.registerLoader('NODE', NodeLoader, PARAMS);
 export const loader = new DataLoader.Proxy('NODE');
