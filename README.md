@@ -18,4 +18,5 @@ Projet perso impulsé par http://www.openearthview.net, qui me prête gracieusem
 
 #### TODO
 
-- Forme des toits (dôme, ...)
+- ~~Forme des toits (dôme, ...)~~
+- Gérer les changements d'échelle (lumières, repositionner les nodes, lines, landuses ...)
