@@ -18,6 +18,7 @@ import * as NormalExtension from './oev/tileExtensions/normal/normalExtension.js
 import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension.js';
 import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
 import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
+import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -51,6 +52,7 @@ const APP = {
 		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
 		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
 		NodeExtension.setApiUrl(serverURL + 'index.php?ressource=node');
+		LinesExtension.setApiUrl(serverURL + 'index.php?ressource=lines');
 
 		TileExtension.register('TILE2D', MapExtension.extensionClass());
 		TileExtension.register('SATELLITE', SatelliteExtension.extensionClass());
@@ -59,6 +61,7 @@ const APP = {
 		TileExtension.register('LANDUSE', LanduseExtension.extensionClass());
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
 		TileExtension.register('NODE', NodeExtension.extensionClass());
+		TileExtension.register('LINES', LinesExtension.extensionClass());
 
 		TileExtension.activate('TILE2D');
 		// TileExtension.activate('SATELLITE');

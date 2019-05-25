@@ -15,15 +15,6 @@ const apiUi = {
 
 	init : function() {
 		UiTilesExtension.init();
-
-		/*
-		document.getElementById('btn-saveWaypoint').addEventListener('click', () => {
-			const lon = OEV.cameraCtrl.coordLookat.x;
-			const lat = OEV.cameraCtrl.coordLookat.y;
-			const zoom = OEV.cameraCtrl.zoomCur;
-			Navigation.saveWaypoint(lon, lat, zoom);
-		});
-		*/
 		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.cameraCtrl.zoomIn());
 		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.cameraCtrl.zoomOut());
 		elmtCamHeading = document.getElementById("camHeading");
