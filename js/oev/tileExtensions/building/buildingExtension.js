@@ -110,12 +110,11 @@ class BuildingExtension {
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
 	}
+
 	applyElevationToVerticesRoof(_buffers, _centroid) {
-		let bufferVertIndex = 0;
 		const alt = ElevationStore.get(_centroid[0], _centroid[1]);
-		for (let v = 0; v < _buffers.verticesNb; v ++) {
-			_buffers.bufferCoord[bufferVertIndex + 2] += alt;
-			bufferVertIndex += 3;
+		for (let v = 2; v < _buffers.bufferCoord.length; v += 3) {
+		_buffers.bufferCoord[v] += alt;
 		}
 	}
 	convertCoordToPositionRoof(_bufferCoord) {
@@ -133,32 +132,13 @@ class BuildingExtension {
 			bufferVertIndex += 3;
 		}
 	}
-	
-	buildRoofOk(_buffers) {
-		// TODO: merger les geometrie ici
-		if (!_buffers) return;
-		let bufferVertices = this.applyElevationToVertices(_buffers);
-		bufferVertices = this.convertCoordToPosition(bufferVertices);
-		const bufferGeometry = new THREE.BufferGeometry();
-		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
-		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
-		bufferGeometry.computeFaceNormals();
-        bufferGeometry.computeVertexNormals();
-		this.meshRoof = new THREE.Mesh(bufferGeometry, materialRoof);
-		console.log('bufferGeometry', bufferGeometry);
-		this.meshRoof.receiveShadow = true;
-		this.meshRoof.castShadow = true;
-		Renderer.scene.add(this.meshRoof);
-	}
-	
 
 	buildWalls(_buffers) {
 		if (!_buffers) return;
-		let bufferVertices = this.applyElevationToVertices(_buffers);
-		bufferVertices = this.convertCoordToPosition(bufferVertices);
+		this.applyElevationToVertices(_buffers);
+		this.convertCoordToPosition(_buffers.bufferCoord);
 		const bufferGeometry = new THREE.BufferGeometry();
-		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(_buffers.bufferCoord, 3));
 		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
@@ -171,20 +151,18 @@ class BuildingExtension {
 
 	applyElevationToVertices(_buffers) {
 		let bufferVertIndex = 0;
-		const buffer = new Float32Array(_buffers.bufferCoord);
 		for (let b = 0; b < _buffers.buildingNb; b ++) {
 			const center = _buffers.centroids[b];
 			const alt = ElevationStore.get(center[0], center[1]);
 			for (let v = 0; v < _buffers.verticesNbs[b]; v ++) {
-				buffer[bufferVertIndex + 2] += alt;
+				_buffers.bufferCoord[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;
 			}
 		}
-		return buffer;
 	}
 
 	convertCoordToPosition(_bufferCoord) {
-		const bufferPos = new Float32Array(_bufferCoord);
+		// const bufferPos = new Float32Array(_bufferCoord);
 		let bufferVertIndex = 0;
 		const length = _bufferCoord.length / 3;
 		for (let c = 0; c < length; c ++) {
@@ -193,12 +171,12 @@ class BuildingExtension {
 				_bufferCoord[bufferVertIndex + 1], 
 				_bufferCoord[bufferVertIndex + 2]
 			);
-			bufferPos[bufferVertIndex + 0] = vertPos.x;
-			bufferPos[bufferVertIndex + 1] = vertPos.y;
-			bufferPos[bufferVertIndex + 2] = vertPos.z;
+			_bufferCoord[bufferVertIndex + 0] = vertPos.x;
+			_bufferCoord[bufferVertIndex + 1] = vertPos.y;
+			_bufferCoord[bufferVertIndex + 2] = vertPos.z;
 			bufferVertIndex += 3;
 		}
-		return bufferPos;
+		// return bufferPos;
 	}
 
 	dispose() {

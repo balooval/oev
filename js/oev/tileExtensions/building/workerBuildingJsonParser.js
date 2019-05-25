@@ -85,11 +85,9 @@ function readJson(_datas) {
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		const centroid = getPolygonCentroid(wayNodes);
 		const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
-
-		if (w.id == 375076234) {
-			console.log('LOUVRE', props);
-		}
-
+		// if (w.id == 375076234) {
+		// 	console.log('LOUVRE', props);
+		// }
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
@@ -100,7 +98,7 @@ function readJson(_datas) {
 		});
 	});
 
-	// buildingsList = buildingsList.filter(b => b.props.roofShape == 'dome');
+	// buildingsList = buildingsList.filter(b => b.props.roofShape == 'pyramidal');
 	
 	return buildingsList;
 }
