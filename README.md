@@ -2,11 +2,11 @@
 Explorer la planète en 3d via son navigateur, basé sur les données d'OSM (openstreetmap)
 
 #### Démo live
-Main : http://val.openearthview.net/index.php
+Main : https://val.openearthview.net
 
-Paris : http://val.openearthview.net/index.php#location=16/2.3435/48.8862/tree,buildings,landuse
+Paris : https://val.openearthview.net/#location=16/2.3435/48.8862
 
-Central Park : http://val.openearthview.net/index.php#location=16/-73.9768/40.7704/tree,buildings,landuse
+Central Park : https://val.openearthview.net/#location=16/-73.9768/40.7704
 
 #### Disclamer
 Aucune qualité de code, d'hébergement ou même de commit.
