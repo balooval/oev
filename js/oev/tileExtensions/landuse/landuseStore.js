@@ -127,6 +127,7 @@ function getLayerInfos(_type) {
     let materialNb = 4;
     let uvFactor = 1;
     let meterBetweenLayers = 1.5;
+    let groundOffset = 0;
 
     if (_type == 'forest') {
         meterBetweenLayers = 1;
@@ -144,6 +145,13 @@ function getLayerInfos(_type) {
         materialNb = 3;
         nbLayers = 9;
     }
+    if (_type == 'rock') {
+        meterBetweenLayers = 0.6;
+        uvFactor = 2;
+        materialNb = 1;
+        nbLayers = 1;
+        groundOffset = 1;
+    }
     if (_type == 'vineyard') {
         meterBetweenLayers = 0.4;
         uvFactor = 16;
@@ -154,7 +162,7 @@ function getLayerInfos(_type) {
         meterBetweenLayers : meterBetweenLayers, 
         uvFactor : uvFactor, 
         nbLayers : nbLayers, 
-        groundOffset : 0, 
+        groundOffset : groundOffset, 
         materialNb : materialNb, 
         layersByMap : nbLayers / materialNb, 
     }
@@ -396,6 +404,8 @@ const equalsTags = {
     meadow : 'grass', 
     greenfield : 'grass', 
     village_green : 'grass', 
+    bare_rock : 'rock', 
+    scree : 'rock', 
 };
 
 const tagsZoom = {
@@ -403,6 +413,7 @@ const tagsZoom = {
     scrub : 15, 
     vineyard : 16, 
     grass : 17, 
+    rock : 15, 
 };
 
 const supportedTags = [
@@ -431,7 +442,9 @@ const supportedTags = [
             'forest', 
             'wood', 
             'scrub', 
+            'bare_rock', 
             
+            'scree', 
             'grass', 
             'farmyard', 
             'farmland', 
