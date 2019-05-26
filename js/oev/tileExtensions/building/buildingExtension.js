@@ -10,8 +10,9 @@ export function extensionClass() {
 	return BuildingExtension;
 }
 
-const materialWalls = new THREE.MeshPhongMaterial({shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.FaceColors});
-const materialRoof = new THREE.MeshPhongMaterial({wireframe:false,shininess: 0, color: 0xCCCCCC, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
+const materialWalls = new THREE.MeshPhongMaterial({shininess:0,color:0xdddddd,vertexColors:THREE.VertexColors});
+// const materialRoof = new THREE.MeshPhongMaterial({wireframe:false,shininess: 0, color: 0xeeeeee, side: THREE.DoubleSide, vertexColors: THREE.VertexColors });
+const materialRoof = new THREE.MeshPhongMaterial({shininess:0,color:0xeeeeee,vertexColors:THREE.VertexColors});
 
 const workerEvent = new Evt();
 const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
@@ -197,5 +198,4 @@ class BuildingExtension {
 		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
-
 }

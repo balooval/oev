@@ -218,6 +218,7 @@ function prepareWallsGeometry(_buildings) {
 	const colorVertices = [];
 	walls.forEach(building => {
 		let buildingCoordNb = building.coords.length;
+		fixDirection(building.coords, building.id);
 		fondationsEle = 0;
 		if (building.props.minAlt == 0) fondationsEle = -10;
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
@@ -266,4 +267,17 @@ function bboxContainCoord(_bbox, _coord) {
 	if (_coord[1] > _bbox.maxLat) return false;;
 	if (_coord[1] < _bbox.minLat) return false;
 	return true;
+}
+
+function fixDirection(_way) {
+	let curve = 0;
+	for (let w = 1; w < _way.length; w ++) {
+		const prevPoint = _way[w - 1];
+		const curPoint = _way[w];
+		curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
+	}
+	const prevPoint = _way[_way.length - 1];
+	const curPoint = _way[0];
+	curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
+	if (curve > 0) _way.reverse();
 }
