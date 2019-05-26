@@ -1,4 +1,4 @@
-# Open Earth Viwer
+# Open Earth Viewer
 Explorer la planète en 3d via son navigateur, basé sur les données d'OSM (openstreetmap)
 
 #### Démo live
