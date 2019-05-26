@@ -6,7 +6,8 @@ import GEO from '../utils/geo.js';
 import MATH from '../utils/math.js';
 
 export class CameraGod {
-	constructor() {
+	constructor(_startPosition = null) {
+		this.startPosition = _startPosition;
 		this.camera = undefined;
 		this.globe = undefined;
 		this.pointer = undefined;
@@ -49,12 +50,11 @@ export class CameraGod {
 		Renderer.scene.add(this.clicPointer);
 		this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
 		Renderer.scene.add(this.debugPointer);
-		if (location.hash != '') {
-			var urlParamsLoc = location.hash.substr(location.hash.search('=') + 1).split('/');
-			this.zoomCur = parseFloat(urlParamsLoc[0]);
+		if (this.startPosition) {
+			this.zoomCur = this.startPosition.z;
 			this.zoomDest = this.zoomCur;
 			this.tweens.zoom.value = this.zoomCur;
-			this.setLookAt(parseFloat(urlParamsLoc[1]), parseFloat(urlParamsLoc[2]));
+			this.setLookAt(this.startPosition.x, this.startPosition.y);
 			this.tweens.lon.value = this.coordLookat.x;
 			this.tweens.lat.value = this.coordLookat.y;
 			this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
@@ -166,15 +166,7 @@ export class CameraGod {
 		this.MUST_UPDATE = true;
 	}
 
-	updateHistory() {
-		const urlLon = Math.round(this.coordLookat.x * 10000) / 10000;
-		const urlLat = Math.round(this.coordLookat.y * 10000) / 10000;
-		const urlZoom = Math.round(this.zoomDest * 10000) / 10000;
-		history.replaceState('toto', "Title", "#location="+urlZoom+"/"+urlLon+"/"+urlLat);
-	}
-
 	updateCamera() {
-		this.updateHistory();
 		this.coordLookat.z = this.globe.getElevationAtCoords(this.coordLookat.x, this.coordLookat.y, true);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
 		this.coordCam.z = this.globe.altitude(this.zoomCur);
@@ -206,7 +198,16 @@ export class CameraGod {
 		this.debugPointer.scale.y = wpScale;
 		this.debugPointer.scale.z = wpScale;
 		Renderer.MUST_RENDER = true;
-		this.evt.fireEvent('CAM_UPDATED', posLookat);
+
+		const evtDatas = {
+			posLookat : posLookat, 
+			coord : {
+				lon : Math.round(this.coordLookat.x * 10000) / 10000, 
+				lat : Math.round(this.coordLookat.y * 10000) / 10000, 
+				zoom : Math.round(this.zoomDest * 10000) / 10000
+			}
+		};
+		this.evt.fireEvent('CAM_UPDATED', evtDatas);
 	}
 
 	updateOnSphere() {

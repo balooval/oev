@@ -42,10 +42,10 @@ const api = {
 		CLOUDS.setTime(_time);
 	}, 	
 	
-	onCameraUpdated : function(_pos) {
-		posCenter.x = _pos.x;
-		posCenter.y = _pos.y;
-		posCenter.z = _pos.z;
+	onCameraUpdated : function(_datas) {
+		posCenter.x = _datas.posLookat.x;
+		posCenter.y = _datas.posLookat.y;
+		posCenter.z = _datas.posLookat.z;
 		SKY.setPosition(posCenter);
 		SUN.setPosition(posCenter);
 	}, 

@@ -19,6 +19,7 @@ import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension
 import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
 import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
+import UrlParser from './app/urlParser.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -42,6 +43,8 @@ const APP = {
 		INPUT.init();
 		ENVIRONMENT.init();
 		Navigation.init();
+		UrlParser.init();
+		
 		APP.clock = new THREE.Clock();
 
 		const serverURL = 'https://val.openearthview.net/api/';
@@ -53,7 +56,7 @@ const APP = {
 		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
 		NodeExtension.setApiUrl(serverURL + 'index.php?ressource=node');
 		LinesExtension.setApiUrl(serverURL + 'index.php?ressource=lines');
-
+		
 		TileExtension.register('TILE2D', MapExtension.extensionClass());
 		TileExtension.register('SATELLITE', SatelliteExtension.extensionClass());
 		TileExtension.register('ELEVATION', ElevationExtension.extensionClass());
@@ -62,19 +65,27 @@ const APP = {
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
 		TileExtension.register('NODE', NodeExtension.extensionClass());
 		TileExtension.register('LINES', LinesExtension.extensionClass());
-
+		
 		TileExtension.activate('TILE2D');
-		// TileExtension.activate('SATELLITE');
 		TileExtension.activate('ELEVATION');
 		TileExtension.activate('NORMAL');
-		// TileExtension.activate('LANDUSE');
+
+		const activesExtensions = UrlParser.activesExtensions();
+		activesExtensions.forEach(extensionToActivate => {
+			TileExtension.activate(extensionToActivate);
+		});
+
 		GLOBE.init();
 
 		Renderer.scene.add(GLOBE.meshe);
 		APP.raycaster = new THREE.Raycaster();
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
-		APP.cameraCtrl = new CamCtrl.CameraGod();
+
+		const cameraLocation = UrlParser.cameraLocation();
+		console.log('cameraLocation', cameraLocation);
+		APP.cameraCtrl = new CamCtrl.CameraGod(cameraLocation);
+
 		UI.init();
 		UI.setCamera(APP.cameraCtrl);
 		APP.evt.fireEvent('APP_INIT');	
@@ -99,7 +110,7 @@ const APP = {
 	}, 
 
 	loadTextures : function() {
-		UI.openModal('Loading common textures');
+		UI.openModal('Loading textures, please wait');
 		const textList = [];
 		const toLoad = [
 			['checker', 'loading.png'], 
