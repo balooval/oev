@@ -20,3 +20,11 @@ Projet perso impulsé par http://www.openearthview.net, qui me prête gracieusem
 
 - ~~Forme des toits (dôme, ...)~~
 - Gérer les changements d'échelle (lumières, repositionner les nodes, lines, landuses ...)
+
+#### Screenshots
+
+Paris (Montmartre) :  
+![paris - montmartre](https://framapic.org/GNd0N4TozpGn/uYpFSkKVRkiP.PNG)
+
+Montpellier (Antigone) :  
+![](https://framapic.org/vSn99gy3vTRy/fK8jxk7aDqDC.PNG)
