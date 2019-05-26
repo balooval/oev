@@ -24,9 +24,10 @@ const api = {
 		Renderer.scene.add(lightSun);
 		lightAmbiant = new THREE.AmbientLight(0x25282d);
 		Renderer.scene.add(lightAmbiant);
+		GLOBE.evt.addEventListener('ZOOM_CHANGE', null, onZoomChanged);
 		if (Renderer.shadowsEnabled) {
 			lightSun.castShadow = true;
-			updateShadow();
+			updateShadow(4);
 		}
 		api.setTime(0.5);
 	}, 
@@ -54,6 +55,10 @@ const api = {
 		updateSunPosition();
 	}
 };
+
+function onZoomChanged(_zoom) {
+	updateShadow(_zoom);
+}
 
 function createSun(_skyRadius) {
 	if (meshSun) return false;
@@ -93,8 +98,9 @@ function updateSunColor(_time) {
 	Renderer.MUST_RENDER = true;
 }
 
-function updateShadow() {
-	var factor = 0.002;
+function updateShadow(_zoom) {
+	// const factor = 0.002;
+	const factor = (20 - _zoom) / 50000;
 	lightSun.shadow.camera.far = GLOBE.radius * GLOBE.globalScale;
 	lightSun.shadow.camera.near = 1;
 	lightSun.shadow.mapSize.width = 2048;
@@ -103,6 +109,8 @@ function updateShadow() {
 	lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
 	lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;
 	lightSun.shadow.camera.bottom = lightSun.shadow.camera.far * factor * -1;
+	lightSun.shadow.camera.updateProjectionMatrix();
+	Renderer.MUST_RENDER = true;
 }
 
 function updateSunPosition() {
@@ -145,6 +153,11 @@ function getPixel(imagedata, x, y) {
 		b: data[position + 2], 
 		a: data[position + 3]
 	};
+}
+
+window.toto = function(_val) {
+	lightSun.shadow.radius = _val;
+	Renderer.MUST_RENDER = true;
 }
 	
 export { api as default}

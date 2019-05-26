@@ -65,7 +65,7 @@ export class CameraGod {
 	}
 
 	setZoomDest(_zoom, _duration) {
-		this.zoomDest = Math.min(Math.max(_zoom, 4), 19);
+		this.zoomDest = Math.min(Math.max(_zoom, 4), 18.999);
 		if (this.zoomDest == this.zoomCur) return false;
 		this.tweens.zoom.setTargetValue(this.zoomDest, _duration);
 	}

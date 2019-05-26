@@ -71,6 +71,9 @@ const api = {
 
 	updateZoom : function(_value){
 		if (api.CUR_ZOOM == _value) return false;
+		if (Math.floor(api.CUR_ZOOM) != Math.floor(_value)) {
+			api.evt.fireEvent('ZOOM_CHANGE', Math.floor(_value));
+		}
 		api.CUR_ZOOM = _value;
 		api.checkLOD();
 	}, 
@@ -177,6 +180,7 @@ const api = {
 			if (api.curLOD != api.LOD_CITY) {
 				console.log("SET TO LOD_CITY");
 				api.globalScale = 10;
+				// api.globalScale = 100;
 				api._updateMeter();
 				curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
 				api.curLOD = api.LOD_CITY;
