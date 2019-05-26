@@ -65,25 +65,27 @@ function onActivateExtension() {
 }
 
 function createMaterials() {
+        // const sided = THREE.DoubleSide;
+        const sided = THREE.FrontSide;
 
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.6}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.7}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.8}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.7}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.8}));
 
-        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:THREE.DoubleSide, transparent:false, alphaTest:0.2}));
+        materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:false, alphaTest:0.2}));
 }
 
 function loadTextures() {
