@@ -86,10 +86,8 @@ function drawLine(_line, _tile) {
 function redrawMeshes() {
     Object.keys(typedGeometries).forEach(type => {
         const curTypedGeos = typedGeometries[type]; 
-        // console.log('type', curTypedGeos);
         curTypedGeos.mesh.geometry.dispose();
         const datasGeometries = curTypedGeos.list.map(data => data.geometry);
-        // console.log('datasGeometries', datasGeometries);
         if (datasGeometries.length == 0) return;
         curTypedGeos.mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
         GLOBE.addMeshe(curTypedGeos.mesh);
@@ -137,11 +135,12 @@ function getElevationsDatas(_line) {
 
 function buildWay(_way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
-    const border = removeWayDuplicateLimits([...wayNodes]);
+    // const border = removeWayDuplicateLimits([...wayNodes]);
     return {
         id : _way.id, 
         type : extractType(_way), 
-        border : border, 
+        // border : border, 
+        border : wayNodes, 
     };
 }
 
@@ -206,11 +205,12 @@ function removeWayDuplicateLimits(_way) {
 }
 
 const equalsTags = {
-    wall : 'fence', 
+    retaining_wall : 'wall', 
     line : 'powerLine', 
 };
 
 const tagsZoom = {
+    wall : 15, 
     fence : 15, 
     powerLine : 16, 
 };
@@ -221,6 +221,7 @@ const supportedTags = [
         values : [
             'fence', 
             'wall', 
+            'retaining_wall', 
         ]
     }, 
     {

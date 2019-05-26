@@ -6,6 +6,7 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LINES', null, onActi
 
 const texturesToLoad = [
     ['fence', 'fence.png'], 
+    ['wall', 'wall.png'], 
 ];
 
 const api = {
@@ -28,6 +29,7 @@ function onActivateExtension() {
 
 function createMaterials() {
     materials.fence = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
+    materials.wall = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF});
 }
 
 function loadTextures() {
@@ -38,6 +40,7 @@ function loadTextures() {
 
 function onTexturesLoaded() {
     materials.fence.map = NET_TEXTURES.texture('fence');
+    materials.wall.map = NET_TEXTURES.texture('wall');
     api.isReady = true;
     api.evt.fireEvent('READY')
 }
