@@ -134,8 +134,8 @@ function getLayerInfos(_type) {
         uvFactor = 3;
     }
     if (_type == 'grass') {
-        meterBetweenLayers = 0.2;
-        uvFactor = 2;
+        meterBetweenLayers = 0.1;
+        uvFactor = 3;
         materialNb = 2;
         nbLayers = 8;
     }
@@ -191,7 +191,7 @@ function redrawMeshes() {
             const mesh = curTypedGeos.meshes[l];
             mesh.geometry.dispose();
             const datasGeometries = curTypedGeos.list.map(data => data.geometries[l]);
-            if (datasGeometries.length == 0) continue; // TODO: vu le test au dessus c'est débile
+            if (datasGeometries.length == 0) continue;
             mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
             GLOBE.addMeshe(mesh);
         }

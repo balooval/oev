@@ -46,21 +46,18 @@ function readJson(_datas) {
 		});
 		const borders = rel.members.filter(member => member.role == 'outer');
 		const parts = mergeContinuousWays(borders, waysList, nodesList)
-		
 		parts
 		.filter(coords => coords.length > 3)
 		.forEach(coords => {
 			const wayNodesShort = removeWayDuplicateLimits([...coords]);
 			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
 			const centroid = getPolygonCentroid(coords);
-
 			let myHole = [];
 			let myHoleIndex = [];
 			if (polygonContainPolygon(wayNodesShort, holesNodes)) {
 				myHole = holesNodes;
 				myHoleIndex = holesIndex;
 			}
-
 			const buildObj = {
 				id : rel.id, 
 				props : props,  
@@ -73,8 +70,6 @@ function readJson(_datas) {
 		});
 	});
 
-
-	
 	json.elements
 	.filter(e => e.type == 'way')
 	.filter(e => e.tags)
@@ -85,9 +80,6 @@ function readJson(_datas) {
 		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
 		const centroid = getPolygonCentroid(wayNodes);
 		const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
-		// if (w.id == 375076234) {
-		// 	console.log('LOUVRE', props);
-		// }
 		buildingsList.push({
 			id : w.id, 
 			props : props, 
@@ -97,8 +89,6 @@ function readJson(_datas) {
 			centroid : centroid, 
 		});
 	});
-
-	// buildingsList = buildingsList.filter(b => b.props.roofShape == 'pyramidal');
 	
 	return buildingsList;
 }
