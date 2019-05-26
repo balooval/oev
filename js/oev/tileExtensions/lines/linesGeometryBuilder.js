@@ -12,19 +12,19 @@ export function buildGeometry(_line, _elevationsDatas, _tile) {
         ]);
     });
     if (_line.type == 'fence') {
-        return buildFence(fullCoords, _tile);
+        return buildFence(_line, fullCoords, _tile);
     } else if (_line.type == 'wall') {
-        return buildWall(_line.border, _tile);
+        return buildWall(_line, _tile, _line.id);
     }
 }
 
-function buildFence(_coords, _tile) {
+function buildFence(_line, _coords, _tile) {
     const verticesNb = _coords.length * 2;
     const bufferGeometry = new THREE.BufferGeometry();
     const bufferVertices = new Float32Array(verticesNb * 3);
     let verticeId = 0;
     verticeId = addVerticesToBuffer(verticeId, bufferVertices, _coords, -1);
-    verticeId = addVerticesToBuffer(verticeId, bufferVertices, _coords, 2);
+    verticeId = addVerticesToBuffer(verticeId, bufferVertices, _coords, _line.props.height);
     const bufferUvs = new Float32Array(verticesNb * 2);
     let uvId = 0;
     uvId = addUvToBuffer(uvId, bufferUvs, _coords, 200000, _tile, 0);
@@ -48,14 +48,41 @@ function buildFence(_coords, _tile) {
     return bufferGeometry;
 }
 
+function inflate(_coords, _distance) {
+    const res = [];
+    const geoInput = _coords.map(point => new jsts.geom.Coordinate(point[0], point[1]));
+    const geometryFactory = new jsts.geom.GeometryFactory();
+    const isClosed = MATH.isClosedPath(_coords);
+    let shell;
+    if (isClosed) {
+        shell = geometryFactory.createPolygon(geoInput);
+    } else {
+        shell = geometryFactory.createLineString(geoInput);
+    }
+    let polygon = shell.buffer(_distance, jsts.operation.buffer.BufferParameters.CAP_FLAT);
+    let oCoordinates = polygon.shell.points.coordinates;
+    res.push(oCoordinates.map(item => [item.x, item.y]));
+    if (isClosed) {
+        let polygon = shell.buffer(_distance * -1, jsts.operation.buffer.BufferParameters.CAP_FLAT);
+        if (polygon.shell) {
+            let oCoordinates = polygon.shell.points.coordinates;
+            res.push(oCoordinates.map(item => [item.x, item.y]));
+        }
+    }
+    return res;
+}
 
-function buildWall(_coords, _tile) {
-    const offset = new Offset();
-    const distance = GLOBE.meter * 0.002;
-    MATH.fixPolygonDirection(_coords);
-    const offsetCoords = offset.data(_coords).offsetLine(distance);
+function buildWall(_line, _tile, _id) {
+    if (_line.border.length < 2) console.log('ATTENTION', _line.border.length);
+    const distance = (GLOBE.meter * 0.001) * (_line.props.width * 2);
+    let offsetCoords = inflate(_line.border, distance);
+    if (offsetCoords.length > 2) {
+        console.warn('Wall', _id, 'had 3 borders');
+        return null;
+    }
     const wallGeometries = [];
     for (let margin = 0; margin < offsetCoords.length; margin ++) {
+        offsetCoords[margin] = MATH.fixPolygonDirection(offsetCoords[margin], margin > 0);
         const elevationsDatas = getElevationsDatas(offsetCoords[margin]);
         const fullCoords = [];
         offsetCoords[margin].forEach((coord, i) => {
@@ -69,7 +96,8 @@ function buildWall(_coords, _tile) {
         const bufferVertices = new Float32Array(verticesNb * 3);
         let verticeId = 0;
         verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, -1);
-        verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, 2);
+        verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, _line.props.height);
+        // verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, 2);
         const bufferUvs = new Float32Array(verticesNb * 2);
         let uvId = 0;
         uvId = addUvToBuffer(uvId, bufferUvs, fullCoords, 200000, _tile, 0);
@@ -93,16 +121,23 @@ function buildWall(_coords, _tile) {
         bufferGeometry.computeVertexNormals();
         wallGeometries.push(bufferGeometry);
     }
-    wallGeometries.push(buildWallRoof(offsetCoords));
+    wallGeometries.push(buildWallRoof(offsetCoords, _line.props));
     return THREE.BufferGeometryUtils.mergeBufferGeometries(wallGeometries);
 }
 
-function buildWallRoof(_offsetCoords) {
+function buildWallRoof(_offsetCoords, _props) {
     const holesIndex = [];
+    _offsetCoords = _offsetCoords.filter(coords => coords.length);
     for (let margin = 0; margin < _offsetCoords.length - 1; margin ++) {
         holesIndex.push(_offsetCoords[margin].length);
     }
     const earsCoords = _offsetCoords.flat();
+    if (earsCoords.length == holesIndex[0]) {
+        console.log('ATTENTION earsCoords');
+        console.log('_offsetCoords', _offsetCoords);
+        console.log('earsCoords', earsCoords);
+        console.log('holesIndex', holesIndex);
+    }
     const facesIndex = earcut(earsCoords.flat(), holesIndex);
     const bufferFaces = Uint32Array.from(facesIndex);
     const fullCoords = [];
@@ -119,7 +154,8 @@ function buildWallRoof(_offsetCoords) {
 
     const bufferVertices = new Float32Array(fullCoords.length * 3);
     let verticeId = 0;
-    verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, 2);
+    verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords,  + _props.height);
+    // verticeId = addVerticesToBuffer(verticeId, bufferVertices, fullCoords, 2);
     const bufferGeometry = new THREE.BufferGeometry();
     const bufferUvs = new Float32Array(fullCoords.length * 2);
     bufferUvs.fill(0);

@@ -8,7 +8,16 @@ const api = {
 		return 180 * radians / Math.PI;
 	}, 
 
-	fixPolygonDirection : function(_polygon) {
+	isClosedPath(_polygon) {
+		const first = _polygon[0];
+		const last = _polygon[_polygon.length - 1];
+		if (first[0] != last[0]) return false;
+		if (first[1] != last[1]) return false;
+		return true;
+	}, 
+
+	fixPolygonDirection : function(_polygon, _counterClockwise = false) {
+		if (!_polygon.length) return _polygon;
 		let curve = 0;
 		const pointsNb = _polygon.length;
 		for (let p = 1; p < pointsNb; p ++) {
@@ -19,7 +28,11 @@ const api = {
 		const prevPoint = _polygon[pointsNb - 1];
 		const curPoint = _polygon[0];
 		curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
-		if (curve > 0) _polygon.reverse();
+		
+		if (!_counterClockwise && curve > 0) _polygon.reverse();
+		if (_counterClockwise && curve < 0) _polygon.reverse();
+		// if (curve > 0) _polygon.reverse();
+		return _polygon;
 	}, 
 		
 	angle2D : function(x1, y1, x2, y2) {

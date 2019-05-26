@@ -80,7 +80,7 @@ function scheduleDraw() {
 function drawLine(_line, _tile) {
     const elevationsDatas = getElevationsDatas(_line);
     const lineGeometry = GEO_BUILDER.buildGeometry(_line, elevationsDatas, _tile)
-    saveLineGeometries(_line.id, lineGeometry, _line.type);
+    if (lineGeometry) saveLineGeometries(_line.id, lineGeometry, _line.type);
 }
 
 function redrawMeshes() {
@@ -116,6 +116,7 @@ function saveLineGeometries(_id, _geometry, _type) {
 
 function deleteLineGeometry(_id, _type) {
     const curTypedGeos = typedGeometries[_type]; 
+    if (!curTypedGeos) return;
     for (let i = 0; i < curTypedGeos.list.length; i ++) {
         if (curTypedGeos.list[i].id != _id) continue;
         curTypedGeos.list[i].geometry.dispose();
@@ -135,11 +136,10 @@ function getElevationsDatas(_line) {
 
 function buildWay(_way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
-    // const border = removeWayDuplicateLimits([...wayNodes]);
     return {
         id : _way.id, 
         type : extractType(_way), 
-        // border : border, 
+        props : extractTags(_way.tags), 
         border : wayNodes, 
     };
 }
@@ -202,6 +202,26 @@ function removeWayDuplicateLimits(_way) {
 	if (first[0] != last[0] || first[1] != last[1]) return _way;
 	_way.pop();
 	return _way;
+}
+
+function extractTags(_tags) {
+    const res = {
+        width : 1, 
+        height : 2, 
+    };
+    if (_tags.width) {
+        _tags.width = _tags.width.replace('m', '');
+        _tags.width = _tags.width.replace(' ', '');
+        res.width = parseFloat(_tags.width);
+    }
+    if (_tags.height) {
+        _tags.height = _tags.height.replace('m', '');
+        _tags.height = _tags.height.replace(' ', '');
+        _tags.height = _tags.height.replace('~', '');
+        res.height = parseFloat(_tags.height);
+        if (isNaN(res.height)) console.log('res.height', _tags.height);
+    }
+    return res;
 }
 
 const equalsTags = {
