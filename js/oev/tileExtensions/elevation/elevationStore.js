@@ -29,11 +29,10 @@ const api = {
 		addStruct(struct, store);
 	}, 
 
-	get : function(_lon, _lat, _z) {
-		const struct = searchCoord(_lon, _lat, _z);
+	get : function(_lon, _lat) {
+		const struct = searchCoord(_lon, _lat);
 		if (!struct) return 0;
 		if (!struct.datas) return 0;
-		// if (_z > 15) console.log(_z, struct)
 		return interpolate(struct, _lon, _lat);
 	}, 
 
@@ -114,19 +113,16 @@ function interpolate(_struct, _lon, _lat) {
 	return interpolY;
 }
 
-function searchCoord(_lon, _lat, _z) {
+function searchCoord(_lon, _lat) {
 	let validParent;
 	let parents = store;
 	let curZ = 0;
 	while(true) {
 		let parent = parents.filter(s => structContainCoord(s, _lon, _lat)).pop();
-		if (parent) {
-			validParent = parent;
-			curZ = validParent.zoom;
-			parents = parent.childs;
-		} else {
-			break;
-		}
+		if (!parent) break;
+		validParent = parent;
+		curZ = validParent.zoom;
+		parents = parent.childs;
 	}
 	return validParent;
 }
@@ -142,10 +138,6 @@ function addStruct(_struct, _parents) {
 			break;
 		}
 	}
-
-	// const alreadyChild = validParent.childs.some(c => c.key == _struct.key);
-	// if (alreadyChild) console.log('alreadyChild', validParent, _struct);
-
 	_struct.childs = validParent.childs.filter(s => structContainStruct(_struct, s));
 	validParent.childs = validParent.childs.filter(s => !structContainStruct(_struct, s));
 	validParent.childs.push(_struct);
@@ -167,23 +159,5 @@ function structContainCoord(_struct, _lon, _lat) {
 	if (_lat <= _struct.endLat) return false;
 	return true;
 }
-
-function debug() {
-	// console.log(store);
-	// searchCoord(4.2289, 43.7981, 16);
-
-	let count = toto(0, store[0]);
-	console.log('COUNT', count);
-}
-
-function toto(_count, _struct) {
-	let nb = _struct.childs.length;
-	_struct.childs.forEach(s => {
-		nb += toto(_count, s);
-	});
-	return _count + nb;
-}
-
-window.debug = debug;
 
 export { api as default}

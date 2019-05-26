@@ -172,9 +172,9 @@ function extractType(_element) {
         tag.values.forEach(value => {
             if (_element.tags[tag.key] == value) {
                 elementType = value;
-                return null;
+                return;
             }
-            return null;
+            return;
         })
     })
     if (equalsTags[elementType]) return equalsTags[elementType];
