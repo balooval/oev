@@ -1,5 +1,4 @@
 import GLOBE from '../../globe.js';
-import ElevationStore from '../elevation/elevationStore.js';
 import MATH from '../../utils/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
@@ -15,7 +14,7 @@ export function buildGeometry(_line, _tile, _id) {
     const wallGeometries = [];
     for (let margin = 0; margin < offsetCoords.length; margin ++) {
         offsetCoords[margin] = MATH.fixPolygonDirection(offsetCoords[margin], margin > 0);
-        const elevationsDatas = getElevationsDatas(offsetCoords[margin]);
+        const elevationsDatas = GeoBuilder.getElevationsDatas(offsetCoords[margin]);
         const fullCoords = GeoBuilder.packCoordsWithElevation(offsetCoords[margin], elevationsDatas);
         const verticesNb = fullCoords.length * 2;
         const bufferVertices = new Float32Array(verticesNb * 3);
@@ -66,7 +65,7 @@ function buildWallRoof(_offsetCoords, _props) {
     const bufferFaces = Uint32Array.from(facesIndex);
     const fullCoords = [];
     for (let margin = 0; margin < _offsetCoords.length; margin ++) {
-        const elevationsDatas = getElevationsDatas(_offsetCoords[margin]);
+        const elevationsDatas = GeoBuilder.getElevationsDatas(_offsetCoords[margin]);
         fullCoords.push(...GeoBuilder.packCoordsWithElevation(_offsetCoords[margin], elevationsDatas));
     }
     const bufferVertices = new Float32Array(fullCoords.length * 3);
@@ -122,12 +121,4 @@ function inflate(_coords, _distance) {
         }
     }
     return res;
-}
-
-function getElevationsDatas(_coords) {
-    const elevations = [];
-    for (let i = 0; i < _coords.length; i ++) {
-        elevations.push(ElevationStore.get(_coords[i][0], _coords[i][1]));
-    }
-    return elevations;
 }

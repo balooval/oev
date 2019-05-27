@@ -1,21 +1,19 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import LinesMaterial from './linesMaterial.js';
-import ElevationStore from '../elevation/elevationStore.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
 
 let knowIds = [];
-const tileToLines = {};
-let storedLines = {};
-const typedGeometries = {};
+const tileToLines = new Map();
+const storedLines = new Map();
+const typedGeometries = new Map();
 let schdeduleNb = 0;
 
 const api = {
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
         const nodesList = extractNodes(parsedJson);
-        tileToLines[_tile.key] = [];
+        tileToLines.set(_tile.key, []);
         const extractedWays = extractElements(parsedJson, _tile.zoom);
         registerDatas(_tile, extractedWays);
         let lineAdded = 0;
@@ -24,19 +22,19 @@ const api = {
     }, 
 
     tileRemoved : function(_tile) {
-        if (!tileToLines[_tile.key]) return false;
-        tileToLines[_tile.key]
+        if (!tileToLines.get(_tile.key)) return false;
+        tileToLines.get(_tile.key)
         .forEach(lineId => {
-            if (!storedLines['LINE_' + lineId]) return false;
-            const stored = storedLines['LINE_' + lineId];
+            if (!storedLines.get('LINE_' + lineId)) return false;
+            const stored = storedLines.get('LINE_' + lineId);
             stored.refNb --;
             if (stored.refNb <= 0) {
                 forgotLine(lineId);
                 deleteLineGeometry(stored.id, stored.type);
-                delete storedLines['LINE_' + lineId];
+                storedLines.delete('LINE_' + lineId);
             }
         });
-        delete tileToLines[_tile.key];
+        tileToLines.delete(_tile.key);
         scheduleDraw();
     }
 };
@@ -45,9 +43,9 @@ function registerDatas(_tile, _extractedDatas) {
     _extractedDatas
     .filter(line => isLineKnowed(line.id))
     .forEach(line => {
-        storedLines['LINE_' + line.id].refNb ++;
+        storedLines.get('LINE_' + line.id).refNb ++;
     });
-    tileToLines[_tile.key].push(..._extractedDatas.map(line => line.id));
+    tileToLines.get(_tile.key).push(..._extractedDatas.map(line => line.id));
 }
 
 function buildLine(_tile, _extractedDatas, _nodesList) {
@@ -58,11 +56,11 @@ function buildLine(_tile, _extractedDatas, _nodesList) {
         knowIds.push(lineDatas.id);
         const lineBuilded = buildWay(lineDatas, _nodesList);
         if (lineBuilded.border.length < 2) return;
-        storedLines['LINE_' + lineBuilded.id] = {
+        storedLines.set('LINE_' + lineBuilded.id, {
             id : lineBuilded.id, 
             type : lineBuilded.type, 
             refNb : 1
-        };
+        });
         drawLine(lineBuilded, _tile);
         lineAdded ++;
     });
@@ -77,14 +75,12 @@ function scheduleDraw() {
 }
 
 function drawLine(_line, _tile) {
-    const elevationsDatas = getElevationsDatas(_line);
-    const lineGeometry = GEO_BUILDER.buildGeometry(_line, elevationsDatas, _tile)
+    const lineGeometry = GEO_BUILDER.buildGeometry(_line, _tile)
     if (lineGeometry) saveLineGeometries(_line.id, lineGeometry, _line.type);
 }
 
 function redrawMeshes() {
-    Object.keys(typedGeometries).forEach(type => {
-        const curTypedGeos = typedGeometries[type]; 
+    typedGeometries.forEach((curTypedGeos) => {
         curTypedGeos.mesh.geometry.dispose();
         const datasGeometries = curTypedGeos.list.map(data => data.geometry);
         if (datasGeometries.length == 0) return;
@@ -96,25 +92,25 @@ function redrawMeshes() {
 }
 
 function saveLineGeometries(_id, _geometry, _type) {
-    if (!typedGeometries[_type]) {
+    if (!typedGeometries.get(_type)) {
         const meshes = [];
         const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LinesMaterial.material(_type));
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         meshes.push(mesh);
-        typedGeometries[_type] = {
+        typedGeometries.set(_type, {
             mesh : mesh, 
             list : [], 
-        };
+        });
     }
-    typedGeometries[_type].list.push({
+    typedGeometries.get(_type).list.push({
         id : _id, 
         geometry : _geometry, 
     });
 }
 
 function deleteLineGeometry(_id, _type) {
-    const curTypedGeos = typedGeometries[_type]; 
+    const curTypedGeos = typedGeometries.get(_type);
     if (!curTypedGeos) return;
     for (let i = 0; i < curTypedGeos.list.length; i ++) {
         if (curTypedGeos.list[i].id != _id) continue;
@@ -127,14 +123,11 @@ function deleteLineGeometry(_id, _type) {
     }
 }
 
-function getElevationsDatas(_line) {
-    return _line.border.map(point => {
-        return ElevationStore.get(point[0], point[1]);
-    });
-}
-
 function buildWay(_way, _nodesList) {
-    let wayNodes = _way.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+    const wayNodes = [];
+    for (let i = 0; i < _way.nodes.length; i ++) {
+        wayNodes.push(_nodesList.get('NODE_' + _way.nodes[i]));
+    }
     return {
         id : _way.id, 
         type : extractType(_way), 
@@ -144,14 +137,14 @@ function buildWay(_way, _nodesList) {
 }
 
 function extractNodes(_datas) {
-    const nodes = {};
+    const nodes = new Map();
     _datas.elements
     .filter(e => e.type == 'node')
 	.forEach(node => {
-		nodes['NODE_' + node.id] = [
+		nodes.set('NODE_' + node.id, [
 			parseFloat(node.lon), 
 			parseFloat(node.lat)
-		];
+		]);
     });
     return nodes;
 }

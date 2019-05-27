@@ -1,10 +1,11 @@
 import GLOBE from '../../globe.js';
+import ElevationStore from '../elevation/elevationStore.js';
 import * as FenceBuilder from './linesGeometryFence.js';
 import * as WallBuilder from './linesGeometryWall.js';
 
-export function buildGeometry(_line, _elevationsDatas, _tile) {
+export function buildGeometry(_line, _tile) {
     if (_line.type == 'fence') {
-        return FenceBuilder.buildGeometry(_line, _elevationsDatas, _tile);
+        return FenceBuilder.buildGeometry(_line, _tile);
     } else if (_line.type == 'wall') {
         return WallBuilder.buildGeometry(_line, _tile, _line.id);
     }
@@ -54,4 +55,12 @@ export function packCoordsWithElevation(_coords, _elevations) {
         ]);
     }
     return fullCoords;
+}
+
+export function getElevationsDatas(_coords) {
+    const elevations = [];
+    for (let i = 0; i < _coords.length; i ++) {
+        elevations.push(ElevationStore.get(_coords[i][0], _coords[i][1]));
+    }
+    return elevations;
 }
