@@ -7,19 +7,17 @@ onmessage = function(_evt) {
 
 function readJson(_datas) {
 	const json = JSON.parse(_datas);
-	const nodesList = {};
+	const nodesList = new Map();
 	const jsonNodes = json.elements.filter(e => e.type == 'node');
 	jsonNodes.forEach(n => {
-		nodesList['NODE_' + n.id] = [
+		nodesList.set('NODE_' + n.id, [
 			parseFloat(n.lon), 
 			parseFloat(n.lat)
-		];
+		]);
 	});
 	
 	let buildingsList = [];
-	
 	const waysList = extractWays(json);
-
 	json.elements
 	.filter(e => e.type == 'relation')
 	.filter(e => e.tags)
@@ -37,8 +35,8 @@ function readJson(_datas) {
 		let holesLastId = 0;
 		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
 		holes.forEach(hole => {
-			const holeWay = waysList['WAY_' + hole.ref];
-			let curHoleNodes = holeWay.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+			const holeWay = waysList.get('WAY_' + hole.ref);
+			let curHoleNodes = holeWay.nodes.map(nodeId => nodesList.get('NODE_' + nodeId));
 			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
 			holesNodes.push(...curHoleNodes);
 			holesIndex.push(holesLastId);
@@ -75,13 +73,16 @@ function readJson(_datas) {
 	.filter(e => e.tags)
 	.filter(e => !excludedIds.includes(e.id))
 	.filter(e => !e.tags['building:parts'])
-	.forEach(w => {
-		const props = cleanTags(w.tags);
-		const wayNodes = w.nodes.map(nodeId => nodesList['NODE_' + nodeId]);
+	.forEach(way => {
+		const props = cleanTags(way.tags);
+		const wayNodes = [];
+		for (let i = 0; i < way.nodes.length; i ++) {
+			wayNodes.push(nodesList.get('NODE_' + way.nodes[i]));
+		}
 		const centroid = getPolygonCentroid(wayNodes);
 		const wayNodesShort = removeWayDuplicateLimits([...wayNodes]);
 		buildingsList.push({
-			id : w.id, 
+			id : way.id, 
 			props : props, 
 			coords : wayNodesShort, 
 			holesCoords : [], 
@@ -89,24 +90,23 @@ function readJson(_datas) {
 			centroid : centroid, 
 		});
 	});
-	
+	nodesList.clear();
+	waysList.clear();
 	return buildingsList;
 }
 
 function mergeContinuousWays(_outers, _waysList, _nodesList) {
 	const outersLimits = _outers.map(outer => {
-		const outerWay = _waysList['WAY_' + outer.ref];
-		let outerNodes = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+		const outerWay = _waysList.get('WAY_' + outer.ref);
+		let outerNodes = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
 		return [
 			outerNodes.shift(), 
 			outerNodes.pop()
 		];
 	});
-	
 	const differentsBorders = [];
 	let curBorderPart = [];
 	let lastStart = null;
-	let lastEnd = null;
 	outersLimits.forEach((limit, i) => {
 		if (lastStart == null) {
 			curBorderPart.push(i);
@@ -136,8 +136,8 @@ function mergeContinuousWays(_outers, _waysList, _nodesList) {
 	const res = differentsBorders.map(contiguousWays => {
 		return contiguousWays.map(outerId => {
 			const curOuter = _outers[outerId];
-			const outerWay = _waysList['WAY_' + curOuter.ref];
-			let outerNodes = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+			const outerWay = _waysList.get('WAY_' + curOuter.ref);
+			let outerNodes = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
 			return outerNodes;
 		}).flat();
 	});
@@ -154,11 +154,11 @@ function removeWayDuplicateLimits(_way) {
 }
 
 function extractWays(_datas) {
-    const ways = {};
+    const ways = new Map();
     _datas.elements
     .filter(e => e.type == 'way')
 	.forEach(way => {
-		ways['WAY_' + way.id] = way;
+		ways.set('WAY_' + way.id, way);
     });
     return ways;
 }

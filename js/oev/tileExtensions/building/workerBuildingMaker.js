@@ -202,21 +202,24 @@ function prepareWallsGeometry(_buildings) {
 	let nbFaces = 0;
 	const centers = [];
 	const verticesNbs = [];
-	walls.forEach(building => {
+
+	for (let i = 0; i < walls.length; i ++) {
+		const building = walls[i];
 		centers.push(building.centroid);
 		let buildingCoordNb = building.coords.length;
 		const buildingNbVert = buildingCoordNb * (building.props.floorsNb + 1);
 		verticesNbs.push(buildingNbVert);
 		nbVertWall += buildingNbVert;
 		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
-	});
+	}
 	const bufferCoord = new Float32Array(nbVertWall * 3);
 	const bufferFaces = new Uint32Array(nbFaces * 3);
 	let bufferVertIndex = 0;
 	let bufferFaceIndex = 0;
 	let pastFaceNb = 0;
 	const colorVertices = [];
-	walls.forEach(building => {
+	for (let i = 0; i < walls.length; i ++) {
+		const building = walls[i];
 		let buildingCoordNb = building.coords.length;
 		fixDirection(building.coords, building.id);
 		fondationsEle = 0;
@@ -250,7 +253,7 @@ function prepareWallsGeometry(_buildings) {
 			fondationsEle = 0;
 		}
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
-	});
+	}
 	return {
 		buildingNb : walls.length, 
 		centroids : centers, 

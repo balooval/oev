@@ -26,13 +26,15 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
         const facesNb = _facesIndex.length;
         const bufferFaces = new Uint32Array(facesNb * 3);
         let facesId = 0;
-        _facesIndex.forEach(t => {
+
+        for (let i = 0; i < _facesIndex.length; i ++) {
+            const t = _facesIndex[i];
             const points = t.getPoints();
             bufferFaces[facesId + 0] = points[0].id;
             bufferFaces[facesId + 1] = points[1].id;
             bufferFaces[facesId + 2] = points[2].id;
             facesId += 3;
-        });
+        }
         bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
         bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
@@ -53,7 +55,8 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
 }
 
 function addVerticesToBuffer(_offset, _buffer, _positions, _elevationsDatas, _elevationOffset) {
-    _positions.forEach((point, i) => {
+    for (let i = 0; i < _positions.length; i ++) {
+        const point = _positions[i];
         const vertPos = GLOBE.coordToXYZ(
             point[0], 
             point[1], 
@@ -63,18 +66,19 @@ function addVerticesToBuffer(_offset, _buffer, _positions, _elevationsDatas, _el
         _buffer[_offset + 1] = vertPos.y;
         _buffer[_offset + 2] = vertPos.z;
         _offset += 3;
-    });
+    }
     return _offset;
 }
 
 function addUvToBuffer(_offset, _buffer, _positions, _uvFactor, _tile) {
-    _positions.forEach(point => {
+    for (let i = 0; i < _positions.length; i ++) {
+        const point = _positions[i];
         let uvX = mapValue(point[0], _tile.startCoord.x, _tile.endCoord.x);
         let uvY = mapValue(point[1], _tile.endCoord.y, _tile.startCoord.y);
         _buffer[_offset + 0] = uvX * _uvFactor;
         _buffer[_offset + 1] = uvY * _uvFactor;
         _offset += 2;
-    });
+    }
     return _offset;
 }
 

@@ -7,9 +7,9 @@ import * as GEO_BUILDER from './landuseGeometryBuilder.js';
 import LanduseMaterial from './landuseMaterial.js';
 
 let knowIds = [];
-const tileToLanduses = {};
-let storedLanduses = {};
-const typedGeometries = {};
+const tileToLanduses = new Map();
+const storedLanduses = new Map();
+const typedGeometries = new Map();
 let schdeduleNb = 0;
 
 const api = {
@@ -17,7 +17,7 @@ const api = {
         const parsedJson = JSON.parse(_json);
         const nodesList = extractNodes(parsedJson);
         const waysList = extractWays(parsedJson);
-        tileToLanduses[_tile.key] = [];
+        tileToLanduses.set(_tile.key, []);
         const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
         const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
         registerDatas(_tile, extractedRelations);
@@ -29,19 +29,19 @@ const api = {
     }, 
 
     tileRemoved : function(_tile) {
-        if (!tileToLanduses[_tile.key]) return false;
-        tileToLanduses[_tile.key]
+        if (!tileToLanduses.get(_tile.key)) return false;
+        tileToLanduses.get(_tile.key)
         .forEach(landuseId => {
-            if (!storedLanduses['LANDUSE_' + landuseId]) return false;
-            const stored = storedLanduses['LANDUSE_' + landuseId];
+            if (!storedLanduses.get('LANDUSE_' + landuseId)) return false;
+            const stored = storedLanduses.get('LANDUSE_' + landuseId);
             stored.refNb --;
             if (stored.refNb <= 0) {
                 forgotLanduse(landuseId);
                 deleteLanduseGeometry(stored.id, stored.type);
-                delete storedLanduses['LANDUSE_' + landuseId];
+                storedLanduses.delete('LANDUSE_' + landuseId);
             }
         });
-        delete tileToLanduses[_tile.key];
+        tileToLanduses.delete(_tile.key);
         scheduleDraw();
     }
 };
@@ -50,9 +50,9 @@ function registerDatas(_tile, _extractedDatas) {
     _extractedDatas
     .filter(landuse => isLanduseKnowed(landuse.id))
     .forEach(landuse => {
-        storedLanduses['LANDUSE_' + landuse.id].refNb ++;
+        storedLanduses.get('LANDUSE_' + landuse.id).refNb ++;
     });
-    tileToLanduses[_tile.key].push(..._extractedDatas.map(landuse => landuse.id));
+    tileToLanduses.get(_tile.key).push(..._extractedDatas.map(landuse => landuse.id));
 }
 
 function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
@@ -62,11 +62,11 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
     .forEach(landuseDatas => {
         knowIds.push(landuseDatas.id);
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
-        storedLanduses['LANDUSE_' + landuseBuilded.id] = {
+        storedLanduses.set('LANDUSE_' + landuseBuilded.id, {
             id : landuseBuilded.id, 
             type : landuseBuilded.type, 
             refNb : 1
-        };
+        });
         simplifyLanduse(landuseBuilded);
         drawLanduse(landuseBuilded, _tile);
         landuseAdded ++;
@@ -184,9 +184,8 @@ function drawLanduse(_landuse, _tile) {
 }
 
 function redrawMeshes() {
-    Object.keys(typedGeometries).forEach(type => {
+    typedGeometries.forEach((curTypedGeos, type) => {
         const layerInfos = getLayerInfos(type);
-        const curTypedGeos = typedGeometries[type]; 
         for (let l = 0; l < layerInfos.materialNb; l ++) {
             const mesh = curTypedGeos.meshes[l];
             mesh.geometry.dispose();
@@ -201,7 +200,7 @@ function redrawMeshes() {
 }
 
 function saveLanduseGeometries(_id, _geometries, _type) {
-    if (!typedGeometries[_type]) {
+    if (!typedGeometries.get(_type)) {
         const layerInfos = getLayerInfos(_type);
         const meshes = [];
         for (let l = 0; l < layerInfos.materialNb; l ++) {
@@ -209,19 +208,19 @@ function saveLanduseGeometries(_id, _geometries, _type) {
             mesh.receiveShadow = true;
             meshes.push(mesh);
         }
-        typedGeometries[_type] = {
+        typedGeometries.set(_type, {
             meshes : meshes, 
             list : [], 
-        };
+        });
     }
-    typedGeometries[_type].list.push({
+    typedGeometries.get(_type).list.push({
         id : _id, 
         geometries : _geometries, 
     });
 }
 
 function deleteLanduseGeometry(_id, _type) {
-    const curTypedGeos = typedGeometries[_type]; 
+    const curTypedGeos = typedGeometries.get(_type); 
     for (let i = 0; i < curTypedGeos.list.length; i ++) {
         if (curTypedGeos.list[i].id != _id) continue;
         curTypedGeos.list[i].geometries.forEach(geo => geo.dispose());
@@ -235,7 +234,10 @@ function deleteLanduseGeometry(_id, _type) {
 
 function triangulate(_landuse) {
     let nbPoints = 0;
-    const border = _landuse.border.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
+    const border = [];
+    for (let i = 0; i < _landuse.border.length; i ++) {
+        border.push(new poly2tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints));
+    }
     try {
         const swctx = new poly2tri.SweepContext(border);
         nbPoints += _landuse.border.length;
@@ -258,17 +260,27 @@ function triangulate(_landuse) {
 }
 
 function getElevationsDatas(_landuse) {
-    const elevationsBorder = _landuse.border.map(point => {
-        return ElevationStore.get(point[0], point[1]);
-    });
-    const elevationsHoles = _landuse.holes.map(hole => {
-        return hole.map(point => {
-            return ElevationStore.get(point[0], point[1]);
-        })
-    });
-    const elevationsFill = _landuse.fillPoints.map(point => {
-        return ElevationStore.get(point[0], point[1]);
-    });
+
+    const elevationsBorder = [];
+    for (let i = 0; i < _landuse.border.length; i ++) {
+        const point = _landuse.border[i];
+        elevationsBorder.push(ElevationStore.get(point[0], point[1]));
+    }
+    const elevationsHoles = [];
+    for (let i = 0; i < _landuse.holes.length; i ++) {
+        const hole = _landuse.holes[i];
+        const holeElevations = [];
+        for (let h = 0; h < hole.length; h ++) {
+            const point = hole[i];
+            holeElevations.push(ElevationStore.get(point[0], point[1]));
+        }
+        elevationsHoles.push(holeElevations);
+    }
+    const elevationsFill = [];
+    for (let i = 0; i < _landuse.fillPoints.length; i ++) {
+        const point = _landuse.fillPoints[i];
+        elevationsFill.push(ElevationStore.get(point[0], point[1]));
+    }
     return {
         border : elevationsBorder, 
         holes : elevationsHoles, 
@@ -280,7 +292,7 @@ function buildRelation(_relation, _nodesList, _waysList) {
     const innersCoords = _relation.members
     .filter(member => member.role == 'inner')
     .map(innerMember => {
-        return _waysList['WAY_' + innerMember.ref].nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+        return _waysList.get('WAY_' + innerMember.ref).nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
     })
     .map(innerWay => {
         const cleanWay = [...innerWay];
@@ -290,8 +302,8 @@ function buildRelation(_relation, _nodesList, _waysList) {
     let wayNodes = [];
     _relation.members.filter(member => member.role == 'outer')
     .forEach(member => {
-        const outerWay = _waysList['WAY_' + member.ref];
-        const cleanWay = outerWay.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+        const outerWay = _waysList.get('WAY_' + member.ref);
+        const cleanWay = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
         cleanWay.pop();
         wayNodes.push(...cleanWay.slice(1));
     });
@@ -308,7 +320,7 @@ function buildRelation(_relation, _nodesList, _waysList) {
 }
 
 function buildWay(_way, _nodesList) {
-    let wayNodes = _way.nodes.map(nodeId => _nodesList['NODE_' + nodeId]);
+    let wayNodes = _way.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
     const border = wayNodes.slice(1);
     const bbox = calcBbox(border);
     const grid = coordGrid(bbox, border);
@@ -322,24 +334,24 @@ function buildWay(_way, _nodesList) {
 }
 
 function extractNodes(_datas) {
-    const nodes = {};
+    const nodes = new Map();
     _datas.elements
     .filter(e => e.type == 'node')
 	.forEach(node => {
-		nodes['NODE_' + node.id] = [
+		nodes.set('NODE_' + node.id, [
 			parseFloat(node.lon), 
 			parseFloat(node.lat)
-		];
+		]);
     });
     return nodes;
 }
 
 function extractWays(_datas) {
-    const ways = {};
+    const ways = new Map();
     _datas.elements
     .filter(e => e.type == 'way')
 	.forEach(way => {
-		ways['WAY_' + way.id] = way;
+		ways.set('WAY_' + way.id, way);
     });
     return ways;
 }
