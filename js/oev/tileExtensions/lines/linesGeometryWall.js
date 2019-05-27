@@ -16,14 +16,7 @@ export function buildGeometry(_line, _tile, _id) {
     for (let margin = 0; margin < offsetCoords.length; margin ++) {
         offsetCoords[margin] = MATH.fixPolygonDirection(offsetCoords[margin], margin > 0);
         const elevationsDatas = getElevationsDatas(offsetCoords[margin]);
-        const fullCoords = [];
-        offsetCoords[margin].forEach((coord, i) => {
-            fullCoords.push([
-                coord[0], 
-                coord[1], 
-                elevationsDatas[i], 
-            ]);
-        });
+        const fullCoords = GeoBuilder.packCoordsWithElevation(offsetCoords[margin], elevationsDatas);
         const verticesNb = fullCoords.length * 2;
         const bufferVertices = new Float32Array(verticesNb * 3);
         let verticeId = 0;
@@ -74,13 +67,7 @@ function buildWallRoof(_offsetCoords, _props) {
     const fullCoords = [];
     for (let margin = 0; margin < _offsetCoords.length; margin ++) {
         const elevationsDatas = getElevationsDatas(_offsetCoords[margin]);
-        _offsetCoords[margin].forEach((coord, i) => {
-            fullCoords.push([
-                coord[0], 
-                coord[1], 
-                elevationsDatas[i], 
-            ]);
-        });
+        fullCoords.push(...GeoBuilder.packCoordsWithElevation(_offsetCoords[margin], elevationsDatas));
     }
     const bufferVertices = new Float32Array(fullCoords.length * 3);
     let verticeId = 0;
@@ -98,7 +85,10 @@ function buildWallRoof(_offsetCoords, _props) {
 
 function inflate(_coords, _distance) {
     const res = [];
-    const geoInput = _coords.map(point => new jsts.geom.Coordinate(point[0], point[1]));
+    const geoInput = [];
+    for (let i = 0; i < _coords.length; i ++) {
+        geoInput.push(new jsts.geom.Coordinate(_coords[i][0], _coords[i][1]));
+    }
     const geometryFactory = new jsts.geom.GeometryFactory();
     const isClosed = MATH.isClosedPath(_coords);
     let shell;
@@ -109,19 +99,35 @@ function inflate(_coords, _distance) {
     }
     let polygon = shell.buffer(_distance, jsts.operation.buffer.BufferParameters.CAP_FLAT);
     let oCoordinates = polygon.shell.points.coordinates;
-    res.push(oCoordinates.map(item => [item.x, item.y]));
+    let oCoords = [];
+    for (let i = 0; i < oCoordinates.length; i ++) {
+        oCoords.push([
+            oCoordinates[i].x, 
+            oCoordinates[i].y, 
+        ]);
+    }
+    res.push(oCoords);
     if (isClosed) {
         let polygon = shell.buffer(_distance * -1, jsts.operation.buffer.BufferParameters.CAP_FLAT);
         if (polygon.shell) {
-            let oCoordinates = polygon.shell.points.coordinates;
-            res.push(oCoordinates.map(item => [item.x, item.y]));
+            oCoordinates = polygon.shell.points.coordinates;
+            oCoords = [];
+            for (let i = 0; i < oCoordinates.length; i ++) {
+                oCoords.push([
+                    oCoordinates[i].x, 
+                    oCoordinates[i].y, 
+                ]);
+            }
+            res.push(oCoords);
         }
     }
     return res;
 }
 
 function getElevationsDatas(_coords) {
-    return _coords.map(point => {
-        return ElevationStore.get(point[0], point[1]);
-    });
+    const elevations = [];
+    for (let i = 0; i < _coords.length; i ++) {
+        elevations.push(ElevationStore.get(_coords[i][0], _coords[i][1]));
+    }
+    return elevations;
 }

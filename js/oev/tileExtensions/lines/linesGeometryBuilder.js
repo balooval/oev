@@ -11,7 +11,8 @@ export function buildGeometry(_line, _elevationsDatas, _tile) {
 }
 
 export function addVerticesToBuffer(_offset, _buffer, _coords, _elevationOffset) {
-    _coords.forEach(coord => {
+    for (let i = 0; i < _coords.length; i ++) {
+        const coord = _coords[i];
         const vertPos = GLOBE.coordToXYZ(
             coord[0], 
             coord[1], 
@@ -21,7 +22,7 @@ export function addVerticesToBuffer(_offset, _buffer, _coords, _elevationOffset)
         _buffer[_offset + 1] = vertPos.y;
         _buffer[_offset + 2] = vertPos.z;
         _offset += 3;
-    });
+    }
     return _offset;
 }
 
@@ -40,4 +41,17 @@ export function addUvToBuffer(_offset, _buffer, _coords, _uvFactor, _tile, _offs
         _offset += 2;
     }
     return _offset;
+}
+
+export function packCoordsWithElevation(_coords, _elevations) {
+    const fullCoords = [];
+    for (let i = 0; i < _coords.length; i ++) {
+        const coord = _coords[i];
+        fullCoords.push([
+            coord[0], 
+            coord[1], 
+            _elevations[i], 
+        ]);
+    }
+    return fullCoords;
 }

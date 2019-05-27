@@ -1,15 +1,7 @@
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _elevationsDatas, _tile) {
-    const fullCoords = [];
-    _line.border.forEach((coord, i) => {
-        fullCoords.push([
-            coord[0], 
-            coord[1], 
-            _elevationsDatas[i], 
-        ]);
-    });
-
+    const fullCoords = GeoBuilder.packCoordsWithElevation(_line.border, _elevationsDatas);
     const verticesNb = fullCoords.length * 2;
     const bufferGeometry = new THREE.BufferGeometry();
     const bufferVertices = new Float32Array(verticesNb * 3);
