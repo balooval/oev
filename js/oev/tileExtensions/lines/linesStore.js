@@ -20,7 +20,6 @@ const api = {
         registerDatas(_tile, extractedWays);
         let lineAdded = 0;
         lineAdded += buildLine(_tile, extractedWays, nodesList);
-        // return false;
         if (lineAdded > 0) scheduleDraw();
     }, 
 
