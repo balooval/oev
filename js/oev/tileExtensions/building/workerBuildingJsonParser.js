@@ -8,45 +8,42 @@ onmessage = function(_evt) {
 function readJson(_datas) {
 	const json = JSON.parse(_datas);
 	const nodesList = new Map();
-	const jsonNodes = json.elements.filter(e => e.type == 'node');
-	jsonNodes.forEach(n => {
-		nodesList.set('NODE_' + n.id, [
-			parseFloat(n.lon), 
-			parseFloat(n.lat)
+	for (let i = 0; i < json.elements.length; i ++) {
+		const element = json.elements[i];
+		if (element.type != 'node') continue;
+		nodesList.set('NODE_' + element.id, [
+			parseFloat(element.lon), 
+			parseFloat(element.lat)
 		]);
-	});
-	
+	}
 	let buildingsList = [];
 	const waysList = extractWays(json);
-	json.elements
-	.filter(e => e.type == 'relation')
-	.filter(e => e.tags)
-	.filter(e => !e.tags['building:parts'])
-	// .filter(e => e.id == 536982) // palais justice paris
-	// .filter(e => e.id == 1603467) // AV
-	.filter(e => !excludedIds.includes(e.id))
-	.forEach(rel => {
-		if (rel.id == 3071549) console.log('Relation OUTER');
-		if (rel.id == 3071552) console.log('Relation PART');
+	for (let i = 0; i < json.elements.length; i ++) {
+		const rel = json.elements[i];
+		if (rel.type != 'relation') continue;
+		if (!rel.tags) continue;
+		if (rel.tags['building:parts']) continue;
+		if (excludedIds.includes(rel.id)) continue;
 		const props = cleanTags(rel.tags);
 		const holes = rel.members.filter(member => member.role == 'inner');
 		let holesNodes = [];
 		let holesIndex = [];
 		let holesLastId = 0;
 		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
-		holes.forEach(hole => {
-			const holeWay = waysList.get('WAY_' + hole.ref);
-			let curHoleNodes = holeWay.nodes.map(nodeId => nodesList.get('NODE_' + nodeId));
+		for (let j = 0; j < holes.length; j ++) {
+			const holeWay = waysList.get('WAY_' + holes[j].ref);
+			let curHoleNodes = getWayNodes(holeWay.nodes, nodesList);
 			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
-			holesNodes.push(...curHoleNodes);
+			for (let j = 0; j < curHoleNodes.length; j ++) {
+				holesNodes.push(curHoleNodes[j]);
+			}
 			holesIndex.push(holesLastId);
 			holesLastId += curHoleNodes.length;
-		});
+		}
 		const borders = rel.members.filter(member => member.role == 'outer');
-		const parts = mergeContinuousWays(borders, waysList, nodesList)
-		parts
-		.filter(coords => coords.length > 3)
-		.forEach(coords => {
+		const parts = mergeContinuousWays(borders, waysList, nodesList);
+		for (let j = 0; j < parts.length; j ++) {
+			const coords = parts[j];
 			const wayNodesShort = removeWayDuplicateLimits([...coords]);
 			holesIndex = holesIndex.map(h => h + wayNodesShort.length);
 			const centroid = getPolygonCentroid(coords);
@@ -65,15 +62,15 @@ function readJson(_datas) {
 				centroid : centroid, 
 			};
 			buildingsList.push(buildObj);
-		});
-	});
+		}
+	}
 
-	json.elements
-	.filter(e => e.type == 'way')
-	.filter(e => e.tags)
-	.filter(e => !excludedIds.includes(e.id))
-	.filter(e => !e.tags['building:parts'])
-	.forEach(way => {
+	for (let i = 0; i < json.elements.length; i ++) {
+		const way = json.elements[i];
+		if (way.type != 'way') continue;
+		if (!way.tags) continue;
+		if (excludedIds.includes(way.id)) continue;
+		if (way.tags['building:parts']) continue;
 		const props = cleanTags(way.tags);
 		const wayNodes = [];
 		for (let i = 0; i < way.nodes.length; i ++) {
@@ -89,58 +86,74 @@ function readJson(_datas) {
 			holesIndex : [], 
 			centroid : centroid, 
 		});
-	});
+	}
 	nodesList.clear();
 	waysList.clear();
 	return buildingsList;
 }
 
+function getWayNodes(_nodesIds, _nodesList) {
+	const nodesCords = [];
+	for (let i = 0; i < _nodesIds.length; i ++) {
+		nodesCords.push(_nodesList.get('NODE_' + _nodesIds[i]));
+	}
+	return nodesCords;
+}
+
 function mergeContinuousWays(_outers, _waysList, _nodesList) {
-	const outersLimits = _outers.map(outer => {
-		const outerWay = _waysList.get('WAY_' + outer.ref);
-		let outerNodes = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
-		return [
+	const outersLimits = [];
+	for (let i = 0; i < _outers.length; i ++) {
+		const outerWay = _waysList.get('WAY_' + _outers[i].ref);
+		const outerNodes = getWayNodes(outerWay.nodes, _nodesList);
+		outersLimits.push([
 			outerNodes.shift(), 
 			outerNodes.pop()
-		];
-	});
+		]);
+	}
 	const differentsBorders = [];
 	let curBorderPart = [];
 	let lastStart = null;
-	outersLimits.forEach((limit, i) => {
+	for (let i = 0; i < outersLimits.length; i ++) {
+		const limit = outersLimits[i];
 		if (lastStart == null) {
 			curBorderPart.push(i);
-			return;
+			continue;
 		}
 		if (lastStart[0] == limit[0][0] && lastStart[1] == limit[0][1]) {
 			curBorderPart.push(i);
-			return;
+			continue;
 		}
 		if (lastStart[0] == limit[1][0] && lastStart[1] == limit[1][1]) {
 			curBorderPart.push(i);
-			return;
+			continue;
 		}
 		if (lastStart[1] == limit[0][0] && lastStart[1] == limit[0][1]) {
 			curBorderPart.push(i);
-			return;
+			continue;
 		}
 		if (lastStart[1] == limit[1][0] && lastStart[1] == limit[1][1]) {
 			curBorderPart.push(i);
-			return;
+			continue;
 		}
 		differentsBorders.push(curBorderPart);
 		curBorderPart = [];
-	});
+	}
 	differentsBorders.push(curBorderPart);
-	
-	const res = differentsBorders.map(contiguousWays => {
-		return contiguousWays.map(outerId => {
-			const curOuter = _outers[outerId];
+	const res = [];
+	for (let i = 0; i < differentsBorders.length; i ++) {
+		const contiguousNodes = [];
+		const contiguousWays = differentsBorders[i];
+		for (let j = 0; j < contiguousWays.length; j ++) {
+			const curOuter = _outers[differentsBorders[i][j]];
 			const outerWay = _waysList.get('WAY_' + curOuter.ref);
-			let outerNodes = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
-			return outerNodes;
-		}).flat();
-	});
+			const outerNodes = getWayNodes(outerWay.nodes, _nodesList);
+			for (let k = 0; k < outerNodes.length; k ++) {
+				contiguousNodes.push(outerNodes[k]);
+			}
+		}
+		if (contiguousNodes.length < 3) continue;
+		res.push(contiguousNodes);
+	}
 	return res;
 }
 
@@ -154,12 +167,12 @@ function removeWayDuplicateLimits(_way) {
 }
 
 function extractWays(_datas) {
-    const ways = new Map();
-    _datas.elements
-    .filter(e => e.type == 'way')
-	.forEach(way => {
+	const ways = new Map();
+	for (let i = 0; i < _datas.elements.length; i ++) {
+		const way = _datas.elements[i];
+		if (way.type != 'way') continue;
 		ways.set('WAY_' + way.id, way);
-    });
+	}
     return ways;
 }
 

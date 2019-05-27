@@ -1,5 +1,6 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
+import OsmReader from '../../utils/osmReader.js';
 import LinesMaterial from './linesMaterial.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';
 
@@ -12,7 +13,7 @@ let schdeduleNb = 0;
 const api = {
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
-        const nodesList = extractNodes(parsedJson);
+        const nodesList = OsmReader.extractNodes(parsedJson);
         tileToLines.set(_tile.key, []);
         const extractedWays = extractElements(parsedJson, _tile.zoom);
         registerDatas(_tile, extractedWays);
@@ -136,19 +137,6 @@ function buildWay(_way, _nodesList) {
     };
 }
 
-function extractNodes(_datas) {
-    const nodes = new Map();
-    _datas.elements
-    .filter(e => e.type == 'node')
-	.forEach(node => {
-		nodes.set('NODE_' + node.id, [
-			parseFloat(node.lon), 
-			parseFloat(node.lat)
-		]);
-    });
-    return nodes;
-}
-
 function isLineKnowed(_id) {
     return knowIds.includes(_id);
 }
@@ -158,9 +146,8 @@ function forgotLine(_id) {
 }
 
 function extractElements(_datas, _zoom) {
-    return _datas.elements
-	.filter(e => e.type == 'way')
-	.filter(e => e.tags)
+    return OsmReader.extractElements(_datas, 'way')
+    .filter(e => e.tags)
     .filter(e => isTagSupported(e, _zoom));
 }
 

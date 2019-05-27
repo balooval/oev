@@ -1,6 +1,7 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
+import OsmReader from '../../utils/osmReader.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as Simplify from '../../../libs/simplify.js';
 import * as GEO_BUILDER from './landuseGeometryBuilder.js';
@@ -15,8 +16,8 @@ let schdeduleNb = 0;
 const api = {
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
-        const nodesList = extractNodes(parsedJson);
-        const waysList = extractWays(parsedJson);
+        const nodesList = OsmReader.extractNodes(parsedJson);
+        const waysList = OsmReader.extractWays(parsedJson);
         tileToLanduses.set(_tile.key, []);
         const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
         const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
@@ -47,19 +48,20 @@ const api = {
 };
 
 function registerDatas(_tile, _extractedDatas) {
-    _extractedDatas
-    .filter(landuse => isLanduseKnowed(landuse.id))
-    .forEach(landuse => {
+    const curTileLinks = tileToLanduses.get(_tile.key);
+    for (let i = 0; i < _extractedDatas.length; i ++) {
+        const landuse = _extractedDatas[i];
+        curTileLinks.push(landuse.id);
+        if (!isLanduseKnowed(landuse.id)) continue;
         storedLanduses.get('LANDUSE_' + landuse.id).refNb ++;
-    });
-    tileToLanduses.get(_tile.key).push(..._extractedDatas.map(landuse => landuse.id));
+    }
 }
 
 function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
     let landuseAdded = 0;
-    _extractedDatas
-    .filter(way => !isLanduseKnowed(way.id))
-    .forEach(landuseDatas => {
+    for (let i = 0; i < _extractedDatas.length; i ++) {
+        const landuseDatas = _extractedDatas[i];
+        if (isLanduseKnowed(landuseDatas.id)) continue;
         knowIds.push(landuseDatas.id);
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
         storedLanduses.set('LANDUSE_' + landuseBuilded.id, {
@@ -70,7 +72,7 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
         simplifyLanduse(landuseBuilded);
         drawLanduse(landuseBuilded, _tile);
         landuseAdded ++;
-    });
+    }
     return landuseAdded;
 }
 
@@ -104,7 +106,8 @@ function coordGrid(_bbox, _border) {
     }
     const grid = [];
     const def = GLOBE.tilesDefinition;
-    tilesPos.forEach(tilePos => {
+    for (let i = 0; i < tilesPos.length; i ++) {
+        const tilePos = tilesPos[i];
         const startCoord = GEO.tileToCoordsVect(tilePos[0], tilePos[1], zoom);
         const endCoord = GEO.tileToCoordsVect(tilePos[0] + 1, tilePos[1] + 1, zoom);
 		const stepCoordX = (endCoord.x - startCoord.x) / def;
@@ -118,7 +121,7 @@ function coordGrid(_bbox, _border) {
                 if (pointIntoPolygon(coord, _border)) grid.push(coord);
 			}
 		}
-    });
+    }
     return grid;
 }
 
@@ -246,9 +249,10 @@ function triangulate(_landuse) {
             swctx.addHole(swcHole);
             nbPoints += hole.length;
         });
-        _landuse.fillPoints.forEach((point, i) => {
+        for (let i = 0; i < _landuse.fillPoints.length; i ++) {
+            const point = _landuse.fillPoints[i];
             swctx.addPoint(new poly2tri.Point(point[0], point[1], i + nbPoints));
-        });
+        }
         nbPoints += _landuse.fillPoints.length;
         swctx.triangulate();
         return swctx.getTriangles();
@@ -289,24 +293,27 @@ function getElevationsDatas(_landuse) {
 }
 
 function buildRelation(_relation, _nodesList, _waysList) {
-    const innersCoords = _relation.members
-    .filter(member => member.role == 'inner')
-    .map(innerMember => {
-        return _waysList.get('WAY_' + innerMember.ref).nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
-    })
-    .map(innerWay => {
-        const cleanWay = [...innerWay];
-        cleanWay.pop();
-        return cleanWay;
-    });
-    let wayNodes = [];
-    _relation.members.filter(member => member.role == 'outer')
-    .forEach(member => {
-        const outerWay = _waysList.get('WAY_' + member.ref);
-        const cleanWay = outerWay.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
-        cleanWay.pop();
-        wayNodes.push(...cleanWay.slice(1));
-    });
+    const innersCoords = [];
+    for (let i = 0; i < _relation.members.length; i ++) {
+        const member = _relation.members[i];
+        if (member.role != 'inner') continue;
+        const memberNodesIds = _waysList.get('WAY_' + member.ref).nodes;
+        const memberNodes = [];
+        for (let j = 0; j < memberNodesIds.length; j ++) {
+            memberNodes.push(_nodesList.get('NODE_' + memberNodesIds[j]));
+        }
+        memberNodes.pop();
+        innersCoords.push(memberNodes);
+    }
+    const wayNodes = [];
+    for (let i = 0; i < _relation.members.length; i ++) {
+        const member = _relation.members[i];
+        if (member.role != 'outer') continue;
+        const memberNodesIds = _waysList.get('WAY_' + member.ref).nodes;
+        for (let j = 1; j < memberNodesIds.length - 1; j ++) {
+            wayNodes.push(_nodesList.get('NODE_' + memberNodesIds[j]));
+        }
+    }
     const border = wayNodes.slice(1);
     const bbox = calcBbox(border);
     const grid = coordGrid(bbox, border);
@@ -333,29 +340,6 @@ function buildWay(_way, _nodesList) {
     };
 }
 
-function extractNodes(_datas) {
-    const nodes = new Map();
-    _datas.elements
-    .filter(e => e.type == 'node')
-	.forEach(node => {
-		nodes.set('NODE_' + node.id, [
-			parseFloat(node.lon), 
-			parseFloat(node.lat)
-		]);
-    });
-    return nodes;
-}
-
-function extractWays(_datas) {
-    const ways = new Map();
-    _datas.elements
-    .filter(e => e.type == 'way')
-	.forEach(way => {
-		ways.set('WAY_' + way.id, way);
-    });
-    return ways;
-}
-
 function isLanduseKnowed(_id) {
     return knowIds.includes(_id);
 }
@@ -365,9 +349,8 @@ function forgotLanduse(_id) {
 }
 
 function extractElements(_datas, _type, _zoom) {
-    return _datas.elements
-	.filter(e => e.type == _type)
-	.filter(e => e.tags)
+    return OsmReader.extractElements(_datas, _type)
+    .filter(e => e.tags)
     .filter(e => isTagSupported(e, _zoom));
 }
 

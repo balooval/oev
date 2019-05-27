@@ -43,13 +43,11 @@ function onAppStart() {
 }
 
 function onExtensionActivate(_extension) {
-    console.log('onExtensionActivate', _extension);
     urlParams.extensions.push(_extension);
     updateHash(urlParams);
 }
 
 function onExtensionDesctivate(_extension) {
-    console.log('onExtensionDesctivate', _extension);
     urlParams.extensions = urlParams.extensions.filter(extension => _extension != extension);
     updateHash(urlParams);
 
