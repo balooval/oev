@@ -1,9 +1,9 @@
-import * as INPUT from './input/input.js';
-import * as TileExtension from './tileExtensions/tileExtension.js';
-import Globe from './globe.js';
-import Navigation from './navigation.js';
-import * as DataLoader from './dataLoader.js';
-import MATH from './utils/math.js';
+import * as INPUT from '../oev/input/input.js';
+import * as TileExtension from '../oev/tileExtensions/tileExtension.js';
+import Globe from '../oev/globe.js';
+import Navigation from '../oev/navigation.js';
+import * as DataLoader from '../oev/dataLoader.js';
+import MATH from '../oev/utils/math.js';
 
 let elmtCamHeading;
 let elmtCoord;

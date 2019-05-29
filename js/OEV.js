@@ -1,6 +1,6 @@
 import Evt from './oev/utils/event.js';
 import Renderer from './oev/renderer.js';
-import UI from './oev/ui.js';
+import UI from './app/ui.js';
 import * as DataLoader from './oev/dataLoader.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
@@ -83,7 +83,6 @@ const APP = {
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
 
 		const cameraLocation = UrlParser.cameraLocation();
-		console.log('cameraLocation', cameraLocation);
 		APP.cameraCtrl = new CamCtrl.CameraGod(cameraLocation);
 
 		UI.init();
