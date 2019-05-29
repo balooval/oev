@@ -20,6 +20,7 @@ Projet perso impulsé par http://www.openearthview.net, qui me prête gracieusem
 
 - ~~Forme des toits (dôme, ...)~~
 - Gérer les changements d'échelle (lumières, repositionner les nodes, lines, landuses ...)
+- Ajouter les crédits (OSM contributors, libs utilisées, ...)
 
 #### Screenshots
 
