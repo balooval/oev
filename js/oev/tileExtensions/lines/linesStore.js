@@ -129,10 +129,12 @@ function buildWay(_way, _nodesList) {
     for (let i = 0; i < _way.nodes.length; i ++) {
         wayNodes.push(_nodesList.get('NODE_' + _way.nodes[i]));
     }
+    const type = extractType(_way);
+    // TODO: si c'est une highway, merger les morceaux contigues et semblables
     return {
         id : _way.id, 
-        type : extractType(_way), 
-        props : extractTags(_way.tags), 
+        type : type, 
+        props : extractTags(_way.tags, type), 
         border : wayNodes, 
     };
 }
@@ -163,11 +165,15 @@ function extractType(_element) {
     supportedTags.forEach(tag => {
         if (!_element.tags[tag.key]) return false;
         tag.values.forEach(value => {
-            if (_element.tags[tag.key] == value) {
-                elementType = value;
-                return null;
+            if (value == '*') {
+                elementType = tag.key;
+                return;
             }
-            return null;
+            if (_element.tags[tag.key] == value) {
+                elementType = tag.useKey ? tag.key : value;
+                return;
+            }
+            return;
         })
     })
     if (equalsTags[elementType]) return equalsTags[elementType];
@@ -183,11 +189,23 @@ function removeWayDuplicateLimits(_way) {
 	return _way;
 }
 
-function extractTags(_tags) {
+function extractTags(_tags, _type) {
     const res = {
         width : 1, 
         height : 2, 
     };
+    if (_type == 'wall') {
+        res.width = 1;
+        res.height = 2;
+    }
+    if (_type == 'highway') {
+        res.width = 4;
+        res.height = 0.5;
+        const highwayProps = getHighwayTags(_tags.highway);
+        highwayProps.forEach((value, prop) => {
+            res[prop] = value;
+        })
+    }
     if (_tags.width) {
         _tags.width = _tags.width.replace('m', '');
         _tags.width = _tags.width.replace(' ', '');
@@ -203,6 +221,71 @@ function extractTags(_tags) {
     return res;
 }
 
+function getHighwayTags(_highwayValue) {
+    const values = [
+        {
+            tags : [
+                'motorway', 
+                'trunk', 
+                'motorway_link', 
+                'trunk_link', 
+            ], 
+            width : 10
+        }, 
+        {
+            tags : [
+                'primary', 
+                'primary_link', 
+                'raceway', 
+            ], 
+            width : 6
+        }, 
+        {
+            tags : [
+                'secondary', 
+                'secondary_link', 
+            ], 
+            width : 5
+        }, 
+        {
+            tags : [
+                'tertiary', 
+                'tertiary_link', 
+            ], 
+            width : 4
+        }, 
+        {
+            tags : [
+                'tertiary', 
+                'unclassified', 
+                'road', 
+            ], 
+            width : 4
+        }, 
+        {
+            tags : [
+                'residential', 
+                'living_street', 
+            ], 
+            width : 3
+        }, 
+        {
+            tags : [
+                'pedestrian', 
+                'service', 
+            ], 
+            width : 2
+        }, 
+    ];
+    return values
+    .filter(value => value.tags.includes(_highwayValue))
+    .map(value => {
+        const res = new Map();
+        res.set('width', value.width);
+        return res;
+    }).pop();
+}
+
 const equalsTags = {
     retaining_wall : 'wall', 
     line : 'powerLine', 
@@ -212,6 +295,7 @@ const tagsZoom = {
     wall : 15, 
     fence : 15, 
     powerLine : 16, 
+    highway : 15, 
 };
 
 const supportedTags = [
@@ -227,6 +311,29 @@ const supportedTags = [
         key : 'power', 
         values : [
             'line', 
+        ], 
+    }, 
+    {
+        useKey : true, 
+        key : 'highway', 
+        values : [
+            'motorway', 
+            'trunk', 
+            'primary', 
+            'secondary', 
+            'tertiary', 
+            'unclassified', 
+            'residential', 
+            'motorway_link', 
+            'trunk_link', 
+            'primary_link', 
+            'secondary_link', 
+            'tertiary_link', 
+            'living_street', 
+            'service', 
+            'pedestrian', 
+            'raceway', 
+            'road', 
         ], 
     }, 
 ];

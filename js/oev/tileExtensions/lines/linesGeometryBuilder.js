@@ -2,12 +2,17 @@ import GLOBE from '../../globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as FenceBuilder from './linesGeometryFence.js';
 import * as WallBuilder from './linesGeometryWall.js';
+import * as HighwayBuilder from './linesGeometryHighway.js';
 
 export function buildGeometry(_line, _tile) {
     if (_line.type == 'fence') {
+        // return null;
         return FenceBuilder.buildGeometry(_line, _tile);
     } else if (_line.type == 'wall') {
+        // return null;
         return WallBuilder.buildGeometry(_line, _tile, _line.id);
+    } else if (_line.type == 'highway') {
+        return HighwayBuilder.buildGeometry(_line, _tile, _line.id);
     }
 }
 

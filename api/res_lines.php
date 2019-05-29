@@ -12,6 +12,7 @@ class Api_lines extends Api_default {
     private $_tags = [
         '"barrier"', 
         '"power"', 
+        '"highway"', 
     ];
 
     public function __construct($_params) {

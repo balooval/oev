@@ -30,6 +30,7 @@ function onActivateExtension() {
 function createMaterials() {
     materials.fence = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
     materials.wall = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF});
+    materials.highway = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918});
 }
 
 function loadTextures() {
