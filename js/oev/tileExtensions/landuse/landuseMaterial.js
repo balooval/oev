@@ -1,4 +1,5 @@
 import Evt from '../../utils/event.js';
+import Renderer from '../../renderer.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_TEXTURES from '../../net/NetTextures.js';
 
@@ -137,8 +138,37 @@ function onTexturesLoaded() {
     materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
     materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
 
+    // materialAnimator.applyCustomShader(materials.forest[2], '0.01');
+    // materialAnimator.applyCustomShader(materials.forest[3], '0.03');
+    // OEV.addObjToUpdate(materialAnimator);
+
     api.isReady = true;
     api.evt.fireEvent('READY')
 }
+
+const materialAnimator = (function () {
+    const shaders = [];
+
+    const api = {
+        update : function() {
+            const time = performance.now() / 1000;
+            shaders.forEach(shader => shader.uniforms.time.value = time);
+            // Renderer.MUST_RENDER = true;
+        }, 
+
+        applyCustomShader : function(_material, _force) {
+            _material.onBeforeCompile = function (shader) {
+                shader.uniforms.time = { value: 0 };
+                shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+                shader.vertexShader = shader.vertexShader.replace(
+                    '#include <begin_vertex>',
+                    'vec3 transformed = vec3( position.x + sin(time) * ' + _force + ', position.y, position.z  + cos(time) * ' + _force + ');'
+                );
+                shaders.push(shader);
+            };
+        },
+    };
+    return api; 
+})();
 
 export {api as default};
