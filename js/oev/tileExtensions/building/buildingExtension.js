@@ -10,8 +10,8 @@ export function extensionClass() {
 	return BuildingExtension;
 }
 
-const materialWalls = new THREE.MeshPhongMaterial({shininess:0,color:0xdddddd,vertexColors:THREE.VertexColors});
-const materialRoof = new THREE.MeshPhongMaterial({shininess:0,color:0xeeeeee,vertexColors:THREE.VertexColors});
+const materialWalls = new THREE.MeshPhongMaterial({shininess:0,color:0xaaaaaa,vertexColors:THREE.VertexColors});
+const materialRoof = new THREE.MeshPhongMaterial({shininess:0,color:0xaaaaaa,vertexColors:THREE.VertexColors});
 
 const workerEvent = new Evt();
 const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
@@ -32,7 +32,6 @@ class BuildingExtension {
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
 		// this.isActive = this.tile.key == '16597_11268_15';
-
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);

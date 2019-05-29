@@ -31,12 +31,12 @@ function prepareRoofPyramidal(_building) {
 	const facesIndex = [];
 	const centerId = _building.coords.length;
 	let lastVertId = _building.coords.length - 1;
-	_building.coords.forEach((coord, i) =>{
+	for (let i = 0; i < _building.coords.length; i ++) {
 		facesIndex.push(lastVertId);
 		facesIndex.push(i);
 		facesIndex.push(centerId);
 		lastVertId = i;
-	});
+	}
 	_building.coords.push(averagePos(_building.coords));
 	const buildingNbVert = _building.coords.length;
 	const bufferFaces = Uint32Array.from(facesIndex);
@@ -63,18 +63,19 @@ function prepareRoofPyramidal(_building) {
 	};
 }
 
-
 function prepareRoofDome(_building) {
 	const coordCenter = averagePos(_building.coords);
-	const directionToCenter = _building.coords.map(coord =>{
+	const directionToCenter = [];
+	for (let i = 0; i < _building.coords.length; i ++) {
+		coord = _building.coords[i];
 		const dist = Math.sqrt(Math.pow(coordCenter[0] - coord[0], 2) + Math.pow(coordCenter[1] - coord[1], 2));
 		const angle = Math.atan2(coordCenter[1] - coord[1], coordCenter[0] - coord[0]);
-		return {
+		directionToCenter.push({
 			dist : dist, 
 			cos : Math.cos(angle), 
 			sin : Math.sin(angle), 
-		}
-	});
+		});
+	}
 	const slicesVertices = [];
 	slicesVertices.push(_building.coords);
 	const sliceNb = 4;
@@ -193,16 +194,16 @@ function prepareRoofsGeometry(_buildings) {
 
 function prepareWallsGeometry(_buildings) {
 	if (_buildings.length == 0) return null;
-	const walls = _buildings.filter(b => {
-		if (!b.props.wall) return true;
-		if (b.props.wall == 'no') return false;
-		return true;
-	});
+	const walls = [];
+	for (let i = 0; i < _buildings.length; i ++) {
+		const building = _buildings[i];
+		if (building.props.wall && building.props.wall == 'no') continue;
+		walls.push(building);
+	}
 	let nbVertWall = 0;
 	let nbFaces = 0;
 	const centers = [];
 	const verticesNbs = [];
-
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
 		centers.push(building.centroid);
