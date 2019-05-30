@@ -138,8 +138,9 @@ function onTexturesLoaded() {
     materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
     materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
 
-    // materialAnimator.applyCustomShader(materials.forest[2], '0.01');
-    // materialAnimator.applyCustomShader(materials.forest[3], '0.03');
+    // materialAnimator.applyCustomShader(materials.forest[1], '0.001');
+    // materialAnimator.applyCustomShader(materials.forest[2], '0.003');
+    // materialAnimator.applyCustomShader(materials.forest[3], '0.006');
     // OEV.addObjToUpdate(materialAnimator);
 
     api.isReady = true;
@@ -148,22 +149,37 @@ function onTexturesLoaded() {
 
 const materialAnimator = (function () {
     const shaders = [];
+    let windValue = 0;
 
     const api = {
         update : function() {
-            const time = performance.now() / 1000;
+            windValue += Math.random();
+            windValue =  Math.max(0, windValue - 0.1);
+            const time = windValue / 10;
+            // const time = performance.now() / 1000;
             shaders.forEach(shader => shader.uniforms.time.value = time);
-            // Renderer.MUST_RENDER = true;
+            Renderer.MUST_RENDER = true;
         }, 
 
         applyCustomShader : function(_material, _force) {
             _material.onBeforeCompile = function (shader) {
+                // console.log('shader', shader);
+                // shader.uniforms.time = { value: 0 };
+                // shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+                // shader.vertexShader = shader.vertexShader.replace(
+                //     '#include <begin_vertex>',
+                //     'vec3 transformed = vec3( position.x + sin(time) * ' + _force + ', position.y, position.z  + cos(time) * ' + _force + ');'
+                // );
+                // shaders.push(shader);
                 shader.uniforms.time = { value: 0 };
                 shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
                 shader.vertexShader = shader.vertexShader.replace(
-                    '#include <begin_vertex>',
-                    'vec3 transformed = vec3( position.x + sin(time) * ' + _force + ', position.y, position.z  + cos(time) * ' + _force + ');'
+                    '#include <uv_vertex>', [
+                    'vUv = ( uvTransform * vec3( uv, 1 ) ).xy;', 
+                    'vUv.x += cos(time) * ' + _force + ';', 
+                    ].join('\n')
                 );
+                // console.log('shader.vertexShader', shader.vertexShader);
                 shaders.push(shader);
             };
         },
