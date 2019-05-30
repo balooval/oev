@@ -54,6 +54,6 @@ function loadNextTexture() {
 			}
 		}, 
 		xhr => {},
-		xhr => console.warn('Oev.Net.Textures error for loading', nextText.url)
+		xhr => console.warn('NetTextures error for loading', nextText.url)
 	);
 }

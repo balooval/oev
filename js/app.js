@@ -5,7 +5,6 @@ import * as DataLoader from './oev/dataLoader.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
 import * as INPUT from './oev/input/input.js';
-import ENVIRONMENT from './oev/environment.js';
 import Navigation from './oev/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
@@ -27,11 +26,7 @@ const objToUpdate = [];
 const APP = {
 	appStarted : false, 
 	evt : null, 
-	geoDebug : undefined, 
-	raycaster : undefined, 
 	clock : null, 
-	cameraCtrl : null, 
-	waypoints : [], 
 	tileExtensions : {}, 
 
 	init : function(_htmlContainer) {
@@ -41,12 +36,10 @@ const APP = {
 		NET_MODELS.init();
 		DataLoader.init();
 		INPUT.init();
-		ENVIRONMENT.init();
+		GLOBE.init();
 		Navigation.init();
 		UrlParser.init();
-		
 		APP.clock = new THREE.Clock();
-
 		const serverURL = 'https://val.openearthview.net/api/';
 		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
 		SatelliteExtension.setApiUrl(serverURL + 'index.php?ressource=satellite');
@@ -74,29 +67,19 @@ const APP = {
 		activesExtensions.forEach(extensionToActivate => {
 			TileExtension.activate(extensionToActivate);
 		});
-
-		GLOBE.init();
-
 		Renderer.scene.add(GLOBE.meshe);
-		APP.raycaster = new THREE.Raycaster();
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
-
-		const cameraLocation = UrlParser.cameraLocation();
-		APP.cameraCtrl = new CamCtrl.CameraGod(cameraLocation);
-
 		UI.init();
-		UI.setCamera(APP.cameraCtrl);
 		APP.evt.fireEvent('APP_INIT');	
 		APP.loadTextures();
 	}, 
-
+	
 	start : function() {
-		const debugGeo = new THREE.SphereGeometry(GLOBE.meter * 100, 16, 7); 
-		const debugMat = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
-		APP.geoDebug = new THREE.Mesh(debugGeo, debugMat);
-		Renderer.scene.add(APP.geoDebug);
-		APP.cameraCtrl.init(Renderer.camera, GLOBE);
+		const cameraLocation = UrlParser.cameraLocation();
+		const cameraCtrl = new CamCtrl.CameraGod(Renderer.camera, cameraLocation);
+		UI.setCamera(cameraCtrl);
+		GLOBE.setCameraControler(cameraCtrl);
 		Navigation.saveWaypoint(4.231021, 43.795594, 13, 'Vaunage');
 		Navigation.saveWaypoint(3.854188, 43.958125, 13, 'St Hippo');
 		Navigation.saveWaypoint(3.8139,43.7925, 13, 'Pic St Loup');
@@ -105,6 +88,7 @@ const APP = {
 		Navigation.saveWaypoint(2.383138,48.880945, 13, 'Paris');
 		APP.appStarted = true;
 		APP.evt.fireEvent('APP_START');
+		GLOBE.construct();
 		render();
 	}, 
 
@@ -136,19 +120,6 @@ const APP = {
 		});
 	}, 
 
-	checkMouseWorldPos : function() {
-		const sceneSize = Renderer.sceneSize();
-		const mX = ((INPUT.Mouse.curMouseX - containerOffset.x) / sceneSize[0]) * 2 - 1;
-		const mY = -((INPUT.Mouse.curMouseY - containerOffset.y) / sceneSize[1]) * 2 + 1;
-		APP.raycaster.near = Renderer.camera.near;
-		APP.raycaster.far = Renderer.camera.far;
-		APP.raycaster.setFromCamera( new THREE.Vector2(mX, mY), Renderer.camera);
-		const intersects = APP.raycaster.intersectObjects( GLOBE.meshe.children);
-		let coord = undefined;
-		intersects.forEach(i => coord = GLOBE.coordFromPos(i.point.x, i.point.z));
-		return coord;
-	}, 
-
 	addObjToUpdate : function(_obj) {
 		if (objToUpdate.includes(_obj)) return false;
 		objToUpdate.push(_obj);
@@ -160,14 +131,14 @@ const APP = {
 
 	render : function() {
 		if (Renderer.MUST_RENDER) {
-			UI.showUICoords(APP.cameraCtrl.coordLookat.x, APP.cameraCtrl.coordLookat.y, APP.cameraCtrl.coordLookat.y);
+			UI.showUICoords(GLOBE.cameraControler.coordLookat.x, GLOBE.cameraControler.coordLookat.y, GLOBE.cameraControler.coordLookat.y);
 		}
 		Renderer.render();
-		APP.cameraCtrl.update();
+		GLOBE.cameraControler.update();
 		if (UI.dragSun) {
 			const sceneSize = Renderer.sceneSize();
 			const normalizedTIme = ((INPUT.Mouse.curMouseX - containerOffset.x) / sceneSize[0]);
-			APP.evt.fireEvent('TIME_CHANGED', normalizedTIme);	
+			GLOBE.setTime(normalizedTIme);	
 		}
 		GLOBE.update();
 		objToUpdate.forEach(o => o.update());
@@ -175,10 +146,10 @@ const APP = {
 
 	gotoWaypoint : function(_waypointIndex) {
 		const waypoint = Navigation.getWaypointById(_waypointIndex);
-		APP.cameraCtrl.setDestination(waypoint.lon, waypoint.lat);
-		APP.cameraCtrl.setZoomDest(waypoint.zoom, 2000);
+		GLOBE.cameraControler.setDestination(waypoint.lon, waypoint.lat);
+		GLOBE.cameraControler.setZoomDest(waypoint.zoom, 2000);
 	},  
 
 };
 
-window.OEV = APP;
+window.APP = APP;

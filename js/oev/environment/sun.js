@@ -39,7 +39,6 @@ const api = {
 	}, 	
 	
 	activate : function(_state) {
-		if (!OEV.appStarted) return false;
 		if (_state) {
 			createSun(GLOBE.radius * 0.7);
 			api.setTime(0.5);
@@ -124,7 +123,7 @@ function updateSunPosition() {
 	lightSun.position.x = meshSun.position.x;
 	lightSun.position.y = meshSun.position.y;
 	lightSun.position.z = meshSun.position.z;
-	lightSun.target = OEV.cameraCtrl.pointer;
+	lightSun.target = GLOBE.cameraControler.pointer;
 	Renderer.MUST_RENDER = true;
 }
 

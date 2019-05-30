@@ -316,9 +316,6 @@ export class Basic {
 		if (this.textureLoaded) {
 			this.remoteTex.dispose();
 		}
-		if (this.mustUpdate) {
-			OEV.removeObjToUpdate( this );
-		}
 		this.extensions = [];
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');

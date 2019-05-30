@@ -141,7 +141,7 @@ function onTexturesLoaded() {
     // materialAnimator.applyCustomShader(materials.forest[1], '0.001');
     // materialAnimator.applyCustomShader(materials.forest[2], '0.003');
     // materialAnimator.applyCustomShader(materials.forest[3], '0.006');
-    // OEV.addObjToUpdate(materialAnimator);
+    // APP.addObjToUpdate(materialAnimator);
 
     api.isReady = true;
     api.evt.fireEvent('READY')

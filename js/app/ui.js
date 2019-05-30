@@ -1,6 +1,6 @@
 import * as INPUT from '../oev/input/input.js';
 import * as TileExtension from '../oev/tileExtensions/tileExtension.js';
-import Globe from '../oev/globe.js';
+import GLOBE from '../oev/globe.js';
 import Navigation from '../oev/navigation.js';
 import * as DataLoader from '../oev/dataLoader.js';
 import MATH from '../oev/utils/math.js';
@@ -15,16 +15,15 @@ const apiUi = {
 
 	init : function() {
 		UiTilesExtension.init();
-		document.getElementById('btn-zoom-in').addEventListener('click', () => OEV.cameraCtrl.zoomIn());
-		document.getElementById('btn-zoom-out').addEventListener('click', () => OEV.cameraCtrl.zoomOut());
+		GLOBE.evt.addEventListener('READY', null, onGlobeReady);
 		elmtCamHeading = document.getElementById("camHeading");
 		elmtCoord = document.getElementById("overlayUICoords");
 		elmtCurTile = document.getElementById("overlayCurtile");
 		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
 		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
 		DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
-		OEV.evt.addEventListener('APP_INIT', null, onAppInit);
-		OEV.evt.addEventListener('APP_START', null, onAppStart);
+		APP.evt.addEventListener('APP_INIT', null, onAppInit);
+		APP.evt.addEventListener('APP_START', null, onAppStart);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionActivate);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionDesctivate);
 	}, 
@@ -57,13 +56,19 @@ const apiUi = {
 	}, 
 };
 
+function onGlobeReady() {
+	GLOBE.evt.removeEventListener('READY', null, onGlobeReady);
+	document.getElementById('btn-zoom-in').addEventListener('click', () => GLOBE.cameraControler.zoomIn());
+	document.getElementById('btn-zoom-out').addEventListener('click', () => GLOBE.cameraControler.zoomOut());
+}
+
 function onCamRotate(_radian) {
 	elmtCamHeading.style.transform = 'rotate(' + (180 + MATH.degree(_radian)) + 'deg)';
 }
 
 function onAppInit() {
-	OEV.evt.removeEventListener('APP_INIT', null, onAppInit);
-	Globe.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
+	APP.evt.removeEventListener('APP_INIT', null, onAppInit);
+	GLOBE.evt.addEventListener('CURTILE_CHANGED', null, onCurTileChanged);
 }
 
 function onAppStart() {
@@ -77,7 +82,7 @@ function onWaypointsChanged(_waypoints) {
 	_waypoints
 	.filter(w => w.showList)
 	.forEach((w, i) => {
-		html += '<img src="img/ico_waypoint.png" />  <span class="hand waypoint" onclick="OEV.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
+		html += '<img src="img/ico_waypoint.png" />  <span class="hand waypoint" onclick="APP.gotoWaypoint(' + i + ');" title=" '+ ( Math.round( w.lon * 1000 ) / 1000 ) + " / " + ( Math.round( w.lat * 1000 ) / 1000 ) +'">' + w.name + '</span><br>';
 	});
 	elmt.innerHTML = html;
 	
@@ -88,7 +93,7 @@ function onCurTileChanged(_evt) {
 }
 
 function onMouseDownLeft() {
-	var coordOnGround = OEV.checkMouseWorldPos();
+	var coordOnGround = GLOBE.screenToSurfacePosition(INPUT.Mouse.curMouseX, INPUT.Mouse.curMouseY);
 	if (coordOnGround === undefined){
 		apiUi.dragSun = true;
 	}
@@ -102,7 +107,7 @@ const UiTilesExtension = (function(){
 	var api = {
 		
 		init : function() {
-			OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+			APP.evt.addEventListener('APP_START', api, api.onAppStart);
 		}, 
 		
 		onAppStart : function() {
@@ -130,7 +135,7 @@ const UiTilesExtension = (function(){
 		}, 
 
 		updateLoadingDatas : function(_evt){
-			var curTime = OEV.clock.getElapsedTime();
+			var curTime = APP.clock.getElapsedTime();
 			if (_evt.nb > 0 && curTime - lastTimeLoadingUpdated <= 1) return false;
 			lastTimeLoadingUpdated = curTime;
 			const elmt = document.getElementById('btn-extension-switch-' + _evt.type);

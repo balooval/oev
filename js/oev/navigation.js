@@ -12,10 +12,11 @@ var api = {
 
 	init : function() {
 		api.evt = new Evt();
-		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
+		GLOBE.evt.addEventListener('READY', api, api.onAppStart);
 	}, 
 	
 	onAppStart : function() {
+		GLOBE.evt.removeEventListener('READY', api, api.onAppStart);
 		waypointMat = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false})
 		if (localStorage.getItem("waypoints") == undefined) {
 			localStorage.setItem("waypoints", JSON.stringify(WpStored));
@@ -85,7 +86,7 @@ class WayPoint {
 			this.sprite.position.x = pos.x;
 			this.sprite.position.y = pos.y;
 			this.sprite.position.z = pos.z;
-			var wpScale = (OEV.cameraCtrl.coordCam.z / GLOBE.radius) * 1000;
+			var wpScale = (GLOBE.cameraControler.coordCam.z / GLOBE.radius) * 1000;
 			this.sprite.scale.x = wpScale;
 			this.sprite.scale.y = wpScale;
 			this.sprite.scale.z = wpScale;

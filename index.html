@@ -10,7 +10,7 @@
 		<script type="text/javascript" src="js/libs/offset.js"></script>
 		<script type="text/javascript" src="js/libs/Earcut.js"></script>
 		<script type="text/javascript" src="js/libs/jsts.min.js"></script>
-		<script src="js/OEV.js" type="module"></script>
+		<script src="js/app.js" type="module"></script>
 	</head>
 	
 	<body>
@@ -70,12 +70,12 @@
 
 		<script>
 			window.addEventListener('load', evt => {
-				OEV.init('threeContainer');
+				APP.init('threeContainer');
 			})
 			
 			function render() {
 				requestAnimationFrame( render );
-				OEV.render();
+				APP.render();
 			}
 		</script>
 	</body>

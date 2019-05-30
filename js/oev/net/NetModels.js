@@ -57,6 +57,6 @@ function loadNextModel() {
 			}
 		}, 
 		xhr => {},
-		xhr => console.warn( 'Oev.Net.Models error for loading', nextModel.url )
+		xhr => console.warn( 'NetModels error for loading', nextModel.url )
 	);
 }

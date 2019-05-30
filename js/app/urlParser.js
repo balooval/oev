@@ -1,3 +1,4 @@
+import GLOBE from '../oev/globe.js';
 import * as TileExtension from '../oev/tileExtensions/tileExtension.js';
 
 let urlParams = {
@@ -9,7 +10,7 @@ const api = {
 
     init : function() {
         parseHash(location.hash);
-        OEV.evt.addEventListener('APP_INIT', null, onAppStart);
+        APP.evt.addEventListener('APP_INIT', null, onAppStart);
     }, 
 
     cameraLocation : function() {
@@ -27,19 +28,24 @@ function updateHash(_urlParams) {
     if (_urlParams.extensions.length) {
         hash += '&extensions=' + _urlParams.extensions.map(extension => extension.toLowerCase()).join(',');
     }
-    history.replaceState('toto', "Title", '#' + hash);
+    location.hash = hash;
 }
 
 function onAppStart() {
-    OEV.evt.removeEventListener('APP_INIT', null, onAppStart);
-    urlParams.location = {
-        x : 0, 
-        y : 0, 
-        z : 0, 
+    APP.evt.removeEventListener('APP_INIT', null, onAppStart);
+    urlParams.location = urlParams.location || {
+        x : 4.1862, 
+        y : 43.7682, 
+        z : 13, 
     }
-    OEV.cameraCtrl.evt.addEventListener('CAM_UPDATED', null, onCameraUpdate);
     TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivate);
     TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, onExtensionDesctivate);
+    GLOBE.evt.addEventListener('READY', null, onGlobeReady);
+}
+
+function onGlobeReady() {
+    GLOBE.evt.removeEventListener('READY', null, onGlobeReady);
+    GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', null, onCameraUpdate);
 }
 
 function onExtensionActivate(_extension) {
@@ -50,7 +56,6 @@ function onExtensionActivate(_extension) {
 function onExtensionDesctivate(_extension) {
     urlParams.extensions = urlParams.extensions.filter(extension => _extension != extension);
     updateHash(urlParams);
-
 }
 
 function onCameraUpdate(_datas) {

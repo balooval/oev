@@ -6,9 +6,9 @@ import GEO from '../utils/geo.js';
 import MATH from '../utils/math.js';
 
 export class CameraGod {
-	constructor(_startPosition = null) {
+	constructor(_camera, _startPosition = null) {
 		this.startPosition = _startPosition;
-		this.camera = undefined;
+		this.camera = _camera;
 		this.globe = undefined;
 		this.pointer = undefined;
 		this.mouseLastPos = [0, 0];
@@ -34,15 +34,13 @@ export class CameraGod {
 		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 		INPUT.Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 		this.MUST_UPDATE = false;
-		OEV.evt.addEventListener('APP_START', this, this.onAppStart);
 	}
 
-	init(_cam, _globe) {
-		this.camera = _cam;
+	init(_globe) {
 		this.globe = _globe;
 	}
 
-	onAppStart() {
+	start() {
 		this.camera.up.set(0, -1, 0);
 		this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
 		Renderer.scene.add(this.pointer);
@@ -62,6 +60,7 @@ export class CameraGod {
 			this.MUST_UPDATE = true;
 		}
 		this.updateCamera();
+		this.evt.fireEvent('READY');
 	}
 
 	setZoomDest(_zoom, _duration) {
@@ -127,7 +126,6 @@ export class CameraGod {
 		this.zoomCur = _value;
 		this.globe.updateZoom(this.zoomCur);
 		const wpScale = (this.coordCam.z / this.globe.radius) * 1000;
-		OEV.waypoints.forEach(w => w.resize(wpScale));
 		this.MUST_UPDATE = true;
 	}
 
@@ -265,18 +263,16 @@ export class CameraGod {
 	}
 
 	onMouseDownLeft() {
-		this.coordOnGround = OEV.checkMouseWorldPos();
-		if (this.coordOnGround != undefined) {
-			const wpScale = (this.coordCam.z / this.globe.radius) * 500;
-			this.clicPointer.scale.x = wpScale;
-			this.clicPointer.scale.y = wpScale;
-			this.clicPointer.scale.z = wpScale;
-			const pos = this.globe.coordToXYZ(this.coordOnGround.x, this.coordOnGround.y, this.coordOnGround.z);
-			this.clicPointer.position.x = pos.x;
-			this.clicPointer.position.y = pos.y;
-			this.clicPointer.position.z = pos.z;
-			this.dragging = true;
-		}
+		this.coordOnGround = this.globe.screenToSurfacePosition(INPUT.Mouse.curMouseX, INPUT.Mouse.curMouseY);
+		if (!this.coordOnGround) return;
+		const scale = (this.coordCam.z / this.globe.radius) * 500;
+		this.clicPointer.scale.x = scale;
+		this.clicPointer.scale.y = scale;
+		this.clicPointer.scale.z = scale;
+		this.clicPointer.position.x = this.coordOnGround.x;
+		this.clicPointer.position.y = this.coordOnGround.y;
+		this.clicPointer.position.z = this.coordOnGround.z;
+		this.dragging = true;
 	}
 
 	onMouseUpLeft() {

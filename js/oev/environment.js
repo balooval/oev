@@ -10,14 +10,9 @@ const posCenter = new THREE.Vector3(0, 0, 0);
 const api = {
 	
 	init : function() {
-		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
-	}, 
-	
-	onAppStart : function() {
-		OEV.evt.removeEventListener('APP_START', api, api.onAppStart);
-		OEV.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
-		OEV.cameraCtrl.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
-		if( fogActive ){
+		GLOBE.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
+		GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
+		if (fogActive){
 			Renderer.scene.fog = new THREE.Fog(0xc5d3ea, GLOBE.radius , GLOBE.radius * 2);
 		}
 		SUN.init();
@@ -27,7 +22,6 @@ const api = {
 	}, 
 	
 	activate : function(_state) {
-		if (!OEV.appStarted) return false;
 		SUN.activate(_state);
 		SKY.activate(_state);
 		if (_state) {

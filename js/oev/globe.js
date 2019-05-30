@@ -9,9 +9,11 @@ import ElevationStore from './tileExtensions/elevation/elevationStore.js';
 let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
 const eleFactor = 1;
+let time = 0.5;
 
 const api = {
 	evt : null, 
+	cameraControler : null, 
 	tilesBase : [], 
 	CUR_ZOOM : 14, 
 	LOD_PLANET : 0, 
@@ -32,12 +34,11 @@ const api = {
 		api.meshe = new THREE.Mesh(new THREE.Geometry());
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
-		api.setProjection('PLANE');
-		OEV.evt.addEventListener('APP_START', api, api.onAppStart);
 	}, 
-	
-	onAppStart : function() {
-		api.construct();
+
+	setCameraControler(_controler) {
+		api.cameraControler = _controler;
+		api.cameraControler.init(api);
 	}, 
 	
 	construct : function() {
@@ -50,6 +51,18 @@ const api = {
 				tile.buildGeometry();
 			}
 		}
+		ENVIRONMENT.init();
+		api.cameraControler.start();
+		api.evt.fireEvent('READY');
+	}, 
+
+	setTime : function(_time) {
+		time = _time;
+		api.evt.fireEvent('TIME_CHANGED', time);	
+	}, 
+
+	screenToSurfacePosition : function(_x, _y) {
+		return Renderer.checkMouseWorldPos(_x, _y, api.meshe);
 	}, 
 
 	addMeshe : function(_meshe) {
@@ -66,7 +79,6 @@ const api = {
 
 	updateLOD : function() {
 		api.tilesBase.forEach(t => t.updateVertex());
-		OEV.waypoints.forEach(w => w.updatePos());
 	}, 
 
 	updateZoom : function(_value){
@@ -161,7 +173,7 @@ const api = {
 			if (api.curLOD != api.LOD_STREET) {
 				console.log("SET TO LOD_STREET");
 				api.globalScale = 100;
-				api._updateMeter();
+				updateMeter();
 				curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
 				console.log('curLodOrigine', curLodOrigine);
 				api.curLOD = api.LOD_STREET;
@@ -181,7 +193,7 @@ const api = {
 				console.log("SET TO LOD_CITY");
 				api.globalScale = 10;
 				// api.globalScale = 100;
-				api._updateMeter();
+				updateMeter();
 				curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
 				api.curLOD = api.LOD_CITY;
 				api.updateLOD();
@@ -200,7 +212,7 @@ const api = {
 				console.log("SET TO LOD_PLANET");
 				curLodOrigine = new THREE.Vector3( 0, 0, 0 );
 				api.globalScale = 1;
-				api._updateMeter();
+				updateMeter();
 				api.curLOD = api.LOD_PLANET;
 				api.setProjection("SPHERE");
 				api.updateLOD();
@@ -216,10 +228,6 @@ const api = {
 		}
 	}, 
 	
-	_updateMeter : function() {
-		api.meter = (api.radius / 40075017.0) * api.globalScale;
-	}, 
-
 	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
 		let ele = ElevationStore.get(_lon, _lat) || 0;
 		if (_inMeters) return ele;
@@ -269,5 +277,10 @@ const api = {
 		return GEO.getAltitude(_zoomlevel, api.radius);
 	}, 
 };
+
+function updateMeter() {
+	api.meter = (api.radius / 40075017.0) * api.globalScale;
+}
+
 
 export { api as default}
