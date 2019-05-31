@@ -82,17 +82,18 @@ export class CameraGod {
 		this.mouseLastPos[1] = INPUT.Mouse.curMouseY;
 	}
 
-	setDestination( _lon, _lat, _duration) {
+	setDestination( _lon, _lat, _zoom, _duration) {
 		if (_duration == undefined) {
 			const distance = GEO.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
 			_duration = Math.min(5000, distance / 10);
-		}	
+		}
 		this.tweens.lon.value = this.coordLookat.x;
 		this.tweens.lat.value = this.coordLookat.y;
 		this.tweens.lon.setTargetValue(_lon, _duration);
 		this.tweens.lat.setTargetValue(_lat, _duration);
 		this.tweens.lon.evt.removeEventListener('END', this, this.onDestReach);
 		this.tweens.lon.evt.addEventListener('END', this, this.onDestReach);
+		this.setZoomDest(_zoom, _duration);
 	}
 
 	onDestReach() {
@@ -168,7 +169,6 @@ export class CameraGod {
 		this.coordLookat.z = this.globe.getElevationAtCoords(this.coordLookat.x, this.coordLookat.y, true);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
 		this.coordCam.z = this.globe.altitude(this.zoomCur);
-		this.globe.zoomFromAltitudeTest(this.coordCam.z);
 		let posCam;
 		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();

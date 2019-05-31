@@ -1,6 +1,7 @@
+import UI from './app/ui.js';
+import UrlParser from './app/urlParser.js';
 import Evt from './oev/utils/event.js';
 import Renderer from './oev/renderer.js';
-import UI from './app/ui.js';
 import * as DataLoader from './oev/dataLoader.js';
 import * as NET_TEXTURES from './oev/net/NetTextures.js';
 import * as NET_MODELS from './oev/net/NetModels.js';
@@ -18,7 +19,6 @@ import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension
 import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
 import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
-import UrlParser from './app/urlParser.js';
 
 let containerOffset = undefined;
 const objToUpdate = [];
@@ -146,8 +146,7 @@ const APP = {
 
 	gotoWaypoint : function(_waypointIndex) {
 		const waypoint = Navigation.getWaypointById(_waypointIndex);
-		GLOBE.cameraControler.setDestination(waypoint.lon, waypoint.lat);
-		GLOBE.cameraControler.setZoomDest(waypoint.zoom, 2000);
+		GLOBE.cameraControler.setDestination(waypoint.lon, waypoint.lat, waypoint.zoom);
 	},  
 
 };

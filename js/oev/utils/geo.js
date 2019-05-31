@@ -49,12 +49,7 @@ const api = {
 			return ((_radius * Math.PI * 2) / Math.pow(2, _zoomlevel));
 		}
 	}, 
-
-	zoomFromAltitude : function(_altitude, _radius, _globalScale) { // _altitude : meters units
-		const a = ((_radius * _globalScale) * Math.PI * 2) / _altitude;
-		return Math.min(Math.max(Math.log(a) / Math.log(2), 4), 19);
-	}, 
-			
+		
 	mercatorLonToX : function(_lon) {
 		const r_major = 6378137.000;
 		return r_major * MATH.radians(_lon);

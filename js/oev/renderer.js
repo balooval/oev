@@ -19,7 +19,11 @@ const api = {
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new THREE.Scene();
         api.camera = new THREE.PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
+
+        var canvas = document.createElement( 'canvas' );
+        var context = canvas.getContext('webgl2');
         webGlRenderer = new THREE.WebGLRenderer({
+            canvas: canvas, context: context, 
             alpha: true, 
             clearAlpha: 1, 
             antialias: true, 
@@ -65,5 +69,7 @@ const api = {
 		return coord;
 	}, 
 };
+
+window.debug = () => console.log(webGlRenderer.info)
 
 export {api as default} 

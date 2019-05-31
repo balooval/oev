@@ -6,26 +6,15 @@ import * as MapLoader from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import * as NET_TEXTURES from './net/NetTextures.js';
 
-let minX = 999999999;
-let maxX = -999999999;
-let minY = 999999999;
-let maxY = -999999999;
 
-export function setMinMax(_minX, _minY, _maxX, _maxY) {
-	minX = _minX;
-	minY = _minX;
-	maxX = _maxX;
-	maxY = _maxY;
-}
-
-export class Basic {
+class Tile {
 		
 	constructor(_tileX, _tileY, _zoom) {
 		this.evt = new Evt();
 		this.isReady = false;
 		this.onStage = true;
 		this.parentTile = null;
-		this.parentOffset = new THREE.Vector2( 0, 0 );
+		this.parentOffset = new THREE.Vector2(0, 0);
 		this.tileX = _tileX;
 		this.tileY = _tileY;
 		this.zoom = _zoom;
@@ -227,7 +216,7 @@ export class Basic {
 	}
 		
 	addChild(_coords, _offsetX, _offsetY) {
-		const newTile = new Basic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
+		const newTile = new Tile(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
 		newTile.parentTile = this;
 		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
@@ -235,7 +224,7 @@ export class Basic {
 	}
 
 	clearChildrens() {
-		if( this.childTiles.length == 0 ) return false;
+		if (this.childTiles.length == 0) return false;
 		this.childTiles.forEach(t => t.dispose());
 		this.childTiles = [];
 	}
@@ -257,13 +246,6 @@ export class Basic {
 			}else{
 				this.show();	
 			}
-		}
-		if (this.onStage) {
-			const pos = GLOBE.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
-			minX = Math.min(pos.x, minX);
-			maxX = Math.max(pos.x, maxX);
-			minY = Math.min(pos.z, minY);
-			maxY = Math.max(pos.z, maxY);
 		}
 	}
 	
@@ -321,3 +303,5 @@ export class Basic {
 		this.evt.fireEvent('DISPOSE');
 	}
 }
+
+export {Tile as default};

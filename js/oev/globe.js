@@ -1,7 +1,7 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import ENVIRONMENT from './environment.js';
-import * as TILE from './tile.js';
+import TILE from './tile.js';
 import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
 import ElevationStore from './tileExtensions/elevation/elevationStore.js';
@@ -46,7 +46,7 @@ const api = {
 		const nbTiles = Math.pow(2, zoomBase);
 		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
 			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
-				const tile = new TILE.Basic(curTileX, curTileY, zoomBase);
+				const tile = new TILE(curTileX, curTileY, zoomBase);
 				api.tilesBase.push(tile);
 				tile.buildGeometry();
 			}
@@ -241,7 +241,6 @@ const api = {
 	}, 
 	
 	onCurTileChange : function(_newTile){
-		TILE.setMinMax(999999999, 999999999, -999999999, -999999999);
 		curTile = _newTile;
 		api.tilesBase.forEach(t => t.updateDetails(api.coordDetails));
 		api.evt.fireEvent('CURTILE_CHANGED', curTile);
@@ -255,22 +254,6 @@ const api = {
 			api.onCurTileChange(newTile);
 		}
 		curTile = newTile;
-	}, 
-
-	zoomFromAltitude : function( _altitude ) { // _altitude : meters units
-		return GEO.zoomFromAltitude(_altitude, api.radius, api.globalScale);
-	}, 
-
-	zoomFromAltitudeTest : function( _altitude ) { // _altitude : meters units
-		const nbTilesToDraw = 4;
-		const tileMeterWidth = _altitude / nbTilesToDraw;
-		let z = 1;
-		let meterByPixel = 78 * 256;
-		while( meterByPixel > tileMeterWidth ){
-			z ++;
-			meterByPixel /= 2;
-		}
-		return Math.min( Math.max( z + 6 ), 19 );
 	}, 
 
 	altitude : function(_zoomlevel) { // return altitude in opengl unit
