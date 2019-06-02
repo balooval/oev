@@ -265,5 +265,4 @@ function updateMeter() {
 	api.meter = (api.radius / 40075017.0) * api.globalScale;
 }
 
-
 export { api as default}

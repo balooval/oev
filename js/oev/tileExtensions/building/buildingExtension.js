@@ -28,6 +28,7 @@ class BuildingExtension {
 		this.dataLoaded = false;
 		this.meshWalls = undefined;
 		this.meshRoof = undefined;
+		this.meshEntrances = undefined;
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
@@ -85,7 +86,68 @@ class BuildingExtension {
 		}
 		this.buildRoof(_datas.roofsBuffers);
 		this.buildWalls(_datas.wallsBuffers);
+		this.buildEntrances(_datas.entrancesDatas);
 		Renderer.MUST_RENDER = true;
+	}
+
+	buildEntrances(_entrancesDatas) {
+		if (!_entrancesDatas) return;
+		if (!_entrancesDatas.length) return;
+		const entrancesGeometries = [];
+		for (let i = 0; i < _entrancesDatas.length; i ++) {
+			const entrance = _entrancesDatas[i];
+			const alt = ElevationStore.get(entrance.coord[0], entrance.coord[1]);
+			const distance = (GLOBE.meter * 0.001) * 3;
+			const corners = [];
+			const angleStep = Math.PI / 2;
+			for (let a = 0; a < 4; a ++) {
+				const curAngle = (entrance.angle - Math.PI / 4) + (angleStep * a);
+				corners.push([
+					entrance.coord[0] + Math.cos(curAngle) * distance, 
+					entrance.coord[1] + Math.sin(curAngle) * distance, 
+					alt - 5, 
+				]);
+			}
+			const positions = [];
+			for (let j = 0; j < 2; j ++) {
+				for (let c = 0; c < corners.length; c ++) {
+					const vertPos = GLOBE.coordToXYZ(
+						corners[c][0], 
+						corners[c][1], 
+						corners[c][2] + (j * 7), 
+					);
+					positions.push(vertPos.x);
+					positions.push(vertPos.y);
+					positions.push(vertPos.z);
+				}
+			}
+			const bufferCoord = Float32Array.from(positions);
+			const facesIndex = [
+				0, 1, 4, 
+				1, 5, 4, 
+				1, 2, 5, 
+				2, 6, 5, 
+				2, 3, 6, 
+				3, 7, 6, 
+				3, 0, 7, 
+				0, 4, 7, 
+				4, 5, 7, 
+				5, 6, 7, 
+			];
+			const bufferFaces = Uint32Array.from(facesIndex);
+
+			const bufferGeometry = new THREE.BufferGeometry();
+			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferCoord, 3));
+			bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+			bufferGeometry.computeVertexNormals();
+			bufferGeometry.computeFaceNormals();
+			entrancesGeometries.push(bufferGeometry);
+		}
+		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(entrancesGeometries);
+		this.meshEntrances = new THREE.Mesh(mergedGeometry, materialRoof);
+		this.meshEntrances.receiveShadow = true;
+		this.meshEntrances.castShadow = true;
+		Renderer.scene.add(this.meshEntrances);
 	}
 
 	buildRoof(roofsDatas) {
@@ -188,10 +250,15 @@ class BuildingExtension {
 		if (this.meshWalls != undefined) {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
+			Renderer.scene.remove(this.meshEntrances);
 			this.meshWalls.geometry.dispose();
 			this.meshWalls = undefined;
 			this.meshRoof.geometry.dispose();
 			this.meshRoof = undefined;
+		}
+		if (this.meshEntrances) {
+			this.meshEntrances.geometry.dispose();
+			this.meshEntrances = undefined;
 		}
 		this.tile = null;
 		Renderer.MUST_RENDER = true;

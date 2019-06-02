@@ -5,12 +5,54 @@ onmessage = function(_evt) {
 	postMessage(datas);
 }
 
+function extractNodes(_elements) {
+	const nodes = [];
+	for (let i = 0; i < _elements.length; i ++) {
+		const element = _elements[i];
+		if (element.type != 'node') continue;
+		nodes.push(element);
+	}
+	return nodes;
+}
+
+function getEntrances(_entrances, _wayNodes, _nodesList) {
+	const entrances = [];
+	let lastNodeId = _wayNodes[_wayNodes.length - 1];
+	for (let i = 0; i < _wayNodes.length; i ++) {
+		const nodeId = _wayNodes[i];
+		if (_entrances.includes(nodeId)) {
+			lastCoord = _nodesList.get('NODE_' + lastNodeId);
+			curCoord = _nodesList.get('NODE_' + nodeId);
+			const angle = Math.atan2(lastCoord[1] - curCoord[1], lastCoord[0] - curCoord[0])
+			entrances.push({
+				coord : curCoord, 
+				angle : angle, 
+			});
+		}
+		lastNodeId = _wayNodes[i];
+	}
+	return entrances;
+}
+
+function listEntrances(_nodesElements) {
+	const entrances = [];
+	for (let i = 0; i < _nodesElements.length; i ++) {
+		const element = _nodesElements[i];
+		if (!element.tags) continue;
+		if (!element.tags.entrance) continue;
+		entrances.push(element.id);
+	}
+	return entrances;
+}
+
 function readJson(_datas) {
 	const json = JSON.parse(_datas);
+	const nodesElements = extractNodes(json.elements);
+	const entrances = listEntrances(nodesElements);
+	// console.log('entrances', entrances);
 	const nodesList = new Map();
-	for (let i = 0; i < json.elements.length; i ++) {
-		const element = json.elements[i];
-		if (element.type != 'node') continue;
+	for (let i = 0; i < nodesElements.length; i ++) {
+		const element = nodesElements[i];
 		nodesList.set('NODE_' + element.id, [
 			parseFloat(element.lon), 
 			parseFloat(element.lat)
@@ -60,6 +102,7 @@ function readJson(_datas) {
 				holesCoords : myHole, 
 				holesIndex : myHoleIndex, 
 				centroid : centroid, 
+				entrances : [], 
 			};
 			buildingsList.push(buildObj);
 		}
@@ -85,6 +128,7 @@ function readJson(_datas) {
 			holesCoords : [], 
 			holesIndex : [], 
 			centroid : centroid, 
+			entrances : getEntrances(entrances, way.nodes, nodesList), 
 		});
 	}
 	nodesList.clear();

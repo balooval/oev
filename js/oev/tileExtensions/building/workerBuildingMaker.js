@@ -9,11 +9,13 @@ onmessage = function(_msg) {
 	buildings = buildings.filter(b => b.coords.length > 2);
 	const wallsDatas = prepareWallsGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
+	const entrancesDatas = prepareEntrancesGeometry(buildings);
 	postMessage({
 		tileKey : _msg.data.tileKey, 
 		result : {
 			wallsBuffers : wallsDatas, 
 			roofsBuffers : roofsDatas, 
+			entrancesDatas : entrancesDatas, 
 		}, 
 	});
 }
@@ -190,6 +192,16 @@ function prepareRoofsGeometry(_buildings) {
 		centroids : centroids, 
 		buffers : buffers, 
 	};
+}
+function prepareEntrancesGeometry(_buildings) {
+	if (_buildings.length == 0) return null;
+	const buildingEntrances = [];
+	for (let i = 0; i < _buildings.length; i ++) {
+		const building = _buildings[i];
+		if (building.entrances.length == 0) continue;
+		buildingEntrances.push(...building.entrances);
+	}
+	return buildingEntrances;
 }
 
 function prepareWallsGeometry(_buildings) {
