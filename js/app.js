@@ -72,7 +72,14 @@ const APP = {
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
 		UI.init();
 		APP.evt.fireEvent('APP_INIT');	
-		APP.loadTextures();
+		APP.loadTextures()
+		.then(() => {
+			return APP.loadShaders();
+		})
+		.then(() => {
+			UI.closeModal();
+			APP.start();
+		});
 	}, 
 	
 	start : function() {
@@ -102,21 +109,14 @@ const APP = {
 			['waypoint', 'waypoint.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
-		NET_TEXTURES.loadBatch(textList, () => {
-			console.log('TEXTURES_LOADED');
-			APP.evt.fireEvent('TEXTURES_LOADED');
-			APP.loadShaders();
+		return new Promise((resolve) => {
+			NET_TEXTURES.loadBatch(textList, resolve);
 		});
 	}, 
 	
 	loadShaders : function() {
-		SHADER.loadList([
-			'cloud', 
-			'sky', 
-			'sun', 
-		], () => {
-			UI.closeModal();
-			APP.start();
+		return new Promise((resolve) => {
+			SHADER.loadList(['cloud', 'sky', 'sun'], resolve);
 		});
 	}, 
 
