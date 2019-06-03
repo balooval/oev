@@ -5,7 +5,7 @@ import GLOBE from './globe.js';
 
 let waypointMat;
 const waypointsList = [];
-let WpStored = [];
+let wpStored = [];
 
 var api = {
 	evt : null, 
@@ -18,14 +18,13 @@ var api = {
 	onAppStart : function() {
 		GLOBE.evt.removeEventListener('READY', api, api.onAppStart);
 		waypointMat = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false})
-		if (localStorage.getItem("waypoints") == undefined) {
-			localStorage.setItem("waypoints", JSON.stringify(WpStored));
+		if (localStorage.getItem('waypoints') == undefined) {
+			localStorage.setItem('waypoints', JSON.stringify(wpStored));
 		}else{
-			WpStored = JSON.parse(localStorage.getItem("waypoints"));
-			for(var w = 0; w < WpStored.length; w ++) {
-				api.saveWaypoint(WpStored[w]["lon"],WpStored[w]["lat"], WpStored[w]["zoom"], WpStored[w]["name"]);
-				
-			}
+			wpStored = JSON.parse(localStorage.getItem('waypoints'));
+			wpStored.forEach(waypoint => {
+				api.saveWaypoint(waypoint.lon, waypoint.lat, waypoint.zoom, waypoint.name);
+			});
 		}
 	}, 
 
@@ -38,26 +37,26 @@ var api = {
 	}, 
 	
 	saveWaypoint : function(_lon, _lat, _zoom, _name, _localStore = false) {
-		_name = _name || "WP " + waypointsList.length;
+		_name = _name || 'WP ' + waypointsList.length;
 		const wp = new WayPoint(_lon, _lat, _zoom, _name);
 		waypointsList.push(wp);
 		api.evt.fireEvent('WAYPOINT_ADDED', waypointsList)
 		// UI.updateWaypointsList(waypointsList);
 		if (_localStore) {
-			WpStored.push({name : _name, lon : _lon, lat : _lat, zoom : _zoom});
-			localStorage.setItem("waypoints", JSON.stringify(WpStored));
+			wpStored.push({name : _name, lon : _lon, lat : _lat, zoom : _zoom});
+			localStorage.setItem("waypoints", JSON.stringify(wpStored));
 		}
 		return wp;
 	}, 
 	
 	removeWaypoint : function( _wId ) {
-		WpStored = WpStored.filter(w => {
+		wpStored = wpStored.filter(w => {
 			if (w.lon != waypoints[_wId].lon) return true;
 			if (w.lat != waypoints[_wId].lat) return true;
 			if (w.zoom != waypoints[_wId].zoom) return true;
 			return false;
 		});
-		localStorage.setItem("waypoints", JSON.stringify(WpStored));	
+		localStorage.setItem("waypoints", JSON.stringify(wpStored));	
 		waypoints[_wId].dispose();
 		waypoints.splice(_wId, 1);
 		updateWaypointsList(waypoints);
@@ -68,7 +67,7 @@ class WayPoint {
 	constructor(_lon, _lat,_zoom, _name) {
 		this.showSprite = true;
 		this.showList = true;
-		if (_name == "none") {
+		if (_name == 'none') {
 			this.showList = false;
 		}
 		this.lon = _lon;
@@ -78,20 +77,23 @@ class WayPoint {
 		this.onStage = true;
 		this.sprite = undefined;
 		this.material = undefined;
-		if (this.showSprite) {
-			this.material = waypointMat;
-			this.sprite = new THREE.Sprite(this.material);
-			var ele = GLOBE.getElevationAtCoords(this.lon, this.lat, true);
-			var pos = GLOBE.coordToXYZ(_lon, _lat, ele);
-			this.sprite.position.x = pos.x;
-			this.sprite.position.y = pos.y;
-			this.sprite.position.z = pos.z;
-			var wpScale = (GLOBE.cameraControler.coordCam.z / GLOBE.radius) * 1000;
-			this.sprite.scale.x = wpScale;
-			this.sprite.scale.y = wpScale;
-			this.sprite.scale.z = wpScale;
-			Renderer.scene.add(this.sprite);
-		}
+		if (this.showSprite) this.addToScene();
+	}
+
+	addToScene() {
+		this.material = waypointMat;
+		this.sprite = new THREE.Sprite(this.material);
+		var ele = GLOBE.getElevationAtCoords(this.lon, this.lat, true);
+		var pos = GLOBE.coordToXYZ(this.lon, this.lat, ele);
+		this.sprite.position.x = pos.x;
+		this.sprite.position.y = pos.y;
+		this.sprite.position.z = pos.z;
+		let wpScale = (GLOBE.cameraControler.coordCam.z / GLOBE.radius) * 1000;
+		wpScale = Math.max(wpScale, 1);
+		this.sprite.scale.x = wpScale;
+		this.sprite.scale.y = wpScale;
+		this.sprite.scale.z = wpScale;
+		Renderer.scene.add(this.sprite);
 	}
 
 	updatePos() {
@@ -112,19 +114,18 @@ class WayPoint {
 	}
 
 	hide(_state) {
-		if (this.showSprite){
-			if (this.onStage && _state){
-				this.onStage = false;
-				Renderer.scene.remove(this.sprite);
-			}else if (!this.onStage && !_state) {
-				this.onStage = true;
-				Renderer.scene.add(this.sprite);
-			}
+		if (!this.showSprite) return true;
+		if (this.onStage && _state){
+			this.onStage = false;
+			Renderer.scene.remove(this.sprite);
+		} else if (!this.onStage && !_state) {
+			this.onStage = true;
+			Renderer.scene.add(this.sprite);
 		}
 	}
 
 	dispose() {
-		if( this.showSprite ){
+		if (this.showSprite) {
 			Renderer.scene.remove(this.sprite);
 		}
 	}

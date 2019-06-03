@@ -126,7 +126,6 @@ export class CameraGod {
 	setCurZoom(_value) {
 		this.zoomCur = _value;
 		this.globe.updateZoom(this.zoomCur);
-		const wpScale = (this.coordCam.z / this.globe.radius) * 1000;
 		this.MUST_UPDATE = true;
 	}
 
