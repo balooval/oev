@@ -1,4 +1,4 @@
-import * as DataLoader from '../../dataLoader.js';
+import * as DataLoader from '../dataLoader.js';
 
 const PARAMS = {
 	nbLoaders : 1, 

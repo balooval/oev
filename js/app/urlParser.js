@@ -1,5 +1,5 @@
 import GLOBE from '../oev/globe.js';
-import * as TileExtension from '../oev/tileExtensions/tileExtension.js';
+import {evt as TileExtensionEvt} from '../oev/tileExtensions/tileExtension.js';
 
 let urlParams = {
     location : null, 
@@ -38,8 +38,8 @@ function onAppStart() {
         y : 43.7682, 
         z : 13, 
     }
-    TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivate);
-    TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, onExtensionDesctivate);
+    TileExtensionEvt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivate);
+    TileExtensionEvt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, onExtensionDesctivate);
     GLOBE.evt.addEventListener('READY', null, onGlobeReady);
 }
 

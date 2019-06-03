@@ -1,6 +1,6 @@
 import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
-import * as SHADER from '../shader.js';
+import {get as Shader} from '../net/shader.js';
 
 let meshSky = null;
 let skyParams = {
@@ -36,8 +36,8 @@ function createSky(_skyRadius) {
 		sunLuminosity : {value : 0.5}, 
 	};
 	const parametersSky = {
-		vertexShader: SHADER.get('vert_sky'),
-		fragmentShader: SHADER.get('frag_sky'),
+		vertexShader: Shader('vert_sky'),
+		fragmentShader: Shader('frag_sky'),
 		uniforms: uniformsSky, 
 		side: THREE.DoubleSide, 
 	};

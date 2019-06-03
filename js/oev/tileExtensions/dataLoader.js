@@ -1,5 +1,5 @@
-import Evt from './utils/event.js';
-import * as TileExtension from './tileExtensions/tileExtension.js';
+import Evt from '../utils/event.js';
+import {evt as TileExtensionEvt} from './tileExtension.js';
 
 const registeredLoaders = {};
 const loadersParams = {};
@@ -27,7 +27,7 @@ export class Proxy {
 		this.clientsWaiting = [];
 		this.loaderParams = loadersParams[_type];
 		this._loaders = this._initLoaders(this.loaderParams.nbLoaders);
-		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this._type, this, this.clear);
+		TileExtensionEvt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this._type, this, this.clear);
 	}
 
 	_initLoaders(_nb) {

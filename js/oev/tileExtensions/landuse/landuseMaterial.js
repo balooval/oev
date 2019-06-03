@@ -1,7 +1,8 @@
 import Evt from '../../utils/event.js';
 import Renderer from '../../renderer.js';
+import GLOBE from '../../globe.js';
 import * as TileExtension from '../tileExtension.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
+import * as NET_TEXTURES from '../../net/textures.js';
 
 TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
 
@@ -138,10 +139,10 @@ function onTexturesLoaded() {
     materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
     materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
 
-    // materialAnimator.applyCustomShader(materials.forest[1], '0.001');
-    // materialAnimator.applyCustomShader(materials.forest[2], '0.003');
-    // materialAnimator.applyCustomShader(materials.forest[3], '0.006');
-    // APP.addObjToUpdate(materialAnimator);
+    // materialAnimator.applyCustomShader(materials.forest[1], '0.0015');
+    // materialAnimator.applyCustomShader(materials.forest[2], '0.0035');
+    // materialAnimator.applyCustomShader(materials.forest[3], '0.0065');
+    // GLOBE.addObjToUpdate(materialAnimator);
 
     api.isReady = true;
     api.evt.fireEvent('READY')
@@ -154,8 +155,8 @@ const materialAnimator = (function () {
     const api = {
         update : function() {
             windValue += Math.random();
-            windValue =  Math.max(0, windValue - 0.1);
-            const time = windValue / 10;
+            windValue =  Math.max(0, windValue - 0.2);
+            const time = windValue / 8;
             // const time = performance.now() / 1000;
             shaders.forEach(shader => shader.uniforms.time.value = time);
             Renderer.MUST_RENDER = true;
@@ -163,20 +164,13 @@ const materialAnimator = (function () {
 
         applyCustomShader : function(_material, _force) {
             _material.onBeforeCompile = function (shader) {
-                // console.log('shader', shader);
-                // shader.uniforms.time = { value: 0 };
-                // shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
-                // shader.vertexShader = shader.vertexShader.replace(
-                //     '#include <begin_vertex>',
-                //     'vec3 transformed = vec3( position.x + sin(time) * ' + _force + ', position.y, position.z  + cos(time) * ' + _force + ');'
-                // );
-                // shaders.push(shader);
                 shader.uniforms.time = { value: 0 };
                 shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
                 shader.vertexShader = shader.vertexShader.replace(
                     '#include <uv_vertex>', [
-                    'vUv = ( uvTransform * vec3( uv, 1 ) ).xy;', 
-                    'vUv.x += cos(time) * ' + _force + ';', 
+                    'vUv = (uvTransform * vec3(uv, 1)).xy;', 
+                    'float uTime = time + vUv.y;', 
+                    'vUv.x += cos(uTime) * ' + _force + ';', 
                     ].join('\n')
                 );
                 // console.log('shader.vertexShader', shader.vertexShader);

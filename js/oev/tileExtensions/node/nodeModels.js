@@ -1,6 +1,6 @@
 import Evt from '../../utils/event.js';
 import * as TileExtension from '../tileExtension.js';
-import * as NET_MODELS from '../../net/NetModels.js';
+import * as NET_MODELS from '../../net/models.js';
 
 TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_NODE', null, onActivateExtension);
 

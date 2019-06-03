@@ -1,6 +1,6 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
-import ENVIRONMENT from './environment.js';
+import ENVIRONMENT from './environment/environment.js';
 import TILE from './tile.js';
 import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
@@ -10,6 +10,7 @@ let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
 const eleFactor = 1;
 let time = 0.5;
+const objToUpdate = [];
 
 const api = {
 	evt : null, 
@@ -74,8 +75,17 @@ const api = {
 	},  
 
 	update : function() {
-		
+		objToUpdate.forEach(o => o.update());
 	},  
+
+	addObjToUpdate : function(_obj) {
+		if (objToUpdate.includes(_obj)) return false;
+		objToUpdate.push(_obj);
+	}, 
+
+	removeObjToUpdate : function(_obj) {
+		objToUpdate = objToUpdate.filter(o => o != _obj);
+	}, 
 
 	updateLOD : function() {
 		api.tilesBase.forEach(t => t.updateVertex());
@@ -190,7 +200,7 @@ const api = {
 			}
 		} else if (api.CUR_ZOOM >= api.LOD_CITY) {
 			if (api.curLOD != api.LOD_CITY) {
-				console.log("SET TO LOD_CITY");
+				// console.log("SET TO LOD_CITY");
 				api.globalScale = 10;
 				// api.globalScale = 100;
 				updateMeter();

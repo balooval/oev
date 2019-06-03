@@ -2,14 +2,14 @@ import UI from './app/ui.js';
 import UrlParser from './app/urlParser.js';
 import Evt from './oev/utils/event.js';
 import Renderer from './oev/renderer.js';
-import * as DataLoader from './oev/dataLoader.js';
-import * as NET_TEXTURES from './oev/net/NetTextures.js';
-import * as NET_MODELS from './oev/net/NetModels.js';
+import * as DataLoader from './oev/tileExtensions/dataLoader.js';
+import * as NET_TEXTURES from './oev/net/textures.js';
+import * as NET_MODELS from './oev/net/models.js';
 import * as INPUT from './oev/input/input.js';
-import Navigation from './oev/navigation.js';
+import Navigation from './app/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
-import * as SHADER from './oev/shader.js';
+import * as SHADER from './oev/net/shader.js';
 import * as TileExtension from './oev/tileExtensions/tileExtension.js';
 import * as MapExtension from './oev/tileExtensions/map/mapExtension.js';
 import * as ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
@@ -21,7 +21,6 @@ import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
 
 let containerOffset = undefined;
-const objToUpdate = [];
 
 const APP = {
 	appStarted : false, 
@@ -105,7 +104,6 @@ const APP = {
 		const toLoad = [
 			['checker', 'loading.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
-			['cloud', 'cloud.png'], 
 			['waypoint', 'waypoint.png'], 
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
@@ -120,15 +118,6 @@ const APP = {
 		});
 	}, 
 
-	addObjToUpdate : function(_obj) {
-		if (objToUpdate.includes(_obj)) return false;
-		objToUpdate.push(_obj);
-	}, 
-
-	removeObjToUpdate : function(_obj) {
-		objToUpdate = objToUpdate.filter(o => o != _obj);
-	}, 
-
 	render : function() {
 		if (Renderer.MUST_RENDER) {
 			UI.showUICoords(GLOBE.cameraControler.coordLookat.x, GLOBE.cameraControler.coordLookat.y, GLOBE.cameraControler.coordLookat.y);
@@ -141,7 +130,6 @@ const APP = {
 			GLOBE.setTime(normalizedTIme);	
 		}
 		GLOBE.update();
-		objToUpdate.forEach(o => o.update());
 	}, 
 
 	gotoWaypoint : function(_waypointIndex) {

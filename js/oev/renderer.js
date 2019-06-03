@@ -34,10 +34,8 @@ const api = {
         api.camera.position.y = 0;
         api.camera.position.z = 500;	
         webGlRenderer.setClearColor(0x101020, 1);
-        if (api.shadowsEnabled) {
-            webGlRenderer.shadowMap.enabled = true;
-            webGlRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        }
+        webGlRenderer.shadowMap.enabled = true;
+        webGlRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
         raycaster = new THREE.Raycaster();
     },  
 

@@ -22,6 +22,7 @@ export function loadFile(_id, _url, _callback) {
 }
 
 export function loadBatch(_list, _callback) {
+	// TODO: si ressource déjà chargée appeler la callback de suite
 	const batch = {
 		callback : _callback, 
 		list : _list, 

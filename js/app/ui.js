@@ -1,8 +1,8 @@
-import * as INPUT from '../oev/input/input.js';
+import {Mouse} from '../oev/input/input.js';
 import * as TileExtension from '../oev/tileExtensions/tileExtension.js';
 import GLOBE from '../oev/globe.js';
-import Navigation from '../oev/navigation.js';
-import * as DataLoader from '../oev/dataLoader.js';
+import Navigation from './navigation.js';
+import * as DataLoader from '../oev/tileExtensions/dataLoader.js';
 import MATH from '../oev/utils/math.js';
 
 let elmtCamHeading;
@@ -19,8 +19,8 @@ const apiUi = {
 		elmtCamHeading = document.getElementById("camHeading");
 		elmtCoord = document.getElementById("overlayUICoords");
 		elmtCurTile = document.getElementById("overlayCurtile");
-		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
-		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
+		Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
+		Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
 		DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
 		APP.evt.addEventListener('APP_INIT', null, onAppInit);
 		APP.evt.addEventListener('APP_START', null, onAppStart);
@@ -93,7 +93,7 @@ function onCurTileChanged(_evt) {
 }
 
 function onMouseDownLeft() {
-	var coordOnGround = GLOBE.screenToSurfacePosition(INPUT.Mouse.curMouseX, INPUT.Mouse.curMouseY);
+	var coordOnGround = GLOBE.screenToSurfacePosition(Mouse.curMouseX, Mouse.curMouseY);
 	if (coordOnGround === undefined){
 		apiUi.dragSun = true;
 	}

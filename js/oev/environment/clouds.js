@@ -1,13 +1,13 @@
 import Renderer from '../renderer.js';
-import * as SHADER from '../shader.js';
-import * as NET_TEXTURES from '../net/NetTextures.js';
+import * as SHADER from '../net/shader.js';
+import * as NET_TEXTURES from '../net/textures.js';
 
 let meshClouds = null;
 let materialClouds = null;
 
 const api = {
 	create : function() {
-		createMesh();
+		NET_TEXTURES.loadFile('cloud', 'cloud.png', createMesh);
 	}, 
 
 	setTime : function(_time) {

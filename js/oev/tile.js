@@ -2,9 +2,9 @@ import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import GEO from './utils/geo.js';
 import * as TileExtension from './tileExtensions/tileExtension.js';
-import * as MapLoader from './tileExtensions/map/mapLoader.js';
+import {loader as MapLoader} from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
-import * as NET_TEXTURES from './net/NetTextures.js';
+import {texture as Texture} from './net/textures.js';
 
 
 class Tile {
@@ -32,7 +32,7 @@ class Tile {
 		this.endMidCoord = GEO.tileToCoordsVect(this.tileX + 1.5, this.tileY + 1.5, this.zoom);
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
-		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: NET_TEXTURES.texture('checker')});
+		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
 		this.extensions = [];
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
@@ -69,7 +69,7 @@ class Tile {
 	nearestTextures() {
 		if (this.textureLoaded) return null;
 		const defaultDatas = {
-			map : NET_TEXTURES.texture("checker"), 
+			map : Texture("checker"), 
 			uvReduc : 1, 
 			offsetX : 0, 
 			offsetY : 0, 
@@ -198,7 +198,7 @@ class Tile {
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
 		if (!this.textureLoaded) {
-			MapLoader.loader.abort({
+			MapLoader.abort({
 				z : this.zoom, 
 				x : this.tileX, 
 				y : this.tileY
@@ -283,7 +283,7 @@ class Tile {
 	unsetTexture() {
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
-		this.material.map = NET_TEXTURES.texture('checker');
+		this.material.map = Texture('checker');
 	}
 
 	dispose() {

@@ -1,8 +1,8 @@
-import Renderer from './renderer.js';
-import GLOBE from './globe.js';
-import CLOUDS from './environment/clouds.js';
-import SUN from './environment/sun.js';
-import SKY from './environment/sky.js';
+import Renderer from '../renderer.js';
+import GLOBE from '../globe.js';
+import CLOUDS from './clouds.js';
+import SUN from './sun.js';
+import SKY from './sky.js';
 
 let fogActive = false;
 const posCenter = new THREE.Vector3(0, 0, 0);

@@ -1,7 +1,7 @@
-import Renderer from './renderer.js';
-import Evt from './utils/event.js';
-import * as NET_TEXTURES from './net/NetTextures.js';
-import GLOBE from './globe.js';
+import Renderer from '../oev/renderer.js';
+import Evt from '../oev/utils/event.js';
+import {texture as Texture} from '../oev/net/textures.js';
+import GLOBE from '../oev/globe.js';
 
 let waypointMat;
 const waypointsList = [];
@@ -17,7 +17,7 @@ var api = {
 	
 	onAppStart : function() {
 		GLOBE.evt.removeEventListener('READY', api, api.onAppStart);
-		waypointMat = new THREE.SpriteMaterial({map:NET_TEXTURES.texture('waypoint'), color:0xffffff, fog:false})
+		waypointMat = new THREE.SpriteMaterial({map:Texture('waypoint'), color:0xffffff, fog:false})
 		if (localStorage.getItem('waypoints') == undefined) {
 			localStorage.setItem('waypoints', JSON.stringify(wpStored));
 		}else{

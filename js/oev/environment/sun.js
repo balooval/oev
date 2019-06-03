@@ -1,8 +1,9 @@
 import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
-import * as NET_TEXTURES from '../net/NetTextures.js';
-import * as SHADER from '../shader.js';
+import * as NET_TEXTURES from '../net/textures.js';
+import {get as Shader} from '../net/shader.js';
 
+let isInit = false;
 let lightAmbiant = undefined;
 let colorsGradient = undefined;
 let lightSun;
@@ -25,18 +26,9 @@ const api = {
 		lightAmbiant = new THREE.AmbientLight(0x25282d);
 		Renderer.scene.add(lightAmbiant);
 		GLOBE.evt.addEventListener('ZOOM_CHANGE', null, onZoomChanged);
-		if (Renderer.shadowsEnabled) {
-			lightSun.castShadow = true;
-			updateShadow(4);
-		}
-		api.setTime(0.5);
+		lightSun.castShadow = true;
+		updateShadow(4);
 	}, 
-
-	setTime : function(_time) {
-		updateSunColor(_time);
-		updateSunPosition();
-		return sunParams;
-	}, 	
 	
 	activate : function(_state) {
 		if (_state) {
@@ -46,6 +38,12 @@ const api = {
 			removeSun();
 		}
 	}, 
+
+	setTime : function(_time) {
+		updateSunColor(_time);
+		updateSunPosition();
+		return sunParams;
+	}, 	
 	
 	setPosition : function(_pos) {
 		posCenter.x = _pos.x;
@@ -68,8 +66,8 @@ function createSun(_skyRadius) {
 		myModelViewMatrixInverse : {value: new THREE.Matrix4()}, 
 	};
 	const parametersSun = {
-		fragmentShader: SHADER.get('frag_sun'),
-		vertexShader: SHADER.get('vert_sun'),
+		fragmentShader: Shader('frag_sun'),
+		vertexShader: Shader('vert_sun'),
 		uniforms: uniformsSun, 
 		transparent: true, 
 	};

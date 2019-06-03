@@ -1,7 +1,7 @@
 import Renderer from '../renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../utils/event.js';
-import * as INPUT from '../input/input.js';
+import {Mouse} from '../input/input.js';
 import GEO from '../utils/geo.js';
 import MATH from '../utils/math.js';
 
@@ -28,11 +28,11 @@ export class CameraGod {
 		this.clicPointer = undefined;
 		this.debugPointer = undefined;
 		this.evt = new Evt();
-		INPUT.Mouse.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
-		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
-		INPUT.Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
-		INPUT.Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
-		INPUT.Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
+		Mouse.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
+		Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
+		Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
+		Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
+		Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
 		this.MUST_UPDATE = false;
 	}
 
@@ -78,8 +78,8 @@ export class CameraGod {
 			this.updateCamera();
 			this.MUST_UPDATE = false;
 		}
-		this.mouseLastPos[0] = INPUT.Mouse.curMouseX;
-		this.mouseLastPos[1] = INPUT.Mouse.curMouseY;
+		this.mouseLastPos[0] = Mouse.curMouseX;
+		this.mouseLastPos[1] = Mouse.curMouseY;
 	}
 
 	setDestination( _lon, _lat, _zoom, _duration) {
@@ -130,8 +130,8 @@ export class CameraGod {
 	}
 
 	drag() {
-		const depX = (INPUT.Mouse.curMouseX - this.mouseLastPos[0]) / Math.pow(2.0, this.zoomCur);
-		const depY = (INPUT.Mouse.curMouseY - this.mouseLastPos[1]) / Math.pow(2.0, this.zoomCur);
+		const depX = (Mouse.curMouseX - this.mouseLastPos[0]) / Math.pow(2.0, this.zoomCur);
+		const depY = (Mouse.curMouseY - this.mouseLastPos[1]) / Math.pow(2.0, this.zoomCur);
 		const finalLon = this.coordLookat.x + (depX * Math.cos(this.camRotation[0]) - depY * Math.sin(this.camRotation[0]));
 		const finalLat = this.coordLookat.y - (depY * Math.cos(this.camRotation[0]) + depX * Math.sin(this.camRotation[0]));
 		this.setLookAt(finalLon, finalLat);
@@ -150,8 +150,8 @@ export class CameraGod {
 	}
 
 	rotate() {
-		var depX = (INPUT.Mouse.curMouseX - this.mouseLastPos[0]) / 100.0;
-		var depY = (INPUT.Mouse.curMouseY - this.mouseLastPos[1]) / 100.0;
+		var depX = (Mouse.curMouseX - this.mouseLastPos[0]) / 100.0;
+		var depY = (Mouse.curMouseY - this.mouseLastPos[1]) / 100.0;
 		this.camRotation[0] += depX;
 		this.camRotation[1] += depY;
 		if (this.camRotation[0] > Math.PI) {
@@ -262,7 +262,7 @@ export class CameraGod {
 	}
 
 	onMouseDownLeft() {
-		this.coordOnGround = this.globe.screenToSurfacePosition(INPUT.Mouse.curMouseX, INPUT.Mouse.curMouseY);
+		this.coordOnGround = this.globe.screenToSurfacePosition(Mouse.curMouseX, Mouse.curMouseY);
 		if (!this.coordOnGround) return;
 		const scale = (this.coordCam.z / this.globe.radius) * 500;
 		this.clicPointer.scale.x = scale;

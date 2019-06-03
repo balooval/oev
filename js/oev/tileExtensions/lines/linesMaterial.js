@@ -1,6 +1,6 @@
 import Evt from '../../utils/event.js';
 import * as TileExtension from '../tileExtension.js';
-import * as NET_TEXTURES from '../../net/NetTextures.js';
+import * as NET_TEXTURES from '../../net/textures.js';
 
 TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LINES', null, onActivateExtension);
 
