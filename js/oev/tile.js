@@ -6,7 +6,6 @@ import {loader as MapLoader} from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import {texture as Texture} from './net/textures.js';
 
-
 class Tile {
 		
 	constructor(_tileX, _tileY, _zoom) {
@@ -114,17 +113,20 @@ class Tile {
 	}
 
 	getVerticesPlaneCoords() {
-		const coords = [];
 		const def = GLOBE.tilesDefinition;
 		const vertBySide = def + 1;
+		const vertNb = vertBySide * vertBySide;
+		const coords = new Array(vertNb);
+		let coordId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / def;
 		const stepCoordY = (this.endCoord.y - this.startCoord.y) / def;
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
-				coords.push([
+				coords[coordId] = [
 					this.startCoord.x + (stepCoordX * x), 
 					this.startCoord.y + (stepCoordY * y)
-				]);
+				];
+				coordId ++;
 			}
 		}
 		return coords;

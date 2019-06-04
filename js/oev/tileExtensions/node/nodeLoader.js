@@ -38,4 +38,4 @@ class NodeLoader {
 }
 
 DataLoader.registerLoader('NODE', NodeLoader, PARAMS);
-export const loader = new DataLoader.Proxy('NODE');
+export const loader = new DataLoader.Loader('NODE');

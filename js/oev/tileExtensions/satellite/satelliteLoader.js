@@ -43,4 +43,4 @@ class LoaderSatellite {
 }
 
 DataLoader.registerLoader('SATELLITE', LoaderSatellite, PARAMS);
-export const loader = new DataLoader.Proxy('SATELLITE');
+export const loader = new DataLoader.Loader('SATELLITE');

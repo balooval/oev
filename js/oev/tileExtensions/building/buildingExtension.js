@@ -3,6 +3,7 @@ import Evt from '../../utils/event.js';
 import GLOBE from '../../globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
+import * as CachedGeometry from '../../utils/cacheGeometry.js';
 
 export {setApiUrl} from './buildingLoader.js';
 
@@ -93,7 +94,7 @@ class BuildingExtension {
 	buildEntrances(_entrancesDatas) {
 		if (!_entrancesDatas) return;
 		if (!_entrancesDatas.length) return;
-		const entrancesGeometries = [];
+		const entrancesGeometries = new Array(_entrancesDatas.length);
 		for (let i = 0; i < _entrancesDatas.length; i ++) {
 			const entrance = _entrancesDatas[i];
 			const alt = ElevationStore.get(entrance.coord[0], entrance.coord[1]);
@@ -136,15 +137,20 @@ class BuildingExtension {
 			];
 			const bufferFaces = Uint32Array.from(facesIndex);
 
-			const bufferGeometry = new THREE.BufferGeometry();
+			// const bufferGeometry = new THREE.BufferGeometry();
+			const bufferGeometry = CachedGeometry.getGeometry();
 			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferCoord, 3));
 			bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
 			bufferGeometry.computeFaceNormals();
-			entrancesGeometries.push(bufferGeometry);
+			entrancesGeometries[i] = bufferGeometry;
 		}
 		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(entrancesGeometries);
-		this.meshEntrances = new THREE.Mesh(mergedGeometry, materialRoof);
+		CachedGeometry.storeGeometries(entrancesGeometries);
+		// this.meshEntrances = new THREE.Mesh(mergedGeometry, materialRoof);
+		this.meshEntrances = CachedGeometry.getMesh();
+		this.meshEntrances.geometry = mergedGeometry;
+		this.meshEntrances.material = materialRoof;
 		this.meshEntrances.receiveShadow = true;
 		this.meshEntrances.castShadow = true;
 		Renderer.scene.add(this.meshEntrances);
@@ -152,21 +158,27 @@ class BuildingExtension {
 
 	buildRoof(roofsDatas) {
 		if (!roofsDatas) return;
-		const roofsGeometries = [];
+		const roofsGeometries = new Array(roofsDatas.buildingNb);
 		for (let r = 0; r < roofsDatas.buildingNb; r ++) {
 			const roofBuffers = roofsDatas.buffers[r];
 			this.applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
 			this.convertCoordToPositionRoof(roofBuffers.bufferCoord);
-			const bufferGeometry = new THREE.BufferGeometry();
+			const bufferGeometry = CachedGeometry.getGeometry();
+			// const bufferGeometry = new THREE.BufferGeometry();
 			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(roofBuffers.bufferCoord, 3));
 			bufferGeometry.addAttribute('color', new THREE.BufferAttribute(roofBuffers.bufferColor, 3, true));
 			bufferGeometry.setIndex(new THREE.BufferAttribute(roofBuffers.bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
 			bufferGeometry.computeFaceNormals();
-			roofsGeometries.push(bufferGeometry);
+			roofsGeometries[r] = bufferGeometry;
 		}
 		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
-		this.meshRoof = new THREE.Mesh(mergedGeometry, materialRoof);
+		CachedGeometry.storeGeometries(roofsGeometries);
+		// this.meshRoof = new THREE.Mesh(mergedGeometry, materialRoof);
+		this.meshRoof = CachedGeometry.getMesh();
+		this.meshRoof.geometry = mergedGeometry;
+		this.meshRoof.material = materialRoof;
+
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
@@ -198,13 +210,18 @@ class BuildingExtension {
 		if (!_buffers) return;
 		this.applyElevationToVertices(_buffers);
 		this.convertCoordToPosition(_buffers.bufferCoord);
-		const bufferGeometry = new THREE.BufferGeometry();
+		const bufferGeometry = CachedGeometry.getGeometry();
+		// const bufferGeometry = new THREE.BufferGeometry();
 		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(_buffers.bufferCoord, 3));
 		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		this.meshWalls = new THREE.Mesh(bufferGeometry, materialWalls);
+		// this.meshWalls = new THREE.Mesh(bufferGeometry, materialWalls);
+		this.meshWalls = CachedGeometry.getMesh();
+		this.meshWalls.geometry = bufferGeometry;
+		this.meshWalls.material = materialWalls;
+
 		this.meshWalls.receiveShadow = true;
 		this.meshWalls.castShadow = true;
 		Renderer.scene.add(this.meshWalls);
@@ -251,13 +268,17 @@ class BuildingExtension {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
 			Renderer.scene.remove(this.meshEntrances);
-			this.meshWalls.geometry.dispose();
+			// this.meshWalls.geometry.dispose();
+			CachedGeometry.storeGeometries(this.meshWalls.geometry);
+			CachedGeometry.storeMesh(this.meshWalls);
 			this.meshWalls = undefined;
 			this.meshRoof.geometry.dispose();
+			CachedGeometry.storeMesh(this.meshRoof);
 			this.meshRoof = undefined;
 		}
 		if (this.meshEntrances) {
 			this.meshEntrances.geometry.dispose();
+			CachedGeometry.storeMesh(this.meshEntrances);
 			this.meshEntrances = undefined;
 		}
 		this.tile = null;

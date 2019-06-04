@@ -69,4 +69,4 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
 }
 
 DataLoader.registerLoader('ELEVATION', LoaderElevation, PARAMS);
-export const loader = new DataLoader.Proxy('ELEVATION');
+export const loader = new DataLoader.Loader('ELEVATION');

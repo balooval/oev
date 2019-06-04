@@ -18,7 +18,7 @@ export function registerLoader(_type, _class, _params) {
 	loadersParams[_type] = _params;
 }
 
-export class Proxy {
+export class Loader {
 	constructor(_type) {
 		this._type = _type;
 		this._datasLoaded = {};

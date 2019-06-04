@@ -11,11 +11,11 @@ let curTile = new THREE.Vector2(0, 0, 0);
 const eleFactor = 1;
 let time = 0.5;
 const objToUpdate = [];
+const tilesBase = [];
 
 const api = {
 	evt : null, 
 	cameraControler : null, 
-	tilesBase : [], 
 	CUR_ZOOM : 14, 
 	LOD_PLANET : 0, 
 	LOD_CITY : 10, 
@@ -48,7 +48,7 @@ const api = {
 		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
 			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
 				const tile = new TILE(curTileX, curTileY, zoomBase);
-				api.tilesBase.push(tile);
+				tilesBase.push(tile);
 				tile.buildGeometry();
 			}
 		}
@@ -88,7 +88,9 @@ const api = {
 	}, 
 
 	updateLOD : function() {
-		api.tilesBase.forEach(t => t.updateVertex());
+		for (let i = 0; i < tilesBase.length; i ++) {
+			tilesBase[i].updateVertex();
+		}
 	}, 
 
 	updateZoom : function(_value){
@@ -119,7 +121,9 @@ const api = {
 			Renderer.camera.up.set(0, 1, 0);
 		}
 		api.projection = _mode;
-		api.tilesBase.forEach(t => t.updateVertex());
+		for (let i = 0; i < tilesBase.length; i ++) {
+			tilesBase[i].updateVertex();
+		}
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation) {
@@ -245,14 +249,16 @@ const api = {
 	}, 
 	
 	getCurTile : function() {
-		return api.tilesBase.map(t => {
+		return tilesBase.map(t => {
 			return t.getCurTile(api.coordDetails)
 		}).filter(res => res).pop();
 	}, 
 	
 	onCurTileChange : function(_newTile){
 		curTile = _newTile;
-		api.tilesBase.forEach(t => t.updateDetails(api.coordDetails));
+		for (let i = 0; i < tilesBase.length; i ++) {
+			tilesBase[i].updateDetails(api.coordDetails);
+		}
 		api.evt.fireEvent('CURTILE_CHANGED', curTile);
 	}, 
 

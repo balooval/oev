@@ -1,5 +1,4 @@
 importScripts('./Earcut.js');
-importScripts('../../../libs/simplify.js');
 
 onmessage = function(_msg) {
 	let buildings = _msg.data.buildingsDatas;
@@ -172,11 +171,11 @@ function prepareRoofFlat(_building) {
 
 function prepareRoofsGeometry(_buildings) {
 	if (_buildings.length == 0) return null;
-	const centroids = [];
-	const buffers = [];
+	const centroids = new Array(_buildings.length);
+	const buffers = new Array(_buildings.length);
 	for (let b = 0; b < _buildings.length; b ++) {
 		const curBuilding = _buildings[b];
-		centroids.push(curBuilding.centroid);
+		centroids[b] = curBuilding.centroid;
 		let roofBuffers;
 		if (curBuilding.props.roofShape == 'pyramidal') {
 			roofBuffers = prepareRoofPyramidal(curBuilding);
@@ -185,7 +184,7 @@ function prepareRoofsGeometry(_buildings) {
 		} else {
 			roofBuffers = prepareRoofFlat(curBuilding);
 		}
-		buffers.push(roofBuffers);
+		buffers[b] = roofBuffers;
 	}
 	return {
 		buildingNb : _buildings.length, 
@@ -214,14 +213,14 @@ function prepareWallsGeometry(_buildings) {
 	}
 	let nbVertWall = 0;
 	let nbFaces = 0;
-	const centers = [];
-	const verticesNbs = [];
+	const centers = new Array(walls.length);
+	const verticesNbs = new Array(walls.length);
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
-		centers.push(building.centroid);
+		centers[i] = building.centroid;
 		let buildingCoordNb = building.coords.length;
 		const buildingNbVert = buildingCoordNb * (building.props.floorsNb + 1);
-		verticesNbs.push(buildingNbVert);
+		verticesNbs[i] = buildingNbVert;
 		nbVertWall += buildingNbVert;
 		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
 	}

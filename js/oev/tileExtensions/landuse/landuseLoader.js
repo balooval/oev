@@ -38,4 +38,4 @@ class LoaderLanduse {
 }
 
 DataLoader.registerLoader('LANDUSE', LoaderLanduse, PARAMS);
-export const loader = new DataLoader.Proxy('LANDUSE');
+export const loader = new DataLoader.Loader('LANDUSE');

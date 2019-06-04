@@ -67,16 +67,18 @@ class ElevationExtension {
 	}
 	
 	applyElevationToGeometry(_elevationBuffer) {
+		if (!this.tile.isReady) return false;
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
 		const vertCoords = this.tile.getVerticesPlaneCoords();
-		vertCoords.forEach((c, i) => {
-			const vertPos = GLOBE.coordToXYZ(c[0], c[1], _elevationBuffer[i]);
+		for (let i = 0; i < vertCoords.length; i ++) {
+			const coord = vertCoords[i];
+			const vertPos = GLOBE.coordToXYZ(coord[0], coord[1], _elevationBuffer[i]);
 			verticePositions.array[curVertId + 0] = vertPos.x;
 			verticePositions.array[curVertId + 1] = vertPos.y;
 			verticePositions.array[curVertId + 2] = vertPos.z;
 			curVertId += 3;
-		});
+		}
 		verticePositions.needsUpdate = true;
 		this.tile.meshe.geometry.verticesNeedUpdate = true;
 		this.tile.meshe.geometry.uvsNeedUpdate = true;

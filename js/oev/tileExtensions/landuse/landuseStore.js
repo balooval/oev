@@ -205,11 +205,11 @@ function redrawMeshes() {
 function saveLanduseGeometries(_id, _geometries, _type) {
     if (!typedGeometries.get(_type)) {
         const layerInfos = getLayerInfos(_type);
-        const meshes = [];
+        const meshes = new Array(layerInfos.materialNb);
         for (let l = 0; l < layerInfos.materialNb; l ++) {
             const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LanduseMaterial.material(_type)[l]);
             mesh.receiveShadow = true;
-            meshes.push(mesh);
+            meshes[l] = mesh;
         }
         typedGeometries.set(_type, {
             meshes : meshes, 
@@ -237,9 +237,9 @@ function deleteLanduseGeometry(_id, _type) {
 
 function triangulate(_landuse) {
     let nbPoints = 0;
-    const border = [];
+    const border = new Array(_landuse.border.length);
     for (let i = 0; i < _landuse.border.length; i ++) {
-        border.push(new poly2tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints));
+        border[i] = new poly2tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints);
     }
     try {
         const swctx = new poly2tri.SweepContext(border);
@@ -265,25 +265,25 @@ function triangulate(_landuse) {
 
 function getElevationsDatas(_landuse) {
 
-    const elevationsBorder = [];
+    const elevationsBorder = new Array(_landuse.border.length);
     for (let i = 0; i < _landuse.border.length; i ++) {
         const point = _landuse.border[i];
-        elevationsBorder.push(ElevationStore.get(point[0], point[1]));
+        elevationsBorder[i] = ElevationStore.get(point[0], point[1]);
     }
     const elevationsHoles = [];
     for (let i = 0; i < _landuse.holes.length; i ++) {
         const hole = _landuse.holes[i];
-        const holeElevations = [];
+        const holeElevations = new Array(hole.length);
         for (let h = 0; h < hole.length; h ++) {
             const point = hole[i];
-            holeElevations.push(ElevationStore.get(point[0], point[1]));
+            holeElevations[h] = ElevationStore.get(point[0], point[1]);
         }
         elevationsHoles.push(holeElevations);
     }
-    const elevationsFill = [];
+    const elevationsFill = new Array(_landuse.fillPoints.length);
     for (let i = 0; i < _landuse.fillPoints.length; i ++) {
         const point = _landuse.fillPoints[i];
-        elevationsFill.push(ElevationStore.get(point[0], point[1]));
+        elevationsFill[i] = ElevationStore.get(point[0], point[1]);
     }
     return {
         border : elevationsBorder, 

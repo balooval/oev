@@ -43,4 +43,4 @@ class LoaderTile2D {
 }
 
 DataLoader.registerLoader('TILE2D', LoaderTile2D, PARAMS);
-export const loader = new DataLoader.Proxy('TILE2D');
+export const loader = new DataLoader.Loader('TILE2D');

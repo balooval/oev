@@ -1,5 +1,5 @@
 import Renderer from '../renderer.js';
-import * as SHADER from '../net/shader.js';
+import * as Shader from '../net/shader.js';
 import * as NET_TEXTURES from '../net/textures.js';
 
 let meshClouds = null;
@@ -18,8 +18,8 @@ const api = {
 
 function createMesh() {
 	const shaderParams = {
-		vertexShader: SHADER.get('vert_cloud'), 
-		fragmentShader: SHADER.get('frag_cloud'),
+		vertexShader: Shader.get('vert_cloud'), 
+		fragmentShader: Shader.get('frag_cloud'),
 		uniforms: {
 			map : {type: "t", value: NET_TEXTURES.texture('cloud')}, 
 			normalizedTime : {value : 0.5}, 

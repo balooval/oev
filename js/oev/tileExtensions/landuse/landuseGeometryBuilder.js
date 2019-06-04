@@ -1,4 +1,5 @@
 import GLOBE from '../../globe.js';
+import * as CacheGeometry from '../../utils/cacheGeometry.js';
 
 export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevationsDatas, _tile) {
     let lastMaterialLayer = 0;
@@ -6,7 +7,7 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
     let curLayerBuffersGeos = [];
     for (let layer = 0; layer < _layerInfos.nbLayers; layer ++) {
         const layerGroundElevation = _layerInfos.groundOffset + (layer * _layerInfos.meterBetweenLayers);
-        const bufferGeometry = new THREE.BufferGeometry();
+        const bufferGeometry = CacheGeometry.getGeometry();
         let verticesNb = _landuse.border.length + _landuse.fillPoints.length;
         _landuse.holes.forEach(hole => verticesNb += hole.length);
         const bufferVertices = new Float32Array(verticesNb * 3);
@@ -45,11 +46,14 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
             lastMaterialLayer = curLayerMap;
             const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
             layersBuffers.push(mergedLayersBuffer);
+            CacheGeometry.storeGeometries(curLayerBuffersGeos);
             curLayerBuffersGeos = [];
         }
         curLayerBuffersGeos.push(bufferGeometry);
     }
     const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
+    CacheGeometry.storeGeometries(curLayerBuffersGeos);
+    curLayerBuffersGeos = [];
     layersBuffers.push(mergedLayersBuffer);
     return layersBuffers;
 }

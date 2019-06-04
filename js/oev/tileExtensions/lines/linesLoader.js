@@ -38,4 +38,4 @@ class LinesLoader {
 }
 
 DataLoader.registerLoader('LINES', LinesLoader, PARAMS);
-export const loader = new DataLoader.Proxy('LINES');
+export const loader = new DataLoader.Loader('LINES');

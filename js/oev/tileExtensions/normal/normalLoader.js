@@ -43,4 +43,4 @@ class LoaderNormal {
 }
 
 DataLoader.registerLoader('NORMAL', LoaderNormal, PARAMS);
-export const loader = new DataLoader.Proxy('NORMAL');
+export const loader = new DataLoader.Loader('NORMAL');

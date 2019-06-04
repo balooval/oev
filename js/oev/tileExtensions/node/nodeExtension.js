@@ -4,6 +4,7 @@ import * as NodeLoader from './nodeLoader.js';
 import NodeMaterial from './nodeMaterial.js';
 import NodeModels from './nodeModels.js';
 import ElevationStore from '../elevation/elevationStore.js';
+import * as CachedGeometry from '../../utils/cacheGeometry.js';
 
 export {setApiUrl} from './nodeLoader.js';
 
@@ -102,7 +103,11 @@ class NodeExtension {
         });
         Object.keys(typedGeometries).forEach(type => {
             const mergedGeometrie = THREE.BufferGeometryUtils.mergeBufferGeometries(typedGeometries[type]);
-            this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeMaterial.material(type));
+            // this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeMaterial.material(type));
+            this.meshes[type] = CachedGeometry.getMesh();
+            this.meshes[type].geometry = mergedGeometrie;
+            this.meshes[type].material = NodeMaterial.material(type);
+
             this.meshes[type].receiveShadow = true;
             this.meshes[type].castShadow = true;
             GLOBE.addMeshe(this.meshes[type]);
@@ -131,6 +136,7 @@ class NodeExtension {
         Object.keys(this.meshes).forEach(key => {
             this.meshes[key].geometry.dispose();
             GLOBE.removeMeshe(this.meshes[key]);
+            CachedGeometry.storeMesh(this.meshes[key]);
             delete this.meshes[key];
         });
         this.meshes = null;

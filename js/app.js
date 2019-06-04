@@ -9,7 +9,7 @@ import * as INPUT from './oev/input/input.js';
 import Navigation from './app/navigation.js';
 import GLOBE from './oev/globe.js';
 import * as CamCtrl from './oev/camera/god.js';
-import * as SHADER from './oev/net/shader.js';
+import * as Shader from './oev/net/shader.js';
 import * as TileExtension from './oev/tileExtensions/tileExtension.js';
 import * as MapExtension from './oev/tileExtensions/map/mapExtension.js';
 import * as ElevationExtension from './oev/tileExtensions/elevation/elevationExtension.js';
@@ -114,7 +114,7 @@ const APP = {
 	
 	loadShaders : function() {
 		return new Promise((resolve) => {
-			SHADER.loadList(['cloud', 'sky', 'sun'], resolve);
+			Shader.loadList(['cloud', 'sky', 'sun'], resolve);
 		});
 	}, 
 

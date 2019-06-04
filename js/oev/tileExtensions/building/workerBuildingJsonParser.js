@@ -145,14 +145,14 @@ function getWayNodes(_nodesIds, _nodesList) {
 }
 
 function mergeContinuousWays(_outers, _waysList, _nodesList) {
-	const outersLimits = [];
+	const outersLimits = new Array(_outers.length);
 	for (let i = 0; i < _outers.length; i ++) {
 		const outerWay = _waysList.get('WAY_' + _outers[i].ref);
 		const outerNodes = getWayNodes(outerWay.nodes, _nodesList);
-		outersLimits.push([
+		outersLimits[i] = [
 			outerNodes.shift(), 
 			outerNodes.pop()
-		]);
+		];
 	}
 	const differentsBorders = [];
 	let curBorderPart = [];
