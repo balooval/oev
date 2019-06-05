@@ -10,7 +10,7 @@ let curLodOrigine = new THREE.Vector3(0, 0, 0);
 let curTile = new THREE.Vector2(0, 0, 0);
 const eleFactor = 1;
 let time = 0.5;
-const objToUpdate = [];
+let objToUpdate = [];
 const tilesBase = [];
 
 const api = {

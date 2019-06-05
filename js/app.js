@@ -19,6 +19,7 @@ import * as LanduseExtension from './oev/tileExtensions/landuse/landuseExtension
 import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExtension.js';
 import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
+import * as PlaneExtension from './oev/tileExtensions/plane/planeExtension.js';
 
 let containerOffset = undefined;
 
@@ -57,6 +58,7 @@ const APP = {
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
 		TileExtension.register('NODE', NodeExtension.extensionClass());
 		TileExtension.register('LINES', LinesExtension.extensionClass());
+		TileExtension.register('PLANE', PlaneExtension.extensionClass());
 		
 		TileExtension.activate('TILE2D');
 		TileExtension.activate('ELEVATION');

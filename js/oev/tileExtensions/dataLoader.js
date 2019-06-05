@@ -68,7 +68,11 @@ export class Loader {
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
 		if (this.loaderParams.useCache) this._datasLoaded[_params.key] = _data;
-		this._checkForNextLoad();
+		if (!this.loaderParams.delay) {
+			this._checkForNextLoad();
+		} else {
+			setTimeout(() => this._checkForNextLoad(), this.loaderParams.delay);
+		}
 	}
 	
 	_addSorted(_params) {
