@@ -116,33 +116,37 @@ class Tile {
 		const def = GLOBE.tilesDefinition;
 		const vertBySide = def + 1;
 		const vertNb = vertBySide * vertBySide;
-		const coords = new Array(vertNb);
+		const bufferCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / def;
 		const stepCoordY = (this.endCoord.y - this.startCoord.y) / def;
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
-				coords[coordId] = [
-					this.startCoord.x + (stepCoordX * x), 
-					this.startCoord.y + (stepCoordY * y)
-				];
-				coordId ++;
+				bufferCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
+				bufferCoords[coordId + 1] = this.startCoord.y + (stepCoordY * y);
+				coordId += 2;
+
 			}
 		}
-		return coords;
+		return bufferCoords;
 	}
 
 	buildGeometry() {
 		let curVertId = 0;
 		const bufferVertices = new Float32Array(this.verticesNb * 3);
 		const vertCoords = this.getVerticesPlaneCoords();
-		vertCoords.forEach(c => {
-			const vertPos = GLOBE.coordToXYZ(c[0], c[1], 0);
+		for (let i = 0; i < vertCoords.length / 2; i ++) {
+			const vertPos = GLOBE.coordToXYZ(
+				vertCoords[i * 2], 
+				vertCoords[i * 2 + 1], 
+				0
+			);
 			bufferVertices[curVertId + 0] = vertPos.x;
 			bufferVertices[curVertId + 1] = vertPos.y;
 			bufferVertices[curVertId + 2] = vertPos.z;
 			curVertId += 3;
-		});
+		}
+
 		const def = GLOBE.tilesDefinition;
 		const vertBySide = def + 1;
 		let faceId = 0;

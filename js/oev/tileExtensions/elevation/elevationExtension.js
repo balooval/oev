@@ -51,9 +51,13 @@ class ElevationExtension {
 		const def = GLOBE.tilesDefinition + 1;
 		const buffer = new Uint16Array(def * def);
 		const vertCoords = this.tile.getVerticesPlaneCoords();
-		vertCoords.forEach((c, i) => {
-			buffer[i] = ElevationStore.get(c[0], c[1], this.tile.zoom);
-		});
+		for (let i = 0; i < vertCoords.length / 2; i ++) {
+			buffer[i] = ElevationStore.get(
+				vertCoords[i * 2], 
+				vertCoords[i * 2 + 1], 
+				this.tile.zoom
+			);
+		}
 		return buffer;
 	}
 	
@@ -71,14 +75,18 @@ class ElevationExtension {
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
 		const vertCoords = this.tile.getVerticesPlaneCoords();
-		for (let i = 0; i < vertCoords.length; i ++) {
-			const coord = vertCoords[i];
-			const vertPos = GLOBE.coordToXYZ(coord[0], coord[1], _elevationBuffer[i]);
+		for (let i = 0; i < vertCoords.length / 2; i ++) {
+			const vertPos = GLOBE.coordToXYZ(
+				vertCoords[i * 2], 
+				vertCoords[i * 2 + 1], 
+				_elevationBuffer[i]
+			);
 			verticePositions.array[curVertId + 0] = vertPos.x;
 			verticePositions.array[curVertId + 1] = vertPos.y;
 			verticePositions.array[curVertId + 2] = vertPos.z;
 			curVertId += 3;
 		}
+
 		verticePositions.needsUpdate = true;
 		this.tile.meshe.geometry.verticesNeedUpdate = true;
 		this.tile.meshe.geometry.uvsNeedUpdate = true;
