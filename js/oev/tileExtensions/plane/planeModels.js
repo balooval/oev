@@ -8,8 +8,6 @@ const modelsToLoad = [
     ['plane', 'airbus.json'], 
 ];
 
-let materialPlane;
-
 const api = {
     evt : new Evt(), 
     isReady : false, 
@@ -20,9 +18,6 @@ const api = {
         return geometry;
     }, 
 
-    getMaterial : function() {
-        return materialPlane;
-    }, 
 };
 
 function applyTransformation(_geometrie) {
@@ -44,7 +39,6 @@ function loadModels() {
 
 function onModelsLoaded() {
     console.log('Plane MODELS LOADED');
-    materialPlane = new THREE.MeshPhysicalMaterial({color: 0xffffff, metalness:0, roughness:0.3});
     api.isReady = true;
     api.evt.fireEvent('READY')
 }

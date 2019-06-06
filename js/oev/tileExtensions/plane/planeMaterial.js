@@ -2,55 +2,42 @@ import Evt from '../../utils/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_TEXTURES from '../../net/textures.js';
 
-TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_NODE', null, onActivateNodes);
+TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_PLANE', null, onActivateNodes);
 
 const api = {
     evt : new Evt(), 
     isReady : false, 
 
-    material : function(_type) {
-        return materials[_type];
+    material : function() {
+        return material;
     }, 
 };
 
-const materials = {
-    bench : null, 
-    street_lamp : null, 
-    tower : null, 
-    tree : null, 
-};
+let material = null;
 
 function onActivateNodes() {
-    TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_NODE', null, onActivateNodes);
+    TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_PLANE', null, onActivateNodes);
     createMaterials();
     loadTextures();
 }
 
 function createMaterials() {
-    materials.bench = new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0x544d42}), 
-    materials.street_lamp = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0x303030}), 
-    materials.tower = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0, color:0xdddddd, side:THREE.DoubleSide, transparent:true, alphaTest:0.1}), 
-    materials.tree = new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xffffff});
+    material = new THREE.MeshPhysicalMaterial({color: 0xffffff, metalness:0, roughness:0.3});
 }
 
 function loadTextures() {
     const texturesList = [
         {
-            id : 'tree_leaves', 
-            url : 'tree_leaves.png', 
-        }, 
-        {
-            id : 'pylone', 
-            url : 'pylone_diffuse.png', 
+            id : 'plane', 
+            url : 'airbus-diffuse.png', 
         }, 
     ];
     NET_TEXTURES.loadBatch(texturesList, onTexturesLoaded);
 }
 
 function onTexturesLoaded() {
-    materials.tree.map = NET_TEXTURES.texture('tree_leaves');
-    materials.tower.map = NET_TEXTURES.texture('pylone');
-    console.log('Nodes TEXTURES_LOADED');
+    material.map = NET_TEXTURES.texture('plane');
+    console.log('Plane TEXTURES_LOADED');
     api.isReady = true;
     api.evt.fireEvent('READY')
 }

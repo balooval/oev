@@ -1,9 +1,11 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import MATH from '../../utils/math.js';
+import Evt from '../../utils/event.js';
 import * as Animation from '../../utils/animation.js';
 import * as TileExtension from '../tileExtension.js';
 import PlaneModels from './planeModels.js';
+import PlaneMaterial from './planeMaterial.js';
 
 let knowIds = [];
 const storedPlanes = new Map();
@@ -21,18 +23,24 @@ function clearOldPlanes() {
     storedPlanes.forEach((plane, id) => {
         const planeTime = plane.lastPositionTime();
         if (curTime - planeTime < 30) return;
-        plane.dispose();
-        storedPlanes.delete(id);
+        deletePlane(id);
     });
+    console.log('Plane NB', storedPlanes.size);
     setTimeout(() => clearOldPlanes(), 20000);
 }
 
 const api = {
+    evt : new Evt(), 
+
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
         if (!parsedJson.states) return null;
         const planes = extractPlanes(parsedJson.states);
         registerDatas(planes);
+    }, 
+
+    getPlane(_planeId) {
+        return storedPlanes.get(_planeId);
     }, 
 
     tileRemoved : function(_tile) {
@@ -44,11 +52,17 @@ const api = {
         };
         storedPlanes.forEach((plane, id) => {
             if (!plane.isInBBox(bbox)) return;
-            plane.dispose();
-            storedPlanes.delete(id);
+            deletePlane(id);
         });
     }
 };
+
+function deletePlane(_planeId) {
+    const plane = storedPlanes.get(_planeId);
+    plane.dispose();
+    storedPlanes.delete(_planeId);
+    api.evt.fireEvent('PLANE_DELETE', _planeId);
+}
 
 function registerDatas(_planes) {
     for (let i = 0; i < _planes.length; i ++) {
@@ -61,6 +75,7 @@ function registerDatas(_planes) {
         const plane = new Plane(planeDatas);
         plane.buildMesh();
         storedPlanes.set(planeDatas.id, plane);
+        api.evt.fireEvent('PLANE_ADD', planeDatas.id);
     }
 }
 
@@ -94,6 +109,25 @@ class Plane {
 		};
     }
 
+    getCurCoord() {
+        const d = new Date();
+        const curTime = d.getTime();
+        if (this.tweens.lon.getValueAtTime(curTime) != 0) {
+            // console.log('RUN', this.props.id);
+            return {
+                lon : this.tweens.lon.getValueAtTime(curTime), 
+                lat : this.tweens.lat.getValueAtTime(curTime), 
+                alt : this.tweens.alt.getValueAtTime(curTime), 
+            };
+        }
+        // console.log('STOP', this.props.id);
+        return {
+            lon : this.props.lon, 
+            lat : this.props.lat, 
+            alt : this.props.alt, 
+        };
+    }
+
     lastPositionTime() {
         return this.props.timePosition;
     }
@@ -124,7 +158,7 @@ class Plane {
     buildMesh() {
         this.mesh = new THREE.Mesh(
             PlaneModels.get('plane'), 
-            PlaneModels.getMaterial()
+            PlaneMaterial.material()
         );
         this.mesh.receiveShadow = true;
         this.mesh.castShadow = true;
@@ -138,16 +172,11 @@ class Plane {
     }
 
     placeMesh() {
-        const d = new Date();
-        const curTime = d.getTime();
-        const curLon = this.tweens.lon.getValueAtTime(curTime);
-        const curLat = this.tweens.lat.getValueAtTime(curTime);
-        const curAlt = this.tweens.alt.getValueAtTime(curTime);
-        
+        const curCoord = this.getCurCoord();
         const pos = GLOBE.coordToXYZ(
-            curLon, 
-            curLat, 
-            curAlt, 
+            curCoord.lon, 
+            curCoord.lat, 
+            curCoord.alt, 
         );
         this.mesh.position.x = pos.x;
         this.mesh.position.y = pos.y;

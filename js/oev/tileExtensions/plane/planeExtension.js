@@ -2,6 +2,7 @@ import Renderer from '../../renderer.js';
 import * as PlaneLoader from './planeLoader.js';
 import PlaneStore from './planeStore.js';
 import PlaneModels from './planeModels.js';
+import PlaneMaterial from './planeMaterial.js';
 
 export {setApiUrl} from './planeLoader.js';
 
@@ -15,24 +16,37 @@ class PlaneExtension {
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.tile = _tile;
+        this.isActive = this.tile.zoom == 11;
 
-        this.isActive = this.tile.zoom == 10;
-		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
-		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
-        this.tile.evt.addEventListener('HIDE', this, this.hide);
-
-        if (PlaneModels.isReady) {
-            this.onModelsReady();
+        if (PlaneMaterial.isReady && PlaneModels.isReady) {
+            this.onRessourcesLoaded();
+        }
+        if (!PlaneMaterial.isReady) {
+            PlaneMaterial.evt.addEventListener('READY', this, this.onTexturesReady);
         }
         if (!PlaneModels.isReady) {
             PlaneModels.evt.addEventListener('READY', this, this.onModelsReady);
         }
     }
 
+    onTexturesReady() {
+        PlaneMaterial.evt.removeEventListener('READY', this, this.onTexturesReady);
+        this.onRessourcesLoaded();
+    }
+
     onModelsReady() {
         PlaneModels.evt.removeEventListener('READY', this, this.onModelsReady);
-        if (this.tile.isReady) this.onTileReady();
+        this.onRessourcesLoaded();
+    }
+
+    onRessourcesLoaded() {
+        if (!PlaneMaterial.isReady) return false;
+        if (!PlaneModels.isReady) return false;
+		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
+		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
+		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
+        this.tile.evt.addEventListener('HIDE', this, this.hide);
+		if (this.tile.isReady) this.onTileReady();
     }
 
     onTileReady() {
@@ -57,7 +71,6 @@ class PlaneExtension {
     }
     
     refreshDatas() {
-        // console.log('refreshDatas');
         this.dataLoading = false;
         this.dataLoaded = false;
         if (!this.tile) return false;

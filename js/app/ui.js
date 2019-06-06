@@ -4,6 +4,7 @@ import GLOBE from '../oev/globe.js';
 import Navigation from './navigation.js';
 import * as DataLoader from '../oev/tileExtensions/dataLoader.js';
 import MATH from '../oev/utils/math.js';
+import UiPlane from './uiPlane.js';
 
 let elmtCamHeading;
 let elmtCoord;
@@ -15,6 +16,7 @@ const apiUi = {
 
 	init : function() {
 		UiTilesExtension.init();
+		UiPlane.init();
 		GLOBE.evt.addEventListener('READY', null, onGlobeReady);
 		elmtCamHeading = document.getElementById("camHeading");
 		elmtCoord = document.getElementById("overlayUICoords");

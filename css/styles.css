@@ -100,6 +100,26 @@ a{
 	border-radius: 0 4px 4px 0;
 }
 
+#overlayExtensionsUi{
+	bottom: 0;
+	left: 50%;
+	text-align: left;
+	padding: 0;
+	border-radius: 4px 4px 0 0;
+	width: 200px;
+	cursor: auto;
+	margin-left: -100px;
+}
+
+.btn-plane {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	background-image: url('/img/extension-plane.png');
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
 
 .toolsContent{
 	margin-top: 0;
