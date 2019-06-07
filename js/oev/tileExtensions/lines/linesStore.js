@@ -1,6 +1,7 @@
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import OsmReader from '../../utils/osmReader.js';
+import NavigationGraph from '../../utils/navigationGraph.js';
 import LinesMaterial from './linesMaterial.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';
 
@@ -16,6 +17,7 @@ const api = {
         const nodesList = OsmReader.extractNodes(parsedJson);
         tileToLines.set(_tile.key, []);
         const extractedWays = extractElements(parsedJson, _tile.zoom);
+        NavigationGraph.build(extractedWays, nodesList);
         registerDatas(_tile, extractedWays);
         let lineAdded = 0;
         lineAdded += buildLine(_tile, extractedWays, nodesList);
@@ -24,6 +26,7 @@ const api = {
 
     tileRemoved : function(_tile) {
         if (!tileToLines.get(_tile.key)) return false;
+        NavigationGraph.cleanTile(_tile);
         tileToLines.get(_tile.key)
         .forEach(lineId => {
             if (!storedLines.get('LINE_' + lineId)) return false;

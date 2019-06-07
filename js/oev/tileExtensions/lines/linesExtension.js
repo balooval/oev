@@ -18,6 +18,10 @@ class LinesExtension {
         this.meshes = {};
         this.mesh = null;
         this.isActive = this.tile.zoom == 15;
+        
+        // this.isActive = this.tile.key == '16765_11942_15';
+
+
 		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
