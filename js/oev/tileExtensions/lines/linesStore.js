@@ -41,21 +41,21 @@ const api = {
 };
 
 function registerDatas(_tile, _extractedDatas) {
-    _extractedDatas
-    .filter(line => isLineKnowed(line.id))
-    .forEach(line => {
-        storedLines.get('LINE_' + line.id).refNb ++;
-    });
+    for (let i = 0; i < _extractedDatas.length; i ++) {
+        const way = _extractedDatas[i];
+        if (!isLineKnowed(way.id)) continue;
+        storedLines.get('LINE_' + way.id).refNb ++;
+    }
     tileToLines.get(_tile.key).push(..._extractedDatas.map(line => line.id));
 }
 
 function buildLine(_tile, _extractedDatas, _nodesList) {
     let lineAdded = 0;
-    _extractedDatas
-    .filter(way => !isLineKnowed(way.id))
-    .forEach(lineDatas => {
-        knowIds.push(lineDatas.id);
-        const lineBuilded = buildWay(lineDatas, _nodesList);
+    for (let i = 0; i < _extractedDatas.length; i ++) {
+        const way = _extractedDatas[i];
+        if (isLineKnowed(way.id)) continue;
+        knowIds.push(way.id);
+        const lineBuilded = buildWay(way, _nodesList);
         if (lineBuilded.border.length < 2) return;
         storedLines.set('LINE_' + lineBuilded.id, {
             id : lineBuilded.id, 
@@ -64,7 +64,7 @@ function buildLine(_tile, _extractedDatas, _nodesList) {
         });
         drawLine(lineBuilded, _tile);
         lineAdded ++;
-    });
+    }
     return lineAdded;
 }
 

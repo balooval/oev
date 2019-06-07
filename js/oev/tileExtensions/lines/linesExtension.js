@@ -22,8 +22,6 @@ class LinesExtension {
 		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
         this.tile.evt.addEventListener('HIDE', this, this.hide);
-
-
         if (LinesMaterial.isReady) {
             this.onMaterialReady();
         } else {
