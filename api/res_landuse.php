@@ -12,6 +12,7 @@ class Api_landuse extends Api_default {
     private $_tags = [
         '"landuse"', 
         '"natural"', 
+        '"waterway"', 
         // '"landuse"="vineyard"', 
         // '"landuse"="forest"', 
         // '"landuse"="residential"', 

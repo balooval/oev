@@ -12,6 +12,7 @@ export function buildGeometry(_line, _tile) {
         // return null;
         return WallBuilder.buildGeometry(_line, _tile, _line.id);
     } else if (_line.type == 'highway') {
+        return null;
         return HighwayBuilder.buildGeometry(_line, _tile, _line.id);
     }
 }

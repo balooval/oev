@@ -2,7 +2,6 @@ import GLOBE from '../../globe.js';
 import MATH from '../../utils/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
-
 export function buildGeometry(_line, _tile, _id) {
     if (_line.border.length < 2) console.log('ATTENTION', _line.border.length);
     const distance = (GLOBE.meter * 0.001) * (_line.props.width * 2);

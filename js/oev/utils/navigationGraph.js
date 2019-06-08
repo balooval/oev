@@ -2,9 +2,18 @@ import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
 import * as Animation from './animation.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
+import LinesModel from '../tileExtensions/lines/linesModels.js';
+import LinesMaterial from '../tileExtensions/lines/linesMaterial.js';
 
 const graphNodes = [];
 const vehicles = [];
+let vehicleGeometry;
+
+LinesModel.evt.addEventListener('READY', null, onModelsReady);
+
+function onModelsReady() {
+    vehicleGeometry = LinesModel.get('vehicle');
+}
 
 const api = {
     
@@ -12,7 +21,7 @@ const api = {
         for (let i = 0; i < _ways.length; i ++) {
             extractWayNodes(_ways[i], _nodesList);
         }
-        for (let i = 0; i < 100; i ++) {
+        for (let i = 0; i < _ways.length; i ++) {
             let startNode = getRandomNode();
             vehicles.push(new Vehicle(startNode));
         }
@@ -139,8 +148,6 @@ class Node {
 }
 
 
-const vehicleMaterial = new THREE.MeshBasicMaterial({color: 0x00ff00});
-const vehicleGeometry = new THREE.SphereGeometry(0.05, 16, 7);
 
 class Vehicle {
     constructor(_startNode) {
@@ -149,9 +156,10 @@ class Vehicle {
         this.tweens = {
             lon : new Animation.TweenValue(this.startNode.coords[0]), 
 			lat : new Animation.TweenValue(this.startNode.coords[1]), 
+			angle : new Animation.TweenValue(0), 
         };
         this.tweens.lon.evt.addEventListener('END', this, this.getNextDest);
-        this.mesh = new THREE.Mesh(vehicleGeometry, vehicleMaterial);
+        this.mesh = new THREE.Mesh(vehicleGeometry, LinesMaterial.material('vehicle'));
         GLOBE.addMeshe(this.mesh);
         this.getNextDest();
         GLOBE.addObjToUpdate(this);
@@ -166,19 +174,19 @@ class Vehicle {
     }
 
     getNextDest() {
-        // console.log('On reach Dest');
-        if (this.startNode.neighbours.length == 0) {
-            console.log('My node has no neighbourg');
-            return false;
-        }
         const neighbour = this.getNextNode();
-        // console.log('neighbour.distance', neighbour.distance);
         const timeToTravel = (neighbour.distance * 50000) / neighbour.node.type;
         this.tweens.lon.value = this.startNode.coords[0];
         this.tweens.lat.value = this.startNode.coords[1];
         this.tweens.lon.setTargetValue(neighbour.node.coords[0], timeToTravel * 1000);
         this.tweens.lat.setTargetValue(neighbour.node.coords[1], timeToTravel * 1000);
         this.storePastNode(this.startNode);
+        const angle = Math.atan2(
+            this.startNode.coords[0] - neighbour.node.coords[0], 
+            this.startNode.coords[1] - neighbour.node.coords[1]
+        );
+        // this.mesh.rotation.y = angle;// + Math.PI / 2;
+        this.tweens.angle.setTargetValue(angle, 500);
         this.startNode = neighbour.node;
     }
 
@@ -210,6 +218,7 @@ class Vehicle {
         return {
             lon : this.tweens.lon.getValueAtTime(curTime), 
             lat : this.tweens.lat.getValueAtTime(curTime), 
+            angle : this.tweens.angle.getValueAtTime(curTime), 
         };
     }
 
@@ -224,6 +233,7 @@ class Vehicle {
         this.mesh.position.x = pos.x;
         this.mesh.position.y = pos.y;
         this.mesh.position.z = pos.z;
+        this.mesh.rotation.y = curCoord.angle;
         Renderer.MUST_RENDER = true;
     }
 

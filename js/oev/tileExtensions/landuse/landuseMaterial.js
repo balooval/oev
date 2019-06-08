@@ -10,6 +10,10 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onAc
 
 const texturesToLoad = [
     ['shell_void', 'shell_void.png'], 
+    
+    ['shell_water_normal_1', 'shell_water_normal_tumblr_1.png'], 
+    ['shell_water_normal_2', 'shell_water_normal_tumblr_2.png'], 
+    ['shell_water_normal_3', 'shell_water_normal_tumblr_3.png'], 
 
     ['shell_tree_1', 'shell_tree_1.png'], 
     ['shell_tree_2', 'shell_tree_2.png'], 
@@ -57,6 +61,7 @@ const materials = {
     grass : [], 
     vineyard : [], 
     rock : [], 
+    water : [], 
 };
 
 
@@ -69,6 +74,10 @@ function onActivateExtension() {
 function createMaterials() {
         // const sided = THREE.DoubleSide;
         const sided = THREE.FrontSide;
+
+        materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x18472d, side:sided}));
+        materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x3f66aa, side:sided, transparent:true, opacity:0.6}));
+        materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x4a7ed6, side:sided, transparent:true, opacity:0.3}));
 
         materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
@@ -97,6 +106,14 @@ function loadTextures() {
 }
 
 function onTexturesLoaded() {
+    materials.water[0].normalMap = NET_TEXTURES.texture('shell_water_normal_1');
+    materials.water[1].normalMap = NET_TEXTURES.texture('shell_water_normal_2');
+    materials.water[2].normalMap = NET_TEXTURES.texture('shell_water_normal_3');
+
+    // materials.water[0].map = NET_TEXTURES.texture('shell_tree_2');
+    // materials.water[1].map = NET_TEXTURES.texture('shell_tree_3');
+    // materials.water[2].map = NET_TEXTURES.texture('shell_tree_4');
+
     materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
     materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
     materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
@@ -139,10 +156,48 @@ function onTexturesLoaded() {
     materials.grass[1].roughnessMap = NET_TEXTURES.texture('shell_grass_specular');
     materials.grass[1].normalMap = NET_TEXTURES.texture('shell_grass_normal');
 
-    // materialAnimator.applyCustomShader(materials.forest[1], '0.0015');
-    // materialAnimator.applyCustomShader(materials.forest[2], '0.0035');
-    // materialAnimator.applyCustomShader(materials.forest[3], '0.0065');
-    // GLOBE.addObjToUpdate(materialAnimator);
+
+    const shaderA = function (shader) {
+        shader.uniforms.time = { value: 0 };
+        shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+        shader.vertexShader = shader.vertexShader.replace('#include <uv_vertex>', [
+            'vUv = (uvTransform * vec3(uv, 1)).xy;', 
+            'float uTime = time + vUv.y;', 
+            'vUv.x += time * 0.001;', 
+            'vUv.y -= time * 0.001;', 
+        ].join('\n'));
+        materialAnimator.toto(shader);
+    };
+
+    const shaderB = function (shader) {
+        shader.uniforms.time = { value: 0 };
+        shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+        shader.vertexShader = shader.vertexShader.replace('#include <uv_vertex>', [
+            'vUv = (uvTransform * vec3(uv, 1)).xy;', 
+            'float uTime = time + vUv.y;', 
+            'vUv.x -= time * 0.003;', 
+            'vUv.y -= time * 0.001;', 
+        ].join('\n'));
+        materialAnimator.toto(shader);
+    };
+
+    const shaderC = function (shader) {
+        shader.uniforms.time = { value: 0 };
+        shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
+        shader.vertexShader = shader.vertexShader.replace('#include <uv_vertex>', [
+            'vUv = (uvTransform * vec3(uv, 1)).xy;', 
+            'float uTime = time + vUv.y;', 
+            'vUv.x += time * 0.005;', 
+            'vUv.y += time * 0.002;', 
+        ].join('\n'));
+        materialAnimator.toto(shader);
+    };
+
+    // materialAnimator.applyCustomShader(materials.water[0], shaderA);
+    materialAnimator.applyCustomShader(materials.water[0], shaderA);
+    materialAnimator.applyCustomShader(materials.water[1], shaderB);
+    materialAnimator.applyCustomShader(materials.water[2], shaderC);
+    GLOBE.addObjToUpdate(materialAnimator);
 
     api.isReady = true;
     api.evt.fireEvent('READY')
@@ -150,32 +205,22 @@ function onTexturesLoaded() {
 
 const materialAnimator = (function () {
     const shaders = [];
-    let windValue = 0;
 
     const api = {
         update : function() {
-            windValue += Math.random();
-            windValue =  Math.max(0, windValue - 0.2);
-            const time = windValue / 8;
-            // const time = performance.now() / 1000;
-            shaders.forEach(shader => shader.uniforms.time.value = time);
+            const time = performance.now() / 1000;
+            for (let i = 0; i < shaders.length; i ++) {
+                shaders[i].uniforms.time.value = time * (i + 0.5);
+            }
             Renderer.MUST_RENDER = true;
         }, 
 
-        applyCustomShader : function(_material, _force) {
-            _material.onBeforeCompile = function (shader) {
-                shader.uniforms.time = { value: 0 };
-                shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
-                shader.vertexShader = shader.vertexShader.replace(
-                    '#include <uv_vertex>', [
-                    'vUv = (uvTransform * vec3(uv, 1)).xy;', 
-                    'float uTime = time + vUv.y;', 
-                    'vUv.x += cos(uTime) * ' + _force + ';', 
-                    ].join('\n')
-                );
-                // console.log('shader.vertexShader', shader.vertexShader);
-                shaders.push(shader);
-            };
+        toto : function(_shader) {
+            shaders.push(_shader);
+        }, 
+
+        applyCustomShader : function(_material, _glsl) {
+            _material.onBeforeCompile = _glsl;
         },
     };
     return api; 

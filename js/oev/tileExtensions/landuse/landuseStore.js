@@ -136,6 +136,13 @@ function getLayerInfos(_type) {
         meterBetweenLayers = 1;
         uvFactor = 3;
     }
+    if (_type == 'water') {
+        meterBetweenLayers = 0.2;
+        uvFactor = 2;
+        materialNb = 3;
+        nbLayers = 3;
+        groundOffset = 0.2;
+    }
     if (_type == 'grass') {
         meterBetweenLayers = 0.1;
         uvFactor = 3;
@@ -372,7 +379,7 @@ function extractType(_element) {
             }
             return null;
         })
-    })
+    });
     if (equalsTags[elementType]) return equalsTags[elementType];
 	return elementType;
 }
@@ -401,6 +408,8 @@ const equalsTags = {
     village_green : 'grass', 
     bare_rock : 'rock', 
     scree : 'rock', 
+    basin : 'water', 
+    riverbank : 'water', 
 };
 
 const tagsZoom = {
@@ -409,6 +418,7 @@ const tagsZoom = {
     vineyard : 16, 
     grass : 17, 
     rock : 15, 
+    water : 15, 
 };
 
 const supportedTags = [
@@ -417,7 +427,9 @@ const supportedTags = [
         values : [
             'vineyard', 
             'forest', 
-            'scrub', 
+            'scrub',
+            
+            'basin', 
             
             'wood', 
             'grass', 
@@ -438,6 +450,7 @@ const supportedTags = [
             'wood', 
             'scrub', 
             'bare_rock', 
+            'water', 
             
             'scree', 
             'grass', 
@@ -448,6 +461,12 @@ const supportedTags = [
             'meadow', 
             'greenfield', 
             'village_green', 
+        ], 
+    }, 
+    {
+        key : 'waterway', 
+        values : [
+            'riverbank', 
         ], 
     }, 
 ];

@@ -7,6 +7,7 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LINES', null, onActi
 const texturesToLoad = [
     ['fence', 'fence.png'], 
     ['wall', 'wall.png'], 
+    ['vehicle', 'voiture-map.png'], 
 ];
 
 const api = {
@@ -31,6 +32,7 @@ function createMaterials() {
     materials.fence = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
     materials.wall = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF});
     materials.highway = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918});
+    materials.vehicle = new THREE.MeshPhysicalMaterial({roughness:0.2,metalness:0, color: 0xffffff});
 }
 
 function loadTextures() {
@@ -42,6 +44,7 @@ function loadTextures() {
 function onTexturesLoaded() {
     materials.fence.map = NET_TEXTURES.texture('fence');
     materials.wall.map = NET_TEXTURES.texture('wall');
+    materials.vehicle.map = NET_TEXTURES.texture('vehicle');
     api.isReady = true;
     api.evt.fireEvent('READY')
 }
