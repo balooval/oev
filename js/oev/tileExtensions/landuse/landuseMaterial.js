@@ -62,6 +62,7 @@ const materials = {
     vineyard : [], 
     rock : [], 
     water : [], 
+    wetland : [], 
 };
 
 
@@ -74,6 +75,11 @@ function onActivateExtension() {
 function createMaterials() {
         // const sided = THREE.DoubleSide;
         const sided = THREE.FrontSide;
+
+        
+        materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x18472d, side:sided}));
+        materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
 
         materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x18472d, side:sided}));
         materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x3f66aa, side:sided, transparent:true, opacity:0.6}));
@@ -110,9 +116,13 @@ function onTexturesLoaded() {
     materials.water[1].normalMap = NET_TEXTURES.texture('shell_water_normal_2');
     materials.water[2].normalMap = NET_TEXTURES.texture('shell_water_normal_3');
 
-    // materials.water[0].map = NET_TEXTURES.texture('shell_tree_2');
-    // materials.water[1].map = NET_TEXTURES.texture('shell_tree_3');
-    // materials.water[2].map = NET_TEXTURES.texture('shell_tree_4');
+    materials.wetland[0].normalMap = NET_TEXTURES.texture('shell_water_normal_1');
+    materials.wetland[1].map = NET_TEXTURES.texture('shell_scrub_2');
+    materials.wetland[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.wetland[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+    materials.wetland[2].map = NET_TEXTURES.texture('shell_scrub_3');
+    materials.wetland[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.wetland[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
 
     materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
     materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');

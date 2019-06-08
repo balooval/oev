@@ -143,6 +143,13 @@ function getLayerInfos(_type) {
         nbLayers = 3;
         groundOffset = 0.2;
     }
+    if (_type == 'wetland') {
+        meterBetweenLayers = 0.2;
+        uvFactor = 3;
+        materialNb = 3;
+        nbLayers = 6;
+        groundOffset = 0.0;
+    }
     if (_type == 'grass') {
         meterBetweenLayers = 0.1;
         uvFactor = 3;
@@ -419,6 +426,7 @@ const tagsZoom = {
     grass : 17, 
     rock : 15, 
     water : 15, 
+    wetland : 15, 
 };
 
 const supportedTags = [
@@ -451,6 +459,7 @@ const supportedTags = [
             'scrub', 
             'bare_rock', 
             'water', 
+            'wetland', 
             
             'scree', 
             'grass', 
