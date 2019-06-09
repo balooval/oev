@@ -31,12 +31,84 @@ class Tile {
 		this.endMidCoord = GEO.tileToCoordsVect(this.tileX + 1.5, this.tileY + 1.5, this.zoom);
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
-		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
+		this.alphaMap = this.createAlphaMap();
+		this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
 		this.extensions = [];
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.onExtensionDisabled);
 	}
+
+
+
+	createAlphaMap() {
+		const canvas = document.createElement('canvas');
+		const canvasSize = 256;
+		canvas.width = canvasSize;
+		canvas.height = canvasSize;
+		const context = canvas.getContext('2d');
+		context.beginPath();
+		context.fillStyle = '#ffffff';
+		context.fillRect(0, 0, canvasSize, canvasSize);
+		const alphaTexture = new THREE.Texture(canvas);
+		alphaTexture.needsUpdate = true;
+		return alphaTexture;
+	}
+
+	drawToAlphaMap(_coords, _holesDatas) {
+		if (!_coords.length) return;
+		const canvasSize = this.alphaMap.image.width;
+		const context = this.alphaMap.image.getContext('2d');
+		/*
+		const points = new Array(_coords.length);
+		for (let i = 0; i < _coords.length; i ++) {
+			const coord = _coords[i];
+			const point = [
+				mapValue(coord[0], this.startCoord.x, this.endCoord.x) * canvasSize, 
+				canvasSize - mapValue(coord[1], this.endCoord.y, this.startCoord.y) * canvasSize, 
+			];
+			points[i] = point;
+		}
+		const start = points.shift();
+		context.beginPath();
+		context.fillStyle = '#000000';
+		context.moveTo(start[0], start[1]);
+		for (let i = 0; i < points.length; i ++) {
+			context.lineTo(points[i][0], points[i][1]);
+		}
+		*/
+		context.beginPath();
+		this.drawCanvasShape(_coords, context, canvasSize);
+		for (let i = 0; i < _holesDatas.length; i ++) {
+			this.drawCanvasShape(_holesDatas[i], context, canvasSize);
+		}
+		context.fill('evenodd');
+		this.alphaMap.needsUpdate = true;
+		Renderer.MUST_RENDER = true;
+	}
+
+	drawCanvasShape(_coords, _context, _size) {
+		const points = new Array(_coords.length);
+		for (let i = 0; i < _coords.length; i ++) {
+			const coord = _coords[i];
+			const point = [
+				mapValue(coord[0], this.startCoord.x, this.endCoord.x) * _size, 
+				_size - mapValue(coord[1], this.endCoord.y, this.startCoord.y) * _size, 
+			];
+			points[i] = point;
+		}
+		const start = points.shift();
+		_context.fillStyle = '#000000';
+		_context.moveTo(start[0], start[1]);
+		for (let i = 0; i < points.length; i ++) {
+			_context.lineTo(points[i][0], points[i][1]);
+		}
+		_context.closePath();
+	}
+
+
+
+
 	
 	onExtensionActivation(_extensionId) {
 		this.addExtension(_extensionId);
@@ -308,6 +380,12 @@ class Tile {
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
 	}
+}
+
+function mapValue(_value, _min, _max) {
+	const length = Math.abs(_max - _min);
+	if (length == 0) return _value;
+	return (_value - _min) / length;
 }
 
 export {Tile as default};

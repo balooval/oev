@@ -5,6 +5,7 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
     let lastMaterialLayer = 0;
     let layersBuffers = [];
     let curLayerBuffersGeos = [];
+
     for (let layer = 0; layer < _layerInfos.nbLayers; layer ++) {
         const layerGroundElevation = _layerInfos.groundOffset + (layer * _layerInfos.meterBetweenLayers);
         const bufferGeometry = CacheGeometry.getGeometry();

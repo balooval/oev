@@ -12,6 +12,7 @@ const tileToLanduses = new Map();
 const storedLanduses = new Map();
 const typedGeometries = new Map();
 let schdeduleNb = 0;
+const rejectedIds = [];
 
 const api = {
     setDatas : function(_json, _tile) {
@@ -61,15 +62,32 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
     let landuseAdded = 0;
     for (let i = 0; i < _extractedDatas.length; i ++) {
         const landuseDatas = _extractedDatas[i];
-        if (isLanduseKnowed(landuseDatas.id)) continue;
-        knowIds.push(landuseDatas.id);
+        if (rejectedIds.includes(landuseDatas.id)) {
+            console.log('ID rejecte, pass');
+            continue;
+        }
+        if (isLanduseKnowed(landuseDatas.id)) {
+            const datas = storedLanduses.get('LANDUSE_' + landuseDatas.id).buildDatas;
+            _tile.drawToAlphaMap(datas.border, datas.holes);
+            continue;
+        }
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
+        if (!landuseBuilded) {
+            rejectedIds.push(landuseDatas.id);
+            continue;
+        }
+        if (landuseBuilded.border.length > 10000) {
+            console.log('Too big, pass');
+            continue;
+        }
+        knowIds.push(landuseDatas.id);
         storedLanduses.set('LANDUSE_' + landuseBuilded.id, {
             id : landuseBuilded.id, 
             type : landuseBuilded.type, 
-            refNb : 1
+            refNb : 1, 
+            buildDatas : landuseBuilded, 
         });
-        simplifyLanduse(landuseBuilded);
+        // simplifyLanduse(landuseBuilded);
         drawLanduse(landuseBuilded, _tile);
         landuseAdded ++;
     }
@@ -137,11 +155,11 @@ function getLayerInfos(_type) {
         uvFactor = 3;
     }
     if (_type == 'water') {
-        meterBetweenLayers = 0.2;
+        meterBetweenLayers = 0.5;
         uvFactor = 2;
         materialNb = 3;
         nbLayers = 3;
-        groundOffset = 0.2;
+        groundOffset = -1;
     }
     if (_type == 'wetland') {
         meterBetweenLayers = 0.2;
@@ -194,6 +212,7 @@ function simplifyLanduse(_landuse) {
 function drawLanduse(_landuse, _tile) {
     const trianglesResult = triangulate(_landuse);
     if (trianglesResult === null) return false;
+    _tile.drawToAlphaMap(_landuse.border, _landuse.holes);
     const layerInfos = getLayerInfos(_landuse.type);
     const elevationsDatas = getElevationsDatas(_landuse);
     const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
@@ -273,6 +292,7 @@ function triangulate(_landuse) {
     } catch (error) {
         console.warn('Error on landuse', _landuse.id, error);
         console.log('_landuse', _landuse);
+        rejectedIds.push(_landuse.id);
         return null;
     }
 }
@@ -327,6 +347,10 @@ function buildRelation(_relation, _nodesList, _waysList) {
         for (let j = 1; j < memberNodesIds.length - 1; j ++) {
             wayNodes.push(_nodesList.get('NODE_' + memberNodesIds[j]));
         }
+    }
+    if (wayNodes.length > 10000) {
+        console.log('wayNodes too long', wayNodes.length);
+        return null;
     }
     const border = wayNodes.slice(1);
     const bbox = calcBbox(border);

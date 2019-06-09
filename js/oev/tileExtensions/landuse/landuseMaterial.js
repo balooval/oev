@@ -6,8 +6,6 @@ import * as NET_TEXTURES from '../../net/textures.js';
 
 TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
 
-// TODO: charger des images élémentaires et créer les textures à la volée
-
 const texturesToLoad = [
     ['shell_void', 'shell_void.png'], 
     
@@ -44,6 +42,7 @@ const texturesToLoad = [
     ['shell_rock_normal', 'shell_rock_normal.png'], 
 
     ['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
+    
 ];
 
 const api = {
