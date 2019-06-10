@@ -182,6 +182,14 @@ const api = {
 		return new THREE.Vector3(coordX, coordY, ele + _eleMeter);
 	}, 
 
+	tileFromXYZ : function(_tileX, _tileY, _zoom) {
+		for (let i = 0; i < tilesBase.length; i ++) {
+			const res = tilesBase[i].searchTileAtXYZ(_tileX, _tileY, _zoom);
+			if (res) return res;
+		}
+		return null;
+	}, 
+
 	checkLOD : function(){
 		if (api.CUR_ZOOM >= api.LOD_STREET) {
 			if (api.curLOD != api.LOD_STREET) {

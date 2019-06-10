@@ -14,6 +14,8 @@ const typedGeometries = new Map();
 let schdeduleNb = 0;
 const rejectedIds = [];
 
+const alphaShapes = new Map();
+
 const api = {
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
@@ -41,6 +43,7 @@ const api = {
                 forgotLanduse(landuseId);
                 deleteLanduseGeometry(stored.id, stored.type);
                 storedLanduses.delete('LANDUSE_' + landuseId);
+                alphaShapes.delete(landuseId);
             }
         });
         tileToLanduses.delete(_tile.key);
@@ -68,9 +71,13 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
         }
         if (isLanduseKnowed(landuseDatas.id)) {
             const datas = storedLanduses.get('LANDUSE_' + landuseDatas.id).buildDatas;
-            _tile.drawToAlphaMap(datas.border, datas.holes);
-            continue;
-        }
+            const layerInfos = getLayerInfos(datas.type);
+            if (layerInfos.hideTile) {
+                    searchTilesUnderLanduse(datas);
+                    // _tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
+                }
+                continue;
+            }
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
         if (!landuseBuilded) {
             rejectedIds.push(landuseDatas.id);
@@ -80,6 +87,7 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
             console.log('Too big, pass');
             continue;
         }
+        searchTilesUnderLanduse(landuseBuilded);
         knowIds.push(landuseDatas.id);
         storedLanduses.set('LANDUSE_' + landuseBuilded.id, {
             id : landuseBuilded.id, 
@@ -149,10 +157,36 @@ function getLayerInfos(_type) {
     let uvFactor = 1;
     let meterBetweenLayers = 1.5;
     let groundOffset = 0;
+    let hideTile = false;
+    let layerMaterialId = null;
+    let vertexColor = false;
 
     if (_type == 'forest') {
         meterBetweenLayers = 1;
+        nbLayers = 17;
+        materialNb = 5;
         uvFactor = 3;
+        vertexColor = true;
+        hideTile = true;
+        layerMaterialId = [
+            0, 
+            1, 
+            1, 
+            1, 
+            1, 
+            2, 
+            2, 
+            2, 
+            2, 
+            3, 
+            3, 
+            3, 
+            3, 
+            4, 
+            4, 
+            4, 
+            4, 
+        ];
     }
     if (_type == 'water') {
         meterBetweenLayers = 0.5;
@@ -160,6 +194,7 @@ function getLayerInfos(_type) {
         materialNb = 3;
         nbLayers = 3;
         groundOffset = -1;
+        hideTile = true;
     }
     if (_type == 'wetland') {
         meterBetweenLayers = 0.2;
@@ -179,6 +214,20 @@ function getLayerInfos(_type) {
         uvFactor = 2;
         materialNb = 3;
         nbLayers = 9;
+        vertexColor = true;
+        hideTile = true;
+        layerMaterialId = [
+            0, 
+            1, 
+            1, 
+            1, 
+            2, 
+            2, 
+            2, 
+            3, 
+            3, 
+            3, 
+        ];
     }
     if (_type == 'rock') {
         meterBetweenLayers = 0.6;
@@ -198,8 +247,11 @@ function getLayerInfos(_type) {
         uvFactor : uvFactor, 
         nbLayers : nbLayers, 
         groundOffset : groundOffset, 
+        hideTile : hideTile, 
         materialNb : materialNb, 
+        layerMaterialId : layerMaterialId, 
         layersByMap : nbLayers / materialNb, 
+        vertexColor : vertexColor, 
     }
 }
 
@@ -212,11 +264,28 @@ function simplifyLanduse(_landuse) {
 function drawLanduse(_landuse, _tile) {
     const trianglesResult = triangulate(_landuse);
     if (trianglesResult === null) return false;
-    _tile.drawToAlphaMap(_landuse.border, _landuse.holes);
     const layerInfos = getLayerInfos(_landuse.type);
     const elevationsDatas = getElevationsDatas(_landuse);
     const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
     saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);
+}
+
+function searchTilesUnderLanduse(_landuse) {
+    const tiles = [];
+    const zoom = 15;
+    const bbox = calcBbox(_landuse.border);
+    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+    for (let x = tileA.x; x <= tileB.x; x ++) {
+        for (let y = tileB.y; y <= tileA.y; y ++) {
+            tiles.push([x, y, zoom]);
+        }
+    }
+    alphaShapes.set(_landuse.id, {
+        tiles : tiles, 
+        border : _landuse.border, 
+        holes : _landuse.holes, 
+    });
 }
 
 function redrawMeshes() {
@@ -229,6 +298,14 @@ function redrawMeshes() {
             if (datasGeometries.length == 0) continue;
             mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
             GLOBE.addMeshe(mesh);
+        }
+    });
+    alphaShapes.forEach(datas => {
+        for (let i = 0; i < datas.tiles.length; i ++) {
+            const tilePos = datas.tiles[i];
+            const tile = GLOBE.tileFromXYZ(tilePos[0], tilePos[1], tilePos[2]);
+            if (!tile) continue;
+            tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
         }
     });
     schdeduleNb --;
@@ -298,7 +375,6 @@ function triangulate(_landuse) {
 }
 
 function getElevationsDatas(_landuse) {
-
     const elevationsBorder = new Array(_landuse.border.length);
     for (let i = 0; i < _landuse.border.length; i ++) {
         const point = _landuse.border[i];
@@ -309,7 +385,7 @@ function getElevationsDatas(_landuse) {
         const hole = _landuse.holes[i];
         const holeElevations = new Array(hole.length);
         for (let h = 0; h < hole.length; h ++) {
-            const point = hole[i];
+            const point = hole[h];
             holeElevations[h] = ElevationStore.get(point[0], point[1]);
         }
         elevationsHoles.push(holeElevations);

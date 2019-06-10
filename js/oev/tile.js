@@ -31,8 +31,13 @@ class Tile {
 		this.endMidCoord = GEO.tileToCoordsVect(this.tileX + 1.5, this.tileY + 1.5, this.zoom);
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
+
+
+		this.alphaShapes = [];
+
 		this.alphaMap = this.createAlphaMap();
 		this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
+		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.99,alphaMap:this.alphaMap,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
 		this.extensions = [];
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
@@ -55,34 +60,25 @@ class Tile {
 		return alphaTexture;
 	}
 
-	drawToAlphaMap(_coords, _holesDatas) {
-		if (!_coords.length) return;
-		const canvasSize = this.alphaMap.image.width;
-		const context = this.alphaMap.image.getContext('2d');
-		/*
-		const points = new Array(_coords.length);
-		for (let i = 0; i < _coords.length; i ++) {
-			const coord = _coords[i];
-			const point = [
-				mapValue(coord[0], this.startCoord.x, this.endCoord.x) * canvasSize, 
-				canvasSize - mapValue(coord[1], this.endCoord.y, this.startCoord.y) * canvasSize, 
-			];
-			points[i] = point;
+	drawToAlphaMap(_shapes) {
+		this.alphaShapes.push(..._shapes);
+		for (let s = 0; s < _shapes.length; s ++) {
+			const shape = _shapes[s];
+			if (!shape.border.length) continue;
+			const canvasSize = this.alphaMap.image.width;
+			const context = this.alphaMap.image.getContext('2d');
+			context.beginPath();
+			// TODO: crop le bord avec le cadre de la tile
+			// context.lineWidth = 7;
+			// context.strokeStyle = '#ffffff';
+			this.drawCanvasShape(shape.border, context, canvasSize);
+			// context.stroke();
+			context.lineWidth = 1;
+			for (let i = 0; i < shape.holes.length; i ++) {
+				this.drawCanvasShape(shape.holes[i], context, canvasSize);
+			}
+			context.fill('evenodd');
 		}
-		const start = points.shift();
-		context.beginPath();
-		context.fillStyle = '#000000';
-		context.moveTo(start[0], start[1]);
-		for (let i = 0; i < points.length; i ++) {
-			context.lineTo(points[i][0], points[i][1]);
-		}
-		*/
-		context.beginPath();
-		this.drawCanvasShape(_coords, context, canvasSize);
-		for (let i = 0; i < _holesDatas.length; i ++) {
-			this.drawCanvasShape(_holesDatas[i], context, canvasSize);
-		}
-		context.fill('evenodd');
 		this.alphaMap.needsUpdate = true;
 		Renderer.MUST_RENDER = true;
 	}
@@ -104,6 +100,7 @@ class Tile {
 			_context.lineTo(points[i][0], points[i][1]);
 		}
 		_context.closePath();
+		// TODO: appliquer aux enfants ..?
 	}
 
 
@@ -260,8 +257,40 @@ class Tile {
 		GLOBE.removeMeshe(this.meshe);
 		this.meshe.geometry.dispose();
 		this.buildGeometry();
-		this.childTiles.forEach(t => t.updateVertex());
+		for (let i = 0; i < this.childTiles.length; i ++) {
+			this.childTiles[i].updateVertex();
+		}
 		Renderer.MUST_RENDER = true;
+	}
+
+	searchTileAtXYZ(_tileX, _tileY, _zoom) {
+		if (this.zoom > _zoom) return false;
+		if (this.isTileAtXYZ(_tileX, _tileY, _zoom)) return this;
+		for (let i = 0; i < this.childTiles.length; i ++) {
+			const res = this.childTiles[i].searchTileAtXYZ(_tileX, _tileY, _zoom);
+			if (res) return res;
+		}
+		if (this.containTileAtXYZ(_tileX, _tileY, _zoom)) return this;
+		return false;
+	}
+	
+	containTileAtXYZ(_tileX, _tileY, _zoom) {
+		if (this.zoom >= _zoom) return false;
+		const zoomDiff = _zoom - this.zoom;
+		const zoomX = this.tileX * Math.pow(2, zoomDiff);
+		const zoomY = this.tileY * Math.pow(2, zoomDiff);
+		if (_tileX < zoomX) return false;
+		if (_tileY < zoomY) return false;
+		if (_tileX > zoomX + 1) return false;
+		if (_tileY > zoomY + 1) return false;
+		return true;
+	}
+
+	isTileAtXYZ(_tileX, _tileY, _zoom) {
+		if (this.zoom != _zoom) return false;
+		if (this.tileX != _tileX) return false;
+		if (this.tileY != _tileY) return false;
+		return true;
 	}
 
 	show() {
@@ -298,6 +327,7 @@ class Tile {
 		newTile.parentTile = this;
 		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
+		newTile.drawToAlphaMap(this.alphaShapes);
 		this.childTiles.push(newTile);
 	}
 
@@ -376,6 +406,7 @@ class Tile {
 		if (this.textureLoaded) {
 			this.remoteTex.dispose();
 		}
+		this.alphaShapes.length = 0;
 		this.extensions = [];
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');

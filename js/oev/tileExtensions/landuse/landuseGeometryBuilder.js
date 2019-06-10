@@ -6,6 +6,8 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
     let layersBuffers = [];
     let curLayerBuffersGeos = [];
 
+    let bufferColor = null;
+
     for (let layer = 0; layer < _layerInfos.nbLayers; layer ++) {
         const layerGroundElevation = _layerInfos.groundOffset + (layer * _layerInfos.meterBetweenLayers);
         const bufferGeometry = CacheGeometry.getGeometry();
@@ -37,12 +39,33 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
             bufferFaces[facesId + 2] = points[2].id;
             facesId += 3;
         }
+        if (_layerInfos.vertexColor) {
+            if (!bufferColor) {
+                bufferColor = new Uint8Array(verticesNb * 3);
+                noise.seed(Math.random());
+                for (let i = 0; i < bufferVertices.length; i += 3) {
+                    const value = perlinValue(bufferVertices[i + 0], bufferVertices[i + 1], bufferVertices[i + 2]);
+                    bufferColor[i + 0] = Math.min(255, 50 + value * 250);
+                    bufferColor[i + 1] = Math.min(255, 200 + value * 100);
+                    bufferColor[i + 2] = 10 + value * 70;
+
+                    // bufferColor[i + 0] = 150 + value * 200;
+                    // bufferColor[i + 1] = 200 + value * 55;
+                    // bufferColor[i + 2] = 0 + value * 50;
+                }
+            }
+            bufferGeometry.addAttribute('color', new THREE.BufferAttribute(bufferColor, 3, true));
+        }
         bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
         bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-        const curLayerMap = Math.floor(layer / _layerInfos.layersByMap);
+
+        let curLayerMap = Math.floor(layer / _layerInfos.layersByMap);
+        if (_layerInfos.layerMaterialId) {
+            curLayerMap = _layerInfos.layerMaterialId[layer];
+        }
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
             const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
@@ -57,6 +80,19 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
     curLayerBuffersGeos = [];
     layersBuffers.push(mergedLayersBuffer);
     return layersBuffers;
+}
+
+function perlinValue(_x, _y, _z) {
+    let res = 0;
+    let scale = 0.05;
+    let factor = 1;
+    for (let i = 0; i < 5; i ++) {
+        const value = noise.simplex3(_x * scale, _y * scale, _z * scale);
+        res += (value * factor);
+        factor *= 0.6;
+        scale *= 2;
+    }
+    return Math.max(0, Math.min(1, (res + 1) / 2));
 }
 
 function addVerticesToBuffer(_offset, _buffer, _positions, _elevationsDatas, _elevationOffset) {

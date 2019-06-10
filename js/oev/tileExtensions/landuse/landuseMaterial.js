@@ -13,10 +13,11 @@ const texturesToLoad = [
     ['shell_water_normal_2', 'shell_water_normal_tumblr_2.png'], 
     ['shell_water_normal_3', 'shell_water_normal_tumblr_3.png'], 
 
+    ['shell_tree_0', 'shell_tree_0_grey.png'], 
     ['shell_tree_1', 'shell_tree_1.png'], 
-    ['shell_tree_2', 'shell_tree_2.png'], 
-    ['shell_tree_3', 'shell_tree_3.png'], 
-    ['shell_tree_4', 'shell_tree_4.png'], 
+    ['shell_tree_2', 'shell_tree_2_grey.png'], 
+    ['shell_tree_3', 'shell_tree_3_grey.png'], 
+    ['shell_tree_4', 'shell_tree_4_grey.png'], 
     
     ['shell_tree_normal', 'shell_tree_normal.png'], 
     ['shell_tree_specular', 'shell_tree_specular.png'], 
@@ -84,11 +85,13 @@ function createMaterials() {
         materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x3f66aa, side:sided, transparent:true, opacity:0.6}));
         materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x4a7ed6, side:sided, transparent:true, opacity:0.3}));
 
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.7}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({roughness:0.7,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.8}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:1,metalness:0, color:0xFFFFFF, side:sided}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.7}));
+        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.7,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.8}));
 
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided}));
         materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
@@ -123,26 +126,28 @@ function onTexturesLoaded() {
     materials.wetland[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
     materials.wetland[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
 
-    materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
-    materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
-    materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');
-    materials.forest[3].map = NET_TEXTURES.texture('shell_tree_4');
+    materials.forest[0].map = NET_TEXTURES.texture('shell_tree_0');
+    materials.forest[1].map = NET_TEXTURES.texture('shell_tree_1');
+    materials.forest[2].map = NET_TEXTURES.texture('shell_tree_2');
+    materials.forest[3].map = NET_TEXTURES.texture('shell_tree_3');
+    materials.forest[4].map = NET_TEXTURES.texture('shell_tree_4');
 
-    materials.forest[1].normalMap = NET_TEXTURES.texture('shell_tree_normal');
     materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
     materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
-    materials.forest[1].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    materials.forest[4].normalMap = NET_TEXTURES.texture('shell_tree_normal');
     materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
     materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    materials.forest[4].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
 
-    materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_1');
-    materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_2');
-    materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_3');
+    materials.scrub[0].map = NET_TEXTURES.texture('shell_tree_0');
+    materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_1');
+    materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_2');
+    materials.scrub[3].map = NET_TEXTURES.texture('shell_scrub_3');
     
-    materials.scrub[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
     materials.scrub[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-    materials.scrub[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+    materials.scrub[3].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
     materials.scrub[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
+    materials.scrub[3].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
     
     materials.rock[0].map = NET_TEXTURES.texture('shell_rock_1');
     materials.rock[0].normalMap = NET_TEXTURES.texture('shell_rock_normal');
@@ -203,10 +208,9 @@ function onTexturesLoaded() {
     };
 
     // materialAnimator.applyCustomShader(materials.water[0], shaderA);
-    materialAnimator.applyCustomShader(materials.water[0], shaderA);
-    materialAnimator.applyCustomShader(materials.water[1], shaderB);
-    materialAnimator.applyCustomShader(materials.water[2], shaderC);
-    GLOBE.addObjToUpdate(materialAnimator);
+    // materialAnimator.applyCustomShader(materials.water[1], shaderB);
+    // materialAnimator.applyCustomShader(materials.water[2], shaderC);
+    // GLOBE.addObjToUpdate(materialAnimator);
 
     api.isReady = true;
     api.evt.fireEvent('READY')
