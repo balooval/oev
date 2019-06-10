@@ -13,14 +13,14 @@ const texturesToLoad = [
     ['shell_water_normal_2', 'shell_water_normal_tumblr_2.png'], 
     ['shell_water_normal_3', 'shell_water_normal_tumblr_3.png'], 
 
-    ['shell_tree_0', 'shell_tree_0_grey.png'], 
-    ['shell_tree_1', 'shell_tree_1.png'], 
+    ['shell_tree_0', 'shell_tree_0.png'], 
+    ['shell_tree_1', 'shell_tree_1_grey.png'], 
     ['shell_tree_2', 'shell_tree_2_grey.png'], 
     ['shell_tree_3', 'shell_tree_3_grey.png'], 
     ['shell_tree_4', 'shell_tree_4_grey.png'], 
     
     ['shell_tree_normal', 'shell_tree_normal.png'], 
-    ['shell_tree_specular', 'shell_tree_specular.png'], 
+    // ['shell_tree_specular', 'shell_tree_specular.png'], 
 
     ['shell_vine_1', 'shell_vine_1.png'], 
     ['shell_vine_2', 'shell_vine_2.png'], 
@@ -135,9 +135,9 @@ function onTexturesLoaded() {
     materials.forest[2].normalMap = NET_TEXTURES.texture('shell_tree_normal');
     materials.forest[3].normalMap = NET_TEXTURES.texture('shell_tree_normal');
     materials.forest[4].normalMap = NET_TEXTURES.texture('shell_tree_normal');
-    materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
-    materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
-    materials.forest[4].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    // materials.forest[2].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    // materials.forest[3].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
+    // materials.forest[4].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
 
     materials.scrub[0].map = NET_TEXTURES.texture('shell_tree_0');
     materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_1');

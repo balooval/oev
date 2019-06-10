@@ -6,6 +6,10 @@ import {loader as MapLoader} from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import {texture as Texture} from './net/textures.js';
 
+const canvasAlphaTemp = document.createElement('canvas');
+canvasAlphaTemp.width = 256;
+canvasAlphaTemp.height = 256;
+
 class Tile {
 		
 	constructor(_tileX, _tileY, _zoom) {
@@ -32,7 +36,6 @@ class Tile {
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 
-
 		this.alphaShapes = [];
 
 		this.alphaMap = this.createAlphaMap();
@@ -52,7 +55,6 @@ class Tile {
 		canvas.width = canvasSize;
 		canvas.height = canvasSize;
 		const context = canvas.getContext('2d');
-		context.beginPath();
 		context.fillStyle = '#ffffff';
 		context.fillRect(0, 0, canvasSize, canvasSize);
 		const alphaTexture = new THREE.Texture(canvas);
@@ -61,24 +63,31 @@ class Tile {
 	}
 
 	drawToAlphaMap(_shapes) {
+		const canvasSize = 256;
 		this.alphaShapes.push(..._shapes);
+		const context = canvasAlphaTemp.getContext('2d');
+		const alphaCanvas = this.alphaMap.image;
+		const alphaContext = alphaCanvas.getContext('2d');
+		context.drawImage(alphaCanvas, 0, 0);
+		alphaContext.globalCompositeOperation = 'darken';
 		for (let s = 0; s < _shapes.length; s ++) {
 			const shape = _shapes[s];
 			if (!shape.border.length) continue;
-			const canvasSize = this.alphaMap.image.width;
-			const context = this.alphaMap.image.getContext('2d');
+			context.fillStyle = '#ffffff';
+			context.fillRect(0, 0, canvasSize, canvasSize);
 			context.beginPath();
-			// TODO: crop le bord avec le cadre de la tile
-			// context.lineWidth = 7;
-			// context.strokeStyle = '#ffffff';
+			context.lineWidth = 7;
+			context.strokeStyle = '#ffffff';
 			this.drawCanvasShape(shape.border, context, canvasSize);
-			// context.stroke();
+			context.stroke();
 			context.lineWidth = 1;
 			for (let i = 0; i < shape.holes.length; i ++) {
 				this.drawCanvasShape(shape.holes[i], context, canvasSize);
 			}
 			context.fill('evenodd');
+			alphaContext.drawImage(canvasAlphaTemp, 0, 0);
 		}
+		alphaContext.globalCompositeOperation = 'copy';
 		this.alphaMap.needsUpdate = true;
 		Renderer.MUST_RENDER = true;
 	}
@@ -100,7 +109,6 @@ class Tile {
 			_context.lineTo(points[i][0], points[i][1]);
 		}
 		_context.closePath();
-		// TODO: appliquer aux enfants ..?
 	}
 
 

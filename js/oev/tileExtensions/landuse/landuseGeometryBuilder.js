@@ -45,13 +45,13 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
                 noise.seed(Math.random());
                 for (let i = 0; i < bufferVertices.length; i += 3) {
                     const value = perlinValue(bufferVertices[i + 0], bufferVertices[i + 1], bufferVertices[i + 2]);
-                    bufferColor[i + 0] = Math.min(255, 50 + value * 250);
-                    bufferColor[i + 1] = Math.min(255, 200 + value * 100);
+                    bufferColor[i + 0] = Math.min(255, 50 + value * 150);
+                    bufferColor[i + 1] = Math.min(255, 100 + value * 150);
                     bufferColor[i + 2] = 10 + value * 70;
 
-                    // bufferColor[i + 0] = 150 + value * 200;
-                    // bufferColor[i + 1] = 200 + value * 55;
-                    // bufferColor[i + 2] = 0 + value * 50;
+                    // bufferColor[i + 0] = 255;
+                    // bufferColor[i + 1] = 255;
+                    // bufferColor[i + 2] = 255;
                 }
             }
             bufferGeometry.addAttribute('color', new THREE.BufferAttribute(bufferColor, 3, true));

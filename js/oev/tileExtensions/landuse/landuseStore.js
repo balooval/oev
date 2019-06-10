@@ -73,11 +73,10 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
             const datas = storedLanduses.get('LANDUSE_' + landuseDatas.id).buildDatas;
             const layerInfos = getLayerInfos(datas.type);
             if (layerInfos.hideTile) {
-                    searchTilesUnderLanduse(datas);
-                    // _tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
-                }
-                continue;
+                searchTilesUnderLanduse(datas);
             }
+            continue;
+        }
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
         if (!landuseBuilded) {
             rejectedIds.push(landuseDatas.id);
