@@ -5,6 +5,7 @@ import * as TileExtension from './tileExtensions/tileExtension.js';
 import {loader as MapLoader} from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import {texture as Texture} from './net/textures.js';
+import CanvasComposer from './utils/canvasComposer.js';
 
 const canvasAlphaTemp = document.createElement('canvas');
 canvasAlphaTemp.width = 256;
@@ -36,17 +37,54 @@ class Tile {
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 
+		this.landusesMap = this.createCanvas();
+		this.composeMap = this.createCanvas();
+		this.diffuseTexture = new THREE.Texture(this.composeMap);
+		this.diffuseTexture.needsUpdate = true
+		
+		this.diffuseMap = null;
 		this.alphaShapes = [];
-
 		this.alphaMap = this.createAlphaMap();
-		this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
-		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.99,alphaMap:this.alphaMap,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
+		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
+		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
+		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
+
 		this.extensions = [];
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.onExtensionDisabled);
 	}
 
+	updateDiffuseMap(_map) {
+		this.diffuseMap = _map.image;
+		const context = this.composeMap.getContext("2d");
+		context.drawImage(this.diffuseMap, 0, 0);
+		// context.drawImage(CanvasComposer.draw(), 0, 0);
+		this.diffuseTexture.needsUpdate = true
+	}
+	
+	drawLanduses(_landuses) {
+		const context = this.composeMap.getContext("2d");
+		context.clearRect(0, 0, 256, 256);
+		context.drawImage(this.diffuseMap, 0, 0);
+		context.drawImage(CanvasComposer.draw(_landuses, this), 0, 0);
+		this.diffuseTexture.needsUpdate = true
+	}
+
+	clearLandusesMap() {
+		const context = this.composeMap.getContext("2d");
+		context.clearRect(0, 0, 256, 256);
+		context.drawImage(this.diffuseMap, 0, 0);
+		this.diffuseTexture.needsUpdate = true
+	}
+
+	createCanvas() {
+		const canvas = document.createElement('canvas');
+		const canvasSize = 256;
+		canvas.width = canvasSize;
+		canvas.height = canvasSize;
+		return canvas;
+	}
 
 
 	createAlphaMap() {
@@ -62,9 +100,21 @@ class Tile {
 		return alphaTexture;
 	}
 
-	drawToAlphaMap(_shapes) {
+	clearAlphaMap() {
+		this.alphaShapes = [];
+		const alphaCanvas = this.alphaMap.image;
+		const alphaContext = alphaCanvas.getContext('2d');
 		const canvasSize = 256;
+		alphaContext.fillStyle = '#ffffff';
+		alphaContext.fillRect(0, 0, canvasSize, canvasSize);
+		this.alphaMap.needsUpdate = true;
+		Renderer.MUST_RENDER = true;
+	}
+
+	drawToAlphaMap(_shapes) {
 		this.alphaShapes.push(..._shapes);
+		if (!this.textureLoaded) return false;
+		const canvasSize = 256;
 		const context = canvasAlphaTemp.getContext('2d');
 		const alphaCanvas = this.alphaMap.image;
 		const alphaContext = alphaCanvas.getContext('2d');
@@ -87,7 +137,7 @@ class Tile {
 			context.fill('evenodd');
 			alphaContext.drawImage(canvasAlphaTemp, 0, 0);
 		}
-		alphaContext.globalCompositeOperation = 'copy';
+		alphaContext.globalCompositeOperation = 'source-over';
 		this.alphaMap.needsUpdate = true;
 		Renderer.MUST_RENDER = true;
 	}
@@ -184,7 +234,13 @@ class Tile {
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - _textureDatas.offsetY;
 			}
 		}
-		this.material.map = _textureDatas.map;
+		// this.material.map = _textureDatas.map;
+		// this.material.map = new THREE.Texture(CanvasComposer.debug());
+		// this.material.map.needsUpdate = true;
+		
+		this.updateDiffuseMap(_textureDatas.map);
+
+
 		this.meshe.geometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 		this.meshe.geometry.attributes.uv.needsUpdate = true;
 	}
@@ -393,6 +449,7 @@ class Tile {
 			offsetX : 0, 
 			offsetY : 0, 
 		});
+		this.drawToAlphaMap(this.alphaShapes);
 		Renderer.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
 	}
 

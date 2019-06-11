@@ -10,11 +10,12 @@ import LanduseMaterial from './landuseMaterial.js';
 let knowIds = [];
 const tileToLanduses = new Map();
 const storedLanduses = new Map();
-const typedGeometries = new Map();
+const typedMeshes = new Map();
 let schdeduleNb = 0;
 const rejectedIds = [];
+let drawId = 0;
 
-const alphaShapes = new Map();
+const tilesUnderLinks = new Map();
 
 const api = {
     setDatas : function(_json, _tile) {
@@ -27,8 +28,8 @@ const api = {
         registerDatas(_tile, extractedRelations);
         registerDatas(_tile, extractedWays);
         let landuseAdded = 0;
-        landuseAdded += buildLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
-        landuseAdded += buildLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
+        landuseAdded += prepareLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
+        landuseAdded += prepareLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
         if (landuseAdded > 0) scheduleDraw();
     }, 
 
@@ -36,14 +37,13 @@ const api = {
         if (!tileToLanduses.get(_tile.key)) return false;
         tileToLanduses.get(_tile.key)
         .forEach(landuseId => {
-            if (!storedLanduses.get('LANDUSE_' + landuseId)) return false;
-            const stored = storedLanduses.get('LANDUSE_' + landuseId);
+            const stored = storedLanduses.get(landuseId);
+            if (!stored) return false;
             stored.refNb --;
             if (stored.refNb <= 0) {
                 forgotLanduse(landuseId);
                 deleteLanduseGeometry(stored.id, stored.type);
-                storedLanduses.delete('LANDUSE_' + landuseId);
-                alphaShapes.delete(landuseId);
+                storedLanduses.delete(landuseId);
             }
         });
         tileToLanduses.delete(_tile.key);
@@ -57,11 +57,17 @@ function registerDatas(_tile, _extractedDatas) {
         const landuse = _extractedDatas[i];
         curTileLinks.push(landuse.id);
         if (!isLanduseKnowed(landuse.id)) continue;
-        storedLanduses.get('LANDUSE_' + landuse.id).refNb ++;
+        storedLanduses.get(landuse.id).refNb ++;
     }
 }
 
-function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
+function scheduleDraw() {
+    if (schdeduleNb > 0) return false;
+    schdeduleNb ++;
+    setTimeout(redrawMeshes, 1000);
+}
+
+function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
     let landuseAdded = 0;
     for (let i = 0; i < _extractedDatas.length; i ++) {
         const landuseDatas = _extractedDatas[i];
@@ -70,11 +76,6 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
             continue;
         }
         if (isLanduseKnowed(landuseDatas.id)) {
-            const datas = storedLanduses.get('LANDUSE_' + landuseDatas.id).buildDatas;
-            const layerInfos = getLayerInfos(datas.type);
-            if (layerInfos.hideTile) {
-                searchTilesUnderLanduse(datas);
-            }
             continue;
         }
         const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
@@ -86,27 +87,130 @@ function buildLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysL
             console.log('Too big, pass');
             continue;
         }
-        searchTilesUnderLanduse(landuseBuilded);
+        if (!buildLanduse(landuseBuilded, _tile)) {
+            continue;
+        }
         knowIds.push(landuseDatas.id);
-        storedLanduses.set('LANDUSE_' + landuseBuilded.id, {
+        storedLanduses.set(landuseBuilded.id, {
             id : landuseBuilded.id, 
             type : landuseBuilded.type, 
             refNb : 1, 
             buildDatas : landuseBuilded, 
         });
-        // simplifyLanduse(landuseBuilded);
-        drawLanduse(landuseBuilded, _tile);
         landuseAdded ++;
     }
     return landuseAdded;
 }
 
-
-function scheduleDraw() {
-    if (schdeduleNb > 0) return false;
-    schdeduleNb ++;
-    setTimeout(redrawMeshes, 1000);
+function buildLanduse(_landuse, _tile) {
+    const trianglesResult = triangulate(_landuse);
+    if (trianglesResult === null) return false;
+    const layerInfos = getLayerInfos(_landuse.type);
+    const elevationsDatas = getElevationsDatas(_landuse);
+    const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
+    saveLanduseGeometries(_landuse, layersBuffers);
+    return true;
 }
+
+function saveLanduseGeometries(_landuse, _geometries) {
+    const type = _landuse.type;
+    if (!typedMeshes.get(type)) {
+        const layerInfos = getLayerInfos(type);
+        const meshes = new Array(layerInfos.materialNb);
+        for (let l = 0; l < layerInfos.materialNb; l ++) {
+            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LanduseMaterial.material(type)[l]);
+            mesh.receiveShadow = true;
+            meshes[l] = mesh;
+        }
+        typedMeshes.set(type, {
+            meshes : meshes, 
+            list : [], 
+        });
+    }
+    const layerInfos = getLayerInfos(type);
+    if (layerInfos.hideTile) {
+        searchTilesUnderLanduse(_landuse);
+    }
+    typedMeshes.get(type).list.push({
+        id : _landuse.id, 
+        geometries : _geometries, 
+    });
+}
+
+function searchTilesUnderLanduse(_landuse) {
+    const zoom = 15;
+    const bbox = calcBbox(_landuse.border);
+    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+    for (let x = tileA.x; x <= tileB.x; x ++) {
+        for (let y = tileB.y; y <= tileA.y; y ++) {
+            const key = x + '_' + y + '_' + zoom;
+            let link = tilesUnderLinks.get(key);
+            if (!link) {
+                tilesUnderLinks.set(key, {
+                    x : x, 
+                    y : y, 
+                    z : zoom, 
+                    drawId : drawId, 
+                    datas : [], 
+                });
+                link = tilesUnderLinks.get(key);
+            }
+            link.drawId = drawId;
+            link.datas.push(_landuse);
+        }
+    }
+}
+
+function redrawMeshes() {
+    for (let [key, values] of tilesUnderLinks) {
+        // if (drawId > values.drawId) {
+        //     continue;
+        // }
+        const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
+        if (!tile) continue;
+        const borders = [];
+        for (let i = 0; i < values.datas.length; i ++) {
+            const datas = values.datas[i];
+            borders.push(datas.border);
+            // tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
+        }
+        tile.drawLanduses(borders);
+    }
+    
+    for (let [type, curTyped] of typedMeshes) {
+        const layerInfos = getLayerInfos(type);
+        for (let l = 0; l < layerInfos.materialNb; l ++) {
+            const mesh = curTyped.meshes[l];
+            GLOBE.removeMeshe(mesh);
+            mesh.geometry.dispose();
+            const datasGeometries = [];
+            for (let g = 0; g < curTyped.list.length; g ++) {
+                datasGeometries.push(curTyped.list[g].geometries[l]);
+            }
+            if (!datasGeometries.length) continue;
+            mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
+            GLOBE.addMeshe(mesh);
+        }
+    }
+    drawId ++;
+    schdeduleNb --;
+    Renderer.MUST_RENDER = true;
+}
+
+function deleteLanduseGeometry(_id, _type) {
+    const curTypedGeos = typedMeshes.get(_type); 
+    for (let i = 0; i < curTypedGeos.list.length; i ++) {
+        if (curTypedGeos.list[i].id != _id) continue;
+        curTypedGeos.list[i].geometries.forEach(geo => geo.dispose());
+        curTypedGeos.list.splice(i, 1);
+        break;
+    }
+    if (curTypedGeos.list.length == 0) {
+        curTypedGeos.meshes.forEach(mesh => GLOBE.removeMeshe(mesh));
+    }
+}
+
 
 function calcBbox(_border) {
     const lon = _border.map(point => point[0]);
@@ -150,198 +254,10 @@ function coordGrid(_bbox, _border) {
     return grid;
 }
 
-function getLayerInfos(_type) {
-    let nbLayers = 16;
-    let materialNb = 4;
-    let uvFactor = 1;
-    let meterBetweenLayers = 1.5;
-    let groundOffset = 0;
-    let hideTile = false;
-    let layerMaterialId = null;
-    let vertexColor = false;
-
-    if (_type == 'forest') {
-        meterBetweenLayers = 1;
-        nbLayers = 17;
-        materialNb = 5;
-        uvFactor = 3;
-        vertexColor = true;
-        hideTile = true;
-        layerMaterialId = [
-            0, 
-            1, 
-            1, 
-            1, 
-            1, 
-            2, 
-            2, 
-            2, 
-            2, 
-            3, 
-            3, 
-            3, 
-            3, 
-            4, 
-            4, 
-            4, 
-            4, 
-        ];
-    }
-    if (_type == 'water') {
-        meterBetweenLayers = 0.5;
-        uvFactor = 2;
-        materialNb = 3;
-        nbLayers = 3;
-        groundOffset = -1;
-        hideTile = true;
-    }
-    if (_type == 'wetland') {
-        meterBetweenLayers = 0.2;
-        uvFactor = 3;
-        materialNb = 3;
-        nbLayers = 6;
-        groundOffset = 0.0;
-    }
-    if (_type == 'grass') {
-        meterBetweenLayers = 0.1;
-        uvFactor = 3;
-        materialNb = 2;
-        nbLayers = 8;
-    }
-    if (_type == 'scrub') {
-        meterBetweenLayers = 0.6;
-        uvFactor = 2;
-        materialNb = 3;
-        nbLayers = 9;
-        vertexColor = true;
-        hideTile = true;
-        layerMaterialId = [
-            0, 
-            1, 
-            1, 
-            1, 
-            2, 
-            2, 
-            2, 
-            3, 
-            3, 
-            3, 
-        ];
-    }
-    if (_type == 'rock') {
-        meterBetweenLayers = 0.6;
-        uvFactor = 2;
-        materialNb = 1;
-        nbLayers = 1;
-        groundOffset = 1;
-    }
-    if (_type == 'vineyard') {
-        meterBetweenLayers = 0.4;
-        uvFactor = 16;
-        materialNb = 4;
-        nbLayers = 12;
-    }
-    return {
-        meterBetweenLayers : meterBetweenLayers, 
-        uvFactor : uvFactor, 
-        nbLayers : nbLayers, 
-        groundOffset : groundOffset, 
-        hideTile : hideTile, 
-        materialNb : materialNb, 
-        layerMaterialId : layerMaterialId, 
-        layersByMap : nbLayers / materialNb, 
-        vertexColor : vertexColor, 
-    }
-}
-
 function simplifyLanduse(_landuse) {
     const factor = 0.00001;
     _landuse.border = simplify(_landuse.border, factor, true);
     _landuse.holes = simplify(_landuse.holes, factor, true);
-}
-
-function drawLanduse(_landuse, _tile) {
-    const trianglesResult = triangulate(_landuse);
-    if (trianglesResult === null) return false;
-    const layerInfos = getLayerInfos(_landuse.type);
-    const elevationsDatas = getElevationsDatas(_landuse);
-    const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
-    saveLanduseGeometries(_landuse.id, layersBuffers, _landuse.type);
-}
-
-function searchTilesUnderLanduse(_landuse) {
-    const tiles = [];
-    const zoom = 15;
-    const bbox = calcBbox(_landuse.border);
-    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
-    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
-    for (let x = tileA.x; x <= tileB.x; x ++) {
-        for (let y = tileB.y; y <= tileA.y; y ++) {
-            tiles.push([x, y, zoom]);
-        }
-    }
-    alphaShapes.set(_landuse.id, {
-        tiles : tiles, 
-        border : _landuse.border, 
-        holes : _landuse.holes, 
-    });
-}
-
-function redrawMeshes() {
-    typedGeometries.forEach((curTypedGeos, type) => {
-        const layerInfos = getLayerInfos(type);
-        for (let l = 0; l < layerInfos.materialNb; l ++) {
-            const mesh = curTypedGeos.meshes[l];
-            mesh.geometry.dispose();
-            const datasGeometries = curTypedGeos.list.map(data => data.geometries[l]);
-            if (datasGeometries.length == 0) continue;
-            mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
-            GLOBE.addMeshe(mesh);
-        }
-    });
-    alphaShapes.forEach(datas => {
-        for (let i = 0; i < datas.tiles.length; i ++) {
-            const tilePos = datas.tiles[i];
-            const tile = GLOBE.tileFromXYZ(tilePos[0], tilePos[1], tilePos[2]);
-            if (!tile) continue;
-            tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
-        }
-    });
-    schdeduleNb --;
-    Renderer.MUST_RENDER = true;
-}
-
-function saveLanduseGeometries(_id, _geometries, _type) {
-    if (!typedGeometries.get(_type)) {
-        const layerInfos = getLayerInfos(_type);
-        const meshes = new Array(layerInfos.materialNb);
-        for (let l = 0; l < layerInfos.materialNb; l ++) {
-            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LanduseMaterial.material(_type)[l]);
-            mesh.receiveShadow = true;
-            meshes[l] = mesh;
-        }
-        typedGeometries.set(_type, {
-            meshes : meshes, 
-            list : [], 
-        });
-    }
-    typedGeometries.get(_type).list.push({
-        id : _id, 
-        geometries : _geometries, 
-    });
-}
-
-function deleteLanduseGeometry(_id, _type) {
-    const curTypedGeos = typedGeometries.get(_type); 
-    for (let i = 0; i < curTypedGeos.list.length; i ++) {
-        if (curTypedGeos.list[i].id != _id) continue;
-        curTypedGeos.list[i].geometries.forEach(geo => geo.dispose());
-        curTypedGeos.list.splice(i, 1);
-        break;
-    }
-    if (curTypedGeos.list.length == 0) {
-        curTypedGeos.meshes.forEach(mesh => GLOBE.removeMeshe(mesh));
-    }
 }
 
 function triangulate(_landuse) {
@@ -459,6 +375,24 @@ function isLanduseKnowed(_id) {
 
 function forgotLanduse(_id) {
     knowIds = knowIds.filter(id => id != _id);
+
+    const toDelete = [];
+    for (let [key, values] of tilesUnderLinks) {
+        for (let i = 0; i < values.datas.length; i ++) {
+            const datas = values.datas[i];
+            if (datas.id != _id) continue;
+            values.datas.splice(i, 1);
+            break;
+        }
+        if (values.datas.length) continue;
+        toDelete.push(key);
+        const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
+        if (!tile) continue;
+        tile.clearLandusesMap();
+    }
+    for (let i = 0; i < toDelete.length; i ++) {
+        tilesUnderLinks.delete(toDelete[i]);
+    }
 }
 
 function extractElements(_datas, _type, _zoom) {
@@ -503,6 +437,110 @@ function pointIntoPolygon(point, vs) {
     return inside;
 };
 
+function getLayerInfos(_type) {
+    let nbLayers = 16;
+    let materialNb = 4;
+    let uvFactor = 1;
+    let meterBetweenLayers = 1.5;
+    let groundOffset = 0;
+    let hideTile = false;
+    let layerMaterialId = null;
+    let vertexColor = false;
+
+    if (_type == 'forest') {
+        meterBetweenLayers = 1;
+        nbLayers = 16;
+        materialNb = 4;
+        uvFactor = 3;
+        vertexColor = true;
+        hideTile = true;
+        // layerMaterialId = [
+        //     // 0, 
+        //     1, 
+        //     1, 
+        //     1, 
+        //     1, 
+        //     2, 
+        //     2, 
+        //     2, 
+        //     2, 
+        //     3, 
+        //     3, 
+        //     3, 
+        //     3, 
+        //     4, 
+        //     4, 
+        //     4, 
+        //     4, 
+        // ];
+    }
+    if (_type == 'water') {
+        meterBetweenLayers = 0.5;
+        uvFactor = 2;
+        materialNb = 3;
+        nbLayers = 3;
+        groundOffset = -1;
+        hideTile = true;
+    }
+    if (_type == 'wetland') {
+        meterBetweenLayers = 0.2;
+        uvFactor = 3;
+        materialNb = 3;
+        nbLayers = 6;
+        groundOffset = 0.0;
+    }
+    if (_type == 'grass') {
+        meterBetweenLayers = 0.1;
+        uvFactor = 3;
+        materialNb = 2;
+        nbLayers = 8;
+    }
+    if (_type == 'scrub') {
+        meterBetweenLayers = 0.6;
+        uvFactor = 2;
+        materialNb = 3;
+        nbLayers = 9;
+        vertexColor = true;
+        hideTile = true;
+        layerMaterialId = [
+            0, 
+            1, 
+            1, 
+            1, 
+            2, 
+            2, 
+            2, 
+            3, 
+            3, 
+            3, 
+        ];
+    }
+    if (_type == 'rock') {
+        meterBetweenLayers = 0.6;
+        uvFactor = 2;
+        materialNb = 1;
+        nbLayers = 1;
+        groundOffset = 1;
+    }
+    if (_type == 'vineyard') {
+        meterBetweenLayers = 0.4;
+        uvFactor = 16;
+        materialNb = 4;
+        nbLayers = 12;
+    }
+    return {
+        meterBetweenLayers : meterBetweenLayers, 
+        uvFactor : uvFactor, 
+        nbLayers : nbLayers, 
+        groundOffset : groundOffset, 
+        hideTile : hideTile, 
+        materialNb : materialNb, 
+        layerMaterialId : layerMaterialId, 
+        layersByMap : nbLayers / materialNb, 
+        vertexColor : vertexColor, 
+    }
+}
+
 const equalsTags = {
     wood : 'forest', 
     farmyard : 'grass', 
@@ -532,51 +570,51 @@ const supportedTags = [
     {
         key : 'landuse', 
         values : [
-            'vineyard', 
             'forest', 
-            'scrub',
-            
-            'basin', 
-            
             'wood', 
-            'grass', 
-            'farmyard', 
-            'farmland', 
-            'grassland', 
-            'orchard', 
-            'meadow', 
-            'greenfield', 
-            'village_green', 
+            // 'vineyard', 
+            // 'scrub',
+            
+            // 'basin', 
+            
+            // 'grass', 
+            // 'farmyard', 
+            // 'farmland', 
+            // 'grassland', 
+            // 'orchard', 
+            // 'meadow', 
+            // 'greenfield', 
+            // 'village_green', 
         ]
     }, 
     {
         key : 'natural', 
         values : [
-            'vineyard', 
             'forest', 
-            'wood', 
-            'scrub', 
-            'bare_rock', 
-            'water', 
-            'wetland', 
+            // 'vineyard', 
+            // 'wood', 
+            // 'scrub', 
+            // 'bare_rock', 
+            // 'water', 
+            // 'wetland', 
             
-            'scree', 
-            'grass', 
-            'farmyard', 
-            'farmland', 
-            'grassland', 
-            'orchard', 
-            'meadow', 
-            'greenfield', 
-            'village_green', 
+            // 'scree', 
+            // 'grass', 
+            // 'farmyard', 
+            // 'farmland', 
+            // 'grassland', 
+            // 'orchard', 
+            // 'meadow', 
+            // 'greenfield', 
+            // 'village_green', 
         ], 
     }, 
-    {
-        key : 'waterway', 
-        values : [
-            'riverbank', 
-        ], 
-    }, 
+    // {
+    //     key : 'waterway', 
+    //     values : [
+    //         'riverbank', 
+    //     ], 
+    // }, 
 ];
 
 export {api as default};
