@@ -8,7 +8,7 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onAc
 
 const texturesToLoad = [
     ['shell_void', 'shell_void.png'], 
-    ['splat', 'splat_16.png'], 
+    ['splat', 'splat_alpha.png'], 
     
     // ['shell_water_normal_1', 'shell_water_normal_tumblr_1.png'], 
     // ['shell_water_normal_2', 'shell_water_normal_tumblr_2.png'], 
