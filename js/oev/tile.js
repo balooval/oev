@@ -42,9 +42,9 @@ class Tile {
 		this.diffuseTexture = new THREE.Texture(this.composeMap);
 		this.diffuseTexture.needsUpdate = true
 		
+		this.landusesShapes = [];
 		this.diffuseMap = null;
-		this.alphaShapes = [];
-		this.alphaMap = this.createAlphaMap();
+
 		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
 		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
 		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
@@ -57,25 +57,60 @@ class Tile {
 
 	updateDiffuseMap(_map) {
 		this.diffuseMap = _map.image;
-		const context = this.composeMap.getContext("2d");
-		context.drawImage(this.diffuseMap, 0, 0);
-		// context.drawImage(CanvasComposer.draw(), 0, 0);
-		this.diffuseTexture.needsUpdate = true
+		this.drawLanduses();
 	}
 	
 	drawLanduses(_landuses) {
 		const context = this.composeMap.getContext("2d");
 		context.clearRect(0, 0, 256, 256);
 		context.drawImage(this.diffuseMap, 0, 0);
-		context.drawImage(CanvasComposer.draw(_landuses, this), 0, 0);
+		if (this.textureLoaded) {
+			context.drawImage(CanvasComposer.draw(this.landusesShapes, this), 0, 0);
+		}
 		this.diffuseTexture.needsUpdate = true
 	}
 
+	setLanduses(_landuses) {
+		// this.landusesShapes = _landuses;
+		this.landusesShapes = this.splitLanduses(_landuses);
+		if (this.childTiles.length == 0) {
+			this.drawLanduses();
+		}
+
+		for (let c = 0; c < this.childTiles.length; c ++) {
+			this.childTiles[c].setLanduses(this.landusesShapes);
+		}
+	}
+
+	splitLanduses(_landuses) {
+		const box = [
+		  [this.startCoord.x, this.endCoord.y], 
+		  [this.endCoord.x, this.endCoord.y], 
+		  [this.endCoord.x, this.startCoord.y], 
+		  [this.startCoord.x, this.startCoord.y], 
+		  [this.startCoord.x, this.endCoord.y], 
+		];
+		const res = [];
+		for (let i = 0; i < _landuses.length; i ++) {
+		  const shapes = polygonClipping.intersection([box], [_landuses[i]]);
+		  for (let s = 0; s < shapes.length; s ++) {
+			res.push(shapes[s][0]);
+		  }
+		}
+		return res;
+	  }
+
+
 	clearLandusesMap() {
+		this.landusesShapes = [];
 		const context = this.composeMap.getContext("2d");
 		context.clearRect(0, 0, 256, 256);
 		context.drawImage(this.diffuseMap, 0, 0);
-		this.diffuseTexture.needsUpdate = true
+		this.diffuseTexture.needsUpdate = true;
+
+		for (let c = 0; c < this.childTiles.length; c ++) {
+			this.childTiles[c].clearLandusesMap();
+		}
 	}
 
 	createCanvas() {
@@ -85,83 +120,6 @@ class Tile {
 		canvas.height = canvasSize;
 		return canvas;
 	}
-
-
-	createAlphaMap() {
-		const canvas = document.createElement('canvas');
-		const canvasSize = 256;
-		canvas.width = canvasSize;
-		canvas.height = canvasSize;
-		const context = canvas.getContext('2d');
-		context.fillStyle = '#ffffff';
-		context.fillRect(0, 0, canvasSize, canvasSize);
-		const alphaTexture = new THREE.Texture(canvas);
-		alphaTexture.needsUpdate = true;
-		return alphaTexture;
-	}
-
-	clearAlphaMap() {
-		this.alphaShapes = [];
-		const alphaCanvas = this.alphaMap.image;
-		const alphaContext = alphaCanvas.getContext('2d');
-		const canvasSize = 256;
-		alphaContext.fillStyle = '#ffffff';
-		alphaContext.fillRect(0, 0, canvasSize, canvasSize);
-		this.alphaMap.needsUpdate = true;
-		Renderer.MUST_RENDER = true;
-	}
-
-	drawToAlphaMap(_shapes) {
-		this.alphaShapes.push(..._shapes);
-		if (!this.textureLoaded) return false;
-		const canvasSize = 256;
-		const context = canvasAlphaTemp.getContext('2d');
-		const alphaCanvas = this.alphaMap.image;
-		const alphaContext = alphaCanvas.getContext('2d');
-		context.drawImage(alphaCanvas, 0, 0);
-		alphaContext.globalCompositeOperation = 'darken';
-		for (let s = 0; s < _shapes.length; s ++) {
-			const shape = _shapes[s];
-			if (!shape.border.length) continue;
-			context.fillStyle = '#ffffff';
-			context.fillRect(0, 0, canvasSize, canvasSize);
-			context.beginPath();
-			context.lineWidth = 7;
-			context.strokeStyle = '#ffffff';
-			this.drawCanvasShape(shape.border, context, canvasSize);
-			context.stroke();
-			context.lineWidth = 1;
-			for (let i = 0; i < shape.holes.length; i ++) {
-				this.drawCanvasShape(shape.holes[i], context, canvasSize);
-			}
-			context.fill('evenodd');
-			alphaContext.drawImage(canvasAlphaTemp, 0, 0);
-		}
-		alphaContext.globalCompositeOperation = 'source-over';
-		this.alphaMap.needsUpdate = true;
-		Renderer.MUST_RENDER = true;
-	}
-
-	drawCanvasShape(_coords, _context, _size) {
-		const points = new Array(_coords.length);
-		for (let i = 0; i < _coords.length; i ++) {
-			const coord = _coords[i];
-			const point = [
-				mapValue(coord[0], this.startCoord.x, this.endCoord.x) * _size, 
-				_size - mapValue(coord[1], this.endCoord.y, this.startCoord.y) * _size, 
-			];
-			points[i] = point;
-		}
-		const start = points.shift();
-		_context.fillStyle = '#000000';
-		_context.moveTo(start[0], start[1]);
-		for (let i = 0; i < points.length; i ++) {
-			_context.lineTo(points[i][0], points[i][1]);
-		}
-		_context.closePath();
-	}
-
-
 
 
 	
@@ -234,9 +192,6 @@ class Tile {
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - _textureDatas.offsetY;
 			}
 		}
-		// this.material.map = _textureDatas.map;
-		// this.material.map = new THREE.Texture(CanvasComposer.debug());
-		// this.material.map.needsUpdate = true;
 		
 		this.updateDiffuseMap(_textureDatas.map);
 
@@ -328,8 +283,11 @@ class Tile {
 	}
 
 	searchTileAtXYZ(_tileX, _tileY, _zoom) {
-		if (this.zoom > _zoom) return false;
+		if (this.zoom > _zoom) {
+			return false;
+		}
 		if (this.isTileAtXYZ(_tileX, _tileY, _zoom)) return this;
+		// if (this.zoom == 13 && this.containTileAtXYZ(_tileX, _tileY, _zoom)) return this;
 		for (let i = 0; i < this.childTiles.length; i ++) {
 			const res = this.childTiles[i].searchTileAtXYZ(_tileX, _tileY, _zoom);
 			if (res) return res;
@@ -339,7 +297,9 @@ class Tile {
 	}
 	
 	containTileAtXYZ(_tileX, _tileY, _zoom) {
-		if (this.zoom >= _zoom) return false;
+		if (this.zoom >= _zoom) {
+			return false;
+		}
 		const zoomDiff = _zoom - this.zoom;
 		const zoomX = this.tileX * Math.pow(2, zoomDiff);
 		const zoomY = this.tileY * Math.pow(2, zoomDiff);
@@ -391,8 +351,9 @@ class Tile {
 		newTile.parentTile = this;
 		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
-		newTile.drawToAlphaMap(this.alphaShapes);
 		this.childTiles.push(newTile);
+
+		newTile.setLanduses(this.landusesShapes);
 	}
 
 	clearChildrens() {
@@ -405,7 +366,9 @@ class Tile {
 		if (this.checkCameraHover(_coords, GLOBE.tilesDetailsMarge)) {
 			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
 				this.createChilds(_coords);
-				this.childTiles.forEach(t => t.updateDetails(_coords));
+				for (let c = 0; c < this.childTiles.length; c ++) {
+					this.childTiles[c].updateDetails(_coords);
+				}
 				this.hide();
 			}else{
 				this.clearChildrens();
@@ -449,7 +412,6 @@ class Tile {
 			offsetX : 0, 
 			offsetY : 0, 
 		});
-		this.drawToAlphaMap(this.alphaShapes);
 		Renderer.MUST_RENDER = true;this.evt.fireEvent('TEXTURE_LOADED');
 	}
 
@@ -471,7 +433,7 @@ class Tile {
 		if (this.textureLoaded) {
 			this.remoteTex.dispose();
 		}
-		this.alphaShapes.length = 0;
+		this.landusesShapes.length = 0;
 		this.extensions = [];
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');

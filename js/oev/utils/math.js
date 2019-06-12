@@ -98,6 +98,12 @@ const api = {
 		};
 	},
 
+	mapValue : function(_value, _min, _max) {
+		const length = Math.abs(_max - _min);
+		if (length == 0) return _value;
+		return (_value - _min) / length;
+	}, 
+
 }
 
 export {api as default};

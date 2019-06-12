@@ -138,7 +138,7 @@ function saveLanduseGeometries(_landuse, _geometries) {
 }
 
 function searchTilesUnderLanduse(_landuse) {
-    const zoom = 15;
+    const zoom = 13;
     const bbox = calcBbox(_landuse.border);
     const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
     const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
@@ -156,7 +156,7 @@ function searchTilesUnderLanduse(_landuse) {
                 });
                 link = tilesUnderLinks.get(key);
             }
-            link.drawId = drawId;
+            link.mustDraw = true;
             link.datas.push(_landuse);
         }
     }
@@ -164,18 +164,19 @@ function searchTilesUnderLanduse(_landuse) {
 
 function redrawMeshes() {
     for (let [key, values] of tilesUnderLinks) {
-        // if (drawId > values.drawId) {
-        //     continue;
-        // }
+        if (!values.mustDraw) {
+            continue;
+        }
         const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
         if (!tile) continue;
+        // console.log('TROUVE');
         const borders = [];
         for (let i = 0; i < values.datas.length; i ++) {
             const datas = values.datas[i];
             borders.push(datas.border);
-            // tile.drawToAlphaMap([{border:datas.border, holes:datas.holes}]);
         }
-        tile.drawLanduses(borders);
+        tile.setLanduses(borders);
+        values.mustDraw = false;
     }
     
     for (let [type, curTyped] of typedMeshes) {

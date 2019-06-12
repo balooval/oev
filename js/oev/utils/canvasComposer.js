@@ -1,3 +1,4 @@
+import GEO from './geo.js';
 import * as NET_TEXTURES from '../net/textures.js'
 
 const finalSize = 256;
@@ -20,23 +21,24 @@ const contextSplat = canvasSplat.getContext("2d");
 const api = {
   // TODO: gérer les trous
 	draw : function(_coords, _tile) {
-    // const shapes = splitBorders(_tile, _coords);
-    
+    contextFinal.clearRect(0, 0, finalSize, finalSize);
+    if (!_coords.length) return canvasFinal;
     const localCoords = new Array(_coords.length);
     for (let i = 0; i < _coords.length; i ++) {
-      localCoords[i] = convertToCanvasPosition(_coords[i], _tile);
+      localCoords[i] = GEO.coordToCanvas(_tile, finalSize, _coords[i]);
     }
+    // const shapes = split(localCoords);
 
-    contextFinal.clearRect(0, 0, finalSize, finalSize);
+
     contextTemp.clearRect(0, 0, finalSize, finalSize);
     contextSplat.clearRect(0, 0, splatSize, splatSize);
     contextSplat.drawImage(NET_TEXTURES.texture('splat').image, 0, 0);
     const groundImage = NET_TEXTURES.texture('shell_tree_0').image;
-    // for (let i = 0; i < _coords.length; i ++) {
     for (let i = 0; i < localCoords.length; i ++) {
-      contextTemp.globalCompositeOperation = 'source-over';
-      // const coords = _coords[i];
       const coords = localCoords[i];
+
+
+      contextTemp.globalCompositeOperation = 'source-over';
       drawLineImage(coords, contextTemp, _tile);
       contextTemp.globalCompositeOperation = 'source-over';
       drawCanvasShape(coords, contextTemp, '#ffffff', _tile);
@@ -51,48 +53,25 @@ const api = {
 
 };
 
-function splitBorders(_tile, _borders) {
+function split(_coords) {
   const box = [
-    _tile.startCoord.x, 
-    _tile.endCoord.y, 
-    _tile.endCoord.x, 
-    _tile.startCoord.y, 
+    [0, 0], 
+    [256, 0], 
+    [256, 256], 
+    [0, 256], 
+    [0, 0], 
   ];
   const res = [];
-  for (let i = 0; i < _borders.length; i ++) {
-    const clips = polygonclip(_borders[i], box);
-    console.log('clips', clips);
-    res.push(convertToCanvasPosition(clips, _tile));
-    // for (let c = 0; c < clips.length; c ++) {
-    //   res.push(convertToCanvasPosition(clips[c], _tile));
-    // }
+  for (let i = 0; i < _coords.length; i ++) {
+    const shapes = polygonClipping.intersection([box], [_coords[i]]);
+    for (let s = 0; s < shapes.length; s ++) {
+      res.push(shapes[s][0]);
+    }
   }
   return res;
 }
 
-function convertToCanvasPosition(_coords, _tile) {
-  const points = new Array(_coords.length);
-   for (let i = 0; i < _coords.length; i ++) {
-     const coord = _coords[i];
-     const point = [
-       mapValue(coord[0], _tile.startCoord.x, _tile.endCoord.x) * finalSize, 
-       finalSize - mapValue(coord[1], _tile.endCoord.y, _tile.startCoord.y) * finalSize, 
-     ];
-     points[i] = point;
-   }
-   return points;
-}
-
 function drawLineImage(_coords, _context, _tile) {
-  // const points = new Array(_coords.length);
-  // for (let i = 0; i < _coords.length; i ++) {
-  //   const coord = _coords[i];
-  //   const point = [
-  //     mapValue(coord[0], _tile.startCoord.x, _tile.endCoord.x) * finalSize, 
-  //     finalSize - mapValue(coord[1], _tile.endCoord.y, _tile.startCoord.y) * finalSize, 
-  //   ];
-  //   points[i] = point;
-  // }
   const points = [..._coords];
   const splatSpace = 6;
   let lastPoint = points.shift();
@@ -120,16 +99,6 @@ function drawLineImage(_coords, _context, _tile) {
 }
 
 function drawCanvasShape(_coords, _context, _color, _tile) {
-    // const points = new Array(_coords.length);
-    // for (let i = 0; i < _coords.length; i ++) {
-    //   const coord = _coords[i];
-    //   const point = [
-    //     mapValue(coord[0], _tile.startCoord.x, _tile.endCoord.x) * finalSize, 
-    //     finalSize - mapValue(coord[1], _tile.endCoord.y, _tile.startCoord.y) * finalSize, 
-    //   ];
-    //   points[i] = point;
-    // }
-
     const points = [..._coords];
     const start = points.shift();
     _context.beginPath();
@@ -140,35 +109,6 @@ function drawCanvasShape(_coords, _context, _color, _tile) {
         }
     _context.closePath();
     _context.fill();
-}
-
-function drawLine(_coords, _context, _color, _width, _tile) {
-   const points = new Array(_coords.length);
-    for (let i = 0; i < _coords.length; i ++) {
-      const coord = _coords[i];
-      const point = [
-        mapValue(coord[0], _tile.startCoord.x, _tile.endCoord.x) * finalSize, 
-        finalSize - mapValue(coord[1], _tile.endCoord.y, _tile.startCoord.y) * finalSize, 
-      ];
-      points[i] = point;
-    }
-
-    const start = points.shift();
-    _context.fillStyle = _color;
-    _context.lineWidth = _width;
-    _context.beginPath();
-		_context.moveTo(start[0], start[1]);
-    for (let i = 0; i < points.length; i ++) {
-        _context.lineTo(points[i][0], points[i][1]);
-    }
-    _context.closePath();
-    _context.stroke();
-}
-
-function mapValue(_value, _min, _max) {
-  const length = Math.abs(_max - _min);
-  if (length == 0) return _value;
-  return (_value - _min) / length;
 }
 
 export {api as default}

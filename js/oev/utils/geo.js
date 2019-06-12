@@ -3,6 +3,23 @@ import MATH from './math.js';
 const api = {
 	projection : 'PLANE', 
 
+	coordToCanvas : function(_tile, _canvasSize, _coords) {
+		const minX = _tile.startCoord.x;
+		const maxX = _tile.endCoord.x;
+		const minY = _tile.endCoord.y;
+		const maxY = _tile.startCoord.y;
+		const points = new Array(_coords.length);
+		for (let i = 0; i < _coords.length; i ++) {
+			const coord = _coords[i];
+			const point = [
+			MATH.mapValue(coord[0], minX, maxX) * _canvasSize, 
+			_canvasSize - MATH.mapValue(coord[1], minY, maxY) * _canvasSize, 
+			];
+			points[i] = point;
+		}
+		return points;
+	}, 
+
 	tileToCoords : function(_tile_x, _tile_y, _zoom) {
 		const p = [];
 		const n = Math.PI - ((2.0 * Math.PI * _tile_y) / Math.pow(2.0, _zoom));
