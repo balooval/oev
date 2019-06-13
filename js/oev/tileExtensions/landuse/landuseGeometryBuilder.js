@@ -45,9 +45,16 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
                 noise.seed(Math.random());
                 for (let i = 0; i < bufferVertices.length; i += 3) {
                     const value = perlinValue(bufferVertices[i + 0], bufferVertices[i + 1], bufferVertices[i + 2]);
-                    bufferColor[i + 0] = Math.min(255, 50 + value * 150);
-                    bufferColor[i + 1] = Math.min(255, 100 + value * 150);
-                    bufferColor[i + 2] = 10 + value * 70;
+
+                    if (_landuse.type == 'forest') {
+                        bufferColor[i + 0] = Math.min(255, 50 + value * 150);
+                        bufferColor[i + 1] = Math.min(255, 100 + value * 150);
+                        bufferColor[i + 2] = 10 + value * 70;
+                    } else {
+                        bufferColor[i + 0] = Math.min(255, 80 + value * 120);
+                        bufferColor[i + 1] = Math.min(255, 50 + value * 120);
+                        bufferColor[i + 2] = 10 + value * 70;
+                    }
 
                     // bufferColor[i + 0] = 255;
                     // bufferColor[i + 1] = 255;
@@ -63,9 +70,6 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
         bufferGeometry.computeVertexNormals();
 
         let curLayerMap = Math.floor(layer / _layerInfos.layersByMap);
-        if (_layerInfos.layerMaterialId) {
-            curLayerMap = _layerInfos.layerMaterialId[layer];
-        }
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
             const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);

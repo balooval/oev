@@ -35,13 +35,13 @@ const texturesToLoad = [
     // ['shell_grass_normal', 'shell_grass_normal.png'], 
     // ['shell_grass_specular', 'shell_grass_specular.png'], 
 
-    // ['shell_scrub_1', 'shell_scrub_mix_1.png'], 
-    // ['shell_scrub_2', 'shell_scrub_mix_2.png'], 
-    // ['shell_scrub_3', 'shell_scrub_mix_3.png'], 
-    // ['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
+    ['shell_scrub_1', 'shell_scrub_mix_1.png'], 
+    ['shell_scrub_2', 'shell_scrub_grey_2.png'], 
+    ['shell_scrub_3', 'shell_scrub_grey_3.png'], 
+    ['shell_scrub_normal', 'shell_scrub_mix_normal.png'], 
 
-    // ['shell_rock_1', 'shell_rock_1.png'], 
-    // ['shell_rock_normal', 'shell_rock_normal.png'], 
+    ['shell_rock_1', 'shell_rock_1.png'], 
+    ['shell_rock_normal', 'shell_rock_normal.png'], 
 
     // ['shell_scrub_specular', 'shell_scrub_mix_specular.png'], 
     
@@ -94,8 +94,8 @@ function createMaterials() {
 
         // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided}));
         // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
         // materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         // materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
@@ -105,7 +105,7 @@ function createMaterials() {
         // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        // materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:false, alphaTest:0.2}));
+        materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:false, alphaTest:0.2}));
 }
 
 function loadTextures() {
@@ -141,17 +141,17 @@ function onTexturesLoaded() {
     // materials.forest[4].roughnessMap = NET_TEXTURES.texture('shell_tree_specular');
 
     // materials.scrub[0].map = NET_TEXTURES.texture('shell_tree_0');
-    // materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_1');
-    // materials.scrub[2].map = NET_TEXTURES.texture('shell_scrub_2');
+    materials.scrub[0].map = NET_TEXTURES.texture('shell_scrub_2');
+    materials.scrub[1].map = NET_TEXTURES.texture('shell_scrub_3');
     // materials.scrub[3].map = NET_TEXTURES.texture('shell_scrub_3');
     
-    // materials.scrub[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-    // materials.scrub[3].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.scrub[0].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
+    materials.scrub[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
     // materials.scrub[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
     // materials.scrub[3].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
     
-    // materials.rock[0].map = NET_TEXTURES.texture('shell_rock_1');
-    // materials.rock[0].normalMap = NET_TEXTURES.texture('shell_rock_normal');
+    materials.rock[0].map = NET_TEXTURES.texture('shell_rock_1');
+    materials.rock[0].normalMap = NET_TEXTURES.texture('shell_rock_normal');
 
     // materials.vineyard[0].map = NET_TEXTURES.texture('shell_vine_2');
     // materials.vineyard[1].map = NET_TEXTURES.texture('shell_vine_2');

@@ -439,7 +439,6 @@ function getLayerInfos(_type) {
     let meterBetweenLayers = 1.5;
     let groundOffset = 0;
     let hideTile = false;
-    let layerMaterialId = null;
     let vertexColor = false;
 
     if (_type == 'forest') {
@@ -449,25 +448,6 @@ function getLayerInfos(_type) {
         uvFactor = 3;
         vertexColor = true;
         hideTile = true;
-        // layerMaterialId = [
-        //     // 0, 
-        //     1, 
-        //     1, 
-        //     1, 
-        //     1, 
-        //     2, 
-        //     2, 
-        //     2, 
-        //     2, 
-        //     3, 
-        //     3, 
-        //     3, 
-        //     3, 
-        //     4, 
-        //     4, 
-        //     4, 
-        //     4, 
-        // ];
     }
     if (_type == 'water') {
         meterBetweenLayers = 0.5;
@@ -475,7 +455,7 @@ function getLayerInfos(_type) {
         materialNb = 3;
         nbLayers = 3;
         groundOffset = -1;
-        hideTile = true;
+        // hideTile = true;
     }
     if (_type == 'wetland') {
         meterBetweenLayers = 0.2;
@@ -491,30 +471,18 @@ function getLayerInfos(_type) {
         nbLayers = 8;
     }
     if (_type == 'scrub') {
-        meterBetweenLayers = 0.6;
+        meterBetweenLayers = 0.7;
         uvFactor = 2;
-        materialNb = 3;
-        nbLayers = 9;
+        materialNb = 2;
+        nbLayers = 8;
         vertexColor = true;
         hideTile = true;
-        layerMaterialId = [
-            0, 
-            1, 
-            1, 
-            1, 
-            2, 
-            2, 
-            2, 
-            3, 
-            3, 
-            3, 
-        ];
     }
     if (_type == 'rock') {
         meterBetweenLayers = 0.6;
         uvFactor = 2;
         materialNb = 1;
-        nbLayers = 1;
+        nbLayers = 2;
         groundOffset = 1;
     }
     if (_type == 'vineyard') {
@@ -530,7 +498,6 @@ function getLayerInfos(_type) {
         groundOffset : groundOffset, 
         hideTile : hideTile, 
         materialNb : materialNb, 
-        layerMaterialId : layerMaterialId, 
         layersByMap : nbLayers / materialNb, 
         vertexColor : vertexColor, 
     }
@@ -568,7 +535,7 @@ const supportedTags = [
             'forest', 
             'wood', 
             // 'vineyard', 
-            // 'scrub',
+            'scrub',
             
             // 'basin', 
             
@@ -586,14 +553,14 @@ const supportedTags = [
         key : 'natural', 
         values : [
             'forest', 
+            'wood', 
             // 'vineyard', 
-            // 'wood', 
-            // 'scrub', 
-            // 'bare_rock', 
+            'scrub', 
+            'bare_rock', 
             // 'water', 
             // 'wetland', 
             
-            // 'scree', 
+            'scree', 
             // 'grass', 
             // 'farmyard', 
             // 'farmland', 
