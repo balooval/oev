@@ -16,8 +16,6 @@ class LanduseExtension {
         this.dataLoaded = false;
         this.tile = _tile;
         this.isActive = this.tile.zoom >= 15;
-
-
         if (LanduseMaterial.isReady) {
             this.onMaterialReady();
         } else {

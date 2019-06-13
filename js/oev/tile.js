@@ -35,18 +35,25 @@ class Tile {
 		this.startMidCoord = GEO.tileToCoordsVect(this.tileX - 0.5, this.tileY - 0.5, this.zoom);
 		this.endMidCoord = GEO.tileToCoordsVect(this.tileX + 1.5, this.tileY + 1.5, this.zoom);
 		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
+		this.bbox = [
+			this.startCoord.x, // min X
+			this.endCoord.x, // max X
+			this.endCoord.y, // min Y
+			this.startCoord.y, // max Y
+		  ];
+
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
 
 		this.landusesMap = this.createCanvas();
 		this.composeMap = this.createCanvas();
+		this.composeContext = this.composeMap.getContext('2d');
 		this.diffuseTexture = new THREE.Texture(this.composeMap);
-		this.diffuseTexture.needsUpdate = true
+		this.diffuseTexture.needsUpdate = true;
 		
-		this.landusesShapes = [];
+		this.landusesShapes = new Map();
 		this.diffuseMap = null;
 
 		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
-		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
 		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
 
 		this.extensions = [];
@@ -60,23 +67,18 @@ class Tile {
 		this.drawLanduses();
 	}
 	
-	drawLanduses(_landuses) {
-		const context = this.composeMap.getContext("2d");
-		context.clearRect(0, 0, 256, 256);
-		context.drawImage(this.diffuseMap, 0, 0);
+	drawLanduses() {
+		this.composeContext.clearRect(0, 0, 256, 256);
+		this.composeContext.drawImage(this.diffuseMap, 0, 0);
 		if (this.textureLoaded) {
-			context.drawImage(CanvasComposer.draw(this.landusesShapes, this), 0, 0);
+			this.composeContext.drawImage(CanvasComposer.draw(this.landusesShapes, this), 0, 0);
 		}
 		this.diffuseTexture.needsUpdate = true
 	}
 
 	setLanduses(_landuses) {
-		// this.landusesShapes = _landuses;
-		this.landusesShapes = this.splitLanduses(_landuses);
-		if (this.childTiles.length == 0) {
-			this.drawLanduses();
-		}
-
+		this.splitLanduses(_landuses);
+		this.drawLanduses();
 		for (let c = 0; c < this.childTiles.length; c ++) {
 			this.childTiles[c].setLanduses(this.landusesShapes);
 		}
@@ -84,30 +86,47 @@ class Tile {
 
 	splitLanduses(_landuses) {
 		const box = [
-		  [this.startCoord.x, this.endCoord.y], 
-		  [this.endCoord.x, this.endCoord.y], 
-		  [this.endCoord.x, this.startCoord.y], 
-		  [this.startCoord.x, this.startCoord.y], 
-		  [this.startCoord.x, this.endCoord.y], 
+			[this.startCoord.x, this.endCoord.y], 
+			[this.endCoord.x, this.endCoord.y], 
+			[this.endCoord.x, this.startCoord.y], 
+			[this.startCoord.x, this.startCoord.y], 
+			[this.startCoord.x, this.endCoord.y], 
 		];
-		const res = [];
-		for (let i = 0; i < _landuses.length; i ++) {
-		  const shapes = polygonClipping.intersection([box], [_landuses[i]]);
-		  for (let s = 0; s < shapes.length; s ++) {
-			res.push(shapes[s][0]);
-		  }
-		}
-		return res;
-	  }
+		_landuses.forEach(curLanduse => {
+			if (this.landusesShapes.has(curLanduse.id)) return false;
+			const myLanduse = {
+				id : curLanduse.id, 
+				type : curLanduse.type, 
+				border : curLanduse.border, 
+				bordersSplit : [], 
+				holes : curLanduse.holes, 
+				holesSplit : [], 
+			};
+			const shapesBorder = polygonClipping.intersection([box], [curLanduse.border]);
+			for (let s = 0; s < shapesBorder.length; s ++) {
+				myLanduse.bordersSplit.push(shapesBorder[s][0]);
+			}
+			const shapesHoles = polygonClipping.intersection([box], curLanduse.holes);
+			for (let s = 0; s < shapesHoles.length; s ++) {
+				myLanduse.holesSplit.push(shapesHoles[s][0]);
+			}
+			this.landusesShapes.set(curLanduse.id, myLanduse);
+		});
+	}
 
+	removeLanduse(_landuseId) {
+		this.landusesShapes.delete(_landuseId);
+		this.drawLanduses();
+		for (let c = 0; c < this.childTiles.length; c ++) {
+			this.childTiles[c].removeLanduse(_landuseId);
+		}
+	}
 
 	clearLandusesMap() {
-		this.landusesShapes = [];
-		const context = this.composeMap.getContext("2d");
-		context.clearRect(0, 0, 256, 256);
-		context.drawImage(this.diffuseMap, 0, 0);
+		this.landusesShapes.clear();
+		this.composeContext.clearRect(0, 0, 256, 256);
+		this.composeContext.drawImage(this.diffuseMap, 0, 0);
 		this.diffuseTexture.needsUpdate = true;
-
 		for (let c = 0; c < this.childTiles.length; c ++) {
 			this.childTiles[c].clearLandusesMap();
 		}
@@ -433,7 +452,7 @@ class Tile {
 		if (this.textureLoaded) {
 			this.remoteTex.dispose();
 		}
-		this.landusesShapes.length = 0;
+		this.landusesShapes.clear();
 		this.extensions = [];
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');

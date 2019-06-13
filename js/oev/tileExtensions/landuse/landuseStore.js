@@ -13,8 +13,6 @@ const storedLanduses = new Map();
 const typedMeshes = new Map();
 let schdeduleNb = 0;
 const rejectedIds = [];
-let drawId = 0;
-
 const tilesUnderLinks = new Map();
 
 const api = {
@@ -44,6 +42,23 @@ const api = {
                 forgotLanduse(landuseId);
                 deleteLanduseGeometry(stored.id, stored.type);
                 storedLanduses.delete(landuseId);
+
+
+                    const zoom = 13;
+                    const bbox = calcBbox(stored.buildDatas.border);
+                    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+                    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+                    for (let x = tileA.x; x <= tileB.x; x ++) {
+                        for (let y = tileB.y; y <= tileA.y; y ++) {
+                            const tile = GLOBE.tileFromXYZ(x, y, zoom);
+                            if (!tile) continue;
+                            tile.removeLanduse(landuseId);
+                        }
+                    }
+
+
+
+
             }
         });
         tileToLanduses.delete(_tile.key);
@@ -138,47 +153,28 @@ function saveLanduseGeometries(_landuse, _geometries) {
 }
 
 function searchTilesUnderLanduse(_landuse) {
+    const myLanduse = {
+        id : _landuse.id, 
+        type : _landuse.type, 
+        border : _landuse.border, 
+        holes : _landuse.holes, 
+    };
     const zoom = 13;
     const bbox = calcBbox(_landuse.border);
     const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
     const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
     for (let x = tileA.x; x <= tileB.x; x ++) {
         for (let y = tileB.y; y <= tileA.y; y ++) {
-            const key = x + '_' + y + '_' + zoom;
-            let link = tilesUnderLinks.get(key);
-            if (!link) {
-                tilesUnderLinks.set(key, {
-                    x : x, 
-                    y : y, 
-                    z : zoom, 
-                    drawId : drawId, 
-                    datas : [], 
-                });
-                link = tilesUnderLinks.get(key);
-            }
-            link.mustDraw = true;
-            link.datas.push(_landuse);
+            const tile = GLOBE.tileFromXYZ(x, y, zoom);
+            if (!tile) continue;
+            const map = new Map();
+            map.set(_landuse.id, myLanduse);
+            tile.setLanduses(map);
         }
     }
 }
 
 function redrawMeshes() {
-    for (let [key, values] of tilesUnderLinks) {
-        if (!values.mustDraw) {
-            continue;
-        }
-        const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
-        if (!tile) continue;
-        // console.log('TROUVE');
-        const borders = [];
-        for (let i = 0; i < values.datas.length; i ++) {
-            const datas = values.datas[i];
-            borders.push(datas.border);
-        }
-        tile.setLanduses(borders);
-        values.mustDraw = false;
-    }
-    
     for (let [type, curTyped] of typedMeshes) {
         const layerInfos = getLayerInfos(type);
         for (let l = 0; l < layerInfos.materialNb; l ++) {
@@ -194,7 +190,6 @@ function redrawMeshes() {
             GLOBE.addMeshe(mesh);
         }
     }
-    drawId ++;
     schdeduleNb --;
     Renderer.MUST_RENDER = true;
 }
@@ -374,14 +369,13 @@ function isLanduseKnowed(_id) {
     return knowIds.includes(_id);
 }
 
-function forgotLanduse(_id) {
-    knowIds = knowIds.filter(id => id != _id);
-
+function forgotLanduse(_landuseId) {
+    knowIds = knowIds.filter(id => id != _landuseId);
     const toDelete = [];
     for (let [key, values] of tilesUnderLinks) {
         for (let i = 0; i < values.datas.length; i ++) {
             const datas = values.datas[i];
-            if (datas.id != _id) continue;
+            if (datas.id != _landuseId) continue;
             values.datas.splice(i, 1);
             break;
         }
@@ -389,7 +383,7 @@ function forgotLanduse(_id) {
         toDelete.push(key);
         const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
         if (!tile) continue;
-        tile.clearLandusesMap();
+        tile.removeLanduse(_landuseId);
     }
     for (let i = 0; i < toDelete.length; i ++) {
         tilesUnderLinks.delete(toDelete[i]);
