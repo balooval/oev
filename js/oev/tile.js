@@ -57,7 +57,7 @@ class Tile {
 		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
 		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
 
-		this.extensions = [];
+		this.extensions = new Map();
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.onExtensionActivation);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.onExtensionDisabled);
@@ -72,10 +72,8 @@ class Tile {
         this.scheduleDraw();
 		this.composeContext.clearRect(0, 0, 256, 256);
 		this.composeContext.drawImage(this.diffuseMap, 0, 0);
-		// if (this.textureLoaded) {
-		// 	this.composeContext.drawImage(CanvasComposer.draw(this.landusesShapes, this), 0, 0);
-		// }
-		this.diffuseTexture.needsUpdate = true
+        this.diffuseTexture.needsUpdate = true
+        Renderer.MUST_RENDER = true;
     }
     
     scheduleDraw() {
@@ -85,12 +83,11 @@ class Tile {
     }
 
     realDrawLanduses() {
-		// this.composeContext.clearRect(0, 0, 256, 256);
-		// this.composeContext.drawImage(this.diffuseMap, 0, 0);
         this.schdeduleNb --;
 		if (!this.textureLoaded) return false
         this.composeContext.drawImage(CanvasComposer.draw(this.landusesShapes, this), 0, 0);
         this.diffuseTexture.needsUpdate = true
+        Renderer.MUST_RENDER = true;
     }
 
 	setLanduses(_landuses) {
@@ -177,19 +174,21 @@ class Tile {
 	addExtension(_extensionId) {
 		if (this.ownExtension(_extensionId)) return false;
 		const ext = new TileExtension.extensions[_extensionId](this);
-		this.extensions.push(ext);
+		this.extensions.set(_extensionId, ext);
 		this.childTiles.forEach(t => t.addExtension(_extensionId));
 		return true;
 	}
 	
 	ownExtension(_id) {
-		return this.extensions.filter(e => e.id == _id).length;
+        return this.extensions.has(_id);
 	}
 	
 	removeExtension(_id) {
-		const extensionsToRemove = this.extensions.filter(e => e.id == _id);
-		extensionsToRemove.forEach(e => e.dispose());
-		this.extensions = this.extensions.filter(e => e.id != _id);
+        const extension = this.extensions.get(_id);
+        if (extension) {
+            extension.dispose();
+            this.extensions.delete(_id);
+        }
 		this.childTiles.forEach(t => t.removeExtension(_id));
 	}
 
@@ -477,7 +476,7 @@ class Tile {
 			this.remoteTex.dispose();
 		}
 		this.landusesShapes.clear();
-		this.extensions = [];
+		this.extensions.clear();
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
 	}
