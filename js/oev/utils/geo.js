@@ -8,8 +8,8 @@ const api = {
 		for (let i = 0; i < _coords.length; i ++) {
 			const coord = _coords[i];
 			const point = [
-			MATH.mapValue(coord[0], _box[0], _box[1]) * _canvasSize, 
-			_canvasSize - MATH.mapValue(coord[1], _box[2], _box[3]) * _canvasSize, 
+                MATH.mapValue(coord[0], _box[0], _box[1]) * _canvasSize, 
+                _canvasSize - MATH.mapValue(coord[1], _box[2], _box[3]) * _canvasSize, 
 			];
 			points[i] = point;
 		}

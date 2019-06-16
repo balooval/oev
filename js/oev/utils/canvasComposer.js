@@ -13,10 +13,18 @@ canvasTypes.set('forest', createCanvas(finalSize));
 canvasTypes.set('scrub', createCanvas(finalSize));
 
 const splatSize = 16;
-const canvasSplat = document.createElement('canvas');
-canvasSplat.width = splatSize;
-canvasSplat.height = splatSize;
-const contextSplat = canvasSplat.getContext("2d");
+
+const linePatterns = new Map();
+linePatterns.set('forest', {
+    canvas : createCanvas(splatSize), 
+    minFactor : 0.2, 
+    maxFactor : 0.8, 
+});
+linePatterns.set('scrub', {
+    canvas : createCanvas(splatSize), 
+    minFactor : 0.2, 
+    maxFactor : 0.5, 
+});
 
 const groundImage = {
     forest : null, 
@@ -27,9 +35,16 @@ LanduseMaterial.evt.addEventListener('READY', null, onMaterialReady);
 
 function onMaterialReady() {
     LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
-    groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image, 
-    groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image, 
-    contextSplat.drawImage(NET_TEXTURES.texture('splat').image, 0, 0);
+    groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
+    groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
+    // contextSplat.drawImage(NET_TEXTURES.texture('splat').image, 0, 0);
+
+
+    let contextLine;
+    contextLine = linePatterns.get('forest').canvas.getContext('2d');
+    contextLine.drawImage(NET_TEXTURES.texture('landuse_border_forest').image, 0, 0);
+    contextLine = linePatterns.get('scrub').canvas.getContext('2d');
+    contextLine.drawImage(NET_TEXTURES.texture('landuse_border_scrub').image, 0, 0);
 }
 
 const typedDatas = {
@@ -52,7 +67,7 @@ function clearTypedDatas() {
 
 const api = {
   
-	draw : function(_landuses, _tile) {
+	draw : function(_landuses, _tileBBox) {
         contextFinal.clearRect(0, 0, finalSize, finalSize);
         if (!_landuses.size) return canvasFinal;
         clearTypedDatas();
@@ -61,11 +76,12 @@ const api = {
             if (!curLanduse.bordersSplit.length) {
                 return false;
             }
-            convertCoordToCanvasPositions(curLanduse.bordersSplit, typedDatas[curLanduse.type].borders, _tile.bbox);
-            convertCoordToCanvasPositions(curLanduse.holesSplit, typedDatas[curLanduse.type].holes, _tile.bbox);
+            convertCoordToCanvasPositions(curLanduse.bordersSplit, typedDatas[curLanduse.type].borders, _tileBBox);
+            convertCoordToCanvasPositions(curLanduse.holesSplit, typedDatas[curLanduse.type].holes, _tileBBox);
         });
 
         for (let type in typedDatas) {
+            const linePattern = linePatterns.get(type);
             const datas = typedDatas[type];
             const canvasTemp = canvasTypes.get(type);
             const contextTemp = canvasTemp.getContext('2d');
@@ -74,15 +90,15 @@ const api = {
             for (let i = 0; i < datas.borders.length; i ++) {
                 const coords = datas.borders[i];
                 contextTemp.globalCompositeOperation = 'source-over';
-                drawLineImage(coords, contextTemp, _tile);
-                drawCanvasShape(coords, contextTemp, '#ffffff', _tile);
+                drawLineImage(linePattern, coords, contextTemp);
+                drawCanvasShape(coords, contextTemp, '#ffffff');
             }
             for (let i = 0; i < datas.holes.length; i ++) {
                 const coords = datas.holes[i];
                 contextTemp.globalCompositeOperation = 'destination-out';
-                drawCanvasShape(coords, contextTemp, '#ffffff', _tile);
+                drawCanvasShape(coords, contextTemp, '#ffffff');
                 contextTemp.globalCompositeOperation = 'source-over';
-                drawLineImage(coords, contextTemp, _tile);
+                drawLineImage(linePattern, coords, contextTemp);
             }
             contextTemp.globalCompositeOperation = 'source-in';
             contextTemp.fillStyle = contextTemp.createPattern(groundImage[type], 'repeat');
@@ -109,7 +125,7 @@ function createCanvas(_size) {
   }
   
 
-function drawLineImage(_coords, _context, _tile) {
+function drawLineImage(_linePattern, _coords, _context) {
   const splatSpace = 6;
   let lastPoint = _coords[0];
   for (let i = 1; i < _coords.length; i ++) {
@@ -121,21 +137,21 @@ function drawLineImage(_coords, _context, _tile) {
     const stepY = Math.sin(angle) * splatSpace;
     for (let d = 0; d < nbDraw; d ++) {
         const rotation = Math.random() * 6;
-        const scale = 0.2 + Math.random() * 0.8;
+        const scale = _linePattern.minFactor + Math.random() * _linePattern.maxFactor;
         const dX = lastPoint[0] + stepX * d;
         const dY = lastPoint[1] + stepY * d;
         _context.save();
         _context.translate(dX, dY);
         _context.rotate(rotation);
         _context.scale(scale, scale);
-        _context.drawImage(canvasSplat, -splatSize / 2, -splatSize / 2);
+        _context.drawImage(_linePattern.canvas, -splatSize / 2, -splatSize / 2);
         _context.restore();
       }
       lastPoint = point;
     }
 }
 
-function drawCanvasShape(_coords, _context, _color, _tile) {
+function drawCanvasShape(_coords, _context, _color) {
     const start = _coords[0];
     _context.beginPath();
     _context.fillStyle = _color;

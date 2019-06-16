@@ -23,51 +23,46 @@ const api = {
         tileToLanduses.set(_tile.key, []);
         const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
         const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
-        registerDatas(_tile, extractedRelations);
-        registerDatas(_tile, extractedWays);
+        registerDatas(_tile.key, extractedRelations);
+        registerDatas(_tile.key, extractedWays);
         let landuseAdded = 0;
         landuseAdded += prepareLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
         landuseAdded += prepareLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
         if (landuseAdded > 0) scheduleDraw();
     }, 
 
-    tileRemoved : function(_tile) {
-        if (!tileToLanduses.get(_tile.key)) return false;
-        tileToLanduses.get(_tile.key)
+    tileRemoved : function(_tileKey) {
+        if (!tileToLanduses.get(_tileKey)) return false;
+        tileToLanduses.get(_tileKey)
         .forEach(landuseId => {
             const stored = storedLanduses.get(landuseId);
             if (!stored) return false;
             stored.refNb --;
-            if (stored.refNb <= 0) {
-                forgotLanduse(landuseId);
-                deleteLanduseGeometry(stored.id, stored.type);
-                storedLanduses.delete(landuseId);
-
-
-                    const zoom = 13;
-                    const bbox = calcBbox(stored.buildDatas.border);
-                    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
-                    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
-                    for (let x = tileA.x; x <= tileB.x; x ++) {
-                        for (let y = tileB.y; y <= tileA.y; y ++) {
-                            const tile = GLOBE.tileFromXYZ(x, y, zoom);
-                            if (!tile) continue;
-                            tile.removeLanduse(landuseId);
-                        }
-                    }
-
-
-
-
+            if (stored.refNb > 0) return;
+            forgotLanduse(landuseId);
+            deleteLanduseGeometry(stored.id, stored.type);
+            storedLanduses.delete(landuseId);
+            const zoom = 13;
+            const bbox = calcBbox(stored.buildDatas.border);
+            const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+            const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+            for (let x = tileA.x; x <= tileB.x; x ++) {
+                for (let y = tileB.y; y <= tileA.y; y ++) {
+                    const tile = GLOBE.tileFromXYZ(x, y, zoom);
+                    if (!tile) continue;
+                    const extension = tile.extensions.get('LANDUSE');
+                    if (!extension) continue;
+                    extension.removeLanduse(landuseId);
+                }
             }
         });
-        tileToLanduses.delete(_tile.key);
+        tileToLanduses.delete(_tileKey);
         scheduleDraw();
     }
 };
 
-function registerDatas(_tile, _extractedDatas) {
-    const curTileLinks = tileToLanduses.get(_tile.key);
+function registerDatas(_tileKey, _extractedDatas) {
+    const curTileLinks = tileToLanduses.get(_tileKey);
     for (let i = 0; i < _extractedDatas.length; i ++) {
         const landuse = _extractedDatas[i];
         curTileLinks.push(landuse.id);
@@ -169,7 +164,10 @@ function searchTilesUnderLanduse(_landuse) {
             if (!tile) continue;
             const map = new Map();
             map.set(_landuse.id, myLanduse);
-            tile.setLanduses(map);
+            // tile.setLanduses(map);
+            const extension = tile.extensions.get('LANDUSE');
+            if (!extension) continue;
+            extension.setLanduses(map);
         }
     }
 }
@@ -383,7 +381,9 @@ function forgotLanduse(_landuseId) {
         toDelete.push(key);
         const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
         if (!tile) continue;
-        tile.removeLanduse(_landuseId);
+        console.log('A');
+        const extension = tile.extensions.get('LANDUSE');
+        extension.removeLanduse(_landuseId);
     }
     for (let i = 0; i < toDelete.length; i ++) {
         tilesUnderLinks.delete(toDelete[i]);
@@ -472,6 +472,7 @@ function getLayerInfos(_type) {
     }
     if (_type == 'scrub') {
         meterBetweenLayers = 0.7;
+        groundOffset = 0.2;
         uvFactor = 2;
         materialNb = 2;
         nbLayers = 8;

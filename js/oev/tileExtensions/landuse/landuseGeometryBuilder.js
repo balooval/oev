@@ -33,6 +33,9 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
 
         for (let i = 0; i < _facesIndex.length; i ++) {
             const t = _facesIndex[i];
+            // bufferFaces[facesId + 0] = t[0];
+            // bufferFaces[facesId + 1] = t[1];
+            // bufferFaces[facesId + 2] = t[2];
             const points = t.getPoints();
             bufferFaces[facesId + 0] = points[0].id;
             bufferFaces[facesId + 1] = points[1].id;
@@ -51,8 +54,8 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
                         bufferColor[i + 1] = Math.min(255, 100 + value * 150);
                         bufferColor[i + 2] = 10 + value * 70;
                     } else {
-                        bufferColor[i + 0] = Math.min(255, 80 + value * 120);
-                        bufferColor[i + 1] = Math.min(255, 50 + value * 120);
+                        bufferColor[i + 0] = Math.min(255, 100 + value * 120);
+                        bufferColor[i + 1] = Math.min(255, 80 + value * 120);
                         bufferColor[i + 2] = 10 + value * 70;
                     }
 

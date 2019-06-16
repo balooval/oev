@@ -1,7 +1,8 @@
 import Renderer from '../../renderer.js';
+import GEO from '../../utils/geo.js';
 import GLOBE from '../../globe.js';
 import OsmReader from '../../utils/osmReader.js';
-import NavigationGraph from '../../utils/navigationGraph.js';
+// import NavigationGraph from '../../utils/navigationGraph.js';
 import LinesMaterial from './linesMaterial.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';
 
@@ -17,26 +18,43 @@ const api = {
         const nodesList = OsmReader.extractNodes(parsedJson);
         tileToLines.set(_tile.key, []);
         const extractedWays = extractElements(parsedJson, _tile.zoom);
-        NavigationGraph.build(extractedWays, nodesList);
+        // NavigationGraph.build(extractedWays, nodesList);
         registerDatas(_tile, extractedWays);
-        let lineAdded = 0;
-        lineAdded += buildLine(_tile, extractedWays, nodesList);
+        let lineAdded = buildLine(_tile, extractedWays, nodesList);
         if (lineAdded > 0) scheduleDraw();
     }, 
 
     tileRemoved : function(_tile) {
+        // console.log('A tileRemoved');
         if (!tileToLines.get(_tile.key)) return false;
-        NavigationGraph.cleanTile(_tile);
+        // console.log('B tileRemoved');
+        // NavigationGraph.cleanTile(_tile);
         tileToLines.get(_tile.key)
         .forEach(lineId => {
             if (!storedLines.get('LINE_' + lineId)) return false;
             const stored = storedLines.get('LINE_' + lineId);
             stored.refNb --;
-            if (stored.refNb <= 0) {
-                forgotLine(lineId);
-                deleteLineGeometry(stored.id, stored.type);
-                storedLines.delete('LINE_' + lineId);
+            if (stored.refNb > 0) return;
+            forgotLine(lineId);
+            deleteLineGeometry(stored.id, stored.type);
+            storedLines.delete('LINE_' + lineId);
+
+            const zoom = 13;
+            // console.log('stored.buildDatas.border', stored.buildDatas.border);
+            const bbox = calcBbox(stored.buildDatas.border);
+            const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+            const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+            for (let x = tileA.x; x <= tileB.x; x ++) {
+                for (let y = tileB.y; y <= tileA.y; y ++) {
+                    const tile = GLOBE.tileFromXYZ(x, y, zoom);
+                    if (!tile) continue;
+                    const extension = tile.extensions.get('LINES');
+                    if (!extension) continue;
+                    extension.removeLine(lineId);
+                }
             }
+
+
         });
         tileToLines.delete(_tile.key);
         scheduleDraw();
@@ -63,13 +81,47 @@ function buildLine(_tile, _extractedDatas, _nodesList) {
         storedLines.set('LINE_' + lineBuilded.id, {
             id : lineBuilded.id, 
             type : lineBuilded.type, 
-            refNb : 1
+            refNb : 1, 
+            buildDatas : lineBuilded, 
         });
+        if (lineBuilded.type == 'highway') {
+            searchTilesUnderWay(lineBuilded);
+        }
         drawLine(lineBuilded, _tile);
         lineAdded ++;
     }
     return lineAdded;
 }
+
+function searchTilesUnderWay(_way) {
+    const zoom = 13;
+    const bbox = calcBbox(_way.border);
+    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
+    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
+    for (let x = tileA.x; x <= tileB.x; x ++) {
+        for (let y = tileB.y; y <= tileA.y; y ++) {
+            const tile = GLOBE.tileFromXYZ(x, y, zoom);
+            if (!tile) continue;
+            const map = new Map();
+            map.set(_way.id, _way);
+            const extension = tile.extensions.get('LINES');
+            if (!extension) continue;
+            extension.setHighways(map);
+        }
+    }
+}
+
+function calcBbox(_border) {
+    const lon = _border.map(point => point[0]);
+    const lat = _border.map(point => point[1]);
+    return {
+        minLon : Math.min(...lon), 
+        maxLon : Math.max(...lon), 
+        minLat : Math.min(...lat), 
+        maxLat : Math.max(...lat), 
+    }
+}
+
 
 
 function scheduleDraw() {
@@ -202,6 +254,7 @@ function extractTags(_tags, _type) {
         res.height = 2;
     }
     if (_type == 'highway') {
+        res.highway = _tags.highway;
         res.width = 4;
         res.height = 0.5;
         const highwayProps = getHighwayTags(_tags.highway);
