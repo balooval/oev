@@ -1,4 +1,5 @@
 import Renderer from '../../renderer.js';
+import * as TILE from '../../tile.js';
 import LanduseStore from './landuseStore.js';
 import LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
@@ -19,12 +20,15 @@ class LanduseExtension {
 
         this.shapes = new Map();
         this.scheduleNb = 0;
+        this.canvas = null;
+        /*
         this.canvas = document.createElement('canvas');
         this.context = this.canvas.getContext('2d');
 		const canvasSize = 256;
 		this.canvas.width = canvasSize;
 		this.canvas.height = canvasSize;
         this.tile.extensionsMaps.set(this.id, this.canvas);
+        */
 
         this.isActive = this.tile.zoom >= 15;
         if (LanduseMaterial.isReady) {
@@ -85,8 +89,17 @@ class LanduseExtension {
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
         this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         this.tile.evt.removeEventListener('ADD_CHILDRENS', this, this.onTileSplit);
-        this.tile.extensionsMaps.delete(this.id);
-        this.drawCanvas();
+        // this.tile.extensionsMaps.delete(this.id);
+
+        if (this.canvas) {
+            this.tile.extensionsMaps.delete(this.id);
+            this.drawCanvas();
+            this.context = null;
+            this.canvas = null;
+        }
+
+
+        // this.drawCanvas();
         // if (!this.isActive) return false;
         LanduseStore.tileRemoved(this.tile.key);
         this.hide();
@@ -99,6 +112,14 @@ class LanduseExtension {
     
 
 
+    initCanvas() {
+        if (this.canvas) return;
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d');
+		this.canvas.width = TILE.mapSize;
+		this.canvas.height = TILE.mapSize;
+        this.tile.extensionsMaps.set(this.id, this.canvas);
+    }
 
 
     scheduleDraw() {
@@ -139,7 +160,7 @@ class LanduseExtension {
 
     setLanduses(_landuses) {
 		if (!this.splitLanduses(_landuses)) return false;
-		// this.drawCanvas();
+		this.initCanvas();
 		this.scheduleDraw();
 		for (let c = 0; c < this.tile.childTiles.length; c ++) {
             const child = this.tile.childTiles[c];

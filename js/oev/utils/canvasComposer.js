@@ -1,16 +1,16 @@
 import GEO from './geo.js';
 import * as NET_TEXTURES from '../net/textures.js'
+import * as TILE from '../tile.js'
 import LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
 
-const finalSize = 256;
 const canvasFinal = document.createElement('canvas');
-canvasFinal.width = finalSize;
-canvasFinal.height = finalSize;
+canvasFinal.width = TILE.mapSize;
+canvasFinal.height = TILE.mapSize;
 const contextFinal = canvasFinal.getContext("2d");
 
 const canvasTypes = new Map();
-canvasTypes.set('forest', createCanvas(finalSize));
-canvasTypes.set('scrub', createCanvas(finalSize));
+canvasTypes.set('forest', createCanvas(TILE.mapSize));
+canvasTypes.set('scrub', createCanvas(TILE.mapSize));
 
 const splatSize = 16;
 
@@ -38,7 +38,6 @@ function onMaterialReady() {
     groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
     groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
     // contextSplat.drawImage(NET_TEXTURES.texture('splat').image, 0, 0);
-
 
     let contextLine;
     contextLine = linePatterns.get('forest').canvas.getContext('2d');
@@ -68,7 +67,7 @@ function clearTypedDatas() {
 const api = {
   
 	draw : function(_landuses, _tileBBox) {
-        contextFinal.clearRect(0, 0, finalSize, finalSize);
+        contextFinal.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
         if (!_landuses.size) return canvasFinal;
         clearTypedDatas();
         
@@ -85,7 +84,7 @@ const api = {
             const datas = typedDatas[type];
             const canvasTemp = canvasTypes.get(type);
             const contextTemp = canvasTemp.getContext('2d');
-            contextTemp.clearRect(0, 0, finalSize, finalSize);
+            contextTemp.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
 
             for (let i = 0; i < datas.borders.length; i ++) {
                 const coords = datas.borders[i];
@@ -102,7 +101,7 @@ const api = {
             }
             contextTemp.globalCompositeOperation = 'source-in';
             contextTemp.fillStyle = contextTemp.createPattern(groundImage[type], 'repeat');
-            contextTemp.fillRect(0, 0, finalSize, finalSize);
+            contextTemp.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
             contextFinal.drawImage(canvasTemp, 0, 0);
         }
 
@@ -113,7 +112,7 @@ const api = {
 
 function convertCoordToCanvasPositions(_coords, _res, _tileBox) {
   for (let s = 0; s < _coords.length; s ++) {
-    _res.push(GEO.coordToCanvas(_tileBox, finalSize, _coords[s]));
+    _res.push(GEO.coordToCanvas(_tileBox, TILE.mapSize, _coords[s]));
   }
 }
 

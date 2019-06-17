@@ -1,7 +1,7 @@
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import ENVIRONMENT from './environment/environment.js';
-import TILE from './tile.js';
+import * as TILE from './tile.js';
 import GEO from './utils/geo.js';
 import MATH from './utils/math.js';
 import ElevationStore from './tileExtensions/elevation/elevationStore.js';
@@ -47,7 +47,7 @@ const api = {
 		const nbTiles = Math.pow(2, zoomBase);
 		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
 			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
-				const tile = new TILE(curTileX, curTileY, zoomBase);
+				const tile = new TILE.TileBasic(curTileX, curTileY, zoomBase);
 				tilesBase.push(tile);
 				tile.buildGeometry();
 			}

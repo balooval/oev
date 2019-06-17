@@ -1,9 +1,13 @@
+import Evt from '../../utils/event.js';
 import Renderer from '../../renderer.js';
+import * as TILE from '../../tile.js';
 import * as LinesLoader from './linesLoader.js';
 import LinesMaterial from './linesMaterial.js';
 import LinesModel from './linesModels.js';
 import LinesStore from './linesStore.js';
 import HighwayDrawer from './highwayDrawer.js';
+
+import GEO from '../../utils/geo.js';
 
 export {setApiUrl} from './linesLoader.js';
 
@@ -11,24 +15,25 @@ export function extensionClass() {
 	return LinesExtension;
 }
 
+const workerEvt = new Evt();
+const workerCanvas = new Worker('js/oev/tileExtensions/lines/workerLineDrawer.js');
+workerCanvas.addEventListener('message', evt => {
+    workerEvt.fireEvent('LINE_DRAW_' + evt.data.tileKey, evt.data.pixelsDatas);
+});
+
+
 class LinesExtension {
 	constructor(_tile) {
 		this.id = 'LINES';
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.tile = _tile;
-        this.meshes = {};
-        this.mesh = null;
         this.isActive = this.tile.zoom == 15;
 
         this.shapes = new Map();
         this.scheduleNb = 0;
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
-		const canvasSize = 256;
-		this.canvas.width = canvasSize;
-		this.canvas.height = canvasSize;
-        this.tile.extensionsMaps.set(this.id, this.canvas);
+        this.canvas = null;
+        
 
         if (LinesMaterial.isReady && LinesModel.isReady) {
             this.onRessourcesLoaded();
@@ -43,7 +48,7 @@ class LinesExtension {
 
     onMaterialReady() {
         LinesMaterial.evt.removeEventListener('READY', this, this.onMaterialReady);
-		if (this.tile.isReady) this.onTileReady();
+		if (this.tile.isReady) this.onRessourcesLoaded();
     }
 
     onModelsReady() {
@@ -103,8 +108,13 @@ class LinesExtension {
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
         this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         this.tile.evt.removeEventListener('ADD_CHILDRENS', this, this.onTileSplit);
-        this.tile.extensionsMaps.delete(this.id);
-        this.drawCanvas();
+        if (this.canvas) {
+            this.tile.extensionsMaps.delete(this.id);
+            this.drawCanvas();
+            this.context = null;
+            this.canvas = null;
+            workerEvt.removeEventListener('LINE_DRAW_' + this.tile.key, this, this.onWorkerFinished);
+        }
         // if (!this.isActive) return false;
         LinesStore.tileRemoved(this.tile);
         this.hide();
@@ -113,6 +123,16 @@ class LinesExtension {
         this.tile = null;
         this.shapes.clear();
 		Renderer.MUST_RENDER = true;
+    }
+
+    initCanvas() {
+        if (this.canvas) return;
+        this.canvas = document.createElement('canvas');
+        this.context = this.canvas.getContext('2d');
+		this.canvas.width = TILE.mapSize;
+		this.canvas.height = TILE.mapSize;
+        this.tile.extensionsMaps.set(this.id, this.canvas);
+        workerEvt.addEventListener('LINE_DRAW_' + this.tile.key, this, this.onWorkerFinished);
     }
 
 
@@ -131,7 +151,6 @@ class LinesExtension {
     }
         
     onTileSplit() {
-        console.log('onTileSplit');
         for (let c = 0; c < this.tile.childTiles.length; c ++) {
             const child = this.tile.childTiles[c];
             const extension = child.extensions.get(this.id);
@@ -149,15 +168,43 @@ class LinesExtension {
     drawCanvas() {
         this.scheduleNb --;
         if (!this.tile) return false
-        this.context.clearRect(0, 0, 256, 256);
-        this.context.drawImage(HighwayDrawer.draw(this.shapes, this.tile.bbox, this.tile.key), 0, 0);
+        this.context.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
+
+        if (this.shapes.size) {
+            const localWays = [];
+            this.shapes.forEach(curWay => {
+                if (!curWay.bordersSplit.length) return false;
+                for (let i = 0; i < curWay.bordersSplit.length; i ++ ){
+                    const local = GEO.coordToCanvas(this.tile.bbox, TILE.mapSize, curWay.bordersSplit[i]);
+                    localWays.push({
+                        positions : local, 
+                        props : curWay.props, 
+                    });
+                }
+            });
+            const textureBuffer = LinesMaterial.textureBuffer();
+            workerCanvas.postMessage({
+                localCoords : localWays, 
+                tileKey : this.tile.key, 
+                zoom : this.tile.zoom, 
+                textureBuffer : textureBuffer, 
+            });
+        }
+    }
+
+    onWorkerFinished(_pixelsDatas) {
+        if (!this.tile) return;
+        if (!this.context) return;
+        const imageDatas = new ImageData(_pixelsDatas, 256, 256);
+        this.context.putImageData(imageDatas, 0, 0);
         this.tile.redrawDiffuse();
     }
     
 
     setHighways(_highways) {
         if (!this.splitHighways(_highways)) return false;
-		this.drawCanvas();
+        this.initCanvas();
+        this.scheduleDraw();
 		for (let c = 0; c < this.tile.childTiles.length; c ++) {
             const child = this.tile.childTiles[c];
             const extension = child.extensions.get(this.id);
@@ -186,7 +233,7 @@ class LinesExtension {
 				border : curWay.border, 
 				bordersSplit : [], 
             };
-            // if (curWay.props.width < 4) return false;
+            // if (curWay.props.width < 5) return false;
             // if (curWay.props.highway != 'primary') return false;
             myWay.bordersSplit = lineclip(curWay.border, bbox);
             if (myWay.bordersSplit.length == 0) {

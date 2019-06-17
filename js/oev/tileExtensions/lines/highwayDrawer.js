@@ -1,21 +1,21 @@
 import GEO from '../../utils/geo.js';
+import * as TILE from '../../tile.js';
 
-const finalSize = 256;
 const canvasFinal = document.createElement('canvas');
-canvasFinal.width = finalSize;
-canvasFinal.height = finalSize;
+canvasFinal.width = TILE.mapSize;
+canvasFinal.height = TILE.mapSize;
 const contextFinal = canvasFinal.getContext("2d");
 
 
 const api = {
   
 	draw : function(_ways, _tileBBox, _key) {
-        contextFinal.clearRect(0, 0, finalSize, finalSize);
+        contextFinal.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
         if (!_ways.size) return canvasFinal;
         _ways.forEach(curWay => {
             if (!curWay.border.length) return false;
             for (let i = 0; i < curWay.bordersSplit.length; i ++ ){
-                const local = GEO.coordToCanvas(_tileBBox, finalSize, curWay.bordersSplit[i]);
+                const local = GEO.coordToCanvas(_tileBBox, TILE.mapSize, curWay.bordersSplit[i]);
                 
                 // contextFinal.setLineDash([]);
                 drawLine(contextFinal, local, curWay.props.width, 130);

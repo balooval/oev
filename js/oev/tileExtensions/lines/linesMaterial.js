@@ -7,6 +7,7 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LINES', null, onActi
 const texturesToLoad = [
     ['fence', 'fence.png'], 
     ['wall', 'wall.png'], 
+    ['path_texture', 'path_texture.png'], 
     ['vehicle', 'voiture-map.png'], 
 ];
 
@@ -15,11 +16,20 @@ const api = {
     isReady : false, 
 
     material : function(_type) {
-        return materials[_type];
+        return materials.get(_type);
+    }, 
+
+    textureBuffer : function() {
+        return textureBuffer;
     }, 
 };
 
-const materials = {};
+const materials = new Map();
+
+let textureBuffer = null;
+const canvasTexture = document.createElement('canvas');
+canvasTexture.width = 16;
+canvasTexture.height = 16;
 
 
 function onActivateExtension() {
@@ -29,10 +39,10 @@ function onActivateExtension() {
 }
 
 function createMaterials() {
-    materials.fence = new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2});
-    materials.wall = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF});
-    materials.highway = new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918});
-    materials.vehicle = new THREE.MeshPhysicalMaterial({roughness:0.2,metalness:0, color: 0xffffff});
+    materials.set('fence', new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
+    materials.set('wall', new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF}));
+    materials.set('highway', new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918}));
+    materials.set('vehicle', new THREE.MeshPhysicalMaterial({roughness:0.2,metalness:0, color: 0xffffff}));
 }
 
 function loadTextures() {
@@ -42,9 +52,16 @@ function loadTextures() {
 }
 
 function onTexturesLoaded() {
-    materials.fence.map = NET_TEXTURES.texture('fence');
-    materials.wall.map = NET_TEXTURES.texture('wall');
-    materials.vehicle.map = NET_TEXTURES.texture('vehicle');
+    materials.get('fence').map = NET_TEXTURES.texture('fence');
+    materials.get('wall').map = NET_TEXTURES.texture('wall');
+    materials.get('vehicle').map = NET_TEXTURES.texture('vehicle');
+
+
+    const context = canvasTexture.getContext('2d');
+    context.drawImage(NET_TEXTURES.texture('path_texture').image, 0, 0);
+    textureBuffer = context.getImageData(0, 0, 16, 16).data;
+
+
     api.isReady = true;
     api.evt.fireEvent('READY')
 }

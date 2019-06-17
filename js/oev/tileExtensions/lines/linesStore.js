@@ -307,12 +307,6 @@ function getHighwayTags(_highwayValue) {
             tags : [
                 'tertiary', 
                 'tertiary_link', 
-            ], 
-            width : 4
-        }, 
-        {
-            tags : [
-                'tertiary', 
                 'unclassified', 
                 'road', 
             ], 
@@ -329,6 +323,12 @@ function getHighwayTags(_highwayValue) {
             tags : [
                 'pedestrian', 
                 'service', 
+            ], 
+            width : 2
+        }, 
+        {
+            tags : [
+                'track', 
             ], 
             width : 2
         }, 
@@ -390,6 +390,7 @@ const supportedTags = [
             'pedestrian', 
             'raceway', 
             'road', 
+            'track', 
         ], 
     }, 
 ];

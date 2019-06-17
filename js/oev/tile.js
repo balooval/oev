@@ -5,13 +5,10 @@ import * as TileExtension from './tileExtensions/tileExtension.js';
 import {loader as MapLoader} from './tileExtensions/map/mapLoader.js';
 import GLOBE from './globe.js';
 import {texture as Texture} from './net/textures.js';
-import CanvasComposer from './utils/canvasComposer.js';
 
-const canvasAlphaTemp = document.createElement('canvas');
-canvasAlphaTemp.width = 256;
-canvasAlphaTemp.height = 256;
+export const mapSize = 256;
 
-class Tile {
+export class TileBasic {
 		
 	constructor(_tileX, _tileY, _zoom) {
 		this.evt = new Evt();
@@ -61,8 +58,8 @@ class Tile {
     }
     
     redrawDiffuse() {
-        this.composeContext.clearRect(0, 0, 256, 256);
-		this.composeContext.drawImage(this.diffuseMap, 0, 0);
+        this.composeContext.clearRect(0, 0, mapSize, mapSize);
+		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, mapSize, mapSize);
         this.extensionsMaps.forEach(map => {
             this.composeContext.drawImage(map, 0, 0);
         });
@@ -72,9 +69,8 @@ class Tile {
 
 	createCanvas() {
 		const canvas = document.createElement('canvas');
-		const canvasSize = 256;
-		canvas.width = canvasSize;
-		canvas.height = canvasSize;
+		canvas.width = mapSize;
+		canvas.height = mapSize;
 		return canvas;
 	}
 	
@@ -306,7 +302,7 @@ class Tile {
 	}
 		
 	addChild(_coords, _offsetX, _offsetY) {
-		const newTile = new Tile(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
+		const newTile = new TileBasic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
 		newTile.parentTile = this;
 		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
@@ -403,5 +399,3 @@ function mapValue(_value, _min, _max) {
 	if (length == 0) return _value;
 	return (_value - _min) / length;
 }
-
-export {Tile as default};

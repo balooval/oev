@@ -6,6 +6,7 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LINES', null, onActi
 
 const modelsToLoad = [
     ['vehicle', 'voiture.json'], 
+    // ['vehicle', 'voiture.glb'], 
 ];
 
 const api = {
