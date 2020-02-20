@@ -8,8 +8,12 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onAc
 
 const texturesToLoad = [
     ['shell_void', 'shell_void.png'], 
-    ['landuse_border_forest', 'splat_alpha.png'], 
-    ['landuse_border_scrub', 'landuse_border_scrub.png'], 
+    
+    // ['landuse_border_forest', 'splat_alpha.png'], 
+    // ['landuse_border_scrub', 'landuse_border_scrub.png'], 
+
+    ['landuse_border_scrub', 'splat_alpha.png'], 
+    ['landuse_border_forest', 'landuse_border_scrub.png'], 
     
     // ['shell_water_normal_1', 'shell_water_normal_tumblr_1.png'], 
     // ['shell_water_normal_2', 'shell_water_normal_tumblr_2.png'], 

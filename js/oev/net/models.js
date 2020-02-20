@@ -1,6 +1,10 @@
+import {GLTFLoader} from '../../libs/GLTFLoader.js';
+
+
 const batchs = [];
 const modelsLoaded = {};
 let objectLoader = null;
+let gltflLoader = null;
 let curBatch = null;
 
 export function get(_name) {
@@ -8,6 +12,7 @@ export function get(_name) {
 }
 
 export function init() {
+	gltflLoader = new GLTFLoader();
 	objectLoader = new THREE.ObjectLoader();
 }
 
@@ -41,14 +46,20 @@ function loadNextBatch() {
 
 function loadNextModel() {
 	const nextModel = curBatch.list.shift();
-	objectLoader.load(
-		'assets/models/' + nextModel.url, 
-		object => {
-			object.rotation.x = Math.PI;
-			// object.scale.x = 0.005;
-			// object.scale.y = 0.005;
-			// object.scale.z = 0.005;
-			modelsLoaded[nextModel.id] = object;
+	if (nextModel.url.includes('.glb')) {
+		loadGlb(nextModel);
+	} else {
+		loadJson(nextModel);
+	}
+}
+
+function loadGlb(_nextModel) {
+	gltflLoader.load(
+		'assets/models/' + _nextModel.url, 
+		gltf => {
+			console.log('gltf', gltf);
+			// gltf.asset.rotation.x = Math.PI;
+			modelsLoaded[_nextModel.id] = gltf.scene.children[0];
 			if (curBatch.list.length == 0) {
 				curBatch.callback();
 				loadNextBatch();
@@ -57,6 +68,24 @@ function loadNextModel() {
 			}
 		}, 
 		xhr => {},
-		xhr => console.warn( 'NetModels error for loading', nextModel.url )
+		xhr => console.warn( 'NetModels error for loading', _nextModel.url )
+	);
+}
+
+function loadJson(_nextModel) {
+	objectLoader.load(
+		'assets/models/' + _nextModel.url, 
+		object => {
+			object.rotation.x = Math.PI;
+			modelsLoaded[_nextModel.id] = object;
+			if (curBatch.list.length == 0) {
+				curBatch.callback();
+				loadNextBatch();
+			}else{
+				loadNextModel();
+			}
+		}, 
+		xhr => {},
+		xhr => console.warn( 'NetModels error for loading', _nextModel.url )
 	);
 }

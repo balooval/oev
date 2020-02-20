@@ -223,10 +223,10 @@ const api = {
 				Renderer.camera.far = api.radius * api.globalScale;
 				Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
 				Renderer.camera.updateProjectionMatrix();
-				if (Renderer.scene.fog) {
-					Renderer.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
-					Renderer.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
-				}
+				// if (Renderer.scene.fog) {
+				// 	Renderer.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
+				// 	Renderer.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
+				// }
 				api.evt.fireEvent('LOD_CHANGED');
 			}
 		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {

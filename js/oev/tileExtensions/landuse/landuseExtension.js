@@ -30,7 +30,7 @@ class LanduseExtension {
         this.tile.extensionsMaps.set(this.id, this.canvas);
         */
 
-        this.isActive = this.tile.zoom >= 15;
+        this.isActive = this.tile.zoom >= 13;
         if (LanduseMaterial.isReady) {
             this.onMaterialReady();
         } else {
@@ -132,7 +132,7 @@ class LanduseExtension {
         this.scheduleNb --;
         if (!this.tile) return false
         this.context.clearRect(0, 0, 256, 256);
-        this.context.drawImage(CanvasComposer.draw(this.shapes, this.tile.bbox), 0, 0);
+        this.context.drawImage(CanvasComposer.draw(this.shapes, this.tile.bbox, this.tile.zoom), 0, 0);
         this.tile.redrawDiffuse();
     }
 

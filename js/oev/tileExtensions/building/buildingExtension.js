@@ -81,7 +81,7 @@ class BuildingExtension {
 	}
 
 	construct(_datas) {
-		if (this.meshWalls != undefined) {
+		if (this.meshWalls != undefined) { // TODO: et le mesh roof ?
 			Renderer.scene.add(this.meshWalls);
 			return false;
 		}

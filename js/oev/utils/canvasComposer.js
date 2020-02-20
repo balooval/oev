@@ -37,7 +37,6 @@ function onMaterialReady() {
     LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
     groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
     groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
-    // contextSplat.drawImage(NET_TEXTURES.texture('splat').image, 0, 0);
 
     let contextLine;
     contextLine = linePatterns.get('forest').canvas.getContext('2d');
@@ -66,7 +65,8 @@ function clearTypedDatas() {
 
 const api = {
   
-	draw : function(_landuses, _tileBBox) {
+	draw : function(_landuses, _tileBBox, _zoom) {
+        const sizeFactor = getSizeFactor(_zoom);
         contextFinal.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
         if (!_landuses.size) return canvasFinal;
         clearTypedDatas();
@@ -89,7 +89,7 @@ const api = {
             for (let i = 0; i < datas.borders.length; i ++) {
                 const coords = datas.borders[i];
                 contextTemp.globalCompositeOperation = 'source-over';
-                drawLineImage(linePattern, coords, contextTemp);
+                drawLineImage(linePattern, coords, contextTemp, sizeFactor);
                 drawCanvasShape(coords, contextTemp, '#ffffff');
             }
             for (let i = 0; i < datas.holes.length; i ++) {
@@ -97,7 +97,7 @@ const api = {
                 contextTemp.globalCompositeOperation = 'destination-out';
                 drawCanvasShape(coords, contextTemp, '#ffffff');
                 contextTemp.globalCompositeOperation = 'source-over';
-                drawLineImage(linePattern, coords, contextTemp);
+                drawLineImage(linePattern, coords, contextTemp, sizeFactor);
             }
             contextTemp.globalCompositeOperation = 'source-in';
             contextTemp.fillStyle = contextTemp.createPattern(groundImage[type], 'repeat');
@@ -109,6 +109,11 @@ const api = {
     }, 
 
 };
+
+function getSizeFactor(_zoom) {
+    const zoomDiff = _zoom - 13;
+    return zoomDiff * 0.5;
+}
 
 function convertCoordToCanvasPositions(_coords, _res, _tileBox) {
   for (let s = 0; s < _coords.length; s ++) {
@@ -124,7 +129,7 @@ function createCanvas(_size) {
   }
   
 
-function drawLineImage(_linePattern, _coords, _context) {
+function drawLineImage(_linePattern, _coords, _context, _sizeFactor) {
   const splatSpace = 6;
   let lastPoint = _coords[0];
   for (let i = 1; i < _coords.length; i ++) {
@@ -136,7 +141,7 @@ function drawLineImage(_linePattern, _coords, _context) {
     const stepY = Math.sin(angle) * splatSpace;
     for (let d = 0; d < nbDraw; d ++) {
         const rotation = Math.random() * 6;
-        const scale = _linePattern.minFactor + Math.random() * _linePattern.maxFactor;
+        const scale = (_linePattern.minFactor + Math.random() * _linePattern.maxFactor) * _sizeFactor;
         const dX = lastPoint[0] + stepX * d;
         const dY = lastPoint[1] + stepY * d;
         _context.save();

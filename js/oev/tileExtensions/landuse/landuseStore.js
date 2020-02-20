@@ -445,7 +445,7 @@ function getLayerInfos(_type) {
         meterBetweenLayers = 1;
         nbLayers = 16;
         materialNb = 4;
-        uvFactor = 3;
+        uvFactor = 12;
         vertexColor = true;
         hideTile = true;
     }
@@ -473,7 +473,7 @@ function getLayerInfos(_type) {
     if (_type == 'scrub') {
         meterBetweenLayers = 0.7;
         groundOffset = 0.2;
-        uvFactor = 2;
+        uvFactor = 8;
         materialNb = 2;
         nbLayers = 8;
         vertexColor = true;
@@ -481,7 +481,8 @@ function getLayerInfos(_type) {
     }
     if (_type == 'rock') {
         meterBetweenLayers = 0.6;
-        uvFactor = 2;
+        // uvFactor = 2;
+        uvFactor = 8;
         materialNb = 1;
         nbLayers = 2;
         groundOffset = 1;
@@ -520,11 +521,11 @@ const equalsTags = {
 };
 
 const tagsZoom = {
-    forest : 15, 
-    scrub : 15, 
+    forest : 13, 
+    scrub : 13, 
     vineyard : 16, 
     grass : 17, 
-    rock : 15, 
+    rock : 13, 
     water : 15, 
     wetland : 15, 
 };

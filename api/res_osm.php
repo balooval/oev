@@ -2,11 +2,14 @@
 class Api_osm extends Api_default {
 
     public $contentType = 'image/png';
-    protected $dirCache = PATH_CACHE . 'tiles_osm';
+    protected $dirCache = PATH_CACHE . 'tiles_osm_fr';
     private $serversList = [
-        'http://a.tile.openstreetmap.org', 
-        'http://b.tile.openstreetmap.org', 
-        'http://c.tile.openstreetmap.org', 
+        // 'http://a.tile.openstreetmap.org', 
+        // 'http://b.tile.openstreetmap.org', 
+        // 'http://c.tile.openstreetmap.org', 
+        'http://a.tile.openstreetmap.fr/osmfr/', 
+        'http://b.tile.openstreetmap.fr/osmfr/', 
+        'http://c.tile.openstreetmap.fr/osmfr/', 
     ];
     private $params;
 

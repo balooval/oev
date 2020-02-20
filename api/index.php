@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 define('PATH_CACHE', dirname(__FILE__) . '/../cache/');
 require_once(dirname(__FILE__) . '/res_default.php');
 $ressource = $_GET['ressource'];
