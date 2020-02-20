@@ -13,8 +13,9 @@ const api = {
     init : function(_htmlContainer) {
         const elmtHtmlContainer = document.getElementById(_htmlContainer);
         containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
+        const parentElmt = elmtHtmlContainer.parentNode;
         const intElemClientWidth = elmtHtmlContainer.clientWidth;
-        const intElemClientHeight = document.getElementById('main').clientHeight;
+        const intElemClientHeight = parentElmt.clientHeight;
         sceneWidth = Math.min(intElemClientWidth, 13000);
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new THREE.Scene();

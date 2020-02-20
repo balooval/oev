@@ -8,7 +8,9 @@ let urlParams = {
 
 const api = {
 
-    init : function() {
+    init : function(_params, _startCamera) {
+        urlParams.location = _startCamera;
+        if (!_params.enabled) return;
         parseHash(location.hash);
         APP.evt.addEventListener('APP_INIT', null, onAppStart);
     }, 
@@ -33,11 +35,6 @@ function updateHash(_urlParams) {
 
 function onAppStart() {
     APP.evt.removeEventListener('APP_INIT', null, onAppStart);
-    urlParams.location = urlParams.location || {
-        x : 4.1862, 
-        y : 43.7682, 
-        z : 13, 
-    }
     TileExtensionEvt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivate);
     TileExtensionEvt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, onExtensionDesctivate);
     GLOBE.evt.addEventListener('READY', null, onGlobeReady);

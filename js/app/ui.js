@@ -10,24 +10,39 @@ let elmtCamHeading;
 let elmtCoord;
 let elmtCurTile;
 let lastTimeLoadingUpdated = 0;
+let params;
 
 const apiUi = {
 	dragSun : false, 
 
-	init : function() {
-		UiTilesExtension.init();
+	init : function(_params) {
+		params = _params;
 		UiPlane.init();
-		GLOBE.evt.addEventListener('READY', null, onGlobeReady);
 		elmtCamHeading = document.getElementById("camHeading");
-		elmtCoord = document.getElementById("overlayUICoords");
 		elmtCurTile = document.getElementById("overlayCurtile");
 		Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
 		Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
-		DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
 		APP.evt.addEventListener('APP_INIT', null, onAppInit);
 		APP.evt.addEventListener('APP_START', null, onAppStart);
-		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionActivate);
-		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionDesctivate);
+		if (!params.waypoints) {
+			document.getElementById('overlayWaypoints').remove();
+		}
+		if (params.navigation) {
+			GLOBE.evt.addEventListener('READY', null, onGlobeReady);
+		} else {
+			document.getElementById('overlayNavigation').remove();
+		}
+		if (params.enabled) {
+			UiTilesExtension.init();
+			elmtCoord = document.getElementById('overlayUICoords');
+			DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
+			TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionActivate);
+			TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', UiTilesExtension, UiTilesExtension.onExtensionDesctivate);
+		} else {
+			document.getElementById('overlayExtensions').remove();
+			document.getElementById('overlayUICoords').remove();
+			document.getElementById('overlayUILoading').remove();
+		}
 	}, 
 		
 	setCamera : function(_camCtrl) {
@@ -35,6 +50,7 @@ const apiUi = {
 	}, 
 
 	showUICoords : function(_lon, _lat, _ele){
+		if (!params.enabled) return;
 		elmtCoord.innerHTML = 'Lon : ' + (Math.round(_lon * 1000) / 1000) + ', Lat : ' + (Math.round(_lat * 1000) / 1000) + ', Elevation : ' + Math.round(_ele);
 	}, 
 
@@ -48,13 +64,13 @@ const apiUi = {
 	}, 
 
 	openModal : function( _content ){
-		document.getElementById( "modalContent" ).innerHTML = _content;
-		document.getElementById( "modalContainer" ).classList.add( "activ" );
+		document.getElementById('modalContent').innerHTML = _content;
+		document.getElementById('modalContainer').classList.add('activ');
 	}, 
 
 	closeModal : function(){
-		document.getElementById( "modalContainer" ).classList.remove( "activ" );
-		document.getElementById( "modalContent" ).innerHTML = '';
+		document.getElementById('modalContainer').classList.remove('activ');
+		document.getElementById('modalContent').innerHTML = '';
 	}, 
 };
 
@@ -74,6 +90,7 @@ function onAppInit() {
 }
 
 function onAppStart() {
+	if (!params.waypoints) return;
 	onWaypointsChanged(Navigation.waypoints());
 	Navigation.evt.addEventListener('WAYPOINT_ADDED', null, onWaypointsChanged);
 }

@@ -29,7 +29,23 @@ const APP = {
 	clock : null, 
 	tileExtensions : {}, 
 
-	init : function(_htmlContainer) {
+	parseParams : function(_params) {
+		_params = _params ?? {};
+		_params.CAMERA = _params.CAMERA ?? {};
+		_params.CAMERA.x = _params.CAMERA.x ?? 2.3831;
+		_params.CAMERA.y = _params.CAMERA.y ?? 48.8809;
+		_params.CAMERA.z = _params.CAMERA.z ?? 13;
+		_params.UI = _params.UI ?? {};
+		_params.UI.enabled = _params.UI.enabled ?? false;
+		_params.UI.waypoints = _params.UI.waypoints ?? false;
+		_params.UI.navigation = _params.UI.navigation ?? false;
+		_params.URL = _params.URL ?? {};
+		_params.URL.disabled = _params.URL.enabled ?? false;
+		return _params;
+	}, 
+
+	init : function(_htmlContainer, _params = {}) {
+		const params = this.parseParams(_params);
 		APP.evt = new Evt();
 		Renderer.init(_htmlContainer);
 		NET_TEXTURES.init('assets/textures');
@@ -38,7 +54,7 @@ const APP = {
 		INPUT.init();
 		GLOBE.init();
 		Navigation.init();
-		UrlParser.init();
+		UrlParser.init(params.URL, params.CAMERA);
 		APP.clock = new THREE.Clock();
 		const serverURL = 'https://val.openearthview.net/api/';
 		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
@@ -63,7 +79,6 @@ const APP = {
 		TileExtension.activate('TILE2D');
 		TileExtension.activate('ELEVATION');
 		TileExtension.activate('NORMAL');
-
 		const activesExtensions = UrlParser.activesExtensions();
 		activesExtensions.forEach(extensionToActivate => {
 			TileExtension.activate(extensionToActivate);
@@ -71,7 +86,7 @@ const APP = {
 		Renderer.scene.add(GLOBE.meshe);
 		const elmtHtmlContainer = document.getElementById(_htmlContainer);
 		containerOffset = new THREE.Vector2(elmtHtmlContainer.offsetLeft, elmtHtmlContainer.offsetTop);
-		UI.init();
+		UI.init(params.UI);
 		APP.evt.fireEvent('APP_INIT');	
 		APP.loadTextures()
 		.then(() => {

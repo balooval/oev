@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>OpenEarthViewer</title>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" href="css/styles.css" type="text/css" />
+		<script type="text/javascript" src="js/libs/three.min.js"></script>
+		<script type="text/javascript" src="js/libs/BufferGeometryUtils.js"></script>
+		<script type="text/javascript" src="js/libs/poly2tri.js"></script>
+		<script type="text/javascript" src="js/libs/offset.js"></script>
+		<script type="text/javascript" src="js/libs/Earcut.js"></script>
+		<script type="text/javascript" src="js/oev/utils/lineclip.js"></script>
+		<script type="text/javascript" src="js/libs/jsts.min.js"></script>
+		<script type="text/javascript" src="js/libs/perlin.js"></script>
+		<script type="text/javascript" src="js/libs/polygon-clipping.umd.js"></script>
+		<script type="text/javascript" src="js/libs/bundle-ct2d.js"></script>
+		<script src="js/app.js" type="module"></script>
+	</head>
+	
+	<body style="background-color:#fff;">
+		<div id="modalContainer">
+			<div id="modalWindow">
+				<div id="modalContent">
+				
+				</div>
+			</div>
+		</div>
+		
+		Version embarquée dans un contenu
+		<br>
+		<br>
+		<div id="embed">
+			<div id="threeContainer">
+				<div class="overlayUI" id="overlayUICoords">
+				</div>
+				<div class="overlayUI" id="overlayCurtile">
+				</div>
+				<div class="overlayUI" id="overlayNavigation">
+					<span class="floating-btn">
+						<div class="heading" id="camHeading"></div>
+					</span>
+					<span class="floating-btn" id="btn-zoom-out">
+						<img src="img/icon_zoom_out.png"/>
+					</span>
+					<span class="floating-btn" id="btn-zoom-in">
+						<img src="img/icon_zoom_in.png"/>
+					</span>
+				</div>
+				<div class="overlayUI" id="overlayExtensions">
+				</div>
+				<div class="overlayUI" id="overlayExtensionsUi">
+				</div>
+				<div class="overlayUI" id="overlayWaypoints">
+					<div id="waypointsInfos"></div>
+				</div>
+
+				<div class="overlayUI" id="overlayUILoading">
+					<div id="computingQueue"></div>
+					<div id="loading_OBJECTS"></div>
+					<div id="loading_TILE2D"></div>
+					<div id="loading_ELE"></div>
+					<div id="loading_MODELS"></div>
+					<div id="loading_BUILDINGS"></div>
+					<div id="loading_LANDUSE"></div>
+					<div id="loading_NORMAL"></div>
+					<div id="loading_NODES"></div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			window.addEventListener('load', evt => {
+				APP.init('threeContainer', {
+					// CAMERA : {
+					// 	x : 4.1862, 
+					// 	y : 43.7682, 
+					// 	z : 13, 
+					// }, 
+					UI : {
+						// enabled : true, 
+						// waypoints : true, 
+						// navigation : true, 
+					}, 
+					URL : {
+						// enabled : true,
+					}
+				});
+			})
+			
+			function render() {
+				requestAnimationFrame(render);
+				APP.render();
+			}
+		</script>
+	</body>
+</html>

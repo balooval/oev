@@ -66,6 +66,11 @@ a{
 	overflow: hidden;
 }
 
+#embed {
+	width: 600px;
+	height: 400px;
+}
+
 #footer{
 	height: 5%;
 	padding: 3px;
