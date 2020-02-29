@@ -1,3 +1,6 @@
+import * as THREE from '../../../libs/three.module.js';
+import * as Perlin from '../../../libs/perlin-module.js';
+import * as BufferGeometryUtils from '../../../libs/BufferGeometryUtils-module.js';
 import GLOBE from '../../globe.js';
 import * as CacheGeometry from '../../utils/cacheGeometry.js';
 
@@ -45,7 +48,7 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
         if (_layerInfos.vertexColor) {
             if (!bufferColor) {
                 bufferColor = new Uint8Array(verticesNb * 3);
-                noise.seed(Math.random());
+                Perlin.seed(Math.random());
                 for (let i = 0; i < bufferVertices.length; i += 3) {
                     const value = perlinValue(bufferVertices[i + 0], bufferVertices[i + 1], bufferVertices[i + 2]);
 
@@ -64,10 +67,10 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
                     // bufferColor[i + 2] = 255;
                 }
             }
-            bufferGeometry.addAttribute('color', new THREE.BufferAttribute(bufferColor, 3, true));
+            bufferGeometry.setAttribute('color', new THREE.BufferAttribute(bufferColor, 3, true));
         }
-        bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-        bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+        bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+        bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
@@ -75,14 +78,14 @@ export function buildLanduseGeometry(_landuse, _layerInfos, _facesIndex, _elevat
         let curLayerMap = Math.floor(layer / _layerInfos.layersByMap);
         if (curLayerMap != lastMaterialLayer) {
             lastMaterialLayer = curLayerMap;
-            const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
+            const mergedLayersBuffer = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
             layersBuffers.push(mergedLayersBuffer);
             CacheGeometry.storeGeometries(curLayerBuffersGeos);
             curLayerBuffersGeos = [];
         }
         curLayerBuffersGeos.push(bufferGeometry);
     }
-    const mergedLayersBuffer = THREE.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
+    const mergedLayersBuffer = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(curLayerBuffersGeos);
     CacheGeometry.storeGeometries(curLayerBuffersGeos);
     curLayerBuffersGeos = [];
     layersBuffers.push(mergedLayersBuffer);
@@ -94,7 +97,7 @@ function perlinValue(_x, _y, _z) {
     let scale = 0.05;
     let factor = 1;
     for (let i = 0; i < 5; i ++) {
-        const value = noise.simplex3(_x * scale, _y * scale, _z * scale);
+        const value = Perlin.simplex3(_x * scale, _y * scale, _z * scale);
         res += (value * factor);
         factor *= 0.6;
         scale *= 2;

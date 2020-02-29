@@ -1,4 +1,4 @@
-importScripts('/js/libs/Earcut.js');
+import Earcut from '/js/libs/Earcut-module.js';
 
 onmessage = function(_msg) {
 	let buildings = _msg.data.buildingsDatas;
@@ -68,7 +68,7 @@ function prepareRoofDome(_building) {
 	const coordCenter = averagePos(_building.coords);
 	const directionToCenter = [];
 	for (let i = 0; i < _building.coords.length; i ++) {
-		coord = _building.coords[i];
+		const coord = _building.coords[i];
 		const dist = Math.sqrt(Math.pow(coordCenter[0] - coord[0], 2) + Math.pow(coordCenter[1] - coord[1], 2));
 		const angle = Math.atan2(coordCenter[1] - coord[1], coordCenter[0] - coord[0]);
 		directionToCenter.push({
@@ -146,7 +146,7 @@ function prepareRoofDome(_building) {
 function prepareRoofFlat(_building) {
 	const allCoords = _building.coords.concat(_building.holesCoords);
 	const buildingNbVert = allCoords.length;
-	const facesIndex = earcut(allCoords.flat(), _building.holesIndex);
+	const facesIndex = Earcut(allCoords.flat(), _building.holesIndex);
 	const bufferFaces = Uint32Array.from(facesIndex);
 	const bufferCoord = new Float32Array(buildingNbVert * 3);
 	const colorVertices = [];
@@ -234,7 +234,7 @@ function prepareWallsGeometry(_buildings) {
 		const building = walls[i];
 		let buildingCoordNb = building.coords.length;
 		fixDirection(building.coords, building.id);
-		fondationsEle = 0;
+		let fondationsEle = 0;
 		if (building.props.minAlt == 0) fondationsEle = -10;
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
 			for (let c = 0; c < buildingCoordNb; c ++) {

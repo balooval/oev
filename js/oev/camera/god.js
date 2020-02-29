@@ -1,3 +1,4 @@
+import * as THREE from '../../libs/three.module.js';
 import Renderer from '../renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../utils/event.js';

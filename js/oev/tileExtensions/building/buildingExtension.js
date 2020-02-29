@@ -1,3 +1,5 @@
+import * as THREE from '../../../libs/three.module.js';
+import * as BufferGeometryUtils from '../../../libs/BufferGeometryUtils-module.js';
 import Renderer from '../../renderer.js';
 import Evt from '../../utils/event.js';
 import GLOBE from '../../globe.js';
@@ -15,7 +17,7 @@ const materialWalls = new THREE.MeshPhongMaterial({shininess:0,color:0xaaaaaa,ve
 const materialRoof = new THREE.MeshPhongMaterial({shininess:0,color:0xaaaaaa,vertexColors:THREE.VertexColors});
 
 const workerEvent = new Evt();
-const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js');
+const worker = new Worker('js/oev/tileExtensions/building/workerBuildingMaker.js', {type:'module'});
 worker.onmessage = onWorkerMessage;
 
 function onWorkerMessage(_res) {
@@ -139,13 +141,13 @@ class BuildingExtension {
 
 			// const bufferGeometry = new THREE.BufferGeometry();
 			const bufferGeometry = CachedGeometry.getGeometry();
-			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferCoord, 3));
+			bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferCoord, 3));
 			bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
 			bufferGeometry.computeFaceNormals();
 			entrancesGeometries[i] = bufferGeometry;
 		}
-		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(entrancesGeometries);
+		const mergedGeometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(entrancesGeometries);
 		CachedGeometry.storeGeometries(entrancesGeometries);
 		// this.meshEntrances = new THREE.Mesh(mergedGeometry, materialRoof);
 		this.meshEntrances = CachedGeometry.getMesh();
@@ -165,14 +167,14 @@ class BuildingExtension {
 			this.convertCoordToPositionRoof(roofBuffers.bufferCoord);
 			const bufferGeometry = CachedGeometry.getGeometry();
 			// const bufferGeometry = new THREE.BufferGeometry();
-			bufferGeometry.addAttribute('position', new THREE.BufferAttribute(roofBuffers.bufferCoord, 3));
-			bufferGeometry.addAttribute('color', new THREE.BufferAttribute(roofBuffers.bufferColor, 3, true));
+			bufferGeometry.setAttribute('position', new THREE.BufferAttribute(roofBuffers.bufferCoord, 3));
+			bufferGeometry.setAttribute('color', new THREE.BufferAttribute(roofBuffers.bufferColor, 3, true));
 			bufferGeometry.setIndex(new THREE.BufferAttribute(roofBuffers.bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
 			bufferGeometry.computeFaceNormals();
 			roofsGeometries[r] = bufferGeometry;
 		}
-		const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
+		const mergedGeometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
 		CachedGeometry.storeGeometries(roofsGeometries);
 		// this.meshRoof = new THREE.Mesh(mergedGeometry, materialRoof);
 		this.meshRoof = CachedGeometry.getMesh();
@@ -212,8 +214,8 @@ class BuildingExtension {
 		this.convertCoordToPosition(_buffers.bufferCoord);
 		const bufferGeometry = CachedGeometry.getGeometry();
 		// const bufferGeometry = new THREE.BufferGeometry();
-		bufferGeometry.addAttribute('position', new THREE.BufferAttribute(_buffers.bufferCoord, 3));
-		bufferGeometry.addAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
+		bufferGeometry.setAttribute('position', new THREE.BufferAttribute(_buffers.bufferCoord, 3));
+		bufferGeometry.setAttribute('color', new THREE.BufferAttribute(_buffers.bufferColor, 3, true));
 		bufferGeometry.setIndex(new THREE.BufferAttribute(_buffers.bufferFaces, 1));
 		bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();

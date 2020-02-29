@@ -1,3 +1,4 @@
+import * as THREE from '../libs/three.module.js';
 import Renderer from './renderer.js';
 import Evt from './utils/event.js';
 import GEO from './utils/geo.js';
@@ -146,7 +147,7 @@ export class TileBasic {
 			}
 		}
 		
-		this.meshe.geometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+		this.meshe.geometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
         
         this.diffuseMap = _textureDatas.map.image;
@@ -206,7 +207,7 @@ export class TileBasic {
 			}
 		}
 		const geoBuffer = new THREE.BufferGeometry();
-		geoBuffer.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+		geoBuffer.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
 		geoBuffer.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
 		geoBuffer.computeFaceNormals();
 		geoBuffer.computeVertexNormals();

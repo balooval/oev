@@ -1,3 +1,6 @@
+import * as THREE from '../../../libs/three.module.js';
+import * as BufferGeometryUtils from '../../../libs/BufferGeometryUtils-module.js';
+import * as Poly2Tri from '../../../libs/poly2tri-module.js';
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import GEO from '../../utils/geo.js';
@@ -184,7 +187,7 @@ function redrawMeshes() {
                 datasGeometries.push(curTyped.list[g].geometries[l]);
             }
             if (!datasGeometries.length) continue;
-            mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
+            mesh.geometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
             GLOBE.addMeshe(mesh);
         }
     }
@@ -258,19 +261,19 @@ function triangulate(_landuse) {
     let nbPoints = 0;
     const border = new Array(_landuse.border.length);
     for (let i = 0; i < _landuse.border.length; i ++) {
-        border[i] = new poly2tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints);
+        border[i] = new Poly2Tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints);
     }
     try {
-        const swctx = new poly2tri.SweepContext(border);
+        const swctx = new Poly2Tri.SweepContext(border);
         nbPoints += _landuse.border.length;
         _landuse.holes.forEach(hole => {
-            const swcHole = hole.map((p, i) => new poly2tri.Point(p[0], p[1], i + nbPoints));
+            const swcHole = hole.map((p, i) => new Poly2Tri.Point(p[0], p[1], i + nbPoints));
             swctx.addHole(swcHole);
             nbPoints += hole.length;
         });
         for (let i = 0; i < _landuse.fillPoints.length; i ++) {
             const point = _landuse.fillPoints[i];
-            swctx.addPoint(new poly2tri.Point(point[0], point[1], i + nbPoints));
+            swctx.addPoint(new Poly2Tri.Point(point[0], point[1], i + nbPoints));
         }
         nbPoints += _landuse.fillPoints.length;
         swctx.triangulate();

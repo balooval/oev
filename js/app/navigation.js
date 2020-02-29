@@ -1,3 +1,4 @@
+import * as THREE from '../libs/three.module.js';
 import Renderer from '../oev/renderer.js';
 import Evt from '../oev/utils/event.js';
 import {texture as Texture} from '../oev/net/textures.js';

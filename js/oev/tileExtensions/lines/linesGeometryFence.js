@@ -1,3 +1,4 @@
+import * as THREE from '../../../libs/three.module.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _tile) {
@@ -26,8 +27,8 @@ export function buildGeometry(_line, _tile) {
         facesIndex.push(layerOffset + i);
     }
     const bufferFaces = Uint32Array.from(facesIndex);
-    bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-    bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+    bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
     bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
     bufferGeometry.computeFaceNormals();
     bufferGeometry.computeVertexNormals();

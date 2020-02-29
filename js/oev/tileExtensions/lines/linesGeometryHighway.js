@@ -1,3 +1,6 @@
+import * as Jsts from '../../../libs/jsts-module.js';
+import Earcut from '../../../libs/Earcut-module.js';
+import * as THREE from '../../../libs/three.module.js';
 import GLOBE from '../../globe.js';
 import MATH from '../../utils/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
@@ -36,8 +39,8 @@ export function buildGeometry(_line, _tile, _id) {
         }
         const bufferFaces = Uint32Array.from(facesIndex);
         const bufferGeometry = new THREE.BufferGeometry();
-        bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-        bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+        bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+        bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
         bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
         bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
@@ -60,7 +63,7 @@ function buildRoof(_offsetCoords, _props) {
         console.log('earsCoords', earsCoords);
         console.log('holesIndex', holesIndex);
     }
-    const facesIndex = earcut(earsCoords.flat(), holesIndex);
+    const facesIndex = Earcut(earsCoords.flat(), holesIndex);
     const bufferFaces = Uint32Array.from(facesIndex);
     const fullCoords = [];
     for (let margin = 0; margin < _offsetCoords.length; margin ++) {
@@ -73,8 +76,8 @@ function buildRoof(_offsetCoords, _props) {
     const bufferGeometry = new THREE.BufferGeometry();
     const bufferUvs = new Float32Array(fullCoords.length * 2);
     bufferUvs.fill(0);
-    bufferGeometry.addAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-    bufferGeometry.addAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
+    bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
     bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
     bufferGeometry.computeFaceNormals();
     bufferGeometry.computeVertexNormals();
@@ -85,9 +88,9 @@ function inflate(_coords, _distance) {
     const res = [];
     const geoInput = [];
     for (let i = 0; i < _coords.length; i ++) {
-        geoInput.push(new jsts.geom.Coordinate(_coords[i][0], _coords[i][1]));
+        geoInput.push(new Jsts.geom.Coordinate(_coords[i][0], _coords[i][1]));
     }
-    const geometryFactory = new jsts.geom.GeometryFactory();
+    const geometryFactory = new Jsts.geom.GeometryFactory();
     const isClosed = MATH.isClosedPath(_coords);
     let shell;
     if (isClosed) {
@@ -95,7 +98,7 @@ function inflate(_coords, _distance) {
     } else {
         shell = geometryFactory.createLineString(geoInput);
     }
-    let polygon = shell.buffer(_distance, jsts.operation.buffer.BufferParameters.CAP_FLAT);
+    let polygon = shell.buffer(_distance, Jsts.operation.buffer.BufferParameters.CAP_FLAT);
     let oCoordinates = polygon.shell.points.coordinates;
     let oCoords = [];
     for (let i = 0; i < oCoordinates.length; i ++) {
@@ -106,7 +109,7 @@ function inflate(_coords, _distance) {
     }
     res.push(oCoords);
     if (isClosed) {
-        let polygon = shell.buffer(_distance * -1, jsts.operation.buffer.BufferParameters.CAP_FLAT);
+        let polygon = shell.buffer(_distance * -1, Jsts.operation.buffer.BufferParameters.CAP_FLAT);
         if (polygon.shell) {
             oCoordinates = polygon.shell.points.coordinates;
             oCoords = [];

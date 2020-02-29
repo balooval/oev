@@ -1,3 +1,5 @@
+import GPXParser from '../../libs/GPXParser-module.js';
+import * as THREE from '../../libs/three.module.js';
 import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
 
@@ -8,7 +10,7 @@ function load(_url) {
 }
 
 function onGpxLoaded(_gpx) {
-    var gpx = new gpxParser();
+    var gpx = new GPXParser();
     gpx.parse(_gpx);
     const pathCoords = getPathPoints(gpx.tracks[0].points);
     const geometry = new THREE.BufferGeometry().setFromPoints(pathCoords);

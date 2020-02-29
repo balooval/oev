@@ -1,3 +1,4 @@
+import * as THREE from '../../libs/three.module.js';
 import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
 import * as NET_TEXTURES from '../net/textures.js';

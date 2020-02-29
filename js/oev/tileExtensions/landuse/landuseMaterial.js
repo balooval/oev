@@ -1,3 +1,4 @@
+import * as THREE from '../../../libs/three.module.js';
 import Evt from '../../utils/event.js';
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';

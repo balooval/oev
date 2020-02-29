@@ -1,3 +1,5 @@
+import * as THREE from '../../../libs/three.module.js';
+import * as BufferGeometryUtils from '../../../libs/BufferGeometryUtils-module.js';
 import Renderer from '../../renderer.js';
 import GEO from '../../utils/geo.js';
 import GLOBE from '../../globe.js';
@@ -140,7 +142,7 @@ function redrawMeshes() {
         curTypedGeos.mesh.geometry.dispose();
         const datasGeometries = curTypedGeos.list.map(data => data.geometry);
         if (datasGeometries.length == 0) return;
-        curTypedGeos.mesh.geometry = THREE.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
+        curTypedGeos.mesh.geometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
         GLOBE.addMeshe(curTypedGeos.mesh);
     });
     schdeduleNb --;

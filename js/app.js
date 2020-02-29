@@ -21,9 +21,15 @@ import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
 import * as PlaneExtension from './oev/tileExtensions/plane/planeExtension.js';
 import * as GpxLoader from './oev/utils/gpxLoader.js';
-// import * as THREEJS from './libs/three.module.js';
+import * as THREE from './libs/three.module.js';
 
 let containerOffset = undefined;
+
+function _choose(_value, _defaultValue) {
+	if (_value === undefined) return _defaultValue;
+	if (_value === null) return _defaultValue;
+	return _value;
+}
 
 const APP = {
 	appStarted : false, 
@@ -34,24 +40,24 @@ const APP = {
 	parseParams : function(_params) {
 		// const serverURL = 'https://val.openearthview.net/api/';
 		const serverURL = 'https://ns378984.ip-5-196-69.eu/api/';
-		_params = _params ?? {};
-		_params.CAMERA = _params.CAMERA ?? {};
-		_params.CAMERA.x = _params.CAMERA.x ?? 2.3831;
-		_params.CAMERA.y = _params.CAMERA.y ?? 48.8809;
-		_params.CAMERA.z = _params.CAMERA.z ?? 13;
-		_params.UI = _params.UI ?? {};
-		_params.UI.extensions = _params.UI.extensions ?? false;
-		_params.UI.waypoints = _params.UI.waypoints ?? false;
-		_params.UI.navigation = _params.UI.navigation ?? false;
-		_params.URL = _params.URL ?? {};
-		_params.URL.disabled = _params.URL.enabled ?? false;
-		_params.EXTENSIONS = _params.EXTENSIONS ?? {};
-		_params.EXTENSIONS.map = _params.EXTENSIONS.map ?? {};
-		_params.EXTENSIONS.map.active = _params.EXTENSIONS.map.active ?? true;
-		_params.EXTENSIONS.map.url = _params.EXTENSIONS.map.url ?? serverURL + 'index.php?ressource=osm';
-		_params.EXTENSIONS.elevation = _params.EXTENSIONS.elevation ?? {};
-		_params.EXTENSIONS.elevation.active = _params.EXTENSIONS.elevation.active ?? true;
-		_params.EXTENSIONS.elevation.url = _params.EXTENSIONS.elevation.url ?? serverURL + 'index.php?ressource=elevation';
+		_params = _choose(_params, {});
+		_params.CAMERA = _choose(_params.CAMERA, {});
+		_params.CAMERA.x = _choose(_params.CAMERA.x, 2.3831);
+		_params.CAMERA.y = _choose(_params.CAMERA.y, 48.8809);
+		_params.CAMERA.z = _choose(_params.CAMERA.z, 13);
+		_params.UI = _choose(_params.UI, {});
+		_params.UI.extensions = _choose(_params.UI.extensions, false);
+		_params.UI.waypoints = _choose(_params.UI.waypoints, false);
+		_params.UI.navigation = _choose(_params.UI.navigation, false);
+		_params.URL = _choose(_params.URL, {});
+		_params.URL.disabled = _choose(_params.URL.enabled, false);
+		_params.EXTENSIONS = _choose(_params.EXTENSIONS, {});
+		_params.EXTENSIONS.map = _choose(_params.EXTENSIONS.map, {});
+		_params.EXTENSIONS.map.active = _choose(_params.EXTENSIONS.map.active, true);
+		_params.EXTENSIONS.map.url = _choose(_params.EXTENSIONS.map.url, serverURL + 'index.php?ressource=osm');
+		_params.EXTENSIONS.elevation = _choose(_params.EXTENSIONS.elevation, {});
+		_params.EXTENSIONS.elevation.active = _choose(_params.EXTENSIONS.elevation.active, true);
+		_params.EXTENSIONS.elevation.url = _choose(_params.EXTENSIONS.elevation.url, serverURL + 'index.php?ressource=elevation');
 		return _params;
 	}, 
 

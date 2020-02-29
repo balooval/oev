@@ -1,3 +1,4 @@
+import * as THREE from '../../../libs/three.module.js';
 import * as DataLoader from '../dataLoader.js';
 
 const PARAMS = {

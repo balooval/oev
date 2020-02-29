@@ -1,3 +1,5 @@
+import * as THREE from '../../libs/three.module.js';
+
 let maxNb = 0;
 const cacheGeometries = [];
 let freeGeometryIndex = -1;
@@ -12,7 +14,7 @@ export function getGeometry() {
 
 export function storeGeometry(_geometry) {
     for (let name in _geometry.attributes) {
-        _geometry.removeAttribute(name);
+        _geometry.deleteAttribute(name);
     }
     freeGeometryIndex ++;
     if (freeGeometryIndex > cacheGeometries.length - 1) {

@@ -1,3 +1,5 @@
+import * as THREE from '../libs/three.module.js';
+
 let webGlRenderer = undefined;
 let sceneWidth = 0;
 let sceneHeight = 0;

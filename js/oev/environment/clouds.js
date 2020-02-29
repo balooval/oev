@@ -1,3 +1,4 @@
+import * as THREE from '../../libs/three.module.js';
 import Renderer from '../renderer.js';
 import * as Shader from '../net/shader.js';
 import * as NET_TEXTURES from '../net/textures.js';

@@ -1,3 +1,4 @@
+import * as THREE from '../../libs/three.module.js';
 import Renderer from '../renderer.js';
 import GLOBE from '../globe.js';
 import {get as Shader} from '../net/shader.js';

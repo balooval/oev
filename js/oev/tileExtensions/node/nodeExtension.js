@@ -1,3 +1,4 @@
+import * as BufferGeometryUtils from '../../../libs/BufferGeometryUtils-module.js';
 import Renderer from '../../renderer.js';
 import GLOBE from '../../globe.js';
 import * as NodeLoader from './nodeLoader.js';
@@ -102,8 +103,7 @@ class NodeExtension {
             typedGeometries[node.type].push(model)
         });
         Object.keys(typedGeometries).forEach(type => {
-            const mergedGeometrie = THREE.BufferGeometryUtils.mergeBufferGeometries(typedGeometries[type]);
-            // this.meshes[type] = new THREE.Mesh(mergedGeometrie, NodeMaterial.material(type));
+            const mergedGeometrie = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(typedGeometries[type]);
             this.meshes[type] = CachedGeometry.getMesh();
             this.meshes[type].geometry = mergedGeometrie;
             this.meshes[type].material = NodeMaterial.material(type);

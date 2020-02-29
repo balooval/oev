@@ -1,4 +1,5 @@
-importScripts('/js/libs/perlin.js');
+// importScripts('/js/libs/perlin.js');
+import * as Perlin from '../../../libs/perlin-module.js';
 
 const canvasSize = 256;
 
@@ -177,7 +178,7 @@ function drawLine(_context, points, _width = 1, col, _sizeFactor, _cap) {
 
 
 function makeNoiseTextures() {
-    noise.seed(Math.random());
+    Perlin.seed(Math.random());
     const canvas = new OffscreenCanvas(canvasSize, canvasSize);
     const context = canvas.getContext('2d');
     for (let x = 0; x < canvasSize; x ++) {
@@ -200,7 +201,7 @@ function perlinValue(_x, _y) {
     let scale = 0.01;
     let factor = 1;
     for (let i = 0; i < 8; i ++) {
-        const value = noise.simplex2(_x * scale, _y * scale);
+        const value = Perlin.simplex2(_x * scale, _y * scale);
         res += (value * factor);
         factor *= 0.6;
         scale *= 2;

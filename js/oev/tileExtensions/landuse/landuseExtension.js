@@ -1,3 +1,4 @@
+import PolygonClipping from '../../../libs/polygon-clipping.esm.js';
 import Renderer from '../../renderer.js';
 import * as TILE from '../../tile.js';
 import LanduseStore from './landuseStore.js';
@@ -189,14 +190,14 @@ class LanduseExtension {
 				holes : curLanduse.holes, 
 				holesSplit : [], 
 			};
-			const shapesBorder = polygonClipping.intersection([box], [curLanduse.border]);
+			const shapesBorder = PolygonClipping.intersection([box], [curLanduse.border]);
 			for (let s = 0; s < shapesBorder.length; s ++) {
                 myLanduse.bordersSplit.push(shapesBorder[s][0]);
             }
             if (myLanduse.bordersSplit.length == 0) {
                 return false;
             }
-			const shapesHoles = polygonClipping.intersection([box], curLanduse.holes);
+			const shapesHoles = PolygonClipping.intersection([box], curLanduse.holes);
 			for (let s = 0; s < shapesHoles.length; s ++) {
                 myLanduse.holesSplit.push(shapesHoles[s][0]);
             }

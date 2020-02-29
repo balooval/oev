@@ -1,3 +1,4 @@
+import * as THREE from '../../../libs/three.module.js';
 import Evt from '../../utils/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_TEXTURES from '../../net/textures.js';

@@ -1,3 +1,4 @@
+import Lineclip from '../../utils/lineclip-module.js';
 import Evt from '../../utils/event.js';
 import Renderer from '../../renderer.js';
 import * as TILE from '../../tile.js';
@@ -16,7 +17,7 @@ export function extensionClass() {
 }
 
 const workerEvt = new Evt();
-const workerCanvas = new Worker('js/oev/tileExtensions/lines/workerLineDrawer.js');
+const workerCanvas = new Worker('js/oev/tileExtensions/lines/workerLineDrawer.js', {type:'module'});
 workerCanvas.addEventListener('message', evt => {
     workerEvt.fireEvent('LINE_DRAW_' + evt.data.tileKey, evt.data.pixelsDatas);
 });
@@ -235,7 +236,7 @@ class LinesExtension {
             };
             // if (curWay.props.width < 5) return false;
             // if (curWay.props.highway != 'primary') return false;
-            myWay.bordersSplit = lineclip(curWay.border, bbox);
+            myWay.bordersSplit = Lineclip(curWay.border, bbox);
             if (myWay.bordersSplit.length == 0) {
                 return false;
             }

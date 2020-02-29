@@ -1,3 +1,5 @@
+import * as THREE from '../../libs/three.module.js';
+
 const batchs = [];
 const textLoaded = {};
 let textureLoader = null;
