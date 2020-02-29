@@ -72,7 +72,9 @@ function createSun(_skyRadius) {
 		transparent: true, 
 	};
 	const materialSun = new THREE.ShaderMaterial(parametersSun);
-	meshSun = new THREE.Mesh(new THREE.SphereGeometry(sunRadius, 16, 16 ), materialSun);
+	// const geoSun = new THREE.PlaneGeometry(sunRadius, sunRadius, 4);
+	const geoSun = new THREE.SphereGeometry(sunRadius, 16, 16);
+	meshSun = new THREE.Mesh(geoSun, materialSun);
 	Renderer.scene.add(meshSun);
 }
 

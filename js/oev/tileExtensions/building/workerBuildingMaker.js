@@ -1,4 +1,4 @@
-importScripts('./Earcut.js');
+importScripts('/js/libs/Earcut.js');
 
 onmessage = function(_msg) {
 	let buildings = _msg.data.buildingsDatas;

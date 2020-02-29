@@ -18,7 +18,6 @@ const apiUi = {
 	init : function(_params) {
 		params = _params;
 		UiPlane.init();
-		elmtCamHeading = document.getElementById("camHeading");
 		elmtCurTile = document.getElementById("overlayCurtile");
 		Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', null, onMouseDownLeft);
 		Mouse.evt.addEventListener('MOUSE_LEFT_UP', null, onMouseUpLeft);
@@ -29,10 +28,15 @@ const apiUi = {
 		}
 		if (params.navigation) {
 			GLOBE.evt.addEventListener('READY', null, onGlobeReady);
+			const navigationContainer = document.getElementById('overlayNavigation');
+			createButton(navigationContainer, '<div class="heading" id="camHeading"></div>');
+			createButton(navigationContainer, '<img src="img/icon_zoom_out.png"/>', 'btn-zoom-out');
+			createButton(navigationContainer, '<img src="img/icon_zoom_in.png"/>', 'btn-zoom-in');
+			elmtCamHeading = document.getElementById("camHeading");
 		} else {
 			document.getElementById('overlayNavigation').remove();
 		}
-		if (params.enabled) {
+		if (params.extensions) {
 			UiTilesExtension.init();
 			elmtCoord = document.getElementById('overlayUICoords');
 			DataLoader.evt.addEventListener('DATA_LOADED', UiTilesExtension, UiTilesExtension.updateLoadingDatas);
@@ -41,16 +45,16 @@ const apiUi = {
 		} else {
 			document.getElementById('overlayExtensions').remove();
 			document.getElementById('overlayUICoords').remove();
-			document.getElementById('overlayUILoading').remove();
 		}
 	}, 
 		
 	setCamera : function(_camCtrl) {
+		if (!params.navigation) return;
 		_camCtrl.evt.addEventListener('ON_ROTATE', null, onCamRotate);
 	}, 
 
 	showUICoords : function(_lon, _lat, _ele){
-		if (!params.enabled) return;
+		if (!params.extensions) return;
 		elmtCoord.innerHTML = 'Lon : ' + (Math.round(_lon * 1000) / 1000) + ', Lat : ' + (Math.round(_lat * 1000) / 1000) + ', Elevation : ' + Math.round(_ele);
 	}, 
 
@@ -73,6 +77,15 @@ const apiUi = {
 		document.getElementById('modalContent').innerHTML = '';
 	}, 
 };
+
+function createButton(_parent, _content, _id = '', _classes = []) {
+	var button = document.createElement('span')
+	button.id = _id;
+	button.classList.add('floating-btn');
+	button.classList.add(..._classes);
+	button.innerHTML = _content;
+	_parent.appendChild(button);
+}
 
 function onGlobeReady() {
 	GLOBE.evt.removeEventListener('READY', null, onGlobeReady);

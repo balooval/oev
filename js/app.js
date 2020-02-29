@@ -20,6 +20,8 @@ import * as SatelliteExtension from './oev/tileExtensions/satellite/satelliteExt
 import * as NodeExtension from './oev/tileExtensions/node/nodeExtension.js';
 import * as LinesExtension from './oev/tileExtensions/lines/linesExtension.js';
 import * as PlaneExtension from './oev/tileExtensions/plane/planeExtension.js';
+import * as GpxLoader from './oev/utils/gpxLoader.js';
+// import * as THREEJS from './libs/three.module.js';
 
 let containerOffset = undefined;
 
@@ -30,17 +32,26 @@ const APP = {
 	tileExtensions : {}, 
 
 	parseParams : function(_params) {
+		// const serverURL = 'https://val.openearthview.net/api/';
+		const serverURL = 'https://ns378984.ip-5-196-69.eu/api/';
 		_params = _params ?? {};
 		_params.CAMERA = _params.CAMERA ?? {};
 		_params.CAMERA.x = _params.CAMERA.x ?? 2.3831;
 		_params.CAMERA.y = _params.CAMERA.y ?? 48.8809;
 		_params.CAMERA.z = _params.CAMERA.z ?? 13;
 		_params.UI = _params.UI ?? {};
-		_params.UI.enabled = _params.UI.enabled ?? false;
+		_params.UI.extensions = _params.UI.extensions ?? false;
 		_params.UI.waypoints = _params.UI.waypoints ?? false;
 		_params.UI.navigation = _params.UI.navigation ?? false;
 		_params.URL = _params.URL ?? {};
 		_params.URL.disabled = _params.URL.enabled ?? false;
+		_params.EXTENSIONS = _params.EXTENSIONS ?? {};
+		_params.EXTENSIONS.map = _params.EXTENSIONS.map ?? {};
+		_params.EXTENSIONS.map.active = _params.EXTENSIONS.map.active ?? true;
+		_params.EXTENSIONS.map.url = _params.EXTENSIONS.map.url ?? serverURL + 'index.php?ressource=osm';
+		_params.EXTENSIONS.elevation = _params.EXTENSIONS.elevation ?? {};
+		_params.EXTENSIONS.elevation.active = _params.EXTENSIONS.elevation.active ?? true;
+		_params.EXTENSIONS.elevation.url = _params.EXTENSIONS.elevation.url ?? serverURL + 'index.php?ressource=elevation';
 		return _params;
 	}, 
 
@@ -56,19 +67,27 @@ const APP = {
 		Navigation.init();
 		UrlParser.init(params.URL, params.CAMERA);
 		APP.clock = new THREE.Clock();
-		const serverURL = 'https://val.openearthview.net/api/';
-		MapExtension.setApiUrl(serverURL + 'index.php?ressource=osm');
+		// const serverURL = 'https://val.openearthview.net/api/';
+		const serverURL = 'https://ns378984.ip-5-196-69.eu/api/';
+		if (_params.EXTENSIONS.map.active) {
+			MapExtension.setApiUrl(_params.EXTENSIONS.map.url);
+			TileExtension.register('TILE2D', MapExtension.extensionClass());
+			TileExtension.activate('TILE2D');
+		}
+		if (_params.EXTENSIONS.elevation.active) {
+			ElevationExtension.setApiUrl(serverURL + 'index.php?ressource=elevation');
+			TileExtension.register('ELEVATION', ElevationExtension.extensionClass());
+			TileExtension.activate('ELEVATION');
+		}
 		SatelliteExtension.setApiUrl(serverURL + 'index.php?ressource=satellite');
-		ElevationExtension.setApiUrl(serverURL + 'index.php?ressource=elevation');
 		NormalExtension.setApiUrl(serverURL + 'index.php?ressource=normal');
 		LanduseExtension.setApiUrl(serverURL + 'index.php?ressource=landuse');
 		BuildingExtension.setApiUrl(serverURL + 'index.php?ressource=building');
 		NodeExtension.setApiUrl(serverURL + 'index.php?ressource=node');
 		LinesExtension.setApiUrl(serverURL + 'index.php?ressource=lines');
 		
-		TileExtension.register('TILE2D', MapExtension.extensionClass());
+		// TileExtension.register('TILE2D', MapExtension.extensionClass());
 		TileExtension.register('SATELLITE', SatelliteExtension.extensionClass());
-		TileExtension.register('ELEVATION', ElevationExtension.extensionClass());
 		TileExtension.register('NORMAL', NormalExtension.extensionClass());
 		TileExtension.register('LANDUSE', LanduseExtension.extensionClass());
 		TileExtension.register('BUILDING', BuildingExtension.extensionClass());
@@ -76,8 +95,7 @@ const APP = {
 		TileExtension.register('LINES', LinesExtension.extensionClass());
 		TileExtension.register('PLANE', PlaneExtension.extensionClass());
 		
-		TileExtension.activate('TILE2D');
-		TileExtension.activate('ELEVATION');
+		// TileExtension.activate('TILE2D');
 		TileExtension.activate('NORMAL');
 		const activesExtensions = UrlParser.activesExtensions();
 		activesExtensions.forEach(extensionToActivate => {
@@ -112,7 +130,8 @@ const APP = {
 		APP.appStarted = true;
 		APP.evt.fireEvent('APP_START');
 		GLOBE.construct();
-		render();
+		APP.render();
+		GpxLoader.load('/assets/gpx/test.gpx');
 	}, 
 
 	loadTextures : function() {
@@ -147,6 +166,7 @@ const APP = {
 			GLOBE.setTime(normalizedTIme);	
 		}
 		GLOBE.update();
+		requestAnimationFrame(APP.render);
 	}, 
 
 	gotoWaypoint : function(_waypointIndex) {
