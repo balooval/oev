@@ -3,7 +3,7 @@ class Api_normal extends Api_default {
 
     public $contentType = 'image/png';
     protected $dirCache = PATH_CACHE . 'normal';
-    private $dirRaw = PATH_CACHE . '../srtm_unpack';
+    private $dirRaw = PATH_DATAS . 'srtm_unpack';
     private $params;
     private $differenceReduction = 100;
 
@@ -12,6 +12,7 @@ class Api_normal extends Api_default {
     // https://val.openearthview.net/api/index.php?ressource=normal&z=11&x=1049&y=748&def=16
 
     public function __construct($_params) {
+        // $this->useCache = false;
         $this->params = $_params;
         parent::__construct($_params);
     }

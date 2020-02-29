@@ -2,19 +2,27 @@
 class Api_elevation extends Api_default {
 
     public $contentType = 'image/png';
+    // public $contentType = 'text';
     protected $dirCache = PATH_CACHE . 'srtm_3';
-    private $dirRaw = PATH_CACHE . '../srtm_unpack';
+    private $dirRaw = PATH_DATAS . 'srtm_unpack';
     private $params;
 
     public function __construct($_params) {
+        // $this->useCache = false;
         $this->params = $_params;
     }
     
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
-        if (!is_file($filePath)) $this->buildElevationImage($filePath);
+        if ($this->mustFetchDatas($filePath)) $this->buildElevationImage($filePath);
         return file_get_contents($filePath);
+    }
+
+    private function mustFetchDatas($_filePath) {
+        if (!$this->useCache) return true;
+        if (!is_file($_filePath)) return true;
+        return false;
     }
 
     private function buildFilePath($_param) {
@@ -68,7 +76,11 @@ class Api_elevation extends Api_default {
         set_time_limit(30);
         $measPerDeg = 1201; // 3 second data
         $hgtfile = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
-        if (!is_file( $hgtfile)) return 0;
+        if (!is_file( $hgtfile)) {
+            // echo 'file ' . $hgtfile . ' not exist';
+            // exit;
+            return 0;
+        }
         $fh = fopen($hgtfile, 'rb') or die("Error opening $hgtfile. Aborting!");
         $hgtfile = basename($hgtfile);
         $starty = substr($hgtfile, 1, 2);
