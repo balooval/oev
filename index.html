@@ -4,7 +4,7 @@
 		<title>OpenEarthViewer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
-		<script src="js/app.js" type="module"></script>
+		<script src="client/appClient.js" type="module"></script>
 
 		<!-- rollup js/app.js --format iife --name "oev" --file oev.js -->
 		<!-- <script src="js/oev-bundle.js"></script> -->
@@ -44,24 +44,35 @@
 		<script>
 			window.addEventListener('load', evt => {
 				APP.init('threeContainer', {
-					CAMERA : {
-						x : 4.1862, 
-						y : 43.7682, 
-						z : 13, 
+					waypoints : [
+						{lon : 4.231021, lat : 43.795594, ele : 13, name : 'Vaunage'}, 
+						{lon : 3.854188, lat : 43.958125, ele : 13, name : 'St Hippo'}, 
+						{lon : 3.8139, lat : 43.7925, ele : 13, name : 'Pic St Loup'}, 
+						{lon : 5.2659, lat : 44.1747, ele : 13, name : 'Mt Ventoux'}, 
+						{lon : 5.7333, lat : 43.1637, ele : 14, name : 'St Cyr'}, 
+						{lon : 2.383138, lat : 48.880945, ele : 13, name : 'Paris'}, 
+					], 
+
+					OEV : {
+						CAMERA : {
+							x : 4.1862, 
+							y : 43.7682, 
+							z : 13, 
+						}, 
+						UI : {
+							extensions : true, 
+							waypoints : true, 
+							navigation : true, 
+						}, 
+						URL : {
+							// enabled : true,
+						}, 
+						EXTENSIONS : {
+							// elevation : {
+								// active : false, 
+							// }
+						}, 
 					}, 
-					UI : {
-						extensions : true, 
-						waypoints : true, 
-						navigation : true, 
-					}, 
-					URL : {
-						enabled : true,
-					}, 
-					EXTENSIONS : {
-						// elevation : {
-							// active : false, 
-						// }
-					}
 				});
 			})
 			
