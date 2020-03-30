@@ -126,7 +126,7 @@ function createCanvas(_size) {
     canvas.width = _size;
     canvas.height = _size;
     return canvas;
-  }
+}
   
 
 function drawLineImage(_linePattern, _coords, _context, _sizeFactor) {

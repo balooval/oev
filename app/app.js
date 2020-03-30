@@ -1,4 +1,4 @@
-import {CameraGod} from './camera/god.js';
+import { CameraGod } from './camera/god.js';
 import Evt from './core/event.js';
 import GLOBE from './core/globe.js';
 import Navigation from './core/navigation.js';
@@ -7,9 +7,9 @@ import * as INPUT from './input/input.js';
 import * as NET_MODELS from './net/models.js';
 import * as Shader from './net/shader.js';
 import * as NET_TEXTURES from './net/textures.js';
-import * as DataLoader from './tileExtensions/dataLoader.js';
-import * as TileExtension from './tileExtensions/tileExtension.js';
 import * as BuildingExtension from './tileExtensions/building/buildingExtension.js';
+import * as CoastExtension from './tileExtensions/coast/coastExtension.js';
+import * as DataLoader from './tileExtensions/dataLoader.js';
 import * as ElevationExtension from './tileExtensions/elevation/elevationExtension.js';
 import * as LanduseExtension from './tileExtensions/landuse/landuseExtension.js';
 import * as LinesExtension from './tileExtensions/lines/linesExtension.js';
@@ -18,6 +18,7 @@ import * as NodeExtension from './tileExtensions/node/nodeExtension.js';
 import * as NormalExtension from './tileExtensions/normal/normalExtension.js';
 import * as PlaneExtension from './tileExtensions/plane/planeExtension.js';
 import * as SatelliteExtension from './tileExtensions/satellite/satelliteExtension.js';
+import * as TileExtension from './tileExtensions/tileExtension.js';
 import * as GpxLoader from './utils/gpxLoader.js';
 
 let containerOffset;
@@ -62,7 +63,9 @@ const OEV = {
 		});
 		_params.EXTENSIONS.elevation.active = true;
 		_params.EXTENSIONS.normal.active = true;
-
+		_params.EXTENSIONS.coast = {
+			url : serverURL + 'index.php?ressource=coastline', 
+		};
 		return _params;
 	}, 
 
@@ -92,6 +95,8 @@ const OEV = {
 		LinesExtension.setApiUrl(OEV.params.EXTENSIONS.lines.url);
 		TileExtension.register('LINES', LinesExtension.extensionClass());
 		TileExtension.register('PLANE', PlaneExtension.extensionClass());
+		CoastExtension.setApiUrl(OEV.params.EXTENSIONS.coast.url);
+		TileExtension.register('COAST', CoastExtension.extensionClass());
 
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, OEV.onExtensionActivate);
         TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, OEV.onExtensionDesctivate);
@@ -248,4 +253,4 @@ function _choose(_value, _defaultValue) {
 	return _value;
 }
 
-export {OEV as default};
+export { OEV as default };

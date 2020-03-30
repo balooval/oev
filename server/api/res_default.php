@@ -20,5 +20,19 @@ abstract class Api_default {
             }
         }
     }
+
+    protected function coordToTile($_lon, $_lat, $_zoom) {
+        $xTile = floor((($_lon + 180) / 360) * pow(2, $_zoom));
+        $yTile = floor((1 - log(tan(deg2rad($_lat)) + 1 / cos(deg2rad($_lat))) / pi()) /2 * pow(2, $_zoom));
+        return [
+            'x' => $xTile, 
+            'y' => $yTile, 
+        ];
+    }
+
+    protected function getPostJson() {
+        $content = trim(file_get_contents("php://input"));
+        return json_decode($content, true);
+    }
 }
 ?>

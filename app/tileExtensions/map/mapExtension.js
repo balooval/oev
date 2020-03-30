@@ -1,8 +1,8 @@
 import Renderer from '../../core/renderer.js';
-import * as MapLoader from './mapLoader.js';
 import * as TileExtension from '../tileExtension.js';
+import * as MapLoader from './mapLoader.js';
 
-export {setApiUrl} from './mapLoader.js';
+export { setApiUrl } from './mapLoader.js';
 
 export function extensionClass() {
 	return MapExtension;

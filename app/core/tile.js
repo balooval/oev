@@ -1,21 +1,21 @@
+import { texture as Texture } from '../net/textures.js';
+import { loader as MapLoader } from '../tileExtensions/map/mapLoader.js';
+import * as TileExtension from '../tileExtensions/tileExtension.js';
 import * as THREE from '../vendor/three.module.js';
-import Renderer from './renderer.js';
-import GLOBE from './globe.js';
 import Evt from './event.js';
 import GEO from './geo.js';
-import * as TileExtension from '../tileExtensions/tileExtension.js';
-import {loader as MapLoader} from '../tileExtensions/map/mapLoader.js';
-import {texture as Texture} from '../net/textures.js';
+import GLOBE from './globe.js';
+import Renderer from './renderer.js';
 
 export const mapSize = 256;
 
 export class TileBasic {
 		
-	constructor(_tileX, _tileY, _zoom) {
+	constructor(_tileX, _tileY, _zoom, _parent = null) {
 		this.evt = new Evt();
 		this.isReady = false;
 		this.onStage = true;
-		this.parentTile = null;
+		this.parentTile = _parent;
 		this.parentOffset = new THREE.Vector2(0, 0);
 		this.tileX = _tileX;
 		this.tileY = _tileY;
@@ -59,6 +59,7 @@ export class TileBasic {
     }
     
     redrawDiffuse() {
+		if (!this.diffuseMap) return;
         this.composeContext.clearRect(0, 0, mapSize, mapSize);
 		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, mapSize, mapSize);
         this.extensionsMaps.forEach(map => {
@@ -104,6 +105,16 @@ export class TileBasic {
 		this.childTiles.forEach(t => t.removeExtension(_id));
 	}
 
+	getParent(_zoom) {
+		if (this.zoom == _zoom) {
+			return this;
+		}
+		if (!this.parentTile) {
+			return null;
+		}
+		return this.parentTile.getParent(_zoom);
+	}
+
 	nearestTextures() {
 		if (this.textureLoaded) return null;
 		const defaultDatas = {
@@ -146,10 +157,8 @@ export class TileBasic {
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - _textureDatas.offsetY;
 			}
 		}
-		
 		this.meshe.geometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
-        
         this.diffuseMap = _textureDatas.map.image;
         this.evt.fireEvent('TEXTURE_CHANGED');
         this.redrawDiffuse();
@@ -303,7 +312,7 @@ export class TileBasic {
 	}
 		
 	addChild(_coords, _offsetX, _offsetY) {
-		const newTile = new TileBasic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1);
+		const newTile = new TileBasic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1, this);
 		newTile.parentTile = this;
 		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
