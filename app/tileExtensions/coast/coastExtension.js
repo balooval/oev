@@ -18,6 +18,15 @@ let evtMaterial = new Evt();
 let materialReady = false;; 
 let oceanTexture; 
 
+
+const workerEvt = new Evt();
+// const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js', {type:'module'});
+const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js');
+workerCanvas.addEventListener('message', evt => {
+    workerEvt.fireEvent('COAST_DRAW_' + evt.data.tileKey, evt.data.pixelsDatas);
+});
+
+
 function loadTextures() {
     const texturesList = [
         {
@@ -150,8 +159,31 @@ class CoastExtension {
 
 
 
+    onWorkerFinished(_pixelsDatas) {
+        if (!this.tile) return;
+        if (!this.canvasDiffuse) return;
+        const imageDatas = new ImageData(_pixelsDatas, 256, 256);
+        const finalContext = this.canvasDiffuse.getContext('2d');
+        finalContext.putImageData(imageDatas, 0, 0);
+        this.tile.extensionsMaps.set(this.id, this.canvasDiffuse);
+        this.tile.redrawDiffuse();
+        Renderer.MUST_RENDER = true;
+    }
+
+
     drawWaterTexture(_polygons) {
         if (_polygons[0] == 'LAND') return;
+        workerEvt.addEventListener('COAST_DRAW_' + this.tile.key, this, this.onWorkerFinished);
+        workerCanvas.postMessage({
+            polygons : _polygons, 
+            bbox : this.tile.bbox, 
+            scale : this.tile.zoom - 9, 
+            tileKey : this.tile.key, 
+            zoom : this.tile.zoom, 
+        });
+        return;
+
+
         const canvasPositions = [];
         convertCoordToCanvasPositions(_polygons, canvasPositions, this.tile.bbox);
         const scale = this.tile.zoom - 9;
