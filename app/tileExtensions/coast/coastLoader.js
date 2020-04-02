@@ -23,8 +23,8 @@ class LoaderCoast {
 		this.isLoading = true;
 		const url = API_URL + '&z=' + _params.z + '&x=' + _params.x + '&y=' + _params.y;
 		fetch(url)
-		.then(res => res.text())
-		.then(text => this.onDataLoadSuccess(text));
+		.then(response => response.json())
+		.then(json => this.onDataLoadSuccess(json));
 	}
 	
 	onDataLoadSuccess(_data) {
@@ -32,7 +32,6 @@ class LoaderCoast {
 	}
 	
 	datasReady(_datas) {
-		// console.log('datasReady', _datas);
 		this.isLoading = false;
 		this.callback(_datas, this.params);
 	}

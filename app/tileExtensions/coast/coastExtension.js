@@ -4,9 +4,8 @@ import Renderer from '../../core/renderer.js';
 import * as TILE from '../../core/tile.js';
 import * as NET_TEXTURES from '../../net/textures.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
-import * as THREE from '../../vendor/three.module.js';
 import * as TileExtension from '../tileExtension.js';
-import * as CoastLoader from './coastLoader.js';
+import * as CoastStore from './coastStore.js';
 
 export { setApiUrl } from './coastLoader.js';
 
@@ -20,8 +19,8 @@ let oceanTexture;
 
 
 const workerEvt = new Evt();
-// const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js', {type:'module'});
-const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js');
+const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js', {type:'module'});
+// const workerCanvas = new Worker('/app/tileExtensions/coast/workerCoastDrawer.js');
 workerCanvas.addEventListener('message', evt => {
     workerEvt.fireEvent('COAST_DRAW_' + evt.data.tileKey, evt.data.pixelsDatas);
 });
@@ -84,37 +83,25 @@ class CoastExtension {
 	onTileReady() {
         evtMaterial.removeEventListener('READY', this, this.onTileReady);
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-
         // if (this.tile.zoom == 10 && (this.tile.tileX != 524 || this.tile.tileY != 374)) {
         //     return false;
         // }
-
         if (this.tile.zoom < 10) return false;
-
-        if (this.tile.zoom > 10) {
-            return this.getParentDatas(10);
-        }
-
+        // if (this.tile.zoom > 10) {
+        //     return this.getParentDatas(10);
+        // }
         if (!this.canvasDiffuse) {
             this.canvasDiffuse = createCanvas(TILE.mapSize);
         }
-
 		if (this.dataLoaded) {
             this.drawWaterTexture(this.datas);
             return true;
         }
-
         if (this.dataLoading) return false;
-		this.dataLoading = true;
-		CoastLoader.loader.getData(
-			{
-				z : this.tile.zoom, 
-				x : this.tile.tileX, 
-				y : this.tile.tileY, 
-				priority : this.tile.distToCam
-			}, 
-			_datas => this.onCoastLoaded(_datas)
-		);
+        this.dataLoading = true;
+        const keyStore = CoastStore.getKey(this.tile);
+        CoastStore.evt.addEventListener('LOADED_' + keyStore, this, this.onCoastLoaded);
+        CoastStore.getDatas(this.tile);
     }
 
     getParentDatas(_zoom) {
@@ -147,12 +134,12 @@ class CoastExtension {
         return true;
     }
     
-    onCoastLoaded(_datas) {
+    onCoastLoaded(_evt) {
+        CoastStore.evt.removeEventListener('LOADED_' + _evt.key, this, this.onCoastLoaded);
         if (!this.tile) return false;
-        this.datas = JSON.parse(_datas);
+        this.datas = _evt.datas;
 		this.dataLoading = false;
 		this.dataLoaded = true;
-        if (!this.tile.isReady) return false;
         this.drawWaterTexture(this.datas);
     }
 
@@ -181,43 +168,6 @@ class CoastExtension {
             tileKey : this.tile.key, 
             zoom : this.tile.zoom, 
         });
-        return;
-
-
-        const canvasPositions = [];
-        convertCoordToCanvasPositions(_polygons, canvasPositions, this.tile.bbox);
-        const scale = this.tile.zoom - 9;
-        const blurCanvas = getBlurDiffuse(canvasPositions, scale);
-        const maskCanvas = getMaskCanvas(canvasPositions);
-        const finalContext = this.canvasDiffuse.getContext('2d');
-        finalContext.drawImage(blurCanvas, 0, 0);
-        finalContext.globalCompositeOperation = 'destination-out';
-        finalContext.drawImage(maskCanvas, 0, 0);
-
-
-        const canvasRough = createCanvas(TILE.mapSize);
-        const contextRough = canvasRough.getContext('2d');
-        contextRough.fillStyle = "#ffffff";
-        contextRough.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
-        const canvasBump = createCanvas(TILE.mapSize);
-        const contextBump = canvasBump.getContext('2d');
-        contextBump.drawImage(NET_TEXTURES.texture('coastOceanBump').image, 0, 0);
-
-        contextRough.globalCompositeOperation = 'destination-in';
-        contextRough.drawImage(maskCanvas, 0, 0);
-        contextBump.globalCompositeOperation = 'destination-out';
-        contextBump.drawImage(maskCanvas, 0, 0);
-
-        const texture = new THREE.CanvasTexture(canvasRough);
-        this.tile.material.roughnessMap = texture;
-        this.tile.material.needsUpdate = true;
-        const textureBump = new THREE.CanvasTexture(canvasBump);
-        this.tile.material.bumpMap = textureBump;
-        this.tile.material.needsUpdate = true;
-
-        this.tile.extensionsMaps.set(this.id, this.canvasDiffuse);
-        this.tile.redrawDiffuse();
-        Renderer.MUST_RENDER = true;
     }
 
     onTileDispose() {
@@ -229,6 +179,8 @@ class CoastExtension {
     }
 	
 	dispose() {
+        const keyStore = CoastStore.getKey(this.tile);
+        CoastStore.evt.removeEventListener('LOADED_' + keyStore, this, this.onCoastLoaded);
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);

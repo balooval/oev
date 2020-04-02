@@ -1,5 +1,4 @@
-// import MATH from '../../core/math.js';
-importScripts('../../vendor/offset.js');
+import MATH from '../../core/math.js';
 
 const canvasSize = 256;
 
@@ -116,18 +115,10 @@ function coordToCanvas(_box, _canvasSize, _coords) {
     for (let i = 0; i < _coords.length; i ++) {
         const coord = _coords[i];
         const point = [
-            // MATH.mapValue(coord[0], _box[0], _box[1]) * _canvasSize, 
-            // _canvasSize - MATH.mapValue(coord[1], _box[2], _box[3]) * _canvasSize, 
-            selfMapValue(coord[0], _box[0], _box[1]) * _canvasSize, 
-            _canvasSize - selfMapValue(coord[1], _box[2], _box[3]) * _canvasSize, 
+            MATH.mapValue(coord[0], _box[0], _box[1]) * _canvasSize, 
+            _canvasSize - MATH.mapValue(coord[1], _box[2], _box[3]) * _canvasSize, 
         ];
         points[i] = point;
     }
     return points;
-}
-
-function selfMapValue(_value, _min, _max) {
-    const length = Math.abs(_max - _min);
-    if (length == 0) return _value;
-    return (_value - _min) / length;
 }
