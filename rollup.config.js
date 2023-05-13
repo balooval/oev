@@ -1,17 +1,21 @@
 import path from 'path';
 
 export default {
-  input: 'js/app.js',
+  input: 'app/app.js',
   output: {
     file: 'bundle.js',
-    format: 'esm'
+    format: 'esm', 
   }, 
   external: [
-    path.resolve( __dirname, 'js/libs/three.module.js' ), 
-    path.resolve( __dirname, 'js/libs/BufferGeometryUtils-module.js' ), 
-    path.resolve( __dirname, 'js/libs/polygon-clipping.esm.js' ), 
-    path.resolve( __dirname, 'js/libs/perlin.js' ), 
-    path.resolve( __dirname, 'js/libs/Earcut.js' ), 
-    path.resolve( __dirname, 'js/libs/GPXParser-module.js' ), 
+    path.resolve( __dirname, 'app/vendor/BufferGeometryUtils.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/Earcut.module.js' ), 
+    path.resolve( __dirname, 'js/vendor/GPXParser.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/jsts.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/lineclip.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/perlin.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/poly2tri.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/polygon-clipping.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/splay.module.js' ), 
+    path.resolve( __dirname, 'app/vendor/three.module.js' ), 
   ]
 };

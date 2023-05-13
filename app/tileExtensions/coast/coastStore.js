@@ -41,12 +41,12 @@ function extractTileDatas(_tile, _parentDatas) {
         [_tile.startCoord.x, _tile.startCoord.y], 
     ];
     const tileDatas = [];
-    _parentDatas.forEach(polygon => {
-        const results = PolygonClipping.intersection([tilePolygon], [polygon]);
-        results.forEach(res => {
-            tileDatas.push(res[0]);
-        });
-    });
+    for (let i = 0; i < _parentDatas.length; i ++) {
+        const results = PolygonClipping.intersection([tilePolygon], [_parentDatas[i]]);
+        for (let j = 0; j < results.length; j ++) {
+            tileDatas.push(results[j][0]);
+        }
+    }
     return tileDatas;
 }
 

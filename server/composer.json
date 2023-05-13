@@ -1,0 +1,5 @@
+{
+    "require": {
+        "gasparesganga/php-shapefile": "^3.1"
+    }
+}

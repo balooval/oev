@@ -37,25 +37,16 @@ onmessage = function(_msg) {
 
 function draw(_ways, _sizeFactor) {
     contextFinal.clearRect(0, 0, canvasSize, canvasSize);
-    
     // contextFinal.drawImage(canvasTexture, 0, 0);
-
-
-
     contextFinal.setLineDash([]);
-    
     contextCompose.globalCompositeOperation = 'source-over';
     contextCompose.clearRect(0, 0, canvasSize, canvasSize);
     contextCompose.setLineDash([]);
-    
-
     const tracks = [];
     const bigRoads = [];
-
     for (let w = 0; w < _ways.length; w ++) {
         const curWay = _ways[w];
         if (!curWay.positions.length) continue;
-        
         if (curWay.props.width > 3) {
             // drawBigRoad(curWay, _sizeFactor);
             bigRoads.push(curWay);
@@ -65,16 +56,13 @@ function draw(_ways, _sizeFactor) {
             drawNormalRoad(curWay, _sizeFactor);
         }
     }
-     
 
     for (let i = 0; i < tracks.length; i ++) {
         drawPathLayer(tracks[i], 'rgba(101, 90, 44, 1)', _sizeFactor / 1, 1);
     }
-
     for (let i = 0; i < tracks.length; i ++) {
         drawPathLayer(tracks[i], 'rgba(125, 126, 47, 1)', _sizeFactor / 2, 1);
     }
-    
     for (let i = 0; i < bigRoads.length; i ++) {
         drawBigRoadLayerA(bigRoads[i], _sizeFactor);
     }
@@ -87,7 +75,6 @@ function draw(_ways, _sizeFactor) {
             drawBigRoadLayerC(bigRoads[i], _sizeFactor);
         }
     }
-    
     return contextFinal.getImageData(0, 0, canvasSize, canvasSize);
 }
 
@@ -101,7 +88,6 @@ function drawBigRoadLayerB(_way, _sizeFactor) {
 function drawBigRoadLayerC(_way, _sizeFactor) {
     contextCompose.clearRect(0, 0, canvasSize, canvasSize);
     contextCompose.globalCompositeOperation = 'source-over';
-
     contextCompose.setLineDash([4 * _sizeFactor, 4 * _sizeFactor]);
     drawLine(contextCompose, _way.positions, 0.2, [220, 220, 220], _sizeFactor, 'round');
     contextCompose.globalCompositeOperation = 'destination-in';
@@ -124,8 +110,6 @@ function drawPathLayer(_way, _color, _sizeFactor, _width) {
     contextCompose.clearRect(0, 0, canvasSize, canvasSize);
     contextCompose.globalCompositeOperation = 'source-over';
 }
-
-
 
 function drawNormalRoad(_way, _sizeFactor) {
     drawLine(contextFinal, _way.positions, _way.props.width, [130, 130, 130], _sizeFactor, 'round');
@@ -175,7 +159,6 @@ function drawLine(_context, points, _width = 1, col, _sizeFactor, _cap) {
 	_context.stroke();
 }
 
-
 function makeNoiseTextures() {
     Perlin.seed(Math.random());
     const canvas = new OffscreenCanvas(canvasSize, canvasSize);
@@ -186,8 +169,6 @@ function makeNoiseTextures() {
             let alpha = 0;
             if (value > 0.2) alpha = 0.5;
             if (value > 0.4) alpha = 1;
-            // const alpha = 0.2 + perlinValue(x, y) * 0.8;
-            const color = 100 + value * 150;
             context.fillStyle = 'rgba(0,0,0, ' + alpha + ')';
             context.fillRect(x, y, 1, 1);
         }
