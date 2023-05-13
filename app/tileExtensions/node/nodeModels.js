@@ -13,6 +13,8 @@ const modelsToLoad = [
     ['street_lamp', 'lamp.json'], 
 ];
 
+let testTreeCircumference = 0;
+
 const api = {
     evt : new Evt(), 
     isReady : false, 
@@ -38,13 +40,21 @@ function getTreeModel(_props) {
 
 function applyTransformation(_node, _geometrie) {
     const scale = new THREE.Vector3(1, 1, 1);
-    if (_node.props.circumference) {
-        scale.x = _node.props.circumference;
-        scale.z = _node.props.circumference;
+    if (_node.props.circumference && _node.props.circumference > 0) {
+        _node.props.circumference = Math.min(_node.props.circumference, 10);
+        scale.x = _node.props.circumference / 5;
+        scale.z = _node.props.circumference / 5;
     }
     const minHeight = _node.props.min_height || 0;
-    if (_node.props.height) {
+    if (_node.props.height && _node.props.height > 0) {
         scale.y = (_node.props.height - minHeight) / 5;
+    }
+
+    if (scale.x <= 0 || scale.y <= 0 || scale.z <= 0) {
+        console.warn('Scale <= 0', _node);
+        scale.x = 1;
+        scale.y = 1;
+        scale.z = 1;
     }
     _geometrie.scale(scale.x, scale.y, scale.z);
     _geometrie.rotateY(Math.random() * 6);

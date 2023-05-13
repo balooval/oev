@@ -25,7 +25,7 @@ class ElevationExtension {
 		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		if (this.dataLoaded) return false;
 		this.applyElevationToGeometry(this.nearestElevationDatas());
-		if (this.tile.zoom > 15) return false;
+		if (this.tile.zoom > 16) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
 		LoaderElevation.loader.getData(

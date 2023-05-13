@@ -100,6 +100,7 @@ function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _way
             continue;
         }
         if (!buildLanduse(landuseBuilded, _tile)) {
+            console.log('landuseDatas', landuseDatas);
             continue;
         }
         knowIds.push(landuseDatas.id);
@@ -314,6 +315,7 @@ function getElevationsDatas(_landuse) {
 }
 
 function buildRelation(_relation, _nodesList, _waysList) {
+    // TODO : ne gère pas les relations avec plusieurs outer séparés (par exemple la forêt du Mont Aigoual)
     const innersCoords = [];
     for (let i = 0; i < _relation.members.length; i ++) {
         const member = _relation.members[i];
@@ -538,7 +540,7 @@ const supportedTags = [
         values : [
             'forest', 
             'wood', 
-            // 'vineyard', 
+            'vineyard', 
             'scrub',
             
             // 'basin', 

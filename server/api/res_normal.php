@@ -2,8 +2,9 @@
 class Api_normal extends Api_default {
 
     public $contentType = 'image/png';
-    protected $dirCache = PATH_CACHE . 'normal';
-    private $dirRaw = PATH_DATAS . 'srtm_unpack';
+    // public $contentType = 'text';
+    protected $dirCache = PATH_CACHE . 'normal_srtm_1';
+    private $dirRaw = PATH_DATAS . 'srtm_1_unpack';
     private $params;
     private $differenceReduction = 100;
 
@@ -20,13 +21,23 @@ class Api_normal extends Api_default {
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
-        if ($this->mustFetchDatas($filePath)) $this->buildNormalImage($filePath);
+        if ($this->mustFetchDatas($filePath)) {
+            try {
+                $this->buildNormalImage($filePath);
+            } catch(Exception $e) {
+                $filePath = $this->dirCache . '/blank.png';
+            }
+        }
         return file_get_contents($filePath);
     }
 
     private function mustFetchDatas($_filePath) {
-        if (!$this->useCache) return true;
-        if (!is_file($_filePath)) return true;
+        if (!$this->useCache) {
+            return true;
+        }
+        if (!is_file($_filePath)) {
+            return true;
+        }
         return false;
     }
 
@@ -137,9 +148,12 @@ class Api_normal extends Api_default {
     }
 
     private function calcFileReadStartPosition($_lat, $_lon) {
-        $measPerDeg = 1201; // 3 second data
+        // $measPerDeg = 1201; // 3 second data
+        $measPerDeg = 3601; // 1 second data
         $filePath = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
-        if (!is_file($filePath)) die('File ' . $filePath . ' not exist.');
+        if (!is_file($filePath)) {
+            throw(new Exception('File ' . $filePath . ' not exist.'));
+        }
         $fileName = basename($filePath);
         $starty = substr($fileName, 1, 2);
         if (substr($fileName, 0, 1) == "S") $starty = -$starty;

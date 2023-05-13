@@ -47,7 +47,7 @@ const canvas = document.createElement('canvas');
 const canvasSize = GLOBE.tilesDefinition + 1;
 canvas.width = canvasSize;
 canvas.height = canvasSize;
-const context = canvas.getContext('2d');
+const context = canvas.getContext('2d', {willReadFrequently: true});
 
 function extractElevation(_img, _imgWidth, _imgHeight) {
     context.drawImage(_img, 0, 0, _imgWidth, _imgHeight);

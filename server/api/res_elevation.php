@@ -3,8 +3,8 @@ class Api_elevation extends Api_default {
 
     public $contentType = 'image/png';
     // public $contentType = 'text';
-    protected $dirCache = PATH_CACHE . 'srtm_3';
-    private $dirRaw = PATH_DATAS . 'srtm_unpack';
+    protected $dirCache = PATH_CACHE . 'srtm_1';
+    private $dirRaw = PATH_DATAS . 'srtm_1_unpack';
     private $params;
 
     public function __construct($_params) {
@@ -74,7 +74,8 @@ class Api_elevation extends Api_default {
 
     private function extractElevation($_lat, $_lon) {
         set_time_limit(30);
-        $measPerDeg = 1201; // 3 second data
+        // $measPerDeg = 1201; // 3 second data
+        $measPerDeg = 3601; // 1 second data ?
         $hgtfile = $this->dirRaw . '/' . $this->getEleFileFromCoord($_lat, $_lon);
         if (!is_file( $hgtfile)) {
             // echo 'file ' . $hgtfile . ' not exist';

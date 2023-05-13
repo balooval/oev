@@ -1,5 +1,6 @@
 {
     "require": {
-        "gasparesganga/php-shapefile": "^3.1"
+        "gasparesganga/php-shapefile": "^3.1",
+	"vaderlab/geometry_utils": "*@dev"
     }
 }

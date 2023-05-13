@@ -29,7 +29,7 @@ const api = {
 	meter : 1, 
 	globalScale : 1, 
 	meshe : null, 
-	tilesDefinition : 16, 
+	tilesDefinition : 32, 
 	
 	init : function() {
 		api.evt = new Evt();

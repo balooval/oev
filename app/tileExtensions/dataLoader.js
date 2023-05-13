@@ -61,13 +61,17 @@ export class Loader {
 		onRessourceLoaded(this._type, this._datasWaiting.length);
 		if (_data === null) {
 			console.warn('Error loading ressource');
+			console.log(_params);
 			return false;
 		}
 		this._datasLoading = this._datasLoading.filter(l => l.key != _params.key);
 		_params.callback(_data);
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
-		if (this.loaderParams.useCache) this._datasLoaded[_params.key] = _data;
+		if (this.loaderParams.useCache) {
+			this._datasLoaded[_params.key] = _data;
+		}
+
 		if (!this.loaderParams.delay) {
 			this._checkForNextLoad();
 		} else {

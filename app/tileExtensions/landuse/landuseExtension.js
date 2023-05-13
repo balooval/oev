@@ -132,8 +132,8 @@ class LanduseExtension {
     drawCanvas() {
         this.scheduleNb --;
         if (!this.tile) return false
-        this.context.clearRect(0, 0, 256, 256);
-        this.context.drawImage(CanvasComposer.draw(this.shapes, this.tile.bbox, this.tile.zoom), 0, 0);
+        // this.context.clearRect(0, 0, 256, 256);
+        // this.context.drawImage(CanvasComposer.draw(this.shapes, this.tile.bbox, this.tile.zoom), 0, 0);
         this.tile.redrawDiffuse();
     }
 
