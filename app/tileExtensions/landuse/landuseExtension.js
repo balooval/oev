@@ -22,14 +22,7 @@ class LanduseExtension {
         this.shapes = new Map();
         this.scheduleNb = 0;
         this.canvas = null;
-        /*
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
-		const canvasSize = 256;
-		this.canvas.width = canvasSize;
-		this.canvas.height = canvasSize;
-        this.tile.extensionsMaps.set(this.id, this.canvas);
-        */
+        
 
         this.isActive = this.tile.zoom >= 13;
         if (LanduseMaterial.isReady) {
@@ -102,7 +95,7 @@ class LanduseExtension {
 
         // this.drawCanvas();
         // if (!this.isActive) return false;
-        LanduseStore.tileRemoved(this.tile.key);
+        LanduseStore.tileRemoved(this.tile.key, this.tile);
         this.hide();
 		this.dataLoaded = false;
         this.dataLoading = false;
@@ -124,6 +117,7 @@ class LanduseExtension {
 
 
     scheduleDraw() {
+        return;
         if (this.scheduleNb > 0) return false;
         this.scheduleNb ++;
         setTimeout(() => this.drawCanvas(), 1000);

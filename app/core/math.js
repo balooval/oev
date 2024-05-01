@@ -1,5 +1,28 @@
 const api = {
 
+	random: function(min, max) {
+		const length = max - min;
+		return min + (Math.random() * length);
+	},
+	
+	randomize: function(value, radius) {
+		const amplitude = radius * 2;
+		return value + (Math.random() * amplitude) - radius;
+	},
+
+	lerpPoint: function(pointA, pointB, percent) {
+		return [
+			api.lerpFloat(pointA[0], pointB[0], percent),
+			api.lerpFloat(pointA[1], pointB[1], percent),
+		]
+	},
+	
+	lerpFloat: function(valueA, valueB, percent) {
+		const distance = valueB - valueA;
+		const value = valueA + (distance * percent);
+		return value;
+	},
+
 	radians : function(_degres){
 		return Math.PI * _degres / 180;
 	}, 

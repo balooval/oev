@@ -31,10 +31,10 @@ const groundImage = {
     scrub : null, 
 };
 
-LanduseMaterial.evt.addEventListener('READY', null, onMaterialReady);
+// LanduseMaterial.evt.addEventListener('READY', null, onMaterialReady);
 
 function onMaterialReady() {
-    LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
+    // LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
     groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
     groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
 

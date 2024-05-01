@@ -30,7 +30,7 @@ function createMesh() {
 		depthWrite: false, 
 	};
 	materialClouds = new THREE.ShaderMaterial(shaderParams);
-	meshClouds = new THREE.Mesh(new THREE.Geometry(), materialClouds);
+	meshClouds = new THREE.Mesh(new THREE.BufferGeometry(), materialClouds);
 	const groupPos = new THREE.Vector3();
 	const groupsDispertion = 5000;
 	const doublePi = Math.PI * 2;
@@ -42,9 +42,9 @@ function createMesh() {
 		}
 		const faceWidth = 10;
 		const faceHeight = 10;
-		const geoFinal = new THREE.Geometry();
+		const geoFinal = new THREE.BufferGeometry();
 		for (let i = 0; i < 8; i ++) {
-			const geo = new THREE.Geometry();
+			const geo = new THREE.BufferGeometry();
 			const tileOffset = Math.random() > 0.5 ? 0.5 : 0;
 			const faceRotX = (Math.random() * doublePi) - Math.PI;
 			const faceRotY = (Math.random() * doublePi) - Math.PI;

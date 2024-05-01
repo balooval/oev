@@ -1,4 +1,19 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+    BufferAttribute,
+    BufferGeometry,
+    Color,
+    DoubleSide,
+    InstancedMesh,
+    Matrix4,
+    Mesh,
+    MeshPhysicalMaterial,
+    MeshBasicMaterial,
+    Quaternion,
+    Vector3,
+    PlaneGeometry,
+} from '../../vendor/three.module.js';
+import * as NET_MODELS from '../../net/models.js';
+import * as NET_TEXTURES from '../../net/textures.js';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';
 import Renderer from '../../core/renderer.js';
@@ -6,18 +21,69 @@ import GLOBE from '../../core/globe.js';
 import GEO from '../../core/geo.js';
 import OsmReader from '../../utils/osmReader.js';
 import ElevationStore from '../elevation/elevationStore.js';
-import * as GEO_BUILDER from './landuseGeometryBuilder.js';
-import LanduseMaterial from './landuseMaterial.js';
+import OEV from '../../app.js';
+import MATH from '../../core/math.js';
 
 let knowIds = [];
 const tileToLanduses = new Map();
 const storedLanduses = new Map();
 const typedMeshes = new Map();
-let schdeduleNb = 0;
+let scheduleNb = 0;
 const rejectedIds = [];
 const tilesUnderLinks = new Map();
 
+const rotationVector = new Vector3(0, 1, 0);
+const instanceMeshByTiles = new Map();
+
+const instanceGeometries = new Map();
+const instancePlacement = new Map();
+instancePlacement.set('forest', placeForest);
+instancePlacement.set('sapin', placeForest);
+instancePlacement.set('scrub', placeScrub);
+instancePlacement.set('vineyard', placeVineyard);
+
+const instanceGeneric = new MeshPhysicalMaterial({
+    color: 0xffffff,
+    side: DoubleSide,
+    vertexColors: true,
+});
+
+const instanceMaterialVigne = new MeshPhysicalMaterial({
+    color: 0xffffff,
+    side: DoubleSide,
+    vertexColors: false,
+});
+
+const instanceMaterialForest = new MeshPhysicalMaterial({
+    color: 0xffffff,
+    side: DoubleSide,
+    vertexColors: false,
+    roughness: 0.5,
+});
+const instanceMaterialSapin = new MeshPhysicalMaterial({
+    color: 0xffffff,
+    side: DoubleSide,
+    vertexColors: false,
+    roughness: 0.6,
+});
+const instanceMaterial = new Map();
+instanceMaterial.set('forest', instanceMaterialForest);
+instanceMaterial.set('sapin', instanceMaterialSapin);
+instanceMaterial.set('scrub', instanceGeneric);
+instanceMaterial.set('vineyard', instanceMaterialVigne);
+
 const api = {
+    init: function() {
+        instanceGeometries.set('forest', createInstanceGeometryForest());
+        instanceGeometries.set('sapin', createInstanceGeometryForestSapin());
+        instanceGeometries.set('scrub', createInstanceGeometryScrub());
+        instanceGeometries.set('vineyard', createInstanceGeometryVineyard());
+
+        instanceMaterial.get('forest').map = NET_TEXTURES.texture('tree-forest');
+        instanceMaterial.get('sapin').map = NET_TEXTURES.texture('tree-forest-sapin');
+        instanceMaterial.get('vineyard').map = NET_TEXTURES.texture('vigne');
+    },
+
     setDatas : function(_json, _tile) {
         const parsedJson = JSON.parse(_json);
         const nodesList = OsmReader.extractNodes(parsedJson);
@@ -25,61 +91,31 @@ const api = {
         tileToLanduses.set(_tile.key, []);
         const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
         const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
-        registerDatas(_tile.key, extractedRelations);
-        registerDatas(_tile.key, extractedWays);
-        let landuseAdded = 0;
-        landuseAdded += prepareLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
-        landuseAdded += prepareLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
-        if (landuseAdded > 0) scheduleDraw();
+        prepareLanduse(_tile, extractedRelations, buildRelation, nodesList, waysList);
+        prepareLanduse(_tile, extractedWays, buildWay, nodesList, waysList);
     }, 
 
-    tileRemoved : function(_tileKey) {
-        if (!tileToLanduses.get(_tileKey)) return false;
-        tileToLanduses.get(_tileKey)
-        .forEach(landuseId => {
-            const stored = storedLanduses.get(landuseId);
-            if (!stored) return false;
-            stored.refNb --;
-            if (stored.refNb > 0) return;
-            forgotLanduse(landuseId);
-            deleteLanduseGeometry(stored.id, stored.type);
-            storedLanduses.delete(landuseId);
-            const zoom = 13;
-            const bbox = calcBbox(stored.buildDatas.border);
-            const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
-            const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
-            for (let x = tileA.x; x <= tileB.x; x ++) {
-                for (let y = tileB.y; y <= tileA.y; y ++) {
-                    const tile = GLOBE.tileFromXYZ(x, y, zoom);
-                    if (!tile) continue;
-                    const extension = tile.extensions.get('LANDUSE');
-                    if (!extension) continue;
-                    extension.removeLanduse(landuseId);
-                }
+    tileRemoved : function(_tileKey, tile) {
+        const instancedTile = instanceMeshByTiles.get(tile);
+        if (instancedTile) {
+            for (const [key, instanceMesh] of instancedTile.entries()) {
+                GLOBE.removeMeshe(instanceMesh);
+                instanceMesh.geometry.dispose();
+                instanceMeshByTiles.delete(tile);
             }
-        });
-        tileToLanduses.delete(_tileKey);
-        scheduleDraw();
+        }
     }
 };
 
-function registerDatas(_tileKey, _extractedDatas) {
-    const curTileLinks = tileToLanduses.get(_tileKey);
-    for (let i = 0; i < _extractedDatas.length; i ++) {
-        const landuse = _extractedDatas[i];
-        curTileLinks.push(landuse.id);
-        if (!isLanduseKnowed(landuse.id)) continue;
-        storedLanduses.get(landuse.id).refNb ++;
-    }
-}
-
-function scheduleDraw() {
-    if (schdeduleNb > 0) return false;
-    schdeduleNb ++;
-    setTimeout(redrawMeshes, 1000);
-}
-
 function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {
+    const tileFilter = [
+        '4188_2983_13',
+        '4189_2983_13',
+    ];
+    // if (tileFilter.includes(_tile.key) === false) { // Vers Primes Combes
+    //     return 0;
+    // }
+
     let landuseAdded = 0;
     for (let i = 0; i < _extractedDatas.length; i ++) {
         const landuseDatas = _extractedDatas[i];
@@ -87,10 +123,8 @@ function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _way
             console.log('ID rejecte, pass');
             continue;
         }
-        if (isLanduseKnowed(landuseDatas.id)) {
-            continue;
-        }
-        const landuseBuilded = _buildFunction(landuseDatas, _nodesList, _waysList);
+        
+        const landuseBuilded = _buildFunction(_tile, landuseDatas, _nodesList, _waysList);
         if (!landuseBuilded) {
             rejectedIds.push(landuseDatas.id);
             continue;
@@ -103,7 +137,7 @@ function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _way
             console.log('landuseDatas', landuseDatas);
             continue;
         }
-        knowIds.push(landuseDatas.id);
+        
         storedLanduses.set(landuseBuilded.id, {
             id : landuseBuilded.id, 
             type : landuseBuilded.type, 
@@ -116,98 +150,52 @@ function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _way
 }
 
 function buildLanduse(_landuse, _tile) {
-    const trianglesResult = triangulate(_landuse);
-    if (trianglesResult === null) return false;
-    const layerInfos = getLayerInfos(_landuse.type);
+    let type = _landuse.type;
+    
+    if (type === 'forest') {
+        // console.log('_landuse', _landuse.tags);
+        if (_landuse.tags.leaf_type === 'needleleaved') {
+            // instanceGeometry = instanceGeometries.get('sapin');
+            type = 'sapin';
+        }
+    }
+        
+    const instanceGeometry = instanceGeometries.get(type);
+
+    if (!instanceGeometry) {
+        console.log('type', type);
+        return;
+    }
+
+    let instancedTile = instanceMeshByTiles.get(_tile);
+    
+    if (instancedTile === undefined) {
+        instanceMeshByTiles.set(_tile, new Map());
+    }
+    
+    let instancedTileMeshes = instanceMeshByTiles.get(_tile);
+    let instancedMesh = instancedTileMeshes.get(type);
+
+    if (instancedMesh === undefined) {
+        instancedMesh = new InstancedMesh(instanceGeometry, instanceMaterial.get(type), 50000);
+        instancedMesh.receiveShadow = true;
+		instancedMesh.castShadow = true;
+        instancedMesh.count = 0;
+        GLOBE.addMeshe(instancedMesh);
+
+        instancedTileMeshes.set(type, instancedMesh);
+    }
+
+    const countOffset = instancedMesh.count;
+    // instancedMesh.count += _landuse.fillPoints.length;
+
     const elevationsDatas = getElevationsDatas(_landuse);
-    const layersBuffers = GEO_BUILDER.buildLanduseGeometry(_landuse, layerInfos, trianglesResult, elevationsDatas, _tile)
-    saveLanduseGeometries(_landuse, layersBuffers);
+    
+    const placementFunction = instancePlacement.get(type);
+    placementFunction(instancedMesh, countOffset, _landuse, elevationsDatas.fill);
+
     return true;
 }
-
-function saveLanduseGeometries(_landuse, _geometries) {
-    const type = _landuse.type;
-    if (!typedMeshes.get(type)) {
-        const layerInfos = getLayerInfos(type);
-        const meshes = new Array(layerInfos.materialNb);
-        for (let l = 0; l < layerInfos.materialNb; l ++) {
-            const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LanduseMaterial.material(type)[l]);
-            mesh.receiveShadow = true;
-            meshes[l] = mesh;
-        }
-        typedMeshes.set(type, {
-            meshes : meshes, 
-            list : [], 
-        });
-    }
-    const layerInfos = getLayerInfos(type);
-    if (layerInfos.hideTile) {
-        searchTilesUnderLanduse(_landuse);
-    }
-    typedMeshes.get(type).list.push({
-        id : _landuse.id, 
-        geometries : _geometries, 
-    });
-}
-
-function searchTilesUnderLanduse(_landuse) {
-    const myLanduse = {
-        id : _landuse.id, 
-        type : _landuse.type, 
-        border : _landuse.border, 
-        holes : _landuse.holes, 
-    };
-    const zoom = 13;
-    const bbox = calcBbox(_landuse.border);
-    const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
-    const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
-    for (let x = tileA.x; x <= tileB.x; x ++) {
-        for (let y = tileB.y; y <= tileA.y; y ++) {
-            const tile = GLOBE.tileFromXYZ(x, y, zoom);
-            if (!tile) continue;
-            const map = new Map();
-            map.set(_landuse.id, myLanduse);
-            // tile.setLanduses(map);
-            const extension = tile.extensions.get('LANDUSE');
-            if (!extension) continue;
-            extension.setLanduses(map);
-        }
-    }
-}
-
-function redrawMeshes() {
-    for (let [type, curTyped] of typedMeshes) {
-        const layerInfos = getLayerInfos(type);
-        for (let l = 0; l < layerInfos.materialNb; l ++) {
-            const mesh = curTyped.meshes[l];
-            GLOBE.removeMeshe(mesh);
-            mesh.geometry.dispose();
-            const datasGeometries = [];
-            for (let g = 0; g < curTyped.list.length; g ++) {
-                datasGeometries.push(curTyped.list[g].geometries[l]);
-            }
-            if (!datasGeometries.length) continue;
-            mesh.geometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(datasGeometries);
-            GLOBE.addMeshe(mesh);
-        }
-    }
-    schdeduleNb --;
-    Renderer.MUST_RENDER = true;
-}
-
-function deleteLanduseGeometry(_id, _type) {
-    const curTypedGeos = typedMeshes.get(_type); 
-    for (let i = 0; i < curTypedGeos.list.length; i ++) {
-        if (curTypedGeos.list[i].id != _id) continue;
-        curTypedGeos.list[i].geometries.forEach(geo => geo.dispose());
-        curTypedGeos.list.splice(i, 1);
-        break;
-    }
-    if (curTypedGeos.list.length == 0) {
-        curTypedGeos.meshes.forEach(mesh => GLOBE.removeMeshe(mesh));
-    }
-}
-
 
 function calcBbox(_border) {
     const lon = _border.map(point => point[0]);
@@ -220,70 +208,33 @@ function calcBbox(_border) {
     }
 }
 
-function coordGrid(_bbox, _border) {
-    const zoom = 15;
-    const tileA = GEO.coordsToTile(_bbox.minLon, _bbox.minLat, zoom);
-    const tileB = GEO.coordsToTile(_bbox.maxLon, _bbox.maxLat, zoom);
-    const tilesPos = [];
-    for (let x = tileA.x; x <= tileB.x; x ++) {
-        for (let y = tileB.y; y <= tileA.y; y ++) {
-            tilesPos.push([x, y]);
-        }
-    }
+function coordGrid(tile, _bbox, _border) {
+    
     const grid = [];
-    const def = GLOBE.tilesDefinition;
-    for (let i = 0; i < tilesPos.length; i ++) {
-        const tilePos = tilesPos[i];
-        const startCoord = GEO.tileToCoordsVect(tilePos[0], tilePos[1], zoom);
-        const endCoord = GEO.tileToCoordsVect(tilePos[0] + 1, tilePos[1] + 1, zoom);
-		const stepCoordX = (endCoord.x - startCoord.x) / def;
-		const stepCoordY = (endCoord.y - startCoord.y) / def;
-		for (let x = 0; x < def; x ++) {
-			for (let y = 0; y < def; y ++) {
-                const coord = [
-					startCoord.x + (stepCoordX * x), 
-					startCoord.y + (stepCoordY * y)
-				];
-                if (pointIntoPolygon(coord, _border)) grid.push(coord);
-			}
-		}
-    }
-    return grid;
-}
+    const def = GLOBE.tilesDefinition * 4;
 
-function simplifyLanduse(_landuse) {
-    const factor = 0.00001;
-    _landuse.border = simplify(_landuse.border, factor, true);
-    _landuse.holes = simplify(_landuse.holes, factor, true);
-}
+    const startCoord = tile.startCoord;
+    const endCoord = tile.endCoord;
 
-function triangulate(_landuse) {
-    let nbPoints = 0;
-    const border = new Array(_landuse.border.length);
-    for (let i = 0; i < _landuse.border.length; i ++) {
-        border[i] = new Poly2Tri.Point(_landuse.border[i][0], _landuse.border[i][1], i + nbPoints);
-    }
-    try {
-        const swctx = new Poly2Tri.SweepContext(border);
-        nbPoints += _landuse.border.length;
-        _landuse.holes.forEach(hole => {
-            const swcHole = hole.map((p, i) => new Poly2Tri.Point(p[0], p[1], i + nbPoints));
-            swctx.addHole(swcHole);
-            nbPoints += hole.length;
-        });
-        for (let i = 0; i < _landuse.fillPoints.length; i ++) {
-            const point = _landuse.fillPoints[i];
-            swctx.addPoint(new Poly2Tri.Point(point[0], point[1], i + nbPoints));
+    const stepCoordX = (endCoord.x - startCoord.x) / def;
+    const stepCoordY = (endCoord.y - startCoord.y) / def;
+
+    const minX = Math.max(startCoord.x, _bbox.minLon);
+    const maxX = Math.min(endCoord.x, _bbox.maxLon);
+    const minY = Math.min(endCoord.y, _bbox.maxLat);
+    const maxY = Math.max(startCoord.y, _bbox.minLat);
+
+    for (let posX = minX; posX < maxX; posX += stepCoordX) {
+        for (let posY = maxY; posY > minY; posY += stepCoordY) {
+            const coord = [posX, posY];
+            if (pointIntoPolygon(coord, _border) === false) {
+                continue;
+            }
+            grid.push(coord);
         }
-        nbPoints += _landuse.fillPoints.length;
-        swctx.triangulate();
-        return swctx.getTriangles();
-    } catch (error) {
-        console.warn('Error on landuse', _landuse.id, error);
-        console.log('_landuse', _landuse);
-        rejectedIds.push(_landuse.id);
-        return null;
     }
+
+    return grid;
 }
 
 function getElevationsDatas(_landuse) {
@@ -314,7 +265,7 @@ function getElevationsDatas(_landuse) {
     }
 }
 
-function buildRelation(_relation, _nodesList, _waysList) {
+function buildRelation(tile, _relation, _nodesList, _waysList) {
     // TODO : ne gère pas les relations avec plusieurs outer séparés (par exemple la forêt du Mont Aigoual)
     const innersCoords = [];
     for (let i = 0; i < _relation.members.length; i ++) {
@@ -342,56 +293,32 @@ function buildRelation(_relation, _nodesList, _waysList) {
         return null;
     }
     const border = wayNodes.slice(1);
+
     const bbox = calcBbox(border);
-    const grid = coordGrid(bbox, border);
+    const grid = coordGrid(tile, bbox, border);
     return {
         id : _relation.id, 
         type : extractType(_relation), 
+        tags : _relation.tags, 
         border : border, 
         fillPoints : grid, 
         holes : innersCoords, 
     };
 }
 
-function buildWay(_way, _nodesList) {
+function buildWay(tile, _way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
     const border = wayNodes.slice(1);
     const bbox = calcBbox(border);
-    const grid = coordGrid(bbox, border);
+    const grid = coordGrid(tile, bbox, border);
     return {
         id : _way.id, 
         type : extractType(_way), 
+        tags : _way.tags, 
         border : border, 
         fillPoints : grid, 
         holes : [], 
     };
-}
-
-function isLanduseKnowed(_id) {
-    return knowIds.includes(_id);
-}
-
-function forgotLanduse(_landuseId) {
-    knowIds = knowIds.filter(id => id != _landuseId);
-    const toDelete = [];
-    for (let [key, values] of tilesUnderLinks) {
-        for (let i = 0; i < values.datas.length; i ++) {
-            const datas = values.datas[i];
-            if (datas.id != _landuseId) continue;
-            values.datas.splice(i, 1);
-            break;
-        }
-        if (values.datas.length) continue;
-        toDelete.push(key);
-        const tile = GLOBE.tileFromXYZ(values.x, values.y, values.z);
-        if (!tile) continue;
-        console.log('A');
-        const extension = tile.extensions.get('LANDUSE');
-        extension.removeLanduse(_landuseId);
-    }
-    for (let i = 0; i < toDelete.length; i ++) {
-        tilesUnderLinks.delete(toDelete[i]);
-    }
 }
 
 function extractElements(_datas, _type, _zoom) {
@@ -409,6 +336,7 @@ function isTagSupported(_element, _zoom) {
 
 function extractType(_element) {
     let elementType = null;
+    // console.log('_element.tags', _element.tags); // leaf_type = broadleaved
     supportedTags.forEach(tag => {
         if (!_element.tags[tag.key]) return false;
         tag.values.forEach(value => {
@@ -435,79 +363,6 @@ function pointIntoPolygon(point, vs) {
     }
     return inside;
 };
-
-function getLayerInfos(_type) {
-    let nbLayers = 16;
-    let materialNb = 4;
-    let uvFactor = 1;
-    let meterBetweenLayers = 1.5;
-    let groundOffset = 0;
-    let hideTile = false;
-    let vertexColor = false;
-
-    if (_type == 'forest') {
-        meterBetweenLayers = 1;
-        nbLayers = 16;
-        materialNb = 4;
-        uvFactor = 12;
-        vertexColor = true;
-        hideTile = true;
-    }
-    if (_type == 'water') {
-        meterBetweenLayers = 0.5;
-        uvFactor = 2;
-        materialNb = 3;
-        nbLayers = 3;
-        groundOffset = -1;
-        // hideTile = true;
-    }
-    if (_type == 'wetland') {
-        meterBetweenLayers = 0.2;
-        uvFactor = 3;
-        materialNb = 3;
-        nbLayers = 6;
-        groundOffset = 0.0;
-    }
-    if (_type == 'grass') {
-        meterBetweenLayers = 0.1;
-        uvFactor = 3;
-        materialNb = 2;
-        nbLayers = 8;
-    }
-    if (_type == 'scrub') {
-        meterBetweenLayers = 0.7;
-        groundOffset = 0.2;
-        uvFactor = 8;
-        materialNb = 2;
-        nbLayers = 8;
-        vertexColor = true;
-        hideTile = true;
-    }
-    if (_type == 'rock') {
-        meterBetweenLayers = 0.6;
-        // uvFactor = 2;
-        uvFactor = 8;
-        materialNb = 1;
-        nbLayers = 2;
-        groundOffset = 1;
-    }
-    if (_type == 'vineyard') {
-        meterBetweenLayers = 0.4;
-        uvFactor = 16;
-        materialNb = 4;
-        nbLayers = 12;
-    }
-    return {
-        meterBetweenLayers : meterBetweenLayers, 
-        uvFactor : uvFactor, 
-        nbLayers : nbLayers, 
-        groundOffset : groundOffset, 
-        hideTile : hideTile, 
-        materialNb : materialNb, 
-        layersByMap : nbLayers / materialNb, 
-        vertexColor : vertexColor, 
-    }
-}
 
 const equalsTags = {
     wood : 'forest', 
@@ -584,5 +439,179 @@ const supportedTags = [
     //     ], 
     // }, 
 ];
+
+function createInstanceGeometryForestSapin() {
+    const geometry = NET_MODELS.get('tree-forest-sapin').clone();
+    const scale = 0.05;
+    geometry.scale(scale, scale, scale);
+    geometry.rotateX(Math.PI);
+    geometry.translate(0, -0.2, 0);
+    return geometry;
+}
+
+function createInstanceGeometryForest() {
+    const geometry = NET_MODELS.get('tree-forest').clone();
+    const scale = 0.05;
+    geometry.scale(scale, scale, scale);
+    geometry.rotateX(Math.PI);
+    geometry.translate(0, -0.2, 0);
+    return geometry;
+}
+
+function createInstanceGeometryScrub() {
+    const vertPos = [];
+    const vertexColors = [];
+
+    const innerWidth = 0.1;
+    const outerWidth = 0.2;
+    const innerHeight = -0.1;
+    const outerHeight = -0.2;
+
+    const colorBase = new Color('hsl(46, 15%, 33%)');
+    const colorTip = new Color('hsl(46, 21%, 51%)');
+    const colorGreen = new Color('hsl(100, 30%, 51%)');
+
+    const spikeCount = 6;
+    const angleStep = (Math.PI * 2) / spikeCount;
+
+    for (let i = 0; i < spikeCount; i ++) {
+        const curAngle = angleStep * i;
+        const nextAngle = angleStep * (i + 1);
+        const midAngle = angleStep * (i + 0.5);
+
+        vertPos.push(
+            0, 0, 0,
+            Math.cos(curAngle) * innerWidth, innerHeight, Math.sin(curAngle) * innerWidth,
+            Math.cos(nextAngle) * innerWidth, innerHeight, Math.sin(nextAngle) * innerWidth,
+
+            Math.cos(nextAngle) * innerWidth, innerHeight, Math.sin(nextAngle) * innerWidth,
+            Math.cos(curAngle) * innerWidth, innerHeight, Math.sin(curAngle) * innerWidth,
+            Math.cos(midAngle) * outerWidth, outerHeight, Math.sin(midAngle) * outerWidth,
+
+            Math.cos(nextAngle) * innerWidth, 0, Math.sin(nextAngle) * innerWidth,
+            Math.cos(curAngle) * innerWidth, 0, Math.sin(curAngle) * innerWidth,
+            Math.cos(midAngle) * outerWidth * 2, innerHeight, Math.sin(midAngle) * outerWidth * 2,
+        );
+
+        vertexColors.push(
+            colorBase.r, colorBase.g, colorBase.b,
+            colorBase.r, colorBase.g, colorBase.b,
+            colorBase.r, colorBase.g, colorBase.b,
+            
+            colorBase.r, colorBase.g, colorBase.b,
+            colorBase.r, colorBase.g, colorBase.b,
+            colorGreen.r, colorGreen.g, colorGreen.b,
+
+            colorBase.r, colorBase.g, colorBase.b,
+            colorBase.r, colorBase.g, colorBase.b,
+            colorTip.r, colorTip.g, colorTip.b,
+        );
+    }
+
+
+    const leafGeometry = new BufferGeometry();
+    leafGeometry.setAttribute('position', new BufferAttribute(new Float32Array(vertPos), 3));
+    leafGeometry.setAttribute('color', new BufferAttribute(new Float32Array(vertexColors), 3));
+    leafGeometry.computeBoundingBox();
+    leafGeometry.computeBoundingSphere();
+    leafGeometry.computeVertexNormals();
+    return leafGeometry;
+}
+
+function createInstanceGeometryVineyard() {
+    const geometry = NET_MODELS.get('vigne').clone();
+    const scale = -0.02;
+    geometry.scale(scale, scale, scale)
+    return geometry;
+}
+
+function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
+
+    const scale = new Vector3(1, 1, 1);
+    const quaternion = new Quaternion();
+    const matrix = new Matrix4();
+
+    let instanceIndex = countOffset;
+
+    for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
+        for (let j = 0; j < 1; j += 0.5) {
+            const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
+            
+            const vertPos = GLOBE.coordToXYZ(
+                point[0] + Math.random() * 0.0004,
+                point[1] + Math.random() * 0.0001,
+                elevationsDatas[i],
+            );
+
+            const scaleValue = 0.7 + Math.random() * 0.2;
+            scale.set(scaleValue, scaleValue, scaleValue);
+            
+            const angle = Math.random() * 6;
+            quaternion.setFromAxisAngle(rotationVector, angle);
+
+            matrix.compose(vertPos, quaternion, scale);
+            instancedMesh.setMatrixAt(instanceIndex, matrix);
+            instanceIndex ++;
+        }
+    }
+    instancedMesh.count += landuseData.fillPoints.length * 2;
+}
+
+function placeScrub(instancedMesh, countOffset, landuseData, elevationsDatas) {
+    const scale = new Vector3(1, 1, 1);
+    const quaternion = new Quaternion();
+    const matrix = new Matrix4();
+
+    for (let i = 0; i < landuseData.fillPoints.length; i++) {
+        const vertPos = GLOBE.coordToXYZ(
+            landuseData.fillPoints[i][0] + Math.random() * 0.0004,
+            landuseData.fillPoints[i][1] + Math.random() * 0.0001,
+            elevationsDatas[i],
+        );
+
+        const scaleValue = 0.7 + Math.random() * 0.5;
+        scale.set(scaleValue, scaleValue, scaleValue);
+
+        const angle = Math.random() * 6;
+        quaternion.setFromAxisAngle(rotationVector, angle);
+
+        matrix.compose(vertPos, quaternion, scale);
+        instancedMesh.setMatrixAt(countOffset + i, matrix);
+    }
+    instancedMesh.count += landuseData.fillPoints.length;
+    instancedMesh.instanceMatrix.needsUpdate = true;
+}
+
+function placeVineyard(instancedMesh, countOffset, landuseData, elevationsDatas) {
+    const scale = new Vector3(1, 1, 1);
+    const quaternion = new Quaternion();
+    const matrix = new Matrix4();
+    const angle = Math.random() * 6;
+    // const angle = 0;
+    const scaleValue = 0.4 + Math.random() * 0.1;
+    // const scaleValue = 1;
+    let instanceIndex = countOffset;
+
+    for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
+        const point = landuseData.fillPoints[i];
+        
+        const vertPos = GLOBE.coordToXYZ(
+            point[0],
+            point[1],
+            elevationsDatas[i],
+        );
+
+        scale.set(scaleValue, scaleValue, scaleValue);
+        
+        quaternion.setFromAxisAngle(rotationVector, angle);
+
+        matrix.compose(vertPos, quaternion, scale);
+        instancedMesh.setMatrixAt(instanceIndex, matrix);
+        instanceIndex ++;
+    }
+    instancedMesh.count += landuseData.fillPoints.length;
+    instancedMesh.instanceMatrix.needsUpdate = true;
+}
+
 
 export {api as default};

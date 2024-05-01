@@ -1,7 +1,16 @@
-import { texture as Texture } from '../net/textures.js';
+import { texture as TextureLoader } from '../net/textures.js';
 import { loader as MapLoader } from '../tileExtensions/map/mapLoader.js';
 import * as TileExtension from '../tileExtensions/tileExtension.js';
-import * as THREE from '../vendor/three.module.js';
+import {
+	BufferAttribute,
+	BufferGeometry,
+	Mesh,
+	Texture,
+	MeshPhysicalMaterial,
+	MeshStandardMaterial,
+	MeshBasicMaterial,
+	Vector2,
+} from '../vendor/three.module.js';
 import Evt from './event.js';
 import GEO from './geo.js';
 import GLOBE from './globe.js';
@@ -16,7 +25,7 @@ export class TileBasic {
 		this.isReady = false;
 		this.onStage = true;
 		this.parentTile = _parent;
-		this.parentOffset = new THREE.Vector2(0, 0);
+		this.parentOffset = new Vector2(0, 0);
 		this.tileX = _tileX;
 		this.tileY = _tileY;
 		this.zoom = _zoom;
@@ -32,25 +41,26 @@ export class TileBasic {
 		this.endLargeCoord = GEO.tileToCoordsVect(this.tileX + 2, this.tileY + 2, this.zoom);
 		this.startMidCoord = GEO.tileToCoordsVect(this.tileX - 0.5, this.tileY - 0.5, this.zoom);
 		this.endMidCoord = GEO.tileToCoordsVect(this.tileX + 1.5, this.tileY + 1.5, this.zoom);
-		this.middleCoord = new THREE.Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
+		this.middleCoord = new Vector2((this.startCoord.x + this.endCoord.x) / 2, (this.startCoord.y + this.endCoord.y) / 2);
 		this.bbox = [
 			this.startCoord.x, // min X
 			this.endCoord.x, // max X
 			this.endCoord.y, // min Y
 			this.startCoord.y, // max Y
-		  ];
+		];
 
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
         
         this.extensionsMaps = new Map();
 		this.composeMap = this.createCanvas();
 		this.composeContext = this.composeMap.getContext('2d');
-		this.diffuseTexture = new THREE.Texture(this.composeMap);
+		this.diffuseTexture = new Texture(this.composeMap);
 		this.diffuseTexture.needsUpdate = true;
 		this.diffuseMap = null;
 
-		this.material = new THREE.MeshPhysicalMaterial({color: 0xA0A0A0, roughness:1,metalness:0, map: this.diffuseTexture});
-		// this.material = new THREE.MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: Texture('checker')});
+		this.material = new MeshPhysicalMaterial({color: 0xffffff, roughness:1, metalness:0, map: this.diffuseTexture});
+		// this.material = new MeshBasicMaterial({color: 0xffffff, map: this.diffuseTexture});
+		// this.material = new MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: TextureLoader('checker')});
 
 		this.extensions = new Map();
 		TileExtension.listActives().forEach(p => this.addExtension(p));
@@ -60,11 +70,15 @@ export class TileBasic {
     
     redrawDiffuse() {
 		if (!this.diffuseMap) return;
-        this.composeContext.clearRect(0, 0, mapSize, mapSize);
+
+		this.composeContext.fillStyle = "#ffffff";
+		this.composeContext.fillRect(0, 0, mapSize, mapSize);
+
 		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, mapSize, mapSize);
         this.extensionsMaps.forEach(map => {
             this.composeContext.drawImage(map, 0, 0);
         });
+		
         this.diffuseTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
     }
@@ -118,7 +132,7 @@ export class TileBasic {
 	nearestTextures() {
 		if (this.textureLoaded) return null;
 		const defaultDatas = {
-			map : Texture("checker"), 
+			map : TextureLoader("checker"), 
 			uvReduc : 1, 
 			offsetX : 0, 
 			offsetY : 0, 
@@ -146,6 +160,7 @@ export class TileBasic {
 	applyTexture(_textureDatas) {
 		if (_textureDatas === null) return false;
 		if (this.meshe === undefined) return false;
+
 		const vertBySide = GLOBE.tilesDefinition + 1;
 		const bufferUvs = new Float32Array(this.verticesNb * 2);
 		let stepUV = _textureDatas.uvReduc / GLOBE.tilesDefinition;
@@ -157,7 +172,7 @@ export class TileBasic {
 				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - _textureDatas.offsetY;
 			}
 		}
-		this.meshe.geometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
+		this.meshe.geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
         this.diffuseMap = _textureDatas.map.image;
         this.evt.fireEvent('TEXTURE_CHANGED');
@@ -186,7 +201,9 @@ export class TileBasic {
 	buildGeometry() {
 		let curVertId = 0;
 		const bufferVertices = new Float32Array(this.verticesNb * 3);
+		const bufferNormals = new Float32Array(this.verticesNb * 3);
 		const vertCoords = this.getVerticesPlaneCoords();
+		
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
 			const vertPos = GLOBE.coordToXYZ(
 				vertCoords[i * 2], 
@@ -196,6 +213,11 @@ export class TileBasic {
 			bufferVertices[curVertId + 0] = vertPos.x;
 			bufferVertices[curVertId + 1] = vertPos.y;
 			bufferVertices[curVertId + 2] = vertPos.z;
+			
+			bufferNormals[curVertId + 0] = 0;
+			bufferNormals[curVertId + 1] = 1;
+			bufferNormals[curVertId + 2] = 0;
+
 			curVertId += 3;
 		}
 
@@ -204,6 +226,7 @@ export class TileBasic {
 		let faceId = 0;
 		const nbFaces = (def * def) * 2;
 		const bufferFaces = new Uint32Array(nbFaces * 3);
+
 		for (let x = 0; x < def; x ++) {
 			for (let y = 0; y < def; y ++) {
 				bufferFaces[faceId + 0] = (x * vertBySide) + y;
@@ -215,19 +238,24 @@ export class TileBasic {
 				faceId += 6;
 			}
 		}
-		const geoBuffer = new THREE.BufferGeometry();
-		geoBuffer.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-		geoBuffer.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
-		geoBuffer.computeFaceNormals();
+		const geoBuffer = new BufferGeometry();
+		geoBuffer.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+		geoBuffer.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
+		geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
+		// geoBuffer.computeFaceNormals();
 		geoBuffer.computeVertexNormals();
+
 		if (this.meshe !== undefined) {
 			GLOBE.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 		}
-		this.meshe = new THREE.Mesh(geoBuffer, this.material);
+
+		this.meshe = new Mesh(geoBuffer, this.material);
+
 		if (this.onStage) {
 			GLOBE.addMeshe(this.meshe);
 		}
+
 		this.meshe.castShadow = true;
 		this.meshe.receiveShadow = true;
 		let parentTexture = this.nearestTextures();
@@ -314,7 +342,7 @@ export class TileBasic {
 	addChild(_coords, _offsetX, _offsetY) {
 		const newTile = new TileBasic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1, this);
 		newTile.parentTile = this;
-		newTile.parentOffset = new THREE.Vector2(_offsetX, _offsetY);
+		newTile.parentOffset = new Vector2(_offsetX, _offsetY);
 		newTile.buildGeometry();
 		this.childTiles.push(newTile);
 	}
@@ -382,7 +410,7 @@ export class TileBasic {
 	unsetTexture() {
 		this.textureLoaded = false;
 		this.remoteTex = undefined;
-		this.material.map = Texture('checker');
+		this.material.map = TextureLoader('checker');
 	}
 
 	dispose() {

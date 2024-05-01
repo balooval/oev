@@ -74,43 +74,30 @@ const materials = {
 
 function onActivateExtension() {
     TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
-    createMaterials();
-    loadTextures();
+    // createMaterials();
+    // loadTextures();
+    api.isReady = true;
+    api.evt.fireEvent('READY')
 }
 
 function createMaterials() {
         // const sided = THREE.DoubleSide;
         const sided = THREE.FrontSide;
 
-        
-        // materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x18472d, side:sided}));
-        // materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        // materials.wetland.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
+        // materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.7}));
+        // materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.7,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.8}));
 
-        // materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x18472d, side:sided}));
-        // materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x3f66aa, side:sided, transparent:true, opacity:0.6}));
-        // materials.water.push(new THREE.MeshPhysicalMaterial({roughness:0,metalness:0, color:0x4a7ed6, side:sided, transparent:true, opacity:0.3}));
-
-        // materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:1,metalness:0, color:0xFFFFFF, side:sided}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.6}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.7}));
-        materials.forest.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.7,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.8}));
-
-        // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided}));
-        // materials.scrub.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:THREE.VertexColors,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.9,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.scrub.push(new THREE.MeshPhysicalMaterial({vertexColors:true,roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        // materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        // materials.grass.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
+        // materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
         
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        materials.vineyard.push(new THREE.MeshPhysicalMaterial({roughness:0.8,metalness:0, color:0xFFFFFF, side:sided, transparent:true, alphaTest:0.2}));
-        
-        materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:false, alphaTest:0.2}));
+        // materials.rock.push(new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF, side:sided, transparent:false, alphaTest:0.2}));
 }
 
 function loadTextures() {
@@ -120,19 +107,7 @@ function loadTextures() {
 }
 
 function onTexturesLoaded() {
-    // materials.water[0].normalMap = NET_TEXTURES.texture('shell_water_normal_1');
-    // materials.water[1].normalMap = NET_TEXTURES.texture('shell_water_normal_2');
-    // materials.water[2].normalMap = NET_TEXTURES.texture('shell_water_normal_3');
-
-    // materials.wetland[0].normalMap = NET_TEXTURES.texture('shell_water_normal_1');
-    // materials.wetland[1].map = NET_TEXTURES.texture('shell_scrub_2');
-    // materials.wetland[1].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-    // materials.wetland[1].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
-    // materials.wetland[2].map = NET_TEXTURES.texture('shell_scrub_3');
-    // materials.wetland[2].normalMap = NET_TEXTURES.texture('shell_scrub_normal');
-    // materials.wetland[2].roughnessMap = NET_TEXTURES.texture('shell_scrub_specular');
-
-    // materials.forest[0].map = NET_TEXTURES.texture('shell_tree_0');
+    
     materials.forest[0].map = NET_TEXTURES.texture('shell_tree_1');
     materials.forest[1].map = NET_TEXTURES.texture('shell_tree_2');
     materials.forest[2].map = NET_TEXTURES.texture('shell_tree_3');

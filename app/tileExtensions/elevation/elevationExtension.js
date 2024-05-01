@@ -90,7 +90,7 @@ class ElevationExtension {
 		verticePositions.needsUpdate = true;
 		this.tile.meshe.geometry.verticesNeedUpdate = true;
 		this.tile.meshe.geometry.uvsNeedUpdate = true;
-		this.tile.meshe.geometry.computeFaceNormals();
+		// this.tile.meshe.geometry.computeFaceNormals();
 		this.tile.meshe.geometry.computeVertexNormals();
 		Renderer.MUST_RENDER = true;
 	} 

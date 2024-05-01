@@ -1,4 +1,7 @@
-import * as THREE from '../vendor/three.module.js';
+import {
+	Vector2,
+	Vector3,
+} from '../vendor/three.module.js';
 import MATH from './math.js';
 
 const api = {
@@ -27,7 +30,7 @@ const api = {
 
 	tileToCoordsVect : function(_tile_x, _tile_y, _zoom){
 		const res = api.tileToCoords(_tile_x, _tile_y, _zoom);
-		return new THREE.Vector2(res[0], res[1]);
+		return new Vector2(res[0], res[1]);
 	}, 
 
 	coordDistance : function(_startLon, _startLat, _endLon, _endLat){
@@ -46,7 +49,7 @@ const api = {
 
 	coordsToTile : function(_lon, _lat, _zoom) {
 		_zoom = Math.floor(_zoom);
-		const tile = new THREE.Vector3();
+		const tile = new Vector3();
 		tile.x = Math.floor( (_lon + 180) / 360 * Math.pow( 2, _zoom));
 		tile.y = Math.floor((1 - Math.log(Math.tan(_lat * Math.PI / 180) + 1 / Math.cos(_lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow( 2, _zoom));
 		tile.z = _zoom;

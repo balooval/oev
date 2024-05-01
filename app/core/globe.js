@@ -1,4 +1,9 @@
-import * as THREE from '../vendor/three.module.js';
+import {
+	BufferGeometry,
+	Mesh,
+	Vector2,
+	Vector3,
+} from '../vendor/three.module.js';
 import Renderer from './renderer.js';
 import * as TILE from './tile.js';
 import Evt from './event.js';
@@ -7,8 +12,8 @@ import ENVIRONMENT from '../environment/environment.js';
 import MATH from './math.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 
-let curLodOrigine = new THREE.Vector3(0, 0, 0);
-let curTile = new THREE.Vector2(0, 0, 0);
+let curLodOrigine = new Vector3(0, 0, 0);
+let curTile = new Vector2(0, 0, 0);
 const eleFactor = 1;
 let time = 0.5;
 let objToUpdate = [];
@@ -23,7 +28,7 @@ const api = {
 	LOD_STREET : 19, 
 	curLOD : 0, 
 	tilesDetailsMarge : 2, 
-	coordDetails : new THREE.Vector2( 0, 0 ), 
+	coordDetails : new Vector2( 0, 0 ), 
 	tileExtensions : {}, 
 	radius : 10000, 
 	meter : 1, 
@@ -33,7 +38,7 @@ const api = {
 	
 	init : function() {
 		api.evt = new Evt();
-		api.meshe = new THREE.Mesh(new THREE.Geometry());
+		api.meshe = new Mesh(new BufferGeometry());
 		api.coordToXYZ = api.coordToXYZPlane;
 		api.meter = api.radius / 40075017.0;
 	}, 
@@ -128,7 +133,7 @@ const api = {
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation) {
-		const pos = new THREE.Vector3(0, 0, 0);
+		const pos = new Vector3(0, 0, 0);
 		pos.x = api.radius * (_lon / 60);
 		pos.y = api.posFromAltitude(_elevation);
 		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
@@ -144,7 +149,7 @@ const api = {
 	coordToXYZSphere : function(lon, lat, _elevation) {
 		_elevation *= api.meter;
 		_elevation += api.radius;
-		const pos = new THREE.Vector3(0, 0, 0);
+		const pos = new Vector3(0, 0, 0);
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
 		pos.x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
@@ -180,7 +185,7 @@ const api = {
 		let coordY = (prctH * 180);
 		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
 		const ele = api.getElevationAtCoords(coordX, coordY, true);
-		return new THREE.Vector3(coordX, coordY, ele + _eleMeter);
+		return new Vector3(coordX, coordY, ele + _eleMeter);
 	}, 
 
 	tileFromXYZ : function(_tileX, _tileY, _zoom) {
@@ -233,7 +238,7 @@ const api = {
 		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
 			if (api.curLOD != api.LOD_PLANET) {
 				console.log("SET TO LOD_PLANET");
-				curLodOrigine = new THREE.Vector3( 0, 0, 0 );
+				curLodOrigine = new Vector3( 0, 0, 0 );
 				api.globalScale = 1;
 				updateMeter();
 				api.curLOD = api.LOD_PLANET;
