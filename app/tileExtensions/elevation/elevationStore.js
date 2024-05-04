@@ -116,12 +116,10 @@ function interpolate(_struct, _lon, _lat) {
 function searchCoord(_lon, _lat) {
 	let validParent;
 	let parents = store;
-	let curZ = 0;
 	while(true) {
 		let parent = parents.filter(s => structContainCoord(s, _lon, _lat)).pop();
 		if (!parent) break;
 		validParent = parent;
-		curZ = validParent.zoom;
 		parents = parent.childs;
 	}
 	return validParent;

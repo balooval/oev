@@ -1,10 +1,9 @@
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 import Renderer from '../../core/renderer.js';
 import * as TILE from '../../core/tile.js';
-import LanduseStore from './landuseStore.js';
-import LanduseMaterial from './landuseMaterial.js';
+import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
+import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
-import CanvasComposer from '../../utils/canvasComposer.js';
 
 export {setApiUrl} from './landuseLoader.js';
 
@@ -22,18 +21,17 @@ class LanduseExtension {
         this.shapes = new Map();
         this.scheduleNb = 0;
         this.canvas = null;
-        
 
         this.isActive = this.tile.zoom >= 13;
         if (LanduseMaterial.isReady) {
-            this.onMaterialReady();
+            this.onRessourcesReady();
         } else {
-            LanduseMaterial.evt.addEventListener('READY', this, this.onMaterialReady);
+            LanduseMaterial.evt.addEventListener('READY', this, this.onRessourcesReady);
         }
     }
 
-    onMaterialReady() {
-        LanduseMaterial.evt.removeEventListener('READY', this, this.onMaterialReady);
+    onRessourcesReady() {
+        LanduseMaterial.evt.removeEventListener('READY', this, this.onRessourcesReady);
         this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
         this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
         this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
@@ -61,7 +59,7 @@ class LanduseExtension {
 		this.dataLoading = false;
 		this.dataLoaded = true;
         if (!this.tile.isReady) return false;
-        LanduseStore.setDatas(_datas, this.tile);
+        LanduseGeometryBuilder.setDatas(_datas, this.tile);
     }
 
 	onTileDispose() {
@@ -95,7 +93,7 @@ class LanduseExtension {
 
         // this.drawCanvas();
         // if (!this.isActive) return false;
-        LanduseStore.tileRemoved(this.tile.key, this.tile);
+        LanduseGeometryBuilder.tileRemoved(this.tile.key, this.tile);
         this.hide();
 		this.dataLoaded = false;
         this.dataLoading = false;

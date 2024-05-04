@@ -12,7 +12,6 @@ import * as CoastExtension from './tileExtensions/coast/coastExtension.js';
 import * as DataLoader from './tileExtensions/dataLoader.js';
 import * as ElevationExtension from './tileExtensions/elevation/elevationExtension.js';
 import * as LanduseExtension from './tileExtensions/landuse/landuseExtension.js';
-import LanduseStore from './tileExtensions/landuse/landuseStore.js';
 import * as LinesExtension from './tileExtensions/lines/linesExtension.js';
 import * as MapExtension from './tileExtensions/map/mapExtension.js';
 import * as NodeExtension from './tileExtensions/node/nodeExtension.js';
@@ -138,10 +137,6 @@ const OEV = {
 			return OEV.loadShaders();
 		})
 		.then(() => {
-			return OEV.loadModels();
-		})
-		.then(() => {
-			LanduseStore.init();
 			_callback();
 		});
 		OEV.isBuild = true;
@@ -167,9 +162,9 @@ const OEV = {
 		const textList = [];
 		const toLoad = [
 			['checker', 'loading.png'], 
-			['tree-forest', 'tree-forest-flip.png'], 
-			['tree-forest-sapin', 'tree-forest-sapin.png'], 
-			['vigne', 'vigne.png'], 
+			// ['tree-forest', 'tree-forest-flip.png'], 
+			// ['tree-forest-sapin', 'tree-forest-sapin.png'], 
+			// ['vigne', 'vigne.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
 			['waypoint', 'waypoint.png'], 
 		];
@@ -182,26 +177,6 @@ const OEV = {
 	loadShaders : function() {
 		return new Promise((resolve) => {
 			Shader.loadList(['cloud', 'sky', 'sun'], resolve);
-		});
-	},
-
-	loadModels : function() {
-		const modelsList = [
-			{
-				id: 'vigne',
-				url: 'vigne.glb',
-			},
-			{
-				id: 'tree-forest',
-				url: 'tree-forest-color.glb',
-			},
-			{
-				id: 'tree-forest-sapin',
-				url: 'tree-forest-sapin.glb',
-			},
-		];
-		return new Promise((resolve) => {
-			NET_MODELS.loadBatch(modelsList, resolve);
 		});
 	},
 

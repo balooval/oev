@@ -1,7 +1,7 @@
 import GEO from '../core/geo.js';
 import * as NET_TEXTURES from '../net/textures.js'
 import * as TILE from '../core/tile.js'
-import LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
+import * as LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
 
 const canvasFinal = document.createElement('canvas');
 canvasFinal.width = TILE.mapSize;

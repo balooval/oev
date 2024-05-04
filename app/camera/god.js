@@ -1,4 +1,11 @@
-import * as THREE from '../vendor/three.module.js';
+import {
+	Matrix4,
+	Mesh,
+	MeshBasicMaterial,
+	SphereGeometry,
+	Vector2,
+	Vector3,
+} from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../core/event.js';
@@ -14,13 +21,13 @@ export class CameraGod {
 		this.pointer = undefined;
 		this.mouseLastPos = [0, 0];
 		this.zoomCur = 14;
-		this.coordLookat = new THREE.Vector3(4.1862, 43.7682, 0);
+		this.coordLookat = new Vector3(4.1862, 43.7682, 0);
 		this.zoomDest = this.zoomCur;
-		this.coordCam = new THREE.Vector3(this.coordLookat.x, this.coordLookat.y, 0);
+		this.coordCam = new Vector3(this.coordLookat.x, this.coordLookat.y, 0);
 		this.camRotation = [Math.PI, 0.2];
 		this.dragging = false;
 		this.rotating = false;
-		this.coordOnGround = new THREE.Vector2(0, 0);
+		this.coordOnGround = new Vector2(0, 0);
 		this.tweens = {
 			zoom : new Animation.TweenValue(this.zoomCur), 
 			lon : new Animation.TweenValue(this.coordLookat.x), 
@@ -43,11 +50,11 @@ export class CameraGod {
 
 	start() {
 		this.camera.up.set(0, -1, 0);
-		this.pointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 200, 16, 7), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+		this.pointer = new Mesh(new SphereGeometry(this.globe.meter * 200, 16, 7), new MeshBasicMaterial({color: 0x00ff00}));
 		Renderer.scene.add(this.pointer);
-		this.clicPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0x0000ff}));
+		this.clicPointer = new Mesh(new SphereGeometry(this.globe.meter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
 		Renderer.scene.add(this.clicPointer);
-		this.debugPointer = new THREE.Mesh(new THREE.SphereGeometry(this.globe.meter * 150, 16, 7), new THREE.MeshBasicMaterial({color: 0xfffc00}));
+		this.debugPointer = new Mesh(new SphereGeometry(this.globe.meter * 150, 16, 7), new MeshBasicMaterial({color: 0xfffc00}));
 		Renderer.scene.add(this.debugPointer);
 		if (this.startPosition) {
 			this.zoomCur = this.startPosition.z;
@@ -211,27 +218,27 @@ export class CameraGod {
 	updateOnSphere() {
 		const radLon = MATH.radians(this.coordLookat.x);
 		const radLat = MATH.radians(this.coordLookat.y);
-		const matGlob = new THREE.Matrix4();
-		const matZ = new THREE.Matrix4();
-		const matY = new THREE.Matrix4();
-		const matX = new THREE.Matrix4();
+		const matGlob = new Matrix4();
+		const matZ = new Matrix4();
+		const matY = new Matrix4();
+		const matX = new Matrix4();
 		matX.makeRotationX(0);
 		matY.makeRotationY(radLon);
 		matZ.makeRotationZ(radLat);
 		matGlob.multiplyMatrices(matY, matZ);
 		matGlob.multiply(matX);
-		const tmpG = new THREE.Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
+		const tmpG = new Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
 		tmpG.applyMatrix4(matGlob);
 		// rotation locale
-		const matLocX = new THREE.Matrix4();
-		const matLocY = new THREE.Matrix4();
-		const matLocZ = new THREE.Matrix4();
+		const matLocX = new Matrix4();
+		const matLocY = new Matrix4();
+		const matLocZ = new Matrix4();
 		matLocX.makeRotationX(this.camRotation[0] * -1);
 		matLocY.makeRotationY(0);
 		matLocZ.makeRotationZ(this.camRotation[1] * 1);
 		matGlob.multiply(matLocX);
 		matGlob.multiply(matLocZ);
-		const tmpL = new THREE.Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
+		const tmpL = new Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
 		tmpL.applyMatrix4(matGlob);
 		tmpG.x += tmpL.x;
 		tmpG.y += tmpL.y;
