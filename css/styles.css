@@ -319,3 +319,7 @@ h2{
 #ws_chat_histo div.current_user{
 	color: #41a62a;
 }
+
+.rs-base {
+	background-color: #fff;
+}

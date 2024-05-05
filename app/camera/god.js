@@ -213,9 +213,15 @@ export class CameraGod {
 			coord : {
 				lon : Math.round(this.coordLookat.x * 10000) / 10000, 
 				lat : Math.round(this.coordLookat.y * 10000) / 10000, 
-				zoom : Math.round(this.zoomDest * 10000) / 10000
+				zoom : Math.round(this.zoomDest * 10000) / 10000,
+			},
+			position: {
+				lon : Math.round(this.coordCam.x * 10000) / 10000, 
+				lat : Math.round(this.coordCam.y * 10000) / 10000, 
+				zoom : Math.round(this.zoomDest * 10000) / 10000,
 			}
 		};
+		// console.log('evtDatas', evtDatas);
 		this.evt.fireEvent('CAM_UPDATED', evtDatas);
 	}
 

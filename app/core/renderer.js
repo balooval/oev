@@ -12,6 +12,19 @@ let sceneWidth = 0;
 let sceneHeight = 0;
 let containerOffset;
 let raycaster;
+// const rS = new rStats( {
+//     values: {
+//         frame: { caption: 'Total frame time (ms)', over: 16 },
+//         raf: { caption: 'Time since last rAF (ms)' },
+//         fps: { caption: 'Framerate (FPS)', below: 30 },
+//         action1: { caption: 'Render action #1 (ms)' },
+//         render: { caption: 'WebGL Render (ms)' }
+//     },
+//     groups: [
+//         { caption: 'Framerate', values: [ 'fps', 'raf' ] },
+//         { caption: 'Frame Budget', values: [ 'frame', 'action1', 'render' ] }
+//     ]
+// } );
 
 const api = {
     scene : undefined, 
@@ -36,6 +49,7 @@ const api = {
             alpha: true, 
             clearAlpha: 1, 
             antialias: true, 
+            powerPreference: 'high-performance',
         });
         webGlRenderer.setSize(sceneWidth, sceneHeight);
         elmtHtmlContainer.appendChild(webGlRenderer.domElement);
@@ -58,8 +72,11 @@ const api = {
 
     render : function() {
         if (!api.MUST_RENDER) return;
+        // rS( 'frame' ).start();
         webGlRenderer.render(api.scene, api.camera);
         api.MUST_RENDER = false;
+        // rS( 'frame' ).end();
+        // rS().update();
     }, 
 
     checkMouseWorldPos : function(_x, _y, _object) {

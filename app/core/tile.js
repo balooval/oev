@@ -59,8 +59,6 @@ export class TileBasic {
 		this.diffuseMap = null;
 
 		this.material = new MeshPhysicalMaterial({color: 0xffffff, roughness:1, metalness:0, map: this.diffuseTexture});
-		// this.material = new MeshBasicMaterial({color: 0xffffff, map: this.diffuseTexture});
-		// this.material = new MeshPhysicalMaterial({alphaTest:0.2,alphaMap:this.alphaMap,transparent:true,color: 0xA0A0A0, roughness:1,metalness:0, map: TextureLoader('checker')});
 
 		this.extensions = new Map();
 		TileExtension.listActives().forEach(p => this.addExtension(p));

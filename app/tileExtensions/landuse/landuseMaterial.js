@@ -124,16 +124,36 @@ function setMapToMaterials() {
 function loadModels() {
     const modelsList = [
         {
-            id: 'vigne',
-            url: 'vigne.glb',
+            id: 'vigne-lod5',
+            url: 'vigne-lod5.glb',
         },
         {
-            id: 'tree-forest',
-            url: 'tree-forest-color.glb',
+            id: 'vigne-lod0',
+            url: 'vigne-lod0.glb',
         },
         {
-            id: 'tree-forest-sapin',
-            url: 'tree-forest-sapin.glb',
+            id: 'tree-forest-lod0',
+            url: 'tree-forest-lod0.glb',
+        },
+        {
+            id: 'tree-forest-lod5',
+            url: 'tree-forest-lod5.glb',
+        },
+        {
+            id: 'tree-sapin-lod0',
+            url: 'tree-sapin-lod0.glb',
+        },
+        {
+            id: 'tree-sapin-lod5',
+            url: 'tree-sapin-lod5.glb',
+        },
+        {
+            id: 'scrub-lod5',
+            url: 'scrub-lod5.glb',
+        },
+        {
+            id: 'scrub-lod0',
+            url: 'scrub-lod0.glb',
         },
     ];
 
@@ -143,18 +163,22 @@ function loadModels() {
 }
 
 function setModelsToGeometries() {
-    instanceGeometries.set('forest', createInstanceGeometryForest());
-    instanceGeometries.set('sapin', createInstanceGeometryForestSapin());
-    instanceGeometries.set('scrub', createInstanceGeometryScrub());
-    instanceGeometries.set('vineyard', createInstanceGeometryVineyard());
+    instanceGeometries.set('forest', createInstanceGeometryTree(5));
+    instanceGeometries.set('forest-0', createInstanceGeometryTree(0));
+    instanceGeometries.set('sapin', createInstanceGeometryForestSapin(5));
+    instanceGeometries.set('sapin-0', createInstanceGeometryForestSapin(0));
+    instanceGeometries.set('scrub', createInstanceGeometryScrub(5));
+    instanceGeometries.set('scrub-0', createInstanceGeometryScrub(0));
+    instanceGeometries.set('vineyard', createInstanceGeometryVineyard(5));
+    instanceGeometries.set('vineyard-0', createInstanceGeometryVineyard(0));
 
     return new Promise((resolve) => {
         resolve();
     });
 }
 
-function createInstanceGeometryForestSapin() {
-    const geometry = NET_MODELS.get('tree-forest-sapin').clone();
+function createInstanceGeometryTree(lod) {
+    const geometry = NET_MODELS.get('tree-forest-lod' + lod).clone();
     const scale = 0.05;
     geometry.scale(scale, scale, scale);
     geometry.rotateX(Math.PI);
@@ -162,8 +186,8 @@ function createInstanceGeometryForestSapin() {
     return geometry;
 }
 
-function createInstanceGeometryForest() {
-    const geometry = NET_MODELS.get('tree-forest').clone();
+function createInstanceGeometryForestSapin(lod) {
+    const geometry = NET_MODELS.get('tree-sapin-lod' + lod).clone();
     const scale = 0.05;
     geometry.scale(scale, scale, scale);
     geometry.rotateX(Math.PI);
@@ -171,68 +195,17 @@ function createInstanceGeometryForest() {
     return geometry;
 }
 
-function createInstanceGeometryScrub() {
-    const vertPos = [];
-    const vertexColors = [];
-
-    const innerWidth = 0.1;
-    const outerWidth = 0.2;
-    const innerHeight = -0.1;
-    const outerHeight = -0.2;
-
-    const colorBase = new Color('hsl(46, 15%, 33%)');
-    const colorTip = new Color('hsl(46, 21%, 51%)');
-    const colorGreen = new Color('hsl(100, 30%, 51%)');
-
-    const spikeCount = 6;
-    const angleStep = (Math.PI * 2) / spikeCount;
-
-    for (let i = 0; i < spikeCount; i ++) {
-        const curAngle = angleStep * i;
-        const nextAngle = angleStep * (i + 1);
-        const midAngle = angleStep * (i + 0.5);
-
-        vertPos.push(
-            0, 0, 0,
-            Math.cos(curAngle) * innerWidth, innerHeight, Math.sin(curAngle) * innerWidth,
-            Math.cos(nextAngle) * innerWidth, innerHeight, Math.sin(nextAngle) * innerWidth,
-
-            Math.cos(nextAngle) * innerWidth, innerHeight, Math.sin(nextAngle) * innerWidth,
-            Math.cos(curAngle) * innerWidth, innerHeight, Math.sin(curAngle) * innerWidth,
-            Math.cos(midAngle) * outerWidth, outerHeight, Math.sin(midAngle) * outerWidth,
-
-            Math.cos(nextAngle) * innerWidth, 0, Math.sin(nextAngle) * innerWidth,
-            Math.cos(curAngle) * innerWidth, 0, Math.sin(curAngle) * innerWidth,
-            Math.cos(midAngle) * outerWidth * 2, innerHeight, Math.sin(midAngle) * outerWidth * 2,
-        );
-
-        vertexColors.push(
-            colorBase.r, colorBase.g, colorBase.b,
-            colorBase.r, colorBase.g, colorBase.b,
-            colorBase.r, colorBase.g, colorBase.b,
-            
-            colorBase.r, colorBase.g, colorBase.b,
-            colorBase.r, colorBase.g, colorBase.b,
-            colorGreen.r, colorGreen.g, colorGreen.b,
-
-            colorBase.r, colorBase.g, colorBase.b,
-            colorBase.r, colorBase.g, colorBase.b,
-            colorTip.r, colorTip.g, colorTip.b,
-        );
-    }
-
-
-    const leafGeometry = new BufferGeometry();
-    leafGeometry.setAttribute('position', new BufferAttribute(new Float32Array(vertPos), 3));
-    leafGeometry.setAttribute('color', new BufferAttribute(new Float32Array(vertexColors), 3));
-    leafGeometry.computeBoundingBox();
-    leafGeometry.computeBoundingSphere();
-    leafGeometry.computeVertexNormals();
-    return leafGeometry;
+function createInstanceGeometryScrub(lod) {
+    const geometry = NET_MODELS.get('scrub-lod' + lod).clone();
+    const scale = 0.08;
+    geometry.scale(scale, scale, scale);
+    geometry.rotateX(Math.PI);
+    geometry.translate(0, -0.2, 0);
+    return geometry;
 }
 
-function createInstanceGeometryVineyard() {
-    const geometry = NET_MODELS.get('vigne').clone();
+function createInstanceGeometryVineyard(lod) {
+    const geometry = NET_MODELS.get('vigne-lod' + lod).clone();
     const scale = -0.02;
     geometry.scale(scale, scale, scale)
     return geometry;

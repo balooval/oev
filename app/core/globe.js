@@ -47,7 +47,13 @@ const api = {
 	setCameraControler(_controler) {
 		api.cameraControler = _controler;
 		api.cameraControler.init(api);
+
+		api.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
 	}, 
+
+	onCameraUpdated: function(cameraDatas) {
+		api.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
+	},
 	
 	construct : function() {
 		const zoomBase = 4;

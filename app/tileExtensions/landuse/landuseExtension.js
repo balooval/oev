@@ -2,6 +2,7 @@ import Renderer from '../../core/renderer.js';
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
+import GLOBE from '../../core/globe.js';
 
 export {setApiUrl} from './landuseLoader.js';
 
@@ -15,6 +16,7 @@ class LanduseExtension {
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.tile = _tile;
+        this.lod = 1;
 
         this.isActive = this.tile.zoom >= 13;
 
@@ -48,6 +50,44 @@ class LanduseExtension {
                 priority : this.tile.distToCam
             }, _datas => this.onLanduseLoaded(_datas)
 		);
+
+        GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
+    }
+    
+    onCameraUpdated(cameraDatas) {
+        const currentLod = this.lod;
+        let nextLod = this.getLod(cameraDatas);
+
+        if (currentLod !== nextLod) {
+            LanduseGeometryBuilder.setLod(this.tile, nextLod);
+        }
+
+        this.lod = nextLod;
+    }
+
+    getLod(cameraDatas) {
+        const limitStart = this.tile.startCoord;
+        const limitEnd = this.tile.endCoord;
+        // const limitStart = this.tile.startMidCoord;
+        // const limitEnd = this.tile.endMidCoord;
+
+        if (cameraDatas.position.lon < limitStart.x) {
+            return 0;
+        }
+
+        if (cameraDatas.position.lon > limitEnd.x) {
+            return 0;
+        }
+
+        if (cameraDatas.position.lat < limitEnd.y) {
+            return 0;
+        }
+
+        if (cameraDatas.position.lat > limitStart.y) {
+            return 0;
+        }
+
+        return 1;
     }
     
     onLanduseLoaded(_datas) {
@@ -73,6 +113,7 @@ class LanduseExtension {
         this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
         this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
+        GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
 
         LanduseGeometryBuilder.tileRemoved(this.tile.key, this.tile);
 

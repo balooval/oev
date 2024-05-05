@@ -42,12 +42,12 @@ export class MapExtension {
 				y : this.tile.tileY, 
 				priority : this.tile.distToCam
 			}, 
-			_datas => this.onMapLoaded(_datas)
+			texture => this.onMapLoaded(texture)
 		);
     }
     
-    onMapLoaded(_datas) {
-        this.texture = _datas;
+    onMapLoaded(texture) {
+        this.texture = texture;
 		this.dataLoading = false;
 		this.dataLoaded = true;
 		if (!this.tile) return false;
