@@ -96,7 +96,7 @@ function buildLanduse(_landuse, tile) {
         console.log('unsupported type', type);
         return;
     }
-    
+
     const countOffset = instancedMesh.count;
     const elevationsDatas = getElevationsDatas(_landuse);
     const placementFunction = instancePlacement.get(type);
