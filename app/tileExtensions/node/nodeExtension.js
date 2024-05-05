@@ -85,7 +85,7 @@ class NodeExtension {
             if (!typedGeometries[node.type]) typedGeometries[node.type] = [];
             const model = NodeModels.get(node);
             const elevation = ElevationStore.get(node.coord[0], node.coord[1]);
-            const pos = GLOBE.coordToXYZ(
+            const position = GLOBE.coordToXYZ(
                 node.coord[0], 
                 node.coord[1], 
                 elevation
@@ -94,9 +94,9 @@ class NodeExtension {
             let verticeId = 0;
             let len = verticesBuffer.array.length / 3;
             for (let v = 0; v < len; v ++) {
-                verticesBuffer.array[verticeId + 0] += pos.x;
-                verticesBuffer.array[verticeId + 1] += pos.y;
-                verticesBuffer.array[verticeId + 2] += pos.z;
+                verticesBuffer.array[verticeId + 0] += position[0];
+                verticesBuffer.array[verticeId + 1] += position[1];
+                verticesBuffer.array[verticeId + 2] += position[2];
                 verticeId += 3;
             }
             if (!model) console.warn('Model NULL', node);

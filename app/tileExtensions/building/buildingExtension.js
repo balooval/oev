@@ -124,9 +124,9 @@ class BuildingExtension {
 						corners[c][1], 
 						corners[c][2] + (j * 7), 
 					);
-					positions.push(vertPos.x);
-					positions.push(vertPos.y);
-					positions.push(vertPos.z);
+					positions.push(vertPos[0]);
+					positions.push(vertPos[1]);
+					positions.push(vertPos[2]);
 				}
 			}
 			const bufferCoord = Float32Array.from(positions);
@@ -206,9 +206,9 @@ class BuildingExtension {
 				_bufferCoord[bufferVertIndex + 1], 
 				_bufferCoord[bufferVertIndex + 2]
 			);
-			_bufferCoord[bufferVertIndex + 0] = vertPos.x;
-			_bufferCoord[bufferVertIndex + 1] = vertPos.y;
-			_bufferCoord[bufferVertIndex + 2] = vertPos.z;
+			_bufferCoord[bufferVertIndex + 0] = vertPos[0];
+			_bufferCoord[bufferVertIndex + 1] = vertPos[1];
+			_bufferCoord[bufferVertIndex + 2] = vertPos[2];
 			bufferVertIndex += 3;
 		}
 	}
@@ -256,9 +256,9 @@ class BuildingExtension {
 				_bufferCoord[bufferVertIndex + 1], 
 				_bufferCoord[bufferVertIndex + 2]
 			);
-			_bufferCoord[bufferVertIndex + 0] = vertPos.x;
-			_bufferCoord[bufferVertIndex + 1] = vertPos.y;
-			_bufferCoord[bufferVertIndex + 2] = vertPos.z;
+			_bufferCoord[bufferVertIndex + 0] = vertPos[0];
+			_bufferCoord[bufferVertIndex + 1] = vertPos[1];
+			_bufferCoord[bufferVertIndex + 2] = vertPos[2];
 			bufferVertIndex += 3;
 		}
 		// return bufferPos;

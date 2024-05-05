@@ -10,9 +10,11 @@ import GLOBE from '../../core/globe.js';
 import OsmReader from '../../utils/osmReader.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import MATH from '../../core/math.js';
+import Renderer from '../../core/renderer.js';
 
 const rejectedIds = [];
 
+const instancePosition = new Vector3(0, 0, 0);
 const instanceScale = new Vector3(1, 1, 1);
 const instanceQuaternion = new Quaternion();
 const instanceMatrix = new Matrix4();
@@ -73,10 +75,11 @@ function prepareLanduse(_tile, _extractedDatas, _buildFunction, _nodesList, _way
             continue;
         }
         if (!buildLanduse(landuseBuilded, _tile)) {
-            console.log('landuseDatas', landuseDatas);
             continue;
         }
     }
+
+    Renderer.MUST_RENDER = true;
 }
 
 function buildLanduse(_landuse, tile) {
@@ -90,7 +93,7 @@ function buildLanduse(_landuse, tile) {
         
     let instancedMesh = getTileMeshForLanduseType(tile, type);
     if (instancedMesh === null) {
-        console.log('type', type);
+        console.log('unsupported type', type);
         return;
     }
     
@@ -355,13 +358,15 @@ function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
                 elevationsDatas[i],
             );
 
+            instancePosition.set(vertPos[0], vertPos[1], vertPos[2])
+
             const scaleValue = 0.7 + Math.random() * 0.2;
             instanceScale.set(scaleValue, scaleValue, scaleValue);
             
             const angle = Math.random() * 6;
             instanceQuaternion.setFromAxisAngle(rotationVector, angle);
 
-            instanceMatrix.compose(vertPos, instanceQuaternion, instanceScale);
+            instanceMatrix.compose(instancePosition, instanceQuaternion, instanceScale);
             instancedMesh.setMatrixAt(instanceIndex, instanceMatrix);
 
             color.setHSL(0.2, MATH.random(0.5, 0.8), MATH.random(0.3, 0.7));
@@ -380,13 +385,15 @@ function placeScrub(instancedMesh, countOffset, landuseData, elevationsDatas) {
             elevationsDatas[i],
         );
 
+        instancePosition.set(vertPos[0], vertPos[1], vertPos[2])
+
         const scaleValue = 0.7 + Math.random() * 0.5;
         instanceScale.set(scaleValue, scaleValue, scaleValue);
 
         const angle = Math.random() * 6;
         instanceQuaternion.setFromAxisAngle(rotationVector, angle);
 
-        instanceMatrix.compose(vertPos, instanceQuaternion, instanceScale);
+        instanceMatrix.compose(instancePosition, instanceQuaternion, instanceScale);
         instancedMesh.setMatrixAt(countOffset + i, instanceMatrix);
     }
     instancedMesh.count += landuseData.fillPoints.length;
@@ -407,9 +414,11 @@ function placeVineyard(instancedMesh, countOffset, landuseData, elevationsDatas)
             elevationsDatas[i],
         );
 
+        instancePosition.set(vertPos[0], vertPos[1], vertPos[2])
+
         instanceScale.set(scaleValue, scaleValue, scaleValue);
         instanceQuaternion.setFromAxisAngle(rotationVector, angle);
-        instanceMatrix.compose(vertPos, instanceQuaternion, instanceScale);
+        instanceMatrix.compose(instancePosition, instanceQuaternion, instanceScale);
         instancedMesh.setMatrixAt(instanceIndex, instanceMatrix);
         instanceIndex ++;
     }

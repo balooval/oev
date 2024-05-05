@@ -4,6 +4,7 @@ import {
 	Vector2,
 	Vector3,
 } from '../vendor/three.module.js';
+import * as GlMatrix from "../vendor/gl-matrix/vec3.js";
 import Renderer from './renderer.js';
 import * as TILE from './tile.js';
 import Evt from './event.js';
@@ -12,7 +13,7 @@ import ENVIRONMENT from '../environment/environment.js';
 import MATH from './math.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 
-let curLodOrigine = new Vector3(0, 0, 0);
+const glCurLodOrigine = GlMatrix.create(0, 0, 0);
 let curTile = new Vector2(0, 0, 0);
 const eleFactor = 1;
 let time = 0.5;
@@ -133,17 +134,28 @@ const api = {
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation) {
-		const pos = new Vector3(0, 0, 0);
-		pos.x = api.radius * (_lon / 60);
-		pos.y = api.posFromAltitude(_elevation);
+		// const pos = new Vector3(0, 0, 0);
+		// pos.x = api.radius * (_lon / 60);
+		// pos.y = api.posFromAltitude(_elevation);
+		// const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
+		// pos.z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
+		// pos.x *= api.globalScale;
+		// pos.y *= api.globalScale;
+		// pos.z *= api.globalScale;
+		// pos.x -= glCurLodOrigine[0];
+		// pos.z -= glCurLodOrigine[2];
+		// return GlMatrix.fromValues(pos.x, pos.y, pos.z);
+
+		let x = api.radius * (_lon / 60);
+		let y = api.posFromAltitude(_elevation);
 		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
-		pos.z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
-		pos.x *= api.globalScale;
-		pos.y *= api.globalScale;
-		pos.z *= api.globalScale;
-		pos.x -= curLodOrigine.x;
-		pos.z -= curLodOrigine.z;
-		return pos;
+		let z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
+		x *= api.globalScale;
+		y *= api.globalScale;
+		z *= api.globalScale;
+		x -= glCurLodOrigine[0];
+		z -= glCurLodOrigine[2];
+		return [x, y, z];
 	}, 
 
 	coordToXYZSphere : function(lon, lat, _elevation) {
@@ -152,18 +164,18 @@ const api = {
 		const pos = new Vector3(0, 0, 0);
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
-		pos.x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
-		pos.y = Math.sin(radX) * _elevation * -1;
-		pos.z = Math.sin(radY) * (_elevation * Math.cos(radX));
+		let x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
+		let y = Math.sin(radX) * _elevation * -1;
+		let z = Math.sin(radY) * (_elevation * Math.cos(radX));
 		if (api.curLOD == api.LOD_CITY) {
-			pos.x -= curLodOrigine.x;
-			pos.y -= curLodOrigine.y;
-			pos.z -= curLodOrigine.z;
-			pos.x *= api.globalScale;
-			pos.y *= api.globalScale;
-			pos.z *= api.globalScale;
+			x -= glCurLodOrigine[0];
+			y -= glCurLodOrigine[1];
+			z -= glCurLodOrigine[2];
+			x *= api.globalScale;
+			y *= api.globalScale;
+			z *= api.globalScale;
 		}
-		return pos;
+		return [x, y, z];
 	}, 
 
 	posFromAltitude : function(_altitude) {
@@ -177,15 +189,15 @@ const api = {
 	coordFromPos : function(_x, _y, _eleMeter = 0) {
 		const pxlStart = api.coordToXYZ( -180, 85.0511, 0);
 		const pxlEnd = api.coordToXYZ( 180, -85.0511, 0);
-		const pxlWidth = Math.abs( pxlEnd.x - pxlStart.x);
-		const pxlHeight = Math.abs( pxlEnd.z - pxlStart.z) / 2;
-		const prctW = (_x - pxlStart.x) / pxlWidth;
-		const prctH = ((_y - pxlEnd.z) / pxlHeight) - 1;
+		const pxlWidth = Math.abs( pxlEnd[0] - pxlStart[0]);
+		const pxlHeight = Math.abs( pxlEnd[2] - pxlStart[2]) / 2;
+		const prctW = (_x - pxlStart[0]) / pxlWidth;
+		const prctH = ((_y - pxlEnd[2]) / pxlHeight) - 1;
 		const coordX = -180 + (prctW * 360);
 		let coordY = (prctH * 180);
 		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
 		const ele = api.getElevationAtCoords(coordX, coordY, true);
-		return new Vector3(coordX, coordY, ele + _eleMeter);
+		return [coordX, coordY, ele + _eleMeter];
 	}, 
 
 	tileFromXYZ : function(_tileX, _tileY, _zoom) {
@@ -202,8 +214,8 @@ const api = {
 				console.log("SET TO LOD_STREET");
 				api.globalScale = 100;
 				updateMeter();
-				curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
-				console.log('curLodOrigine', curLodOrigine);
+				GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
+				console.log('curLodOrigine', glCurLodOrigine);
 				api.curLOD = api.LOD_STREET;
 				api.updateLOD();
 				api.setProjection("PLANE");
@@ -222,7 +234,7 @@ const api = {
 				api.globalScale = 10;
 				// api.globalScale = 100;
 				updateMeter();
-				curLodOrigine = api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0);
+				GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
 				api.curLOD = api.LOD_CITY;
 				api.updateLOD();
 				api.setProjection("PLANE");
@@ -238,7 +250,7 @@ const api = {
 		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
 			if (api.curLOD != api.LOD_PLANET) {
 				console.log("SET TO LOD_PLANET");
-				curLodOrigine = new Vector3( 0, 0, 0 );
+				GlMatrix.set(glCurLodOrigine, 0, 0, 0)
 				api.globalScale = 1;
 				updateMeter();
 				api.curLOD = api.LOD_PLANET;

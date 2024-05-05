@@ -25,9 +25,9 @@ export function addVerticesToBuffer(_offset, _buffer, _coords, _elevationOffset)
             coord[1], 
             coord[2] + _elevationOffset, 
         );
-        _buffer[_offset + 0] = vertPos.x;
-        _buffer[_offset + 1] = vertPos.y;
-        _buffer[_offset + 2] = vertPos.z;
+        _buffer[_offset + 0] = vertPos[0];
+        _buffer[_offset + 1] = vertPos[1];
+        _buffer[_offset + 2] = vertPos[2];
         _offset += 3;
     }
     return _offset;

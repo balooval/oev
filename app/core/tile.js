@@ -210,9 +210,9 @@ export class TileBasic {
 				vertCoords[i * 2 + 1], 
 				0
 			);
-			bufferVertices[curVertId + 0] = vertPos.x;
-			bufferVertices[curVertId + 1] = vertPos.y;
-			bufferVertices[curVertId + 2] = vertPos.z;
+			bufferVertices[curVertId + 0] = vertPos[0];
+			bufferVertices[curVertId + 1] = vertPos[1];
+			bufferVertices[curVertId + 2] = vertPos[2];
 			
 			bufferNormals[curVertId + 0] = 0;
 			bufferNormals[curVertId + 1] = 1;

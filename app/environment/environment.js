@@ -42,9 +42,9 @@ const api = {
 	}, 	
 	
 	onCameraUpdated : function(_datas) {
-		posCenter.x = _datas.posLookat.x;
-		posCenter.y = _datas.posLookat.y;
-		posCenter.z = _datas.posLookat.z;
+		posCenter.x = _datas.posLookat[0];
+		posCenter.y = _datas.posLookat[1];
+		posCenter.z = _datas.posLookat[2];
 		SKY.setPosition(posCenter);
 		SUN.setPosition(posCenter);
 	}, 

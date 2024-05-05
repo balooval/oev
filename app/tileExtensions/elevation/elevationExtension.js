@@ -81,9 +81,9 @@ class ElevationExtension {
 				vertCoords[i * 2 + 1], 
 				_elevationBuffer[i]
 			);
-			verticePositions.array[curVertId + 0] = vertPos.x;
-			verticePositions.array[curVertId + 1] = vertPos.y;
-			verticePositions.array[curVertId + 2] = vertPos.z;
+			verticePositions.array[curVertId + 0] = vertPos[0];
+			verticePositions.array[curVertId + 1] = vertPos[1];
+			verticePositions.array[curVertId + 2] = vertPos[2];
 			curVertId += 3;
 		}
 

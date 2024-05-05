@@ -10,6 +10,7 @@ function load(_url) {
 }
 
 function onGpxLoaded(_gpx) {
+    return;
     var gpx = new GPXParser();
     gpx.parse(_gpx);
     const pathCoords = getPathPoints(gpx.tracks[0].points);

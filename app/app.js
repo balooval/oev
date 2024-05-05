@@ -245,8 +245,8 @@ const OEV = {
 		return GLOBE.screenToSurfacePosition(_screenPosX, _screenPosY);
 	}, 
 
-	onCameraUpdate : function(_evtDatas) {
-		OEV.evt.fireEvent('CAMERA_UPDATED', _evtDatas);
+	onCameraUpdate : function(evtDatas) {
+		OEV.evt.fireEvent('CAMERA_UPDATED', evtDatas);
 	}
 
 };

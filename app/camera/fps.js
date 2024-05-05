@@ -330,7 +330,6 @@ CamCtrlFps.prototype.updateCamera = function() {
 		
 	}else{
 		this.coordCam.z *= this.planet.globalScale;
-		// var orbitRadius = Math.sin( this.camRotation.y ) * ( this.coordCam.z );
 		var orbitRadius = 1 * ( this.coordCam.z );
 		this.posCam.x = this.posLookat.x + Math.sin( this.camRotation.x ) * orbitRadius;
 		this.posCam.z = this.posLookat.z + Math.cos( this.camRotation.x ) * orbitRadius;
@@ -338,35 +337,19 @@ CamCtrlFps.prototype.updateCamera = function() {
 		this.camera.up.set( 0, -1, 0 );
 	}
 	
-	// this.camera.position.x = this.posCam.x;
-	// this.camera.position.y = this.posCam.y;
-	// this.camera.position.z = this.posCam.z;
-	
-	
 	this.camera.position.x = this.posLookat.x;
-	// this.camera.position.y = -this.coordCam.z;
 	this.camera.position.y = this.posLookat.y;
 	this.camera.position.z = this.posLookat.z;
-	
-	// this.posCam.y = this.posLookat.y;
-	
 	
 	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
 	this.coordCam.x = tmpCoords.x;
 	this.coordCam.y = tmpCoords.y;
-	// this.camera.lookAt( this.posLookat );
-	
 	
 	this.camera.lookAt( this.posCam );
-	
-	
-	
 	
 	this.clicPointer.position.x = this.posCam.x;
 	this.clicPointer.position.y = this.posCam.y;
 	this.clicPointer.position.z = this.posCam.z;
-	
-	
 	
 	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
 	this.planet.zoomDetails = this.zoomCur;
@@ -386,11 +369,9 @@ CamCtrlFps.prototype.updateCamera = function() {
 	
 	Renderer.MUST_RENDER = true;
 	
-	
 	if (SKY != undefined) {
 		SKY.globalScale = this.planet.globalScale;
 	}
-	
 }
 
 

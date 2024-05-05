@@ -22,6 +22,7 @@ export class CameraGod {
 		this.mouseLastPos = [0, 0];
 		this.zoomCur = 14;
 		this.coordLookat = new Vector3(4.1862, 43.7682, 0);
+		this.lookAtVector = new Vector3(0, 0, 0);
 		this.zoomDest = this.zoomCur;
 		this.coordCam = new Vector3(this.coordLookat.x, this.coordLookat.y, 0);
 		this.camRotation = [Math.PI, 0.2];
@@ -186,9 +187,12 @@ export class CameraGod {
 		this.camera.position.y = posCam[1];
 		this.camera.position.z = posCam[2];
 		const tmpCoords = this.globe.coordFromPos(posCam[0], posCam[2]);
-		this.coordCam.x = tmpCoords.x;
-		this.coordCam.y = tmpCoords.y;
-		this.camera.lookAt(posLookat);
+		this.coordCam.x = tmpCoords[0];
+		this.coordCam.y = tmpCoords[1];
+		this.lookAtVector.x = posLookat[0];
+		this.lookAtVector.y = posLookat[1];
+		this.lookAtVector.z = posLookat[2];
+		this.camera.lookAt(this.lookAtVector);
 		this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
 		this.globe.checkLOD();
@@ -196,9 +200,9 @@ export class CameraGod {
 		this.pointer.scale.x = wpScale;
 		this.pointer.scale.y = wpScale;
 		this.pointer.scale.z = wpScale;
-		this.pointer.position.x = posLookat.x;
-		this.pointer.position.y = posLookat.y;
-		this.pointer.position.z = posLookat.z;
+		this.pointer.position.x = posLookat[0];
+		this.pointer.position.y = posLookat[1];
+		this.pointer.position.z = posLookat[2];
 		this.debugPointer.scale.x = wpScale;
 		this.debugPointer.scale.y = wpScale;
 		this.debugPointer.scale.z = wpScale;
@@ -259,9 +263,9 @@ export class CameraGod {
 		this.coordCam.z *= this.globe.globalScale;
 		const orbitRadius = Math.sin(this.camRotation[1]) * this.coordCam.z;
 		return [
-			_posLookat.x + Math.sin(this.camRotation[0]) * orbitRadius, 
-			_posLookat.y - Math.cos(this.camRotation[1]) * (this.coordCam.z), 
-			_posLookat.z + Math.cos(this.camRotation[0]) * orbitRadius, 
+			_posLookat[0] + Math.sin(this.camRotation[0]) * orbitRadius, 
+			_posLookat[1] - Math.cos(this.camRotation[1]) * (this.coordCam.z), 
+			_posLookat[2] + Math.cos(this.camRotation[0]) * orbitRadius, 
 		];
 	}
 
