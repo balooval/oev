@@ -21,24 +21,24 @@ class LanduseExtension {
         this.isActive = this.tile.zoom >= 13;
 
         if (LanduseMaterial.isReady) {
-            this.onRessourcesReady();
+            this.#onRessourcesReady();
         } else {
-            LanduseMaterial.evt.addEventListener('READY', this, this.onRessourcesReady);
+            LanduseMaterial.evt.addEventListener('READY', this, this.#onRessourcesReady);
         }
     }
 
-    onRessourcesReady() {
-        LanduseMaterial.evt.removeEventListener('READY', this, this.onRessourcesReady);
-        this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
-        this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-        this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
+    #onRessourcesReady() {
+        LanduseMaterial.evt.removeEventListener('READY', this, this.#onRessourcesReady);
+        this.tile.evt.addEventListener('SHOW', this, this.#onTileReady);
+        this.tile.evt.addEventListener('DISPOSE', this, this.#onTileDispose);
+        this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
 
         if (this.tile.isReady) {
-            this.onTileReady();
+            this.#onTileReady();
         }
     }
 
-    onTileReady() {
+    #onTileReady() {
 		if (this.dataLoaded) return true;
         if (this.dataLoading) return false;
         if (!this.isActive) return false;
@@ -48,15 +48,15 @@ class LanduseExtension {
                 x : this.tile.tileX, 
                 y : this.tile.tileY, 
                 priority : this.tile.distToCam
-            }, _datas => this.onLanduseLoaded(_datas)
+            }, _datas => this.#onLanduseLoaded(_datas)
 		);
 
-        GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
+        GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
     }
     
-    onCameraUpdated(cameraDatas) {
+    #onCameraUpdated(cameraDatas) {
         const currentLod = this.lod;
-        let nextLod = this.getLod(cameraDatas);
+        let nextLod = this.#getLod(cameraDatas);
 
         if (currentLod !== nextLod) {
             LanduseGeometryBuilder.setLod(this.tile, nextLod);
@@ -65,7 +65,7 @@ class LanduseExtension {
         this.lod = nextLod;
     }
 
-    getLod(cameraDatas) {
+    #getLod(cameraDatas) {
         const limitStart = this.tile.startCoord;
         const limitEnd = this.tile.endCoord;
         // const limitStart = this.tile.startMidCoord;
@@ -90,7 +90,7 @@ class LanduseExtension {
         return 1;
     }
     
-    onLanduseLoaded(_datas) {
+    #onLanduseLoaded(_datas) {
         if (!this.tile) {
             return false;
         }
@@ -105,15 +105,15 @@ class LanduseExtension {
         LanduseGeometryBuilder.setDatas(_datas, this.tile);
     }
 
-	onTileDispose() {
+	#onTileDispose() {
 		this.dispose();
 	}
 	
 	dispose() {
-        this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
-        this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
-        this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
-        GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
+        this.tile.evt.removeEventListener('SHOW', this, this.#onTileReady);
+        this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
+        this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
+        GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
 
         LanduseGeometryBuilder.tileRemoved(this.tile.key, this.tile);
 

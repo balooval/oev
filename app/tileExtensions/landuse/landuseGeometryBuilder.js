@@ -7,7 +7,7 @@ import {
 } from '../../vendor/three.module.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import GLOBE from '../../core/globe.js';
-import OsmReader from '../../utils/osmReader.js';
+import * as OsmReader from '../../utils/osmReader.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import MATH from '../../core/math.js';
 import Renderer from '../../core/renderer.js';

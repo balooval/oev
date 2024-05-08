@@ -3,7 +3,7 @@ import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js
 import Renderer from '../../core/renderer.js';
 import GEO from '../../core/geo.js';
 import GLOBE from '../../core/globe.js';
-import OsmReader from '../../utils/osmReader.js';
+import * as OsmReader from '../../utils/osmReader.js';
 // import NavigationGraph from '../../utils/navigationGraph.js';
 import LinesMaterial from './linesMaterial.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';

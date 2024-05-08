@@ -42,13 +42,13 @@ class BuildingExtension {
 		this.isActive = this.tile.zoom == 15;
 		// this.isActive = this.tile.key == '16597_11268_15';
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
-		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
+		this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
-		if (this.tile.isReady) this.onTileReady();
+		if (this.tile.isReady) this.#onTileReady();
 	}
 
-	onTileReady(_evt) {
-		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
+	#onTileReady(_evt) {
+		this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
 		if (!this.isActive) return false;
 		var bbox = { 
 			minLon : this.tile.startCoord.x, 
@@ -59,11 +59,11 @@ class BuildingExtension {
 		this.waiting = true;
 		BuildingsDatas.store.get(this.tile.zoom, this.tile.tileX, this.tile.tileY, bbox, this.tile.distToCam, _datas => {
 			this.waiting = false;
-			this.onBuildingsLoaded(_datas);
+			this.#onBuildingsLoaded(_datas);
 		});
 	}
 
-	onBuildingsLoaded(_datas) {
+	#onBuildingsLoaded(_datas) {
 		if (!this.tile) return false;
 		this.dataLoaded = true;
 		this.datas = _datas;
@@ -73,7 +73,7 @@ class BuildingExtension {
 			minLat : this.tile.endCoord.y, 
 			maxLat : this.tile.startCoord.y
 		};
-		workerEvent.addEventListener('BUILDING_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
+		workerEvent.addEventListener('BUILDING_READY_' + this.tileKey, this, this.#onWorkerFinishedBuild);
 		worker.postMessage({
 			tileKey : this.tileKey,
 			buildingsDatas : this.datas,  
@@ -82,23 +82,23 @@ class BuildingExtension {
 		});
 	}
 
-	onWorkerFinishedBuild(_res) {
-		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
-		this.construct(_res);
+	#onWorkerFinishedBuild(_res) {
+		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.#onWorkerFinishedBuild);
+		this.#construct(_res);
 	}
 
-	construct(_datas) {
+	#construct(_datas) {
 		if (this.meshWalls != undefined) { // TODO: et le mesh roof ?
 			Renderer.scene.add(this.meshWalls);
 			return false;
 		}
-		this.buildRoof(_datas.roofsBuffers);
-		this.buildWalls(_datas.wallsBuffers);
-		this.buildEntrances(_datas.entrancesDatas);
+		this.#buildRoof(_datas.roofsBuffers);
+		this.#buildWalls(_datas.wallsBuffers);
+		this.#buildEntrances(_datas.entrancesDatas);
 		Renderer.MUST_RENDER = true;
 	}
 
-	buildEntrances(_entrancesDatas) {
+	#buildEntrances(_entrancesDatas) {
 		if (!_entrancesDatas) return;
 		if (!_entrancesDatas.length) return;
 		const entrancesGeometries = new Array(_entrancesDatas.length);
@@ -163,13 +163,13 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshEntrances);
 	}
 
-	buildRoof(roofsDatas) {
+	#buildRoof(roofsDatas) {
 		if (!roofsDatas) return;
 		const roofsGeometries = new Array(roofsDatas.buildingNb);
 		for (let r = 0; r < roofsDatas.buildingNb; r ++) {
 			const roofBuffers = roofsDatas.buffers[r];
-			this.applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
-			this.convertCoordToPositionRoof(roofBuffers.bufferCoord);
+			this.#applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
+			this.#convertCoordToPositionRoof(roofBuffers.bufferCoord);
 			const bufferGeometry = CachedGeometry.getGeometry();
 			// const bufferGeometry = new BufferGeometry();
 			bufferGeometry.setAttribute('position', new BufferAttribute(roofBuffers.bufferCoord, 3));
@@ -191,13 +191,14 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshRoof);
 	}
 
-	applyElevationToVerticesRoof(_buffers, _centroid) {
+	#applyElevationToVerticesRoof(_buffers, _centroid) {
 		const alt = ElevationStore.get(_centroid[0], _centroid[1]);
 		for (let v = 2; v < _buffers.bufferCoord.length; v += 3) {
 		_buffers.bufferCoord[v] += alt;
 		}
 	}
-	convertCoordToPositionRoof(_bufferCoord) {
+
+	#convertCoordToPositionRoof(_bufferCoord) {
 		let bufferVertIndex = 0;
 		const length = _bufferCoord.length / 3;
 		for (let c = 0; c < length; c ++) {
@@ -213,10 +214,10 @@ class BuildingExtension {
 		}
 	}
 
-	buildWalls(_buffers) {
+	#buildWalls(_buffers) {
 		if (!_buffers) return;
-		this.applyElevationToVertices(_buffers);
-		this.convertCoordToPosition(_buffers.bufferCoord);
+		this.#applyElevationToVertices(_buffers);
+		this.#convertCoordToPosition(_buffers.bufferCoord);
 		const bufferGeometry = CachedGeometry.getGeometry();
 		// const bufferGeometry = new BufferGeometry();
 		bufferGeometry.setAttribute('position', new BufferAttribute(_buffers.bufferCoord, 3));
@@ -234,7 +235,7 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshWalls);
 	}
 
-	applyElevationToVertices(_buffers) {
+	#applyElevationToVertices(_buffers) {
 		let bufferVertIndex = 0;
 		for (let b = 0; b < _buffers.buildingNb; b ++) {
 			const center = _buffers.centroids[b];
@@ -246,7 +247,7 @@ class BuildingExtension {
 		}
 	}
 
-	convertCoordToPosition(_bufferCoord) {
+	#convertCoordToPosition(_bufferCoord) {
 		// const bufferPos = new Float32Array(_bufferCoord);
 		let bufferVertIndex = 0;
 		const length = _bufferCoord.length / 3;
@@ -270,7 +271,7 @@ class BuildingExtension {
 		if (!this.dataLoaded){
 			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
 		}
-		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.onWorkerFinishedBuild);
+		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.#onWorkerFinishedBuild);
 		if (this.meshWalls != undefined) {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
