@@ -171,12 +171,10 @@ class BuildingExtension {
 			this.#applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
 			this.#convertCoordToPositionRoof(roofBuffers.bufferCoord);
 			const bufferGeometry = CachedGeometry.getGeometry();
-			// const bufferGeometry = new BufferGeometry();
 			bufferGeometry.setAttribute('position', new BufferAttribute(roofBuffers.bufferCoord, 3));
 			bufferGeometry.setAttribute('color', new BufferAttribute(roofBuffers.bufferColor, 3, true));
 			bufferGeometry.setIndex(new BufferAttribute(roofBuffers.bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
-			// bufferGeometry.computeFaceNormals();
 			roofsGeometries[r] = bufferGeometry;
 		}
 		const mergedGeometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
@@ -219,13 +217,10 @@ class BuildingExtension {
 		this.#applyElevationToVertices(_buffers);
 		this.#convertCoordToPosition(_buffers.bufferCoord);
 		const bufferGeometry = CachedGeometry.getGeometry();
-		// const bufferGeometry = new BufferGeometry();
 		bufferGeometry.setAttribute('position', new BufferAttribute(_buffers.bufferCoord, 3));
 		bufferGeometry.setAttribute('color', new BufferAttribute(_buffers.bufferColor, 3, true));
 		bufferGeometry.setIndex(new BufferAttribute(_buffers.bufferFaces, 1));
-		// bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
-		// this.meshWalls = new Mesh(bufferGeometry, materialWalls);
 		this.meshWalls = CachedGeometry.getMesh();
 		this.meshWalls.geometry = bufferGeometry;
 		this.meshWalls.material = materialWalls;

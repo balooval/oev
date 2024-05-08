@@ -5,8 +5,10 @@ const cacheGeometries = [];
 let freeGeometryIndex = -1;
 
 export function getGeometry() {
-    // console.log('maxNb', maxNb);
-    if (freeGeometryIndex < 0) return new THREE.BufferGeometry();
+    if (freeGeometryIndex < 0) {
+        return new THREE.BufferGeometry();
+    }
+
     const geometry = cacheGeometries[freeGeometryIndex];
     freeGeometryIndex --;
     return geometry;
@@ -37,7 +39,6 @@ const cachedMeshes = [];
 let freeMeshesIndex = -1;
 
 export function getMesh() {
-    // console.log('maxNbMeshes', maxNbMeshes);
     if (freeMeshesIndex < 0) return new THREE.Mesh();
     const mesh = cachedMeshes[freeMeshesIndex];
     freeMeshesIndex --;

@@ -155,6 +155,7 @@ function prepareRoofFlat(_building) {
 	const floorHeight = _building.props.floorHeight;
 	const roofAlt = minAlt + (floorsNb * floorHeight)
 	let bufferVertIndex = 0;
+
 	for (let v = 0; v < buildingNbVert; v ++) {
 		bufferCoord[bufferVertIndex + 0] = allCoords[v][0];
 		bufferCoord[bufferVertIndex + 1] = allCoords[v][1];
@@ -162,6 +163,7 @@ function prepareRoofFlat(_building) {
 		bufferVertIndex += 3;
 		colorVertices.push(..._building.props.roofColor);
 	}
+	
 	return {
 		bufferCoord : bufferCoord, 
 		bufferFaces : bufferFaces, 
@@ -170,9 +172,13 @@ function prepareRoofFlat(_building) {
 }
 
 function prepareRoofsGeometry(_buildings) {
-	if (_buildings.length == 0) return null;
+	if (_buildings.length == 0) {
+		return null;
+	}
+
 	const centroids = new Array(_buildings.length);
 	const buffers = new Array(_buildings.length);
+
 	for (let b = 0; b < _buildings.length; b ++) {
 		const curBuilding = _buildings[b];
 		centroids[b] = curBuilding.centroid;
@@ -186,6 +192,7 @@ function prepareRoofsGeometry(_buildings) {
 		}
 		buffers[b] = roofBuffers;
 	}
+
 	return {
 		buildingNb : _buildings.length, 
 		centroids : centroids, 
