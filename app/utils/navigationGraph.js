@@ -226,14 +226,14 @@ class Vehicle {
     update() {
         const curCoord = this.getCurCoord();
         const elevation = ElevationStore.get(curCoord.lon, curCoord.lat);
-        const pos = GLOBE.coordToXYZ(
+        const position = GLOBE.coordToXYZ(
             curCoord.lon, 
             curCoord.lat, 
             elevation, 
         );
-        this.mesh.position.x = pos.x;
-        this.mesh.position.y = pos.y;
-        this.mesh.position.z = pos.z;
+        this.mesh.position.x = position[0];
+        this.mesh.position.y = position[1];
+        this.mesh.position.z = position[2];
         this.mesh.rotation.y = curCoord.angle;
         Renderer.MUST_RENDER = true;
     }

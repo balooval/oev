@@ -85,10 +85,10 @@ class WayPoint {
 		this.material = waypointMat;
 		this.sprite = new THREE.Sprite(this.material);
 		var ele = GLOBE.getElevationAtCoords(this.lon, this.lat, true);
-		var pos = GLOBE.coordToXYZ(this.lon, this.lat, ele);
-		this.sprite.position.x = pos.x;
-		this.sprite.position.y = pos.y;
-		this.sprite.position.z = pos.z;
+		const position = GLOBE.coordToXYZ(this.lon, this.lat, ele);
+		this.sprite.position.x = position[0];
+		this.sprite.position.y = position[1];
+		this.sprite.position.z = position[2];
 		let wpScale = (GLOBE.cameraControler.coordCam.z / GLOBE.radius) * 1000;
 		wpScale = Math.max(wpScale, 1);
 		this.sprite.scale.x = wpScale;
@@ -99,10 +99,10 @@ class WayPoint {
 
 	updatePos() {
 		if (this.showSprite) {
-			var pos = GLOBE.coordToXYZ(this.lon, this.lat, (GLOBE.meter * 64) * GLOBE.globalScale);
-			this.sprite.position.x = pos.x;
-			this.sprite.position.y = pos.y;
-			this.sprite.position.z = pos.z;
+			const position = GLOBE.coordToXYZ(this.lon, this.lat, (GLOBE.meter * 64) * GLOBE.globalScale);
+			this.sprite.position.x = position[0];
+			this.sprite.position.y = position[1];
+			this.sprite.position.z = position[2];
 		}
 	}
 

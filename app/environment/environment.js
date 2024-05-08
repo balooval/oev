@@ -1,12 +1,15 @@
-import * as THREE from '../vendor/three.module.js';
+import {
+	Fog,
+	Vector3,
+} from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import GLOBE from '../core/globe.js';
-import CLOUDS from './clouds.js';
+// import CLOUDS from './clouds.js';
 import SUN from './sun.js';
 import SKY from './sky.js';
 
 let fogActive = true;
-const posCenter = new THREE.Vector3(0, 0, 0);
+const posCenter = new Vector3(0, 0, 0);
 
 const api = {
 	
@@ -14,8 +17,8 @@ const api = {
 		GLOBE.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
 		GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
 		if (fogActive){
-			// Renderer.scene.fog = new THREE.Fog(0x91b8fb, 200, 500);
-			Renderer.scene.fog = new THREE.Fog(0x86aaff, 500, 2000);
+			// Renderer.scene.fog = new Fog(0x91b8fb, 200, 500);
+			Renderer.scene.fog = new Fog(0x86aaff, 500, 2000);
 		}
 		SUN.init();
 		GLOBE.evt.addEventListener('LOD_CHANGED', api, api.onLodChanged);
@@ -27,7 +30,7 @@ const api = {
 		SUN.activate(_state);
 		SKY.activate(_state);
 		if (_state) {
-			CLOUDS.create();
+			// CLOUDS.create();
 			api.onTimeChanged(0.5);
 		}
 	}, 
@@ -35,13 +38,13 @@ const api = {
 	onTimeChanged : function(_time) {
 		const sunParams = SUN.setTime(_time);
 		SKY.setTime(_time, sunParams);
-		CLOUDS.setTime(_time);
+		// CLOUDS.setTime(_time);
 	}, 	
 	
 	onCameraUpdated : function(_datas) {
-		posCenter.x = _datas.posLookat.x;
-		posCenter.y = _datas.posLookat.y;
-		posCenter.z = _datas.posLookat.z;
+		posCenter.x = _datas.posLookat[0];
+		posCenter.y = _datas.posLookat[1];
+		posCenter.z = _datas.posLookat[2];
 		SKY.setPosition(posCenter);
 		SUN.setPosition(posCenter);
 	}, 

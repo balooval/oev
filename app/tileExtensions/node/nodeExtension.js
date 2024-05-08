@@ -23,38 +23,38 @@ class NodeExtension {
         this.mesh = null;
 
         if (NodeMaterial.isReady && NodeModels.isReady) {
-            this.onRessourcesLoaded();
+            this.#onRessourcesLoaded();
         }
         if (!NodeMaterial.isReady) {
-            NodeMaterial.evt.addEventListener('READY', this, this.onTexturesReady);
+            NodeMaterial.evt.addEventListener('READY', this, this.#onTexturesReady);
         }
         if (!NodeModels.isReady) {
-            NodeModels.evt.addEventListener('READY', this, this.onModelsReady);
+            NodeModels.evt.addEventListener('READY', this, this.#onModelsReady);
         }
     }
 
-    onTexturesReady() {
-        NodeMaterial.evt.removeEventListener('READY', this, this.onTexturesReady);
-        this.onRessourcesLoaded();
+    #onTexturesReady() {
+        NodeMaterial.evt.removeEventListener('READY', this, this.#onTexturesReady);
+        this.#onRessourcesLoaded();
     }
     
-    onModelsReady() {
-        NodeModels.evt.removeEventListener('READY', this, this.onModelsReady);
-        this.onRessourcesLoaded();
+    #onModelsReady() {
+        NodeModels.evt.removeEventListener('READY', this, this.#onModelsReady);
+        this.#onRessourcesLoaded();
     }
 
-    onRessourcesLoaded() {
+    #onRessourcesLoaded() {
         if (!NodeMaterial.isReady) return false;
         if (!NodeModels.isReady) return false;
         this.isActive = this.tile.zoom == 15;
-		this.tile.evt.addEventListener('SHOW', this, this.onTileReady);
-		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
-		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
+		this.tile.evt.addEventListener('SHOW', this, this.#onTileReady);
+		this.tile.evt.addEventListener('DISPOSE', this, this.#onTileDispose);
+		this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
         this.tile.evt.addEventListener('HIDE', this, this.hide);
-		if (this.tile.isReady) this.onTileReady();
+		if (this.tile.isReady) this.#onTileReady();
     }
 
-    onTileReady() {
+    #onTileReady() {
 		if (this.dataLoaded) return true;
         if (this.dataLoading) return false;
         if (!this.isActive) return false;
@@ -64,11 +64,11 @@ class NodeExtension {
                 x : this.tile.tileX, 
                 y : this.tile.tileY, 
                 priority : this.tile.distToCam
-            }, _datas => this.onNodesLoaded(_datas)
+            }, _datas => this.#onNodesLoaded(_datas)
 		);
     }
     
-    onNodesLoaded(_datas) {
+    #onNodesLoaded(_datas) {
         if (!this.tile) return false;
 		this.dataLoading = false;
 		this.dataLoaded = true;
@@ -76,16 +76,16 @@ class NodeExtension {
         const parsedJson = JSON.parse(_datas);
         const nodes = prepareNodesDatas(parsedJson);
         if (!nodes.length) return false;
-        this.drawNodes(nodes);
+        this.#drawNodes(nodes);
     }
 
-    drawNodes(_nodes) {
+    #drawNodes(_nodes) {
         const typedGeometries = {};
         _nodes.forEach(node => {
             if (!typedGeometries[node.type]) typedGeometries[node.type] = [];
             const model = NodeModels.get(node);
             const elevation = ElevationStore.get(node.coord[0], node.coord[1]);
-            const pos = GLOBE.coordToXYZ(
+            const position = GLOBE.coordToXYZ(
                 node.coord[0], 
                 node.coord[1], 
                 elevation
@@ -94,9 +94,9 @@ class NodeExtension {
             let verticeId = 0;
             let len = verticesBuffer.array.length / 3;
             for (let v = 0; v < len; v ++) {
-                verticesBuffer.array[verticeId + 0] += pos.x;
-                verticesBuffer.array[verticeId + 1] += pos.y;
-                verticesBuffer.array[verticeId + 2] += pos.z;
+                verticesBuffer.array[verticeId + 0] += position[0];
+                verticesBuffer.array[verticeId + 1] += position[1];
+                verticesBuffer.array[verticeId + 2] += position[2];
                 verticeId += 3;
             }
             if (!model) console.warn('Model NULL', node);
@@ -114,7 +114,7 @@ class NodeExtension {
         });
     }
 
-	onTileDispose() {
+	#onTileDispose() {
 		this.dispose();
 	}
 	
@@ -128,10 +128,10 @@ class NodeExtension {
     }
 	
 	dispose() {
-        this.tile.evt.removeEventListener('SHOW', this, this.onTileReady);
-        this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
+        this.tile.evt.removeEventListener('SHOW', this, this.#onTileReady);
+        this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
-		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
+		this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
         if (!this.isActive) return false;
         Object.keys(this.meshes).forEach(key => {
             this.meshes[key].geometry.dispose();

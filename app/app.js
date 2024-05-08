@@ -62,7 +62,7 @@ const OEV = {
 			_params.EXTENSIONS[extension].url = _choose(_params.EXTENSIONS[extension].url, serverURL + 'index.php?ressource=' + extension);
 		});
 		_params.EXTENSIONS.elevation.active = true;
-		_params.EXTENSIONS.normal.active = true;
+		// _params.EXTENSIONS.normal.active = true;
 		_params.EXTENSIONS.coast = {
 			url : serverURL + 'index.php?ressource=coastline', 
 		};
@@ -140,6 +140,7 @@ const OEV = {
 			_callback();
 		});
 		OEV.isBuild = true;
+
 	}, 
 	
 	start : function(_cameraCtrl) {
@@ -161,6 +162,9 @@ const OEV = {
 		const textList = [];
 		const toLoad = [
 			['checker', 'loading.png'], 
+			// ['tree-forest', 'tree-forest-flip.png'], 
+			// ['tree-forest-sapin', 'tree-forest-sapin.png'], 
+			// ['vigne', 'vigne.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
 			['waypoint', 'waypoint.png'], 
 		];
@@ -174,7 +178,7 @@ const OEV = {
 		return new Promise((resolve) => {
 			Shader.loadList(['cloud', 'sky', 'sun'], resolve);
 		});
-	}, 
+	},
 
 	update : function() {
 		if (!OEV.isBuild) return;
@@ -241,8 +245,8 @@ const OEV = {
 		return GLOBE.screenToSurfacePosition(_screenPosX, _screenPosY);
 	}, 
 
-	onCameraUpdate : function(_evtDatas) {
-		OEV.evt.fireEvent('CAMERA_UPDATED', _evtDatas);
+	onCameraUpdate : function(evtDatas) {
+		OEV.evt.fireEvent('CAMERA_UPDATED', evtDatas);
 	}
 
 };

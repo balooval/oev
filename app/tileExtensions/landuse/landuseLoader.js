@@ -1,8 +1,8 @@
 import * as DataLoader from '../dataLoader.js';
 
 const PARAMS = {
-	nbLoaders : 1, 
-	useCache : true, 
+	nbLoaders : 4,
+	useCache : true,
 };
 
 let API_URL = '';

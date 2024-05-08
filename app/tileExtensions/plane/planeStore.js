@@ -174,14 +174,14 @@ class Plane {
 
     placeMesh() {
         const curCoord = this.getCurCoord();
-        const pos = GLOBE.coordToXYZ(
+        const position = GLOBE.coordToXYZ(
             curCoord.lon, 
             curCoord.lat, 
             curCoord.alt, 
         );
-        this.mesh.position.x = pos.x;
-        this.mesh.position.y = pos.y;
-        this.mesh.position.z = pos.z;
+        this.mesh.position.x = position[0];
+        this.mesh.position.y = position[1];
+        this.mesh.position.z = position[2];
         this.mesh.rotation.y = MATH.radians(this.props.angle + 180);
         Renderer.MUST_RENDER = true;
     }

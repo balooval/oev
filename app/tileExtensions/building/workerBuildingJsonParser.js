@@ -17,6 +17,8 @@ function extractNodes(_elements) {
 
 function getEntrances(_entrances, _wayNodes, _nodesList) {
 	const entrances = [];
+	let lastCoord;
+	let curCoord;
 	let lastNodeId = _wayNodes[_wayNodes.length - 1];
 	for (let i = 0; i < _wayNodes.length; i ++) {
 		const nodeId = _wayNodes[i];
@@ -49,28 +51,42 @@ function readJson(_datas) {
 	const json = JSON.parse(_datas);
 	const nodesElements = extractNodes(json.elements);
 	const entrances = listEntrances(nodesElements);
-	// console.log('entrances', entrances);
 	const nodesList = new Map();
+	let element = null;
+
 	for (let i = 0; i < nodesElements.length; i ++) {
-		const element = nodesElements[i];
+		element = nodesElements[i];
 		nodesList.set('NODE_' + element.id, [
 			parseFloat(element.lon), 
 			parseFloat(element.lat)
 		]);
 	}
+
 	let buildingsList = [];
 	const waysList = extractWays(json);
+
+	// Relations
 	for (let i = 0; i < json.elements.length; i ++) {
 		const rel = json.elements[i];
-		if (rel.type != 'relation') continue;
-		if (!rel.tags) continue;
-		if (rel.tags['building:parts']) continue;
-		if (excludedIds.includes(rel.id)) continue;
+		if (rel.type != 'relation') {
+			continue;
+		}
+		if (!rel.tags) {
+			continue;
+		}
+		if (rel.tags['building:parts']) {
+			continue;
+		}
+		if (excludedIds.includes(rel.id)) {
+			continue;
+		}
+
 		const props = cleanTags(rel.tags);
 		const holes = rel.members.filter(member => member.role == 'inner');
 		let holesNodes = [];
 		let holesIndex = [];
 		let holesLastId = 0;
+		
 		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
 		for (let j = 0; j < holes.length; j ++) {
 			const holeWay = waysList.get('WAY_' + holes[j].ref);
@@ -82,8 +98,10 @@ function readJson(_datas) {
 			holesIndex.push(holesLastId);
 			holesLastId += curHoleNodes.length;
 		}
+
 		const borders = rel.members.filter(member => member.role == 'outer');
 		const parts = mergeContinuousWays(borders, waysList, nodesList);
+
 		for (let j = 0; j < parts.length; j ++) {
 			const coords = parts[j];
 			const wayNodesShort = removeWayDuplicateLimits([...coords]);
@@ -108,14 +126,25 @@ function readJson(_datas) {
 		}
 	}
 
+	// Ways
 	for (let i = 0; i < json.elements.length; i ++) {
 		const way = json.elements[i];
-		if (way.type != 'way') continue;
-		if (!way.tags) continue;
-		if (excludedIds.includes(way.id)) continue;
-		if (way.tags['building:parts']) continue;
+		if (way.type != 'way') {
+			continue;
+		}
+		if (!way.tags) {
+			continue;
+		}
+		if (excludedIds.includes(way.id)) {
+			continue;
+		}
+		if (way.tags['building:parts']) {
+			continue;
+		}
+
 		const props = cleanTags(way.tags);
 		const wayNodes = [];
+
 		for (let i = 0; i < way.nodes.length; i ++) {
 			wayNodes.push(nodesList.get('NODE_' + way.nodes[i]));
 		}
@@ -131,8 +160,10 @@ function readJson(_datas) {
 			entrances : getEntrances(entrances, way.nodes, nodesList), 
 		});
 	}
+
 	nodesList.clear();
 	waysList.clear();
+
 	return buildingsList;
 }
 
@@ -146,9 +177,10 @@ function getWayNodes(_nodesIds, _nodesList) {
 
 function mergeContinuousWays(_outers, _waysList, _nodesList) {
 	const outersLimits = new Array(_outers.length);
+	let outerNodes = null;
 	for (let i = 0; i < _outers.length; i ++) {
 		const outerWay = _waysList.get('WAY_' + _outers[i].ref);
-		const outerNodes = getWayNodes(outerWay.nodes, _nodesList);
+		outerNodes = getWayNodes(outerWay.nodes, _nodesList);
 		outersLimits[i] = [
 			outerNodes.shift(), 
 			outerNodes.pop()
@@ -157,8 +189,9 @@ function mergeContinuousWays(_outers, _waysList, _nodesList) {
 	const differentsBorders = [];
 	let curBorderPart = [];
 	let lastStart = null;
+	let limit = null;
 	for (let i = 0; i < outersLimits.length; i ++) {
-		const limit = outersLimits[i];
+		limit = outersLimits[i];
 		if (lastStart == null) {
 			curBorderPart.push(i);
 			continue;
@@ -184,15 +217,20 @@ function mergeContinuousWays(_outers, _waysList, _nodesList) {
 	}
 	differentsBorders.push(curBorderPart);
 	const res = [];
+	let contiguousWays = null;
+	let contiguousNodes = null;
+	let curOuter = null;
+	let outerWay = null;
+	let outerNodesB = null;
 	for (let i = 0; i < differentsBorders.length; i ++) {
-		const contiguousNodes = [];
-		const contiguousWays = differentsBorders[i];
+		contiguousNodes = [];
+		contiguousWays = differentsBorders[i];
 		for (let j = 0; j < contiguousWays.length; j ++) {
-			const curOuter = _outers[differentsBorders[i][j]];
-			const outerWay = _waysList.get('WAY_' + curOuter.ref);
-			const outerNodes = getWayNodes(outerWay.nodes, _nodesList);
-			for (let k = 0; k < outerNodes.length; k ++) {
-				contiguousNodes.push(outerNodes[k]);
+			curOuter = _outers[differentsBorders[i][j]];
+			outerWay = _waysList.get('WAY_' + curOuter.ref);
+			outerNodesB = getWayNodes(outerWay.nodes, _nodesList);
+			for (let k = 0; k < outerNodesB.length; k ++) {
+				contiguousNodes.push(outerNodesB[k]);
 			}
 		}
 		if (contiguousNodes.length < 3) continue;

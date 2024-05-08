@@ -1,7 +1,7 @@
 import GEO from '../core/geo.js';
 import * as NET_TEXTURES from '../net/textures.js'
 import * as TILE from '../core/tile.js'
-import LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
+import * as LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
 
 const canvasFinal = document.createElement('canvas');
 canvasFinal.width = TILE.mapSize;
@@ -31,10 +31,10 @@ const groundImage = {
     scrub : null, 
 };
 
-LanduseMaterial.evt.addEventListener('READY', null, onMaterialReady);
+// LanduseMaterial.evt.addEventListener('READY', null, onMaterialReady);
 
 function onMaterialReady() {
-    LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
+    // LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
     groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
     groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
 

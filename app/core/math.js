@@ -1,5 +1,28 @@
 const api = {
 
+	random: function(min, max) {
+		const length = max - min;
+		return min + (Math.random() * length);
+	},
+	
+	randomize: function(value, radius) {
+		const amplitude = radius * 2;
+		return value + (Math.random() * amplitude) - radius;
+	},
+
+	lerpPoint: function(pointA, pointB, percent) {
+		return [
+			api.lerpFloat(pointA[0], pointB[0], percent),
+			api.lerpFloat(pointA[1], pointB[1], percent),
+		]
+	},
+	
+	lerpFloat: function(valueA, valueB, percent) {
+		const distance = valueB - valueA;
+		const value = valueA + (distance * percent);
+		return value;
+	},
+
 	radians : function(_degres){
 		return Math.PI * _degres / 180;
 	}, 
@@ -71,7 +94,20 @@ const api = {
 			return false;
 		}
 		return true;
-	}, 
+	},
+
+	pointIntoPolygon: function(point, polygon) {
+		var x = point[0], y = point[1];
+		var inside = false;
+		for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+			var xi = polygon[i][0], yi = polygon[i][1];
+			var xj = polygon[j][0], yj = polygon[j][1];
+			var intersect = ((yi > y) != (yj > y))
+				&& (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+			if (intersect) inside = !inside;
+		}
+		return inside;
+	},
 	
 	findCentroid : function (pts){
 		var nPts = pts.length;

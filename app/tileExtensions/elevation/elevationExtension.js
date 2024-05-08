@@ -24,7 +24,7 @@ class ElevationExtension {
 	onTileReady() {
 		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		if (this.dataLoaded) return false;
-		this.applyElevationToGeometry(this.nearestElevationDatas());
+		this.#applyElevationToGeometry(this.#nearestElevationDatas());
 		if (this.tile.zoom > 16) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;
@@ -35,7 +35,7 @@ class ElevationExtension {
 				y : this.tile.tileY, 
 				priority : this.tile.distToCam
 			}, 
-			_datas => this.onElevationLoaded(_datas.slice(0))
+			_datas => this.#onElevationLoaded(_datas.slice(0))
 		);
 	}
 	
@@ -47,7 +47,7 @@ class ElevationExtension {
 		});
 	}
 
-	nearestElevationDatas() {
+	#nearestElevationDatas() {
 		const def = GLOBE.tilesDefinition + 1;
 		const buffer = new Uint16Array(def * def);
 		const vertCoords = this.tile.getVerticesPlaneCoords();
@@ -61,16 +61,16 @@ class ElevationExtension {
 		return buffer;
 	}
 	
-	onElevationLoaded(_datas) {
+	#onElevationLoaded(_datas) {
 		this.dataLoading = false;
 		if (!this.tile.isReady) return false;
 		this.dataLoaded = true;
 		this.elevationBuffer = _datas;
 		ElevationStore.set(this.tile, this.elevationBuffer);
-		this.applyElevationToGeometry(this.elevationBuffer);
+		this.#applyElevationToGeometry(this.elevationBuffer);
 	}
 	
-	applyElevationToGeometry(_elevationBuffer) {
+	#applyElevationToGeometry(_elevationBuffer) {
 		if (!this.tile.isReady) return false;
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
@@ -81,16 +81,16 @@ class ElevationExtension {
 				vertCoords[i * 2 + 1], 
 				_elevationBuffer[i]
 			);
-			verticePositions.array[curVertId + 0] = vertPos.x;
-			verticePositions.array[curVertId + 1] = vertPos.y;
-			verticePositions.array[curVertId + 2] = vertPos.z;
+			verticePositions.array[curVertId + 0] = vertPos[0];
+			verticePositions.array[curVertId + 1] = vertPos[1];
+			verticePositions.array[curVertId + 2] = vertPos[2];
 			curVertId += 3;
 		}
 
 		verticePositions.needsUpdate = true;
 		this.tile.meshe.geometry.verticesNeedUpdate = true;
 		this.tile.meshe.geometry.uvsNeedUpdate = true;
-		this.tile.meshe.geometry.computeFaceNormals();
+		// this.tile.meshe.geometry.computeFaceNormals();
 		this.tile.meshe.geometry.computeVertexNormals();
 		Renderer.MUST_RENDER = true;
 	} 
@@ -103,7 +103,7 @@ class ElevationExtension {
 			const def = GLOBE.tilesDefinition + 1;
 			const buffer = new Uint16Array(def * def);
 			buffer.fill(0);
-			this.applyElevationToGeometry(buffer);
+			this.#applyElevationToGeometry(buffer);
 		}
 		this.dataLoaded = false;
 		this.dataLoading = false;

@@ -26,11 +26,11 @@ export class Loader {
 		this._datasLoading = [];
 		this.clientsWaiting = [];
 		this.loaderParams = loadersParams[_type];
-		this._loaders = this._initLoaders(this.loaderParams.nbLoaders);
+		this._loaders = this.#initLoaders(this.loaderParams.nbLoaders);
 		TileExtensionEvt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this._type, this, this.clear);
 	}
 
-	_initLoaders(_nb) {
+	#initLoaders(_nb) {
 		const loaders = [];
 		for (let i = 0; i < _nb; i ++) {
 			const loader = new registeredLoaders[this._type]((_datas, _params) => this.onDataLoaded(_datas, _params));
@@ -41,18 +41,18 @@ export class Loader {
 
 	getData(_params, _callback) {
 		_params.priority = _params.priority || 1;
-		_params.key = this._genKey(_params);
+		_params.key = this.#genKey(_params);
 		_params.callback = _callback;
-		if (this._sendCachedData(_params) === true) return true;
-		if (this._isWaiting(_params.key) || this._isLoading(_params.key)) {
+		if (this.#sendCachedData(_params) === true) return true;
+		if (this.#isWaiting(_params.key) || this.#isLoading(_params.key)) {
 			this.clientsWaiting.push(_params);
 			return false;
 		};
-		this._addSorted(_params);
-		this._checkForNextLoad();
+		this.#addSorted(_params);
+		this.#checkForNextLoad();
 	}
 	
-	_genKey(_params) {
+	#genKey(_params) {
 		_params.keyOpt = _params.keyOpt || '';
 		return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
 	}
@@ -73,13 +73,13 @@ export class Loader {
 		}
 
 		if (!this.loaderParams.delay) {
-			this._checkForNextLoad();
+			this.#checkForNextLoad();
 		} else {
-			setTimeout(() => this._checkForNextLoad(), this.loaderParams.delay);
+			setTimeout(() => this.#checkForNextLoad(), this.loaderParams.delay);
 		}
 	}
 	
-	_addSorted(_params) {
+	#addSorted(_params) {
 		_params.priority /= _params.z;
 		for (let i = 0; i < this._datasWaiting.length; i ++) {
 			if (_params.priority < this._datasWaiting[i].priority) {
@@ -91,14 +91,14 @@ export class Loader {
 		return false;
 	}
 	
-	_sendCachedData(_params) {
+	#sendCachedData(_params) {
 		if (!this._datasLoaded[_params.key]) return false;
 		_params.callback(this._datasLoaded[_params.key]);
 		return true;
 	}
 	
 	abort(_params) {
-		if (_params.key === undefined) _params.key = this._genKey(_params);
+		if (_params.key === undefined) _params.key = this.#genKey(_params);
 		this._datasWaiting = this._datasWaiting.filter(w => w.key != _params.key);
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
 	}
@@ -110,30 +110,30 @@ export class Loader {
 		this.clientsWaiting = [];
 	}
 	
-	_checkForNextLoad() {
+	#checkForNextLoad() {
 		if (this._datasLoading.length >= this.loaderParams.nbLoaders) return false;
-		this._loadNext();
+		this.#loadNext();
 		return true;
 	}
 	
-	_loadNext() {
+	#loadNext() {
 		if (this._datasWaiting.length == 0) return false;
-		var freeLoader = this._getAvailableLoader();
+		var freeLoader = this.#getAvailableLoader();
 		if (!freeLoader) return false;
 		const currentLoadingParams = this._datasWaiting.shift();
 		this._datasLoading.push(currentLoadingParams);
 		freeLoader.load(currentLoadingParams);
 	}
 	
-	_getAvailableLoader() {
+	#getAvailableLoader() {
 		return this._loaders.filter(l => !l.isLoading).pop();
 	}
 	
-	_isWaiting(_key) {
+	#isWaiting(_key) {
 		return this._datasWaiting.some(w => w.key == _key);
 	}
 	
-	_isLoading(_key) {
+	#isLoading(_key) {
 		return this._datasLoading.some(w => w.key == _key);
 	}
 }

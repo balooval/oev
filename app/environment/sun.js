@@ -1,4 +1,13 @@
-import * as THREE from '../vendor/three.module.js';
+import {
+	AmbientLight,
+	Color,
+	DirectionalLight,
+	Matrix4,
+	Mesh,
+	ShaderMaterial,
+	SphereGeometry,
+	Vector3,
+} from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import GLOBE from '../core/globe.js';
 import * as NET_TEXTURES from '../net/textures.js';
@@ -10,9 +19,9 @@ let colorsGradient = undefined;
 let lightSun;
 let orbitRadius = 0;
 let meshSun = null;
-const posCenter = new THREE.Vector3(0, 0, 0);
+const posCenter = new Vector3(0, 0, 0);
 const sunParams = {
-	position : new THREE.Vector3(0, 0, 0), 
+	position : new Vector3(0, 0, 0), 
 	inclinaison : 0, 
 	azimuth : 0, 
 	luminosity : 0.2, 
@@ -22,9 +31,9 @@ const api = {
 	
 	init : function() {
 		colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
-		lightSun = new THREE.DirectionalLight(0xffffff, 1);
+		lightSun = new DirectionalLight(0xffffff, 2);
 		Renderer.scene.add(lightSun);
-		lightAmbiant = new THREE.AmbientLight(0x25282d);
+		lightAmbiant = new AmbientLight(0x25282d);
 		Renderer.scene.add(lightAmbiant);
 		GLOBE.evt.addEventListener('ZOOM_CHANGE', null, onZoomChanged);
 		lightSun.castShadow = true;
@@ -64,7 +73,7 @@ function createSun(_skyRadius) {
 	const sunRadius = _skyRadius / 40;
 	const uniformsSun = {
 		sunElevation : {value : 0.5}, 
-		myModelViewMatrixInverse : {value: new THREE.Matrix4()}, 
+		myModelViewMatrixInverse : {value: new Matrix4()}, 
 	};
 	const parametersSun = {
 		fragmentShader: Shader('frag_sun'),
@@ -72,10 +81,9 @@ function createSun(_skyRadius) {
 		uniforms: uniformsSun, 
 		transparent: true, 
 	};
-	const materialSun = new THREE.ShaderMaterial(parametersSun);
-	// const geoSun = new THREE.PlaneGeometry(sunRadius, sunRadius, 4);
-	const geoSun = new THREE.SphereGeometry(sunRadius, 16, 16);
-	meshSun = new THREE.Mesh(geoSun, materialSun);
+	const materialSun = new ShaderMaterial(parametersSun);
+	const geoSun = new SphereGeometry(sunRadius, 16, 16);
+	meshSun = new Mesh(geoSun, materialSun);
 	Renderer.scene.add(meshSun);
 }
 
@@ -90,7 +98,7 @@ function updateSunColor(_time) {
 	meshSun.material.uniforms.sunElevation.value = Math.abs(sunParams.inclinaison);
 	var gradientValue = Math.round((Math.min(Math.max(_time, 0), 1)) * 127);
 	var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
-	var sunCol = new THREE.Color('rgb(' + rampColorLight.r + ',' + rampColorLight.g + ',' + rampColorLight.b + ')');
+	var sunCol = new Color('rgb(' + rampColorLight.r + ',' + rampColorLight.g + ',' + rampColorLight.b + ')');
 	lightSun.color = sunCol;
 	lightAmbiant.color.r = rampColorLight.r / 400;
 	lightAmbiant.color.g = rampColorLight.g / 400;

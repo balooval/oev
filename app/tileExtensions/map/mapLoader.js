@@ -1,4 +1,7 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+	SRGBColorSpace ,
+	TextureLoader,
+} from '../../vendor/three.module.js';
 import * as DataLoader from '../dataLoader.js';
 
 const PARAMS = {
@@ -17,7 +20,7 @@ class LoaderTile2D {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.textureLoader = new THREE.TextureLoader();
+		this.textureLoader = new TextureLoader();
 	}
 
 	load(_params) {
@@ -25,15 +28,16 @@ class LoaderTile2D {
 		this.isLoading = true;
 		var loader = this;
 		this.textureLoader.load(API_URL + '&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
-			_texture => loader.onDataLoadSuccess(_texture), 
+			texture => loader.onDataLoadSuccess(texture), 
 			xhr => {},
 			xhr => loader.onDataLoadError()
 		);
 	}
 	
-	onDataLoadSuccess(_data) {
+	onDataLoadSuccess(texture) {
+		texture.encoding = SRGBColorSpace;
 		this.isLoading = false;
-		this.callback(_data, this.params);
+		this.callback(texture, this.params);
 	}
 	
 	onDataLoadError() {
