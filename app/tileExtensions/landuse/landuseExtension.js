@@ -1,5 +1,7 @@
 import Renderer from '../../core/renderer.js';
-import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
+import * as LanduseDataParser from './landuseDataParser.js';
+// import * as LanduseGeometry from './landuseGeometryInstances.js';
+import * as LanduseGeometry from './landuseGeometryPlane.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
 import GLOBE from '../../core/globe.js';
@@ -48,10 +50,26 @@ class LanduseExtension {
                 x : this.tile.tileX, 
                 y : this.tile.tileY, 
                 priority : this.tile.distToCam
-            }, _datas => this.#onLanduseLoaded(_datas)
+            }, datas => this.#onLanduseLoaded(datas)
 		);
 
         GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
+    }
+
+    #onLanduseLoaded(datas) {
+        if (!this.tile) {
+            return false;
+        }
+
+		this.dataLoading = false;
+		this.dataLoaded = true;
+
+        if (!this.tile.isReady) {
+            return false;
+        }
+
+        const landusesDatas = LanduseDataParser.parseDatas(datas, this.tile);
+        LanduseGeometry.setDatas(landusesDatas, this.tile);
     }
     
     #onCameraUpdated(cameraDatas) {
@@ -59,7 +77,7 @@ class LanduseExtension {
         let nextLod = this.#getLod(cameraDatas);
 
         if (currentLod !== nextLod) {
-            LanduseGeometryBuilder.setLod(this.tile, nextLod);
+            LanduseGeometry.setLod(this.tile, nextLod);
         }
 
         this.lod = nextLod;
@@ -89,21 +107,6 @@ class LanduseExtension {
 
         return 1;
     }
-    
-    #onLanduseLoaded(_datas) {
-        if (!this.tile) {
-            return false;
-        }
-
-		this.dataLoading = false;
-		this.dataLoaded = true;
-
-        if (!this.tile.isReady) {
-            return false;
-        }
-
-        LanduseGeometryBuilder.setDatas(_datas, this.tile);
-    }
 
 	#onTileDispose() {
 		this.dispose();
@@ -115,7 +118,7 @@ class LanduseExtension {
         this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
         GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
 
-        LanduseGeometryBuilder.tileRemoved(this.tile.key, this.tile);
+        LanduseGeometry.tileRemoved(this.tile.key, this.tile);
 
         LanduseLoader.loader.abort({
             z : this.tile.zoom, 
