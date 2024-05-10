@@ -71,7 +71,8 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
 
     const bbox = calcBbox(border);
     const grid = coordGrid(tile, bbox, border);
-    return {
+
+    const res = {
         id : _relation.id, 
         type : extractType(_relation), 
         tags : _relation.tags, 
@@ -79,6 +80,8 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
         fillPoints : grid, 
         holes : innersCoords, 
     };
+    
+    return res;
 }
 
 function buildWay(tile, _way, _nodesList) {
