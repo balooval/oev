@@ -30,8 +30,12 @@ class Api_lines extends Api_default {
     private function mustFetchData($_filePath) {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
-        // $fileDate = filemtime($_filePath);
-        // if ($fileDate < 1558130528) return true;
+        
+        $fileDate = filemtime($_filePath);
+        $age = time() - $fileDate;
+        if ($age > 2600000) { // 30 jours
+            return true;
+        }
         return false;
     }
 

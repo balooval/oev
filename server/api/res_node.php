@@ -32,7 +32,10 @@ class Api_node extends Api_default {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
         $fileDate = filemtime($_filePath);
-        if ($fileDate < 1558130528) return true;
+        $age = time() - $fileDate;
+        if ($age > 2600000) { // 30 jours
+            return true;
+        }
         return false;
     }
 

@@ -36,7 +36,11 @@ class Api_landuse extends Api_default {
         if (!$this->useCache) return true;
         if (!is_file($_filePath)) return true;
         $fileDate = filemtime($_filePath);
-        if ($fileDate < 1557187200) return true;
+        if ($fileDate < 1715464292) return true;
+        $age = time() - $fileDate;
+        if ($age > 2600000) { // 30 jours
+            return true;
+        }
         return false;
     }
 
