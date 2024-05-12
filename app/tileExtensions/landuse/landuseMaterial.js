@@ -104,6 +104,10 @@ function loadTextures() {
             id: 'vigne',
             url: 'vigne.png',
         },
+        {
+            id: 'forest-top',
+            url: 'forest-top.png',
+        },
     ];
     
     return new Promise((resolve) => {

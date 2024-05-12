@@ -13,6 +13,7 @@ import ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 import MATH from '../../core/math.js';
+import * as NET_TEXTURES from '../../net/textures.js';
 
 const rejectedIds = [];
 
@@ -125,7 +126,9 @@ function buildLanduse(landuse, tile, material, canvas) {
 }
 
 function drawCanvasShape(coords, holesCoords, context) {
-    context.fillStyle = 'rgba(255, 0, 0, 0.5)';
+    // context.fillStyle = 'rgba(255, 0, 0, 0.5)';
+    const pattern = context.createPattern(NET_TEXTURES.texture('forest-top').image, 'repeat');
+    context.fillStyle = pattern;
     context.beginPath();
     
     drawPolygon(coords, context);
