@@ -137,6 +137,7 @@ function updateSunPosition() {
 }
 
 function removeSun() {
+	if (!meshSun) return false;
 	Renderer.scene.remove(meshSun);
 	meshSun.geometry.dispose();
 	meshSun.material.dispose();
