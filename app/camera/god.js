@@ -221,7 +221,7 @@ export class CameraGod {
 				zoom : Math.round(this.zoomDest * 10000) / 10000,
 			}
 		};
-		// console.log('evtDatas', evtDatas);
+
 		this.evt.fireEvent('CAM_UPDATED', evtDatas);
 	}
 
@@ -258,9 +258,9 @@ export class CameraGod {
 		const posCamZ = -tmpG.z;
 		this.camera.up.set(-Math.cos(radLat * -1) * Math.cos(radLon), -Math.sin(radLat * -1), Math.cos(radLat * -1) * Math.sin(radLon));
 		return [
-			posCamX, 
-			posCamY, 
-			posCamZ
+			posCamX,
+			posCamY,
+			posCamZ,
 		];
 	}
 

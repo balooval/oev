@@ -44,7 +44,6 @@ export function buildGeometry(_line, _tile, _id) {
         bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
         bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
         bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
-        bufferGeometry.computeFaceNormals();
         bufferGeometry.computeVertexNormals();
         wallGeometries.push(bufferGeometry);
     }
@@ -81,7 +80,6 @@ function buildWallRoof(_offsetCoords, _props) {
     bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
     bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
     bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
-    bufferGeometry.computeFaceNormals();
     bufferGeometry.computeVertexNormals();
     return bufferGeometry;
 }

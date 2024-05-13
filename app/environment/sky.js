@@ -70,6 +70,7 @@ function updateSkyPosition(_position) {
 }
 
 function removeSky() {
+	if (meshSky === null) return false;
 	Renderer.scene.remove(meshSky);
 	meshSky.geometry.dispose();
 	meshSky.material.dispose();

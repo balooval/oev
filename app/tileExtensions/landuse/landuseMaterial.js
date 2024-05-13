@@ -104,6 +104,10 @@ function loadTextures() {
             id: 'vigne',
             url: 'vigne.png',
         },
+        {
+            id: 'forest-top',
+            url: 'forest-top.png',
+        },
     ];
     
     return new Promise((resolve) => {
@@ -137,7 +141,7 @@ function loadModels() {
         },
         {
             id: 'tree-forest-lod5',
-            url: 'tree-forest-lod5.glb',
+            url: 'tree-forest-test.glb',
         },
         {
             id: 'tree-sapin-lod0',
@@ -145,7 +149,7 @@ function loadModels() {
         },
         {
             id: 'tree-sapin-lod5',
-            url: 'tree-sapin-lod5.glb',
+            url: 'tree-sapin-test.glb',
         },
         {
             id: 'scrub-lod5',

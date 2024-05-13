@@ -20,13 +20,13 @@ let time = 0.5;
 let objToUpdate = [];
 const tilesBase = [];
 
+const LOD_PLANET = 0; 
+const LOD_CITY = 10;
+
 const api = {
 	evt : null, 
 	cameraControler : null, 
 	CUR_ZOOM : 14, 
-	LOD_PLANET : 0, 
-	LOD_CITY : 10, 
-	LOD_STREET : 19, 
 	curLOD : 0, 
 	tilesDetailsMarge : 2, 
 	coordDetails : new Vector2( 0, 0 ), 
@@ -140,18 +140,6 @@ const api = {
 	}, 
 
 	coordToXYZPlane : function(_lon, _lat, _elevation) {
-		// const pos = new Vector3(0, 0, 0);
-		// pos.x = api.radius * (_lon / 60);
-		// pos.y = api.posFromAltitude(_elevation);
-		// const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
-		// pos.z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
-		// pos.x *= api.globalScale;
-		// pos.y *= api.globalScale;
-		// pos.z *= api.globalScale;
-		// pos.x -= glCurLodOrigine[0];
-		// pos.z -= glCurLodOrigine[2];
-		// return GlMatrix.fromValues(pos.x, pos.y, pos.z);
-
 		let x = api.radius * (_lon / 60);
 		let y = api.posFromAltitude(_elevation);
 		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
@@ -173,7 +161,7 @@ const api = {
 		let x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
 		let y = Math.sin(radX) * _elevation * -1;
 		let z = Math.sin(radY) * (_elevation * Math.cos(radX));
-		if (api.curLOD == api.LOD_CITY) {
+		if (api.curLOD == LOD_CITY) {
 			x -= glCurLodOrigine[0];
 			y -= glCurLodOrigine[1];
 			z -= glCurLodOrigine[2];
@@ -215,64 +203,53 @@ const api = {
 	}, 
 
 	checkLOD : function(){
-		if (api.CUR_ZOOM >= api.LOD_STREET) {
-			if (api.curLOD != api.LOD_STREET) {
-				console.log("SET TO LOD_STREET");
-				api.globalScale = 100;
-				updateMeter();
-				GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
-				console.log('curLodOrigine', glCurLodOrigine);
-				api.curLOD = api.LOD_STREET;
-				api.updateLOD();
-				api.setProjection("PLANE");
-				Renderer.camera.far = api.radius * api.globalScale;
-				Renderer.camera.near = (api.radius * api.globalScale) / 10000000;
-				Renderer.camera.updateProjectionMatrix();
-				if (Renderer.scene.fog) {
-					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
-					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
-				}
-				api.evt.fireEvent("LOD_CHANGED");
-			}
-		} else if (api.CUR_ZOOM >= api.LOD_CITY) {
-			if (api.curLOD != api.LOD_CITY) {
-				// console.log("SET TO LOD_CITY");
-				api.globalScale = 10;
-				// api.globalScale = 100;
-				updateMeter();
-				GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
-				api.curLOD = api.LOD_CITY;
-				api.updateLOD();
-				api.setProjection("PLANE");
-				Renderer.camera.far = api.radius * api.globalScale;
-				Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
-				Renderer.camera.updateProjectionMatrix();
-				// if (Renderer.scene.fog) {
-				// 	Renderer.scene.fog.near = api.radius * ( 0.01 * api.globalScale );
-				// 	Renderer.scene.fog.far = api.radius * ( 0.9 * api.globalScale );
-				// }
-				api.evt.fireEvent('LOD_CHANGED');
-			}
-		} else if (api.CUR_ZOOM >= api.LOD_PLANET) {
-			if (api.curLOD != api.LOD_PLANET) {
-				console.log("SET TO LOD_PLANET");
-				GlMatrix.set(glCurLodOrigine, 0, 0, 0)
-				api.globalScale = 1;
-				updateMeter();
-				api.curLOD = api.LOD_PLANET;
-				api.setProjection("SPHERE");
-				api.updateLOD();
-				Renderer.camera.far = (api.radius * 2 ) * api.globalScale;
-				Renderer.camera.near = (api.radius * api.globalScale) / 1000000;
-				Renderer.camera.updateProjectionMatrix();
-				if (Renderer.scene.fog) {
-					Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
-					Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
-				}
-				api.evt.fireEvent("LOD_CHANGED");
+		const targetLod = api.mustChangeToLod();
+		
+		if (targetLod === null) {
+			return;
+		}
+
+		if (targetLod === LOD_CITY) {
+			api.globalScale = 10;
+			updateMeter();
+			GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
+			api.curLOD = LOD_CITY;
+			api.updateLOD();
+			api.setProjection("PLANE");
+			Renderer.camera.far = api.radius * api.globalScale;
+			Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
+			Renderer.camera.updateProjectionMatrix();
+
+		} else if (targetLod === LOD_PLANET) {
+			GlMatrix.set(glCurLodOrigine, 0, 0, 0)
+			api.globalScale = 1;
+			updateMeter();
+			api.curLOD = LOD_PLANET;
+			api.setProjection("SPHERE");
+			api.updateLOD();
+			Renderer.camera.far = (api.radius * 2 ) * api.globalScale;
+			Renderer.camera.near = (api.radius * api.globalScale) / 1000000;
+			Renderer.camera.updateProjectionMatrix();
+			if (Renderer.scene.fog) {
+				Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
+				Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
 			}
 		}
-	}, 
+
+		api.evt.fireEvent("LOD_CHANGED");
+	},
+
+	mustChangeToLod: function() {
+		if (api.CUR_ZOOM >= LOD_CITY && api.curLOD != LOD_CITY) {
+			return LOD_CITY;
+		}
+
+		if (api.CUR_ZOOM >= LOD_PLANET && api.CUR_ZOOM < LOD_CITY && api.curLOD != LOD_PLANET) {
+			return LOD_PLANET;
+		}
+
+		return null;
+	},
 	
 	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
 		let ele = ElevationStore.get(_lon, _lat) || 0;
