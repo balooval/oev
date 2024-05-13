@@ -134,11 +134,12 @@ function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
     for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
         for (let j = 0; j < 1; j += 0.5) {
             const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
+            const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j);
             
             const vertPos = GLOBE.coordToXYZ(
                 point[0] + Math.random() * 0.0003,
                 point[1] + Math.random() * 0.0002,
-                elevationsDatas[i],
+                elevation,
             );
 
             instancePosition.set(vertPos[0], vertPos[1], vertPos[2]);
@@ -169,11 +170,12 @@ function placeScrub(instancedMesh, countOffset, landuseData, elevationsDatas) {
     for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
         for (let j = 0; j < 1; j += 0.5) {
             const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
+            const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j);
             
             const vertPos = GLOBE.coordToXYZ(
                 point[0] + Math.random() * 0.0003,
                 point[1],
-                elevationsDatas[i],
+                elevation,
             );
 
             instancePosition.set(vertPos[0], vertPos[1], vertPos[2])
