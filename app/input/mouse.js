@@ -56,7 +56,7 @@ const api = {
 	}, 
 	
 	onMouseWheel : function(_evt) {
-		var delta = _evt.wheelDelta / 360;
+		const delta = _evt.wheelDelta / 360;
 		api.evt.fireEvent('MOUSE_WHEEL', delta);
 	}, 
 };

@@ -33,7 +33,11 @@ export class MapExtension {
             this.tile.setTexture(this.texture);
             return true;
         }
-		if (this.dataLoading) return false;
+
+		if (this.dataLoading) {
+			return false;
+		}
+
 		this.dataLoading = true;
 		MapLoader.loader.getData(
 			{
@@ -50,8 +54,15 @@ export class MapExtension {
         this.texture = texture;
 		this.dataLoading = false;
 		this.dataLoaded = true;
-		if (!this.tile) return false;
-		if (!this.tile.isReady) return false;
+		
+		if (!this.tile) {
+			return false;
+		}
+
+		if (!this.tile.isReady) {
+			return false;
+		}
+		
 		this.tile.setTexture(this.texture);
 	}
 	

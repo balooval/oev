@@ -64,7 +64,7 @@ export class CameraGod {
 			this.setLookAt(this.startPosition.x, this.startPosition.y);
 			this.tweens.lon.value = this.coordLookat.x;
 			this.tweens.lat.value = this.coordLookat.y;
-			this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
+			this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 			this.globe.updateZoom(this.zoomCur);
 			this.MUST_UPDATE = true;
 		}
@@ -193,7 +193,7 @@ export class CameraGod {
 		this.lookAtVector.y = posLookat[1];
 		this.lookAtVector.z = posLookat[2];
 		this.camera.lookAt(this.lookAtVector);
-		this.globe.updateCurTile(this.coordLookat.x, this.coordLookat.y);
+		this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
 		this.globe.checkLOD();
 		const wpScale = (this.coordCam.z / this.globe.radius) * 500;

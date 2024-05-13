@@ -20,12 +20,15 @@ export const mapSize = 256;
 
 export class TileBasic {
 		
-	constructor(_tileX, _tileY, _zoom, _parent = null) {
+	constructor(_tileX, _tileY, _zoom, parent = null) {
 		this.evt = new Evt();
 		this.isReady = false;
 		this.onStage = true;
-		this.parentTile = _parent;
-		this.parentOffset = new Vector2(0, 0);
+		this.parentTile = parent;
+		this.parentOffset = {
+			x: 0,
+			y: 0,
+		};
 		this.tileX = _tileX;
 		this.tileY = _tileY;
 		this.zoom = _zoom;
@@ -89,65 +92,89 @@ export class TileBasic {
 		return canvas;
 	}
 	
-	#onExtensionActivation(_extensionId) {
-		this.addExtension(_extensionId);
+	#onExtensionActivation(extensionId) {
+		this.addExtension(extensionId);
 	}
 
-	#onExtensionDisabled(_extensionId) {
-		this.removeExtension(_extensionId);
+	#onExtensionDisabled(extensionId) {
+		this.removeExtension(extensionId);
 	}
 	
-	addExtension(_extensionId) {
-		if (this.#ownExtension(_extensionId)) return false;
-		const ext = new TileExtension.extensions[_extensionId](this);
-		this.extensions.set(_extensionId, ext);
-		this.childTiles.forEach(t => t.addExtension(_extensionId));
+	addExtension(extensionId) {
+		if (this.#ownExtension(extensionId)) {
+			return false;
+		}
+
+		const ext = new TileExtension.extensions[extensionId](this);
+		this.extensions.set(extensionId, ext);
+
+		for (let i = 0; i < this.childTiles.length; i ++) {
+			this.childTiles[i].addExtension(extensionId);
+		}
+
 		return true;
 	}
 	
-	#ownExtension(_id) {
-        return this.extensions.has(_id);
+	#ownExtension(extensionId) {
+        return this.extensions.has(extensionId);
 	}
 	
-	removeExtension(_id) {
-        const extension = this.extensions.get(_id);
+	removeExtension(extensionId) {
+        const extension = this.extensions.get(extensionId);
         if (extension) {
             extension.dispose();
-            this.extensions.delete(_id);
+            this.extensions.delete(extensionId);
         }
-		this.childTiles.forEach(t => t.removeExtension(_id));
+		
+		for (let i = 0; i < this.childTiles.length; i ++) {
+			this.childTiles[i].removeExtension(extensionId);
+		}
 	}
 
-	getParent(_zoom) {
-		if (this.zoom == _zoom) {
+	getParent(zoomTarget) {
+		if (this.zoom == zoomTarget) {
 			return this;
 		}
+
 		if (!this.parentTile) {
 			return null;
 		}
-		return this.parentTile.getParent(_zoom);
+
+		return this.parentTile.getParent(zoomTarget);
 	}
 
 	#nearestTextures() {
-		if (this.textureLoaded) return null;
+		if (this.textureLoaded) {
+			return null;
+		}
+
 		const defaultDatas = {
 			map : TextureLoader("checker"), 
 			uvReduc : 1, 
 			offsetX : 0, 
 			offsetY : 0, 
 		};
-		if (!this.parentTile) return defaultDatas;
+
+		if (!this.parentTile) {
+			return defaultDatas;
+		}
+
 		let curParent = this.parentTile;
 		let uvReduc = 0.5;
 		let curOffsetX = this.parentOffset.x * 0.5;
 		let curOffsetY = this.parentOffset.y * 0.5;
+
 		while (curParent && !curParent.textureLoaded) {
 			uvReduc *= 0.5;
 			curOffsetX = curParent.parentOffset.x * 0.5 + (curOffsetX * 0.5);
 			curOffsetY = curParent.parentOffset.y * 0.5 + (curOffsetY * 0.5);
 			curParent = curParent.parentTile;
 		}
-		if (!curParent) return defaultDatas;
+
+		if (!curParent) {
+			return defaultDatas;
+		}
+
 		return {
 			map : curParent.material.map, 
 			uvReduc : uvReduc, 
@@ -156,36 +183,43 @@ export class TileBasic {
 		};
 	}
 
-	applyTexture(_textureDatas) {
-		if (_textureDatas === null) return false;
-		if (this.meshe === undefined) return false;
+	#applyTexture(textureDatas) {
+		if (textureDatas === null) {
+			return false;
+		}
+		
+		if (this.meshe === undefined) {
+			return false;
+		}
 
 		const vertBySide = GLOBE.tilesDefinition + 1;
 		const bufferUvs = new Float32Array(this.verticesNb * 2);
-		let stepUV = _textureDatas.uvReduc / GLOBE.tilesDefinition;
+		let stepUV = textureDatas.uvReduc / GLOBE.tilesDefinition;
 		let uvIndex = 0;
+
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
 				uvIndex = (x * vertBySide) + y;
-				bufferUvs[uvIndex * 2] = _textureDatas.offsetX + (stepUV * x);
-				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - _textureDatas.offsetY;
+				bufferUvs[uvIndex * 2] = textureDatas.offsetX + (stepUV * x);
+				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - textureDatas.offsetY;
 			}
 		}
+
 		this.meshe.geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
-        this.diffuseMap = _textureDatas.map.image;
+        this.diffuseMap = textureDatas.map.image;
         this.evt.fireEvent('TEXTURE_CHANGED');
         this.redrawDiffuse();
 	}
 
 	getVerticesPlaneCoords() {
-		const def = GLOBE.tilesDefinition;
-		const vertBySide = def + 1;
+		const vertBySide = GLOBE.tilesDefinition + 1;
 		const vertNb = vertBySide * vertBySide;
 		const bufferCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
-		const stepCoordX = (this.endCoord.x - this.startCoord.x) / def;
-		const stepCoordY = (this.endCoord.y - this.startCoord.y) / def;
+		const stepCoordX = (this.endCoord.x - this.startCoord.x) / GLOBE.tilesDefinition;
+		const stepCoordY = (this.endCoord.y - this.startCoord.y) / GLOBE.tilesDefinition;
+
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
 				bufferCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
@@ -258,7 +292,7 @@ export class TileBasic {
 		this.meshe.castShadow = true;
 		this.meshe.receiveShadow = true;
 		let parentTexture = this.#nearestTextures();
-		this.applyTexture(parentTexture);
+		this.#applyTexture(parentTexture);
 		this.isReady = true;
 		this.evt.fireEvent('TILE_READY');
 	}
@@ -267,24 +301,33 @@ export class TileBasic {
 		GLOBE.removeMeshe(this.meshe);
 		this.meshe.geometry.dispose();
 		this.buildGeometry();
+
 		for (let i = 0; i < this.childTiles.length; i ++) {
 			this.childTiles[i].updateVertex();
 		}
-		Renderer.MUST_RENDER = true;
 	}
 
 	searchTileAtXYZ(_tileX, _tileY, _zoom) {
 		if (this.zoom > _zoom) {
 			return false;
 		}
-		if (this.#isTileAtXYZ(_tileX, _tileY, _zoom)) return this;
-		// if (this.zoom == 13 && this.#containTileAtXYZ(_tileX, _tileY, _zoom)) return this;
+		
+		if (this.#isTileAtXYZ(_tileX, _tileY, _zoom)) {
+			return this;
+		}
+		
 		for (let i = 0; i < this.childTiles.length; i ++) {
 			const res = this.childTiles[i].searchTileAtXYZ(_tileX, _tileY, _zoom);
-			if (res) return res;
+			if (res) {
+				return res;
+			}
 		}
-		if (this.#containTileAtXYZ(_tileX, _tileY, _zoom)) return this;
-		return false;
+		
+		if (this.#containTileAtXYZ(_tileX, _tileY, _zoom)) {
+			return this;
+		}
+
+		return null;
 	}
 	
 	#containTileAtXYZ(_tileX, _tileY, _zoom) {
@@ -329,74 +372,98 @@ export class TileBasic {
 		this.evt.fireEvent('HIDE');
 	}
 
-	#createChilds(_coords) {
+	#createChilds() {
 		if (this.childTiles.length > 0) return false;
-		this.#addChild(_coords, 0, 0);
-		this.#addChild(_coords, 0, 1);
-		this.#addChild(_coords, 1, 0);
-        this.#addChild(_coords, 1, 1);
+		this.#addChild(0, 0);
+		this.#addChild(0, 1);
+		this.#addChild(1, 0);
+        this.#addChild(1, 1);
         this.evt.fireEvent('ADD_CHILDRENS');
 	}
 		
-	#addChild(_coords, _offsetX, _offsetY) {
-		const newTile = new TileBasic(this.tileX * 2 + _offsetX, this.tileY * 2 + _offsetY, this.zoom + 1, this);
-		newTile.parentTile = this;
-		newTile.parentOffset = new Vector2(_offsetX, _offsetY);
+	#addChild(offsetX, offsetY) {
+		const newTile = new TileBasic(
+			this.tileX * 2 + offsetX,
+			this.tileY * 2 + offsetY,
+			this.zoom + 1,
+			this
+		);
+		newTile.parentOffset = {
+			x: offsetX,
+			y: offsetY,
+		};
 		newTile.buildGeometry();
 		this.childTiles.push(newTile);
 	}
 
 	#clearChildrens() {
-		if (this.childTiles.length == 0) return false;
-		this.childTiles.forEach(t => t.dispose());
+		if (this.childTiles.length == 0) {
+			return false;
+		}
+
+		for (let i = 0; i < this.childTiles.length; i ++) {
+			this.childTiles[i].dispose();
+		}
+
 		this.childTiles = [];
 	}
 
-	updateDetails(_coords) {
-		if (this.#checkCameraHover(_coords, GLOBE.tilesDetailsMarge)) {
+	updateDetails(coords) {
+		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge)) {
 			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
-				this.#createChilds(_coords);
+				this.#createChilds();
 				for (let c = 0; c < this.childTiles.length; c ++) {
-					this.childTiles[c].updateDetails(_coords);
+					this.childTiles[c].updateDetails(coords);
 				}
 				this.hide();
-			}else{
+
+			} else {
 				this.#clearChildrens();
 				this.show();
 			}
-		}else{
+
+		} else {
 			this.#clearChildrens();
 			if( this.zoom + 5 < GLOBE.CUR_ZOOM ){
 				this.hide();
-			}else{
+
+			} else {
 				this.show();	
 			}
 		}
 	}
 	
-	getCurTile(_coords) {
-		if (this.#checkCameraHover(_coords, 1) === false) return false;
-		if (this.childTiles.length == 0) return this;
+	getCurTile(coords) {
+		if (this.#cameraIsOver(coords, 1) === false) {
+			return false;
+		}
+		
+		if (this.childTiles.length == 0) {
+			return this;
+		}
+
 		const childs = this.childTiles
-			.map(t => t.getCurTile(_coords))
-			.filter(res => res);
+		.map(t => t.getCurTile(coords))
+		.filter(res => res);
 		return childs.pop();
 	}
 
-	#checkCameraHover(_coords, _marge) {
-		const startLimit = GEO.tileToCoords(this.tileX - (_marge - 1), this.tileY - (_marge - 1), this.zoom);
-		const endLimit = GEO.tileToCoords(this.tileX + _marge, this.tileY + _marge, this.zoom);
-		if (startLimit[0] > _coords.x) return false;
-		if (endLimit[0] < _coords.x) return false;
-		if (startLimit[1] < _coords.y) return false;
-		if (endLimit[1] > _coords.y) return false;
+	#cameraIsOver(coords, margin) {
+		const startLimit = GEO.tileToCoords(this.tileX - (margin - 1), this.tileY - (margin - 1), this.zoom);
+		const endLimit = GEO.tileToCoords(this.tileX + margin, this.tileY + margin, this.zoom);
+
+		if (startLimit[0] > coords.x) return false;
+		if (endLimit[0] < coords.x) return false;
+		if (startLimit[1] < coords.y) return false;
+		if (endLimit[1] > coords.y) return false;
+
 		return true;
 	}
 
 	setTexture(_texture) {
 		this.textureLoaded = true;
 		this.remoteTex = _texture;
-		this.applyTexture({
+		this.#applyTexture({
 			map : this.remoteTex, 
 			uvReduc : 1, 
 			offsetX : 0, 
@@ -416,14 +483,17 @@ export class TileBasic {
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.#onExtensionActivation);
 		this.#clearChildrens();
 		this.hide();
+
 		if (this.meshe != undefined) {
 			this.meshe.geometry.dispose();
 			this.material.map.dispose();
 			this.material.dispose();
 		}
+
 		if (this.textureLoaded) {
 			this.remoteTex.dispose();
 		}
+
 		this.extensions.clear();
         this.extensionsMaps.clear();
 		this.isReady = false;

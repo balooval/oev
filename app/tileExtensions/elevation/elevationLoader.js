@@ -27,15 +27,16 @@ class LoaderElevation {
 		};
 	}
 
-	load(_params) {
+	load(params) {
 		this.isLoading = true;
-		this.params = _params;
-		this.imageObj.src = API_URL + '&def=' + this.definition + '&z='+_params.z+'&x='+_params.x+'&y='+_params.y;
+		this.params = params;
+		this.imageObj.src = API_URL + '&def=' + this.definition + '&z='+params.z+'&x='+params.x+'&y='+params.y;
 	}
 	
-	onImgReady(_img) {
-		var res = extractElevation(_img, _img.width, _img.height);
+	onImgReady(image) {
+		const res = extractElevation(image, image.width, image.height);
 		this.isLoading = false;
+
 		if (this.callback) {
 			this.callback(res, this.params);
 		}
@@ -54,6 +55,7 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
     const imageData = context.getImageData(0, 0, _imgWidth, _imgHeight).data;
     const eleBuffer = new Uint16Array(imageData.length / 4);
     let bufferIndex = 0;
+
     for (let x = 0; x < _imgWidth; ++x) {
         for (let y = 0; y < _imgHeight; ++y) {
             let index = (y * _imgWidth + x) * 4;
@@ -65,6 +67,7 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
             bufferIndex ++;
         }
     }
+
     return eleBuffer;
 }
 

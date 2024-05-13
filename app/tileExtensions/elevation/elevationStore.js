@@ -13,40 +13,47 @@ const store = [{
 
 const api = {
 	
-	set : function(_tile, _buffer) {
-		let struct = {
-			zoom : _tile.zoom, 
-			startLon : _tile.startCoord.x, 
-			startLat : _tile.startCoord.y, 
-			endLon : _tile.endCoord.x, 
-			endLat : _tile.endCoord.y, 
-			midLon : _tile.middleCoord.x, 
-			midLat : _tile.middleCoord.y, 
-			datas : _buffer, 
+	set : function(tile, buffer) {
+		const struct = {
+			zoom : tile.zoom, 
+			startLon : tile.startCoord.x, 
+			startLat : tile.startCoord.y, 
+			endLon : tile.endCoord.x, 
+			endLat : tile.endCoord.y, 
+			midLon : tile.middleCoord.x, 
+			midLat : tile.middleCoord.y, 
+			datas : buffer, 
 			childs : [], 
-			key : _tile.zoom + '-' + _tile.tileX + '-' + _tile.tileY, 
+			key : tile.zoom + '-' + tile.tileX + '-' + tile.tileY, 
 		};
 		addStruct(struct, store);
 	}, 
 
-	get : function(_lon, _lat) {
-		const struct = searchCoord(_lon, _lat);
-		if (!struct) return 0;
-		if (!struct.datas) return 0;
-		return interpolate(struct, _lon, _lat);
+	get : function(lon, lat) {
+		const struct = searchCoord(lon, lat);
+
+		if (!struct) {
+			return 0;
+		}
+
+		if (!struct.datas) {
+			return 0;
+		}
+
+		return interpolate(struct, lon, lat);
 	}, 
 
-	delete : function(_tile) {
-		let startLon = _tile.startCoord.x;
-		let startLat = _tile.startCoord.y;
-		let endLon = _tile.endCoord.x;
-		let endLat = _tile.endCoord.y;
-		let midLon = _tile.middleCoord.x;
-		let midLat = _tile.middleCoord.y;
-		const key = _tile.zoom + '-' + _tile.tileX + '-' + _tile.tileY;
+	delete : function(tile) {
+		let startLon = tile.startCoord.x;
+		let startLat = tile.startCoord.y;
+		let endLon = tile.endCoord.x;
+		let endLat = tile.endCoord.y;
+		let midLon = tile.middleCoord.x;
+		let midLat = tile.middleCoord.y;
 		let validParent;
 		let parents = store;
 		let prevParent;
+
 		while(true) {
 			prevParent = validParent;
 			let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
@@ -67,6 +74,7 @@ function isStructure(_struct, _startLon, _startLat, _endLon, _endLat) {
 	if (_struct.startLat != _startLat) return false;
 	if (_struct.endLon != _endLon) return false;
 	if (_struct.endLat != _endLat) return false;
+
 	return true;
 }
 
@@ -109,7 +117,11 @@ function interpolate(_struct, _lon, _lat) {
 	const interpolXMin = slideValue(elevationMinXMinY, elevationMaxXMinY, prctX);
 	const interpolXMax = slideValue(elevationMinXMaxY, elevationMaxXMaxY, prctX);
 	const interpolY = slideValue(interpolXMin, interpolXMax, prctY);
-	if (isNaN(interpolY)) return 0;
+	
+	if (isNaN(interpolY)) {
+		return 0;
+	}
+	
 	return interpolY;
 }
 

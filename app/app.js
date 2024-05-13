@@ -76,7 +76,6 @@ const OEV = {
 		NET_MODELS.init();
 		DataLoader.init();
 		INPUT.init();
-		GLOBE.init();
 		Navigation.init();
 		MapExtension.setApiUrl(OEV.params.EXTENSIONS.map.url);
 		TileExtension.register('TILE2D', MapExtension.extensionClass());
@@ -145,7 +144,7 @@ const OEV = {
 	
 	start : function(_cameraCtrl) {
 		GLOBE.setCameraControler(_cameraCtrl);
-		GLOBE.construct();
+		GLOBE.start();
 		GpxLoader.load('/assets/gpx/test.gpx');
 		_cameraCtrl.evt.addEventListener('CAM_UPDATED', OEV, OEV.onCameraUpdate);
 	}, 

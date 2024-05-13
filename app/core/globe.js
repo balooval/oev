@@ -14,280 +14,296 @@ import MATH from './math.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 
 const glCurLodOrigine = GlMatrix.create(0, 0, 0);
-let curTile = new Vector2(0, 0, 0);
-const eleFactor = 1;
-let time = 0.5;
-let objToUpdate = [];
-const tilesBase = [];
+const elevationFactor = 1;
 
 const LOD_PLANET = 0; 
 const LOD_CITY = 10;
+const PROJECTION_PLANE = 'PLANE';
+const PROJECTION_SPHERE = 'SPHERE';
 
-const api = {
-	evt : null, 
-	cameraControler : null, 
-	CUR_ZOOM : 14, 
-	curLOD : 0, 
-	tilesDetailsMarge : 2, 
-	coordDetails : new Vector2( 0, 0 ), 
-	tileExtensions : {}, 
-	radius : 10000, 
-	meter : 1, 
-	globalScale : 1, 
-	meshe : null, 
-	tilesDefinition : 32, 
+class Globe {
+	#time = 0.5;
+
+	#curLOD = LOD_PLANET;
+
+	#rootTiles = [];
+
+	#currentTile = {
+		x: 0,
+		y: 0,
+		z: 0,
+	};
+
+	constructor() {
+		this.evt = new Evt();
+		this.cameraControler = null;
+		this.CUR_ZOOM = 14;
+		this.tilesDetailsMarge = 2;
+		this.coordDetails = new Vector2( 0, 0 );
+		this.radius = 10000;
+		this.meter = this.radius / 40075017.0;
+		this.globalScale = 1;
+		this.meshe = null;
+		this.tilesDefinition = 32;
+		this.objToUpdate = [];
+		this.meshe = new Mesh(new BufferGeometry());
+		this.coordToXYZ = this.#coordToXYZPlane;
+	} 
 	
-	init : function() {
-		api.evt = new Evt();
-		api.meshe = new Mesh(new BufferGeometry());
-		api.coordToXYZ = api.coordToXYZPlane;
-		api.meter = api.radius / 40075017.0;
-	}, 
-
 	setCameraControler(_controler) {
-		api.cameraControler = _controler;
-		api.cameraControler.init(api);
+		this.cameraControler = _controler;
+		this.cameraControler.init(this);
 
-		api.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
-	}, 
+		this.cameraControler.evt.addEventListener('CAM_UPDATED', this, this.#onCameraUpdated);
+	}
 
-	onCameraUpdated: function(cameraDatas) {
-		api.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
-	},
+	#onCameraUpdated(cameraDatas) {
+		this.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
+	}
 	
-	construct : function() {
+	start() {
 		const zoomBase = 4;
 		const nbTiles = Math.pow(2, zoomBase);
 		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
 			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
-				const tile = new TILE.TileBasic(curTileX, curTileY, zoomBase);
-				tilesBase.push(tile);
+				const tile = new TILE.TileBasic(curTileX, curTileY, zoomBase, null);
+				this.#rootTiles.push(tile);
 				tile.buildGeometry();
 			}
 		}
 		ENVIRONMENT.init();
-		api.cameraControler.start();
-		api.evt.fireEvent('READY');
-	}, 
+		this.cameraControler.start();
+		this.evt.fireEvent('READY');
+	}
 
-	setTime : function(_time) {
-		time = _time;
-		api.evt.fireEvent('TIME_CHANGED', time);	
-	}, 
+	setTime(timeValue) {
+		this.#time = timeValue;
+		this.evt.fireEvent('TIME_CHANGED', this.#time);	
+	}
 
-	screenToSurfacePosition : function(_x, _y) {
-		return Renderer.checkMouseWorldPos(_x, _y, api.meshe);
-	}, 
+	screenToSurfacePosition(_x, _y) {
+		return Renderer.checkMouseWorldPos(_x, _y, this.meshe);
+	}
 
-	addMeshe : function(_meshe) {
-		api.meshe.add(_meshe);
-	}, 
+	addMeshe(_meshe) {
+		this.meshe.add(_meshe);
+	}
 
-	removeMeshe : function(_meshe) {
-		api.meshe.remove(_meshe);
-	},  
+	removeMeshe(_meshe) {
+		this.meshe.remove(_meshe);
+	}
 
-	update : function() {
-		objToUpdate.forEach(o => o.update());
-	},  
+	update() {
+		this.objToUpdate.forEach(o => o.update());
+	}
 
-	addObjToUpdate : function(_obj) {
-		if (objToUpdate.includes(_obj)) return false;
-		objToUpdate.push(_obj);
-	}, 
+	addObjToUpdate(_obj) {
+		if (this.objToUpdate.includes(_obj)) return false;
+		this.objToUpdate.push(_obj);
+	}
 
-	removeObjToUpdate : function(_obj) {
-		objToUpdate = objToUpdate.filter(o => o != _obj);
-	}, 
+	removeObjToUpdate(_obj) {
+		this.objToUpdate = this.objToUpdate.filter(o => o != _obj);
+	}
 
-	updateLOD : function() {
-		for (let i = 0; i < tilesBase.length; i ++) {
-			tilesBase[i].updateVertex();
+	#updateLOD() {
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+			this.#rootTiles[i].updateVertex();
 		}
-	}, 
+		Renderer.MUST_RENDER = true;
+	}
 
-	updateZoom : function(_value){
-		if (api.CUR_ZOOM == _value) return false;
-		if (Math.floor(api.CUR_ZOOM) != Math.floor(_value)) {
-			api.evt.fireEvent('ZOOM_CHANGE', Math.floor(_value));
+	updateZoom(zoomValue){
+		if (this.CUR_ZOOM == zoomValue) {
+			return false;
 		}
-		api.CUR_ZOOM = _value;
-		api.checkLOD();
-	}, 
 
-	switchProjection : function(){
-		if (api.projection == 'SPHERE') {
-			api.setProjection('PLANE');
-		} else if (api.projection == 'PLANE') {
-			api.setProjection('SPHERE');
+		if (Math.floor(this.CUR_ZOOM) != Math.floor(zoomValue)) {
+			this.evt.fireEvent('ZOOM_CHANGE', Math.floor(zoomValue));
 		}
-	}, 
 
-	setProjection : function(_mode) {
-		if (_mode == 'PLANE') {
+		this.CUR_ZOOM = zoomValue;
+		this.checkLOD();
+	}
+
+	#setProjection(projectionMode) {
+		if (projectionMode == PROJECTION_PLANE) {
 			ENVIRONMENT.activate(true);
-			api.coordToXYZ = api.coordToXYZPlane;
+			this.coordToXYZ = this.#coordToXYZPlane;
 			Renderer.camera.up.set(0, 0, 1);
-		} else if (_mode == 'SPHERE') {
+
+		} else if (projectionMode == PROJECTION_SPHERE) {
 			ENVIRONMENT.activate(false);
-			api.coordToXYZ = api.coordToXYZSphere;
+			this.coordToXYZ = this.#coordToXYZSphere;
 			Renderer.camera.up.set(0, 1, 0);
 		}
-		api.projection = _mode;
-		for (let i = 0; i < tilesBase.length; i ++) {
-			tilesBase[i].updateVertex();
-		}
-	}, 
 
-	coordToXYZPlane : function(_lon, _lat, _elevation) {
-		let x = api.radius * (_lon / 60);
-		let y = api.posFromAltitude(_elevation);
+		this.projection = projectionMode;
+
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+			this.#rootTiles[i].updateVertex();
+		}
+
+		Renderer.MUST_RENDER = true;
+	}
+
+	#coordToXYZPlane(_lon, _lat, _elevation) {
+		let x = this.radius * (_lon / 60);
+		let y = this.#posFromAltitude(_elevation);
 		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
-		let z = (tmpZ * (2 * Math.PI * api.radius / 2.0) / 180.0);
-		x *= api.globalScale;
-		y *= api.globalScale;
-		z *= api.globalScale;
+		let z = (tmpZ * (2 * Math.PI * this.radius / 2.0) / 180.0);
+		x *= this.globalScale;
+		y *= this.globalScale;
+		z *= this.globalScale;
 		x -= glCurLodOrigine[0];
 		z -= glCurLodOrigine[2];
 		return [x, y, z];
-	}, 
+	}
 
-	coordToXYZSphere : function(lon, lat, _elevation) {
-		_elevation *= api.meter;
-		_elevation += api.radius;
-		const pos = new Vector3(0, 0, 0);
+	#coordToXYZSphere(lon, lat, _elevation) {
+		_elevation *= this.meter;
+		_elevation += this.radius;
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
 		let x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
 		let y = Math.sin(radX) * _elevation * -1;
 		let z = Math.sin(radY) * (_elevation * Math.cos(radX));
-		if (api.curLOD == LOD_CITY) {
+		if (this.#curLOD == LOD_CITY) {
 			x -= glCurLodOrigine[0];
 			y -= glCurLodOrigine[1];
 			z -= glCurLodOrigine[2];
-			x *= api.globalScale;
-			y *= api.globalScale;
-			z *= api.globalScale;
+			x *= this.globalScale;
+			y *= this.globalScale;
+			z *= this.globalScale;
 		}
 		return [x, y, z];
-	}, 
+	}
 
-	posFromAltitude : function(_altitude) {
-		return 0 - (_altitude * (api.meter * eleFactor));
-	}, 
+	#posFromAltitude(_altitude) {
+		return 0 - (_altitude * (this.meter * elevationFactor));
+	}
 
-	altitudeFromPos : function(_pos) {
-		return ((_pos / api.globalScale) / (api.meter * eleFactor)) * -1;
-	}, 
+	altitudeFromPos(webglPosition) {
+		return ((webglPosition / this.globalScale) / (this.meter * elevationFactor)) * -1;
+	}
 
-	coordFromPos : function(_x, _y, _eleMeter = 0) {
-		const pxlStart = api.coordToXYZ( -180, 85.0511, 0);
-		const pxlEnd = api.coordToXYZ( 180, -85.0511, 0);
+	coordFromPos(webglX, webglY, elevationMeter = 0) {
+		const pxlStart = this.coordToXYZ( -180, 85.0511, 0);
+		const pxlEnd = this.coordToXYZ( 180, -85.0511, 0);
 		const pxlWidth = Math.abs( pxlEnd[0] - pxlStart[0]);
 		const pxlHeight = Math.abs( pxlEnd[2] - pxlStart[2]) / 2;
-		const prctW = (_x - pxlStart[0]) / pxlWidth;
-		const prctH = ((_y - pxlEnd[2]) / pxlHeight) - 1;
+		const prctW = (webglX - pxlStart[0]) / pxlWidth;
+		const prctH = ((webglY - pxlEnd[2]) / pxlHeight) - 1;
 		const coordX = -180 + (prctW * 360);
 		let coordY = (prctH * 180);
 		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
-		const ele = api.getElevationAtCoords(coordX, coordY, true);
-		return [coordX, coordY, ele + _eleMeter];
-	}, 
+		const elevationAtCoord = this.getElevationAtCoords(coordX, coordY, true);
+		return [coordX, coordY, elevationAtCoord + elevationMeter];
+	}
 
-	tileFromXYZ : function(_tileX, _tileY, _zoom) {
-		for (let i = 0; i < tilesBase.length; i ++) {
-			const res = tilesBase[i].searchTileAtXYZ(_tileX, _tileY, _zoom);
-			if (res) return res;
+	tileFromXYZ(tileX, tileY, zoom) {
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+			const res = this.#rootTiles[i].searchTileAtXYZ(tileX, tileY, zoom);
+			if (res) {
+				return res;
+			}
 		}
-		return null;
-	}, 
 
-	checkLOD : function(){
-		const targetLod = api.mustChangeToLod();
+		return null;
+	}
+
+	checkLOD(){
+		const targetLod = this.#mustChangeToLod();
 		
 		if (targetLod === null) {
 			return;
 		}
 
 		if (targetLod === LOD_CITY) {
-			api.globalScale = 10;
-			updateMeter();
-			GlMatrix.copy(glCurLodOrigine, api.coordToXYZ(api.coordDetails.x, api.coordDetails.y, 0));
-			api.curLOD = LOD_CITY;
-			api.updateLOD();
-			api.setProjection("PLANE");
-			Renderer.camera.far = api.radius * api.globalScale;
-			Renderer.camera.near = (api.radius * api.globalScale ) / 1000000;
+			this.globalScale = 10;
+			this.#updateMeter();
+			GlMatrix.copy(glCurLodOrigine, this.coordToXYZ(this.coordDetails.x, this.coordDetails.y, 0));
+			this.#curLOD = LOD_CITY;
+			this.#updateLOD();
+			this.#setProjection(PROJECTION_PLANE);
+			Renderer.camera.far = this.radius * this.globalScale;
+			Renderer.camera.near = (this.radius * this.globalScale ) / 1000000;
 			Renderer.camera.updateProjectionMatrix();
 
 		} else if (targetLod === LOD_PLANET) {
 			GlMatrix.set(glCurLodOrigine, 0, 0, 0)
-			api.globalScale = 1;
-			updateMeter();
-			api.curLOD = LOD_PLANET;
-			api.setProjection("SPHERE");
-			api.updateLOD();
-			Renderer.camera.far = (api.radius * 2 ) * api.globalScale;
-			Renderer.camera.near = (api.radius * api.globalScale) / 1000000;
+			this.globalScale = 1;
+			this.#updateMeter();
+			this.#curLOD = LOD_PLANET;
+			this.#setProjection(PROJECTION_SPHERE);
+			this.#updateLOD();
+			Renderer.camera.far = (this.radius * 2 ) * this.globalScale;
+			Renderer.camera.near = (this.radius * this.globalScale) / 1000000;
 			Renderer.camera.updateProjectionMatrix();
 			if (Renderer.scene.fog) {
-				Renderer.scene.fog.near = api.radius * (0.01 * api.globalScale);
-				Renderer.scene.fog.far = api.radius * (0.9 * api.globalScale);
+				Renderer.scene.fog.near = this.radius * (0.01 * this.globalScale);
+				Renderer.scene.fog.far = this.radius * (0.9 * this.globalScale);
 			}
 		}
 
-		api.evt.fireEvent("LOD_CHANGED");
-	},
+		this.evt.fireEvent("LOD_CHANGED");
+	}
 
-	mustChangeToLod: function() {
-		if (api.CUR_ZOOM >= LOD_CITY && api.curLOD != LOD_CITY) {
+	#mustChangeToLod() {
+		if (this.CUR_ZOOM >= LOD_CITY && this.#curLOD != LOD_CITY) {
 			return LOD_CITY;
 		}
 
-		if (api.CUR_ZOOM >= LOD_PLANET && api.CUR_ZOOM < LOD_CITY && api.curLOD != LOD_PLANET) {
+		if (this.CUR_ZOOM >= LOD_PLANET && this.CUR_ZOOM < LOD_CITY && this.#curLOD != LOD_PLANET) {
 			return LOD_PLANET;
 		}
 
 		return null;
-	},
+	}
 	
-	getElevationAtCoords : function(_lon, _lat, _inMeters = false) {
-		let ele = ElevationStore.get(_lon, _lat) || 0;
-		if (_inMeters) return ele;
-		return ele *= (api.meter * eleFactor);
-	}, 
+	getElevationAtCoords(lon, lat, inMeters = false) {
+		let elevation = ElevationStore.get(lon, lat);
+
+		if (inMeters) {
+			return elevation;
+		}
+
+		return elevation *= (this.meter * elevationFactor);
+	}
 	
-	getCurTile : function() {
-		return tilesBase.map(t => {
-			return t.getCurTile(api.coordDetails)
+	#getCurTile() {
+		return this.#rootTiles.map(t => {
+			return t.getCurTile(this.coordDetails)
 		}).filter(res => res).pop();
-	}, 
+	}
 	
-	onCurTileChange : function(_newTile){
-		curTile = _newTile;
-		for (let i = 0; i < tilesBase.length; i ++) {
-			tilesBase[i].updateDetails(api.coordDetails);
+	#onCurTileChange(newTile){
+		this.#currentTile = newTile;
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+			this.#rootTiles[i].updateDetails(this.coordDetails);
 		}
-		api.evt.fireEvent('CURTILE_CHANGED', curTile);
-	}, 
+	}
 
-	updateCurTile : function(_coordX, _coordY) {
-		api.coordDetails.x = _coordX;
-		api.coordDetails.y = _coordY;
-		const newTile = GEO.coordsToTile(api.coordDetails.x, api.coordDetails.y, api.CUR_ZOOM);
-		if (newTile.x != curTile.x || newTile.y != curTile.y || newTile.z != curTile.z) {
-			api.onCurTileChange(newTile);
+	updateCurrentTile(coordX, coordY) {
+		this.coordDetails.x = coordX;
+		this.coordDetails.y = coordY;
+		const newTile = GEO.coordsToTile(this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM);
+		if (newTile.x != this.#currentTile.x || newTile.y != this.#currentTile.y || newTile.z != this.#currentTile.z) {
+			this.#onCurTileChange(newTile);
 		}
-		curTile = newTile;
-	}, 
+		this.#currentTile = newTile;
+	}
 
-	altitude : function(_zoomlevel) { // return altitude in opengl unit
-		return GEO.getAltitude(_zoomlevel, api.radius);
-	}, 
-};
+	altitude(zoomlevel) { // return altitude in opengl unit
+		return GEO.getAltitude(zoomlevel, this.radius, this.projection);
+	}
 
-function updateMeter() {
-	api.meter = (api.radius / 40075017.0) * api.globalScale;
+	#updateMeter() {
+		this.meter = (this.radius / 40075017.0) * this.globalScale;
+	}
 }
 
-export { api as default}
+const globe = new Globe();
+
+
+export { globe as default}

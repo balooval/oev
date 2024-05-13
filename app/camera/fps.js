@@ -342,8 +342,8 @@ CamCtrlFps.prototype.updateCamera = function() {
 	this.camera.position.z = this.posLookat.z;
 	
 	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
-	this.coordCam.x = tmpCoords.x;
-	this.coordCam.y = tmpCoords.y;
+	this.coordCam.x = tmpCoords[0];
+	this.coordCam.y = tmpCoords[1];
 	
 	this.camera.lookAt( this.posCam );
 	
@@ -351,7 +351,7 @@ CamCtrlFps.prototype.updateCamera = function() {
 	this.clicPointer.position.y = this.posCam.y;
 	this.clicPointer.position.z = this.posCam.z;
 	
-	this.planet.updateCurTile( this.coordLookat.x, this.coordLookat.y );
+	this.planet.updateCurrentTile( this.coordLookat.x, this.coordLookat.y );
 	this.planet.zoomDetails = this.zoomCur;
 	this.planet.checkLOD();
 	
