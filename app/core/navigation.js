@@ -84,7 +84,7 @@ class WayPoint {
 	addToScene() {
 		this.material = waypointMat;
 		this.sprite = new THREE.Sprite(this.material);
-		var ele = GLOBE.getElevationAtCoords(this.lon, this.lat, true);
+		var ele = GLOBE.getElevationMetersAtCoords(this.lon, this.lat);
 		const position = GLOBE.coordToXYZ(this.lon, this.lat, ele);
 		this.sprite.position.x = position[0];
 		this.sprite.position.y = position[1];
@@ -99,7 +99,7 @@ class WayPoint {
 
 	updatePos() {
 		if (this.showSprite) {
-			const position = GLOBE.coordToXYZ(this.lon, this.lat, (GLOBE.meter * 64) * GLOBE.globalScale);
+			const position = GLOBE.coordToXYZ(this.lon, this.lat, (GLOBE.webglUnitsByMeter * 64) * GLOBE.globalScale);
 			this.sprite.position.x = position[0];
 			this.sprite.position.y = position[1];
 			this.sprite.position.z = position[2];

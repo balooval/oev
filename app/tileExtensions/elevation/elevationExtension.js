@@ -33,7 +33,7 @@ class ElevationExtension {
 
 		this.#applyElevationToGeometry(this.#nearestElevationDatas());
 
-		if (this.tile.zoom > 16) {
+		if (this.tile.zoom > 17) {
 			return false;
 		}
 		

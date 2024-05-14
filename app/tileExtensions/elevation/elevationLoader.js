@@ -57,7 +57,8 @@ function extractElevation(_img, _imgWidth, _imgHeight) {
     let bufferIndex = 0;
 
     for (let x = 0; x < _imgWidth; ++x) {
-        for (let y = 0; y < _imgHeight; ++y) {
+        // for (let y = 0; y < _imgHeight; ++y) {
+        for (let y = _imgHeight - 1; y >= 0; y --) {
             let index = (y * _imgWidth + x) * 4;
             const red = imageData[index];
             index ++;

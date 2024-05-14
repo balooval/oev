@@ -12,14 +12,17 @@ import GEO from './geo.js';
 import ENVIRONMENT from '../environment/environment.js';
 import MATH from './math.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
+import CheapRuler from '../vendor/cheap-ruler.js';
+
 
 const glCurLodOrigine = GlMatrix.create(0, 0, 0);
-const elevationFactor = 1;
 
 const LOD_PLANET = 0; 
 const LOD_CITY = 10;
 const PROJECTION_PLANE = 'PLANE';
 const PROJECTION_SPHERE = 'SPHERE';
+const RAD2DEG = 180 / Math.PI;
+const PI_4 = Math.PI / 4;
 
 class Globe {
 	#time = 0.5;
@@ -41,14 +44,25 @@ class Globe {
 		this.tilesDetailsMarge = 2;
 		this.coordDetails = new Vector2( 0, 0 );
 		this.radius = 10000;
-		this.meter = this.radius / 40075017.0;
+		this.webglUnitsByMeter = this.radius / 40075017.0;
 		this.globalScale = 1;
 		this.meshe = null;
 		this.tilesDefinition = 32;
 		this.objToUpdate = [];
 		this.meshe = new Mesh(new BufferGeometry());
 		this.coordToXYZ = this.#coordToXYZPlane;
-	} 
+
+		this.offset = [0, 0];
+		this.coordOrigin = [0, 0];
+
+		this.ruler = new CheapRuler(this.coordOrigin[1], 'meters');
+	}
+
+	debug() {
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+			this.#rootTiles[i].debug();
+		}
+	}
 	
 	setCameraControler(_controler) {
 		this.cameraControler = _controler;
@@ -85,12 +99,12 @@ class Globe {
 		return Renderer.checkMouseWorldPos(_x, _y, this.meshe);
 	}
 
-	addMeshe(_meshe) {
-		this.meshe.add(_meshe);
+	addMeshe(mesh) {
+		this.meshe.add(mesh);
 	}
-
-	removeMeshe(_meshe) {
-		this.meshe.remove(_meshe);
+	
+	removeMeshe(mesh) {
+		this.meshe.remove(mesh);
 	}
 
 	update() {
@@ -130,12 +144,10 @@ class Globe {
 		if (projectionMode == PROJECTION_PLANE) {
 			ENVIRONMENT.activate(true);
 			this.coordToXYZ = this.#coordToXYZPlane;
-			Renderer.camera.up.set(0, 0, 1);
 
 		} else if (projectionMode == PROJECTION_SPHERE) {
 			ENVIRONMENT.activate(false);
 			this.coordToXYZ = this.#coordToXYZSphere;
-			Renderer.camera.up.set(0, 1, 0);
 		}
 
 		this.projection = projectionMode;
@@ -147,27 +159,31 @@ class Globe {
 		Renderer.MUST_RENDER = true;
 	}
 
-	#coordToXYZPlane(_lon, _lat, _elevation) {
-		let x = this.radius * (_lon / 60);
-		let y = this.#posFromAltitude(_elevation);
-		const tmpZ = Math.log(Math.tan((90 + _lat) * Math.PI / 360.0)) / (Math.PI / 180.0);
-		let z = (tmpZ * (2 * Math.PI * this.radius / 2.0) / 180.0);
-		x *= this.globalScale;
-		y *= this.globalScale;
-		z *= this.globalScale;
-		x -= glCurLodOrigine[0];
-		z -= glCurLodOrigine[2];
+	#coordToXYZPlane(lon, lat, elevation) {
+		let x = this.ruler.distance([0, 0], [lon, 0]) * this.webglUnitsByMeter;
+		let z = this.ruler.distance([0, 0], [0, lat]) * -this.webglUnitsByMeter;
+
+		const sensLon = Math.sign(lon);
+		x *= sensLon;
+		const sensLat = Math.sign(lat);
+		z *= sensLat;
+
+		let y = this.#altitudeToWebglUnit(elevation, lat);
+
+		x -= this.offset[0];
+		z += this.offset[1];
+
 		return [x, y, z];
 	}
 
-	#coordToXYZSphere(lon, lat, _elevation) {
-		_elevation *= this.meter;
-		_elevation += this.radius;
+	#coordToXYZSphere(lon, lat, elevation) {
+		elevation *= this.webglUnitsByMeter;
+		elevation += this.radius;
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
-		let x = Math.cos(radY) * ((_elevation) * Math.cos(radX));
-		let y = Math.sin(radX) * _elevation * -1;
-		let z = Math.sin(radY) * (_elevation * Math.cos(radX));
+		let x = Math.cos(radY) * ((elevation) * Math.cos(radX));
+		let y = Math.sin(radX) * elevation * -1;
+		let z = Math.sin(radY) * (elevation * Math.cos(radX));
 		if (this.#curLOD == LOD_CITY) {
 			x -= glCurLodOrigine[0];
 			y -= glCurLodOrigine[1];
@@ -179,25 +195,31 @@ class Globe {
 		return [x, y, z];
 	}
 
-	#posFromAltitude(_altitude) {
-		return 0 - (_altitude * (this.meter * elevationFactor));
+	#altitudeToWebglUnit(altitude, lat) {
+		// TODO: réduire d'autant que la largeur d'une bande diminue à l'approche des pôles !
+		const baseValue = altitude * this.webglUnitsByMeter;
+		const latRadians = MATH.radians(lat);
+		const latRatio = (Math.cos(latRadians) + 1) / 2;
+		return baseValue * latRatio;
 	}
 
-	altitudeFromPos(webglPosition) {
-		return ((webglPosition / this.globalScale) / (this.meter * elevationFactor)) * -1;
+	webglUnitToAltitude(webglUnit) {
+		return webglUnit / this.webglUnitsByMeter;
 	}
 
-	coordFromPos(webglX, webglY, elevationMeter = 0) {
-		const pxlStart = this.coordToXYZ( -180, 85.0511, 0);
-		const pxlEnd = this.coordToXYZ( 180, -85.0511, 0);
+	webglUnitsToCoord(webglX, webglY, elevationMeter = 0) {
+		// A vérifier, notamment pour les X/Lon
+		const absolutePosY = webglY - this.offset[1];
+		const pxlStart = this.coordToXYZ(-180, 85.0511, 0);
+		const pxlEnd = this.coordToXYZ(180, -85.0511, 0);
 		const pxlWidth = Math.abs( pxlEnd[0] - pxlStart[0]);
-		const pxlHeight = Math.abs( pxlEnd[2] - pxlStart[2]) / 2;
+		const latUnitSize = this.coordToXYZ(0, 85.0511, 0);
+		const absoluteLatUnitSize = Math.abs(latUnitSize[2]  - this.offset[1]);
 		const prctW = (webglX - pxlStart[0]) / pxlWidth;
-		const prctH = ((webglY - pxlEnd[2]) / pxlHeight) - 1;
+		const prctH = (absolutePosY / absoluteLatUnitSize) * -1;
 		const coordX = -180 + (prctW * 360);
-		let coordY = (prctH * 180);
-		coordY = 180 / Math.PI * (2 * Math.atan( Math.exp( coordY * Math.PI / 180.0)) - Math.PI / 2.0);
-		const elevationAtCoord = this.getElevationAtCoords(coordX, coordY, true);
+		let coordY = (prctH * 85.0511);
+		const elevationAtCoord = this.getElevationMetersAtCoords(coordX, coordY);
 		return [coordX, coordY, elevationAtCoord + elevationMeter];
 	}
 
@@ -220,30 +242,35 @@ class Globe {
 		}
 
 		if (targetLod === LOD_CITY) {
-			this.globalScale = 10;
-			this.#updateMeter();
-			GlMatrix.copy(glCurLodOrigine, this.coordToXYZ(this.coordDetails.x, this.coordDetails.y, 0));
+			this.globalScale = 1;
+			this.#updateUnitsByMeter();
+			const origin = this.coordToXYZ(this.coordDetails.x, this.coordDetails.y, 0);
+			GlMatrix.set(glCurLodOrigine, origin[0], origin[1], origin[2]);
+
+			this.ruler = new CheapRuler(this.coordDetails.y, 'meters');
+
+			this.coordOrigin[0] = this.coordDetails.x;
+			this.coordOrigin[1] = this.coordDetails.y;
+			this.offset[0] = GEO.metersBetweenCoords(0, 0, this.coordDetails.x, 0) * this.webglUnitsByMeter;
+			this.offset[1] = GEO.metersBetweenCoords(0, 0, 0, this.coordDetails.y) * this.webglUnitsByMeter;
+
 			this.#curLOD = LOD_CITY;
 			this.#updateLOD();
 			this.#setProjection(PROJECTION_PLANE);
-			Renderer.camera.far = this.radius * this.globalScale;
-			Renderer.camera.near = (this.radius * this.globalScale ) / 1000000;
+			Renderer.camera.far = this.webglUnitsByMeter * 100000;
+			Renderer.camera.near = this.webglUnitsByMeter * 1;
 			Renderer.camera.updateProjectionMatrix();
 
 		} else if (targetLod === LOD_PLANET) {
 			GlMatrix.set(glCurLodOrigine, 0, 0, 0)
 			this.globalScale = 1;
-			this.#updateMeter();
+			this.#updateUnitsByMeter();
 			this.#curLOD = LOD_PLANET;
 			this.#setProjection(PROJECTION_SPHERE);
 			this.#updateLOD();
 			Renderer.camera.far = (this.radius * 2 ) * this.globalScale;
 			Renderer.camera.near = (this.radius * this.globalScale) / 1000000;
 			Renderer.camera.updateProjectionMatrix();
-			if (Renderer.scene.fog) {
-				Renderer.scene.fog.near = this.radius * (0.01 * this.globalScale);
-				Renderer.scene.fog.far = this.radius * (0.9 * this.globalScale);
-			}
 		}
 
 		this.evt.fireEvent("LOD_CHANGED");
@@ -261,14 +288,14 @@ class Globe {
 		return null;
 	}
 	
-	getElevationAtCoords(lon, lat, inMeters = false) {
+	getElevationUnitsAtCoords(lon, lat) {
+		const elevation = this.getElevationMetersAtCoords(lon, lat);
+		return elevation *= this.webglUnitsByMeter;
+	}
+
+	getElevationMetersAtCoords(lon, lat) {
 		let elevation = ElevationStore.get(lon, lat);
-
-		if (inMeters) {
-			return elevation;
-		}
-
-		return elevation *= (this.meter * elevationFactor);
+		return elevation;
 	}
 	
 	#getCurTile() {
@@ -294,12 +321,12 @@ class Globe {
 		this.#currentTile = newTile;
 	}
 
-	altitude(zoomlevel) { // return altitude in opengl unit
+	getElevationUnitsForZoom(zoomlevel) { // return altitude in opengl unit
 		return GEO.getAltitude(zoomlevel, this.radius, this.projection);
 	}
 
-	#updateMeter() {
-		this.meter = (this.radius / 40075017.0) * this.globalScale;
+	#updateUnitsByMeter() {
+		this.webglUnitsByMeter = 1 * this.globalScale;
 	}
 }
 

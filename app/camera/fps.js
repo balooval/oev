@@ -94,11 +94,11 @@ CamCtrlFps.prototype.init = function( _cam, _planet ) {
 	this.camera = _cam;
 	this.planet = _planet;
 	this.camera.up.set( 0, -1, 0 );
-	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
+	this.pointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.webglUnitsByMeter * 200, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x00ff00 }) );
 	Renderer.scene.add(this.pointer);
-	this.clicPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x0000ff }) );
+	this.clicPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.webglUnitsByMeter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0x0000ff }) );
 	Renderer.scene.add( this.clicPointer );
-	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.meter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
+	this.debugPointer = new THREE.Mesh( new THREE.SphereGeometry( this.planet.webglUnitsByMeter * 150, 16, 7 ), new THREE.MeshBasicMaterial({ color: 0xfffc00 }) );
 	Renderer.scene.add( this.debugPointer );
 	if( location.hash != '' ){
 		var urlParamsLoc = location.hash.substr( location.hash.search( '=' ) + 1 ).split( '/' );
@@ -182,7 +182,7 @@ CamCtrlFps.prototype.update = function() {
 
 CamCtrlFps.prototype.setDestination = function( _lon, _lat, _duration ) {
 	if( _duration == undefined ){
-		var distance = GEO.coordDistance( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
+		var distance = GEO.metersBetweenCoords( this.coordLookat.x, this.coordLookat.y, _lon, _lat );
 		_duration = Math.min( 5000, distance / 10 );
 		// debug( "_duration undefined, set to " + _duration + ' (' + distance + ')' );
 	}	
@@ -278,9 +278,9 @@ CamCtrlFps.prototype.updateCamera = function() {
 	var urlZoom = Math.round( this.zoomDest * 10000 ) / 10000;
 	history.replaceState( 'toto', "Title", "#location="+urlZoom+"/"+urlLon+"/"+urlLat );
 	
-	this.coordLookat.z = this.planet.getElevationAtCoords( this.coordLookat.x, this.coordLookat.y, true );
+	this.coordLookat.z = this.planet.getElevationMetersAtCoords(this.coordLookat.x, this.coordLookat.y);
 	this.coordLookat.z += this.altitude;
-	this.coordCam.z = this.planet.altitude( this.zoomCur );
+	this.coordCam.z = this.planet.getElevationUnitsForZoom( this.zoomCur );
 	this.posLookat = this.planet.coordToXYZ( this.coordLookat.x, this.coordLookat.y, this.coordLookat.z + 6 );
 	
 	if( this.planet.projection == "SPHERE" ){
@@ -341,7 +341,7 @@ CamCtrlFps.prototype.updateCamera = function() {
 	this.camera.position.y = this.posLookat.y;
 	this.camera.position.z = this.posLookat.z;
 	
-	var tmpCoords = this.planet.coordFromPos( this.posCam.x, this.posCam.z );
+	var tmpCoords = this.planet.webglUnitsToCoord( this.posCam.x, this.posCam.z );
 	this.coordCam.x = tmpCoords[0];
 	this.coordCam.y = tmpCoords[1];
 	

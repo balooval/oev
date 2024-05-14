@@ -25,7 +25,7 @@ export class CameraGod {
 		this.lookAtVector = new Vector3(0, 0, 0);
 		this.zoomDest = this.zoomCur;
 		this.coordCam = new Vector3(this.coordLookat.x, this.coordLookat.y, 0);
-		this.camRotation = [Math.PI, 0.2];
+		this.camRotation = [0, 0.2];
 		this.dragging = false;
 		this.rotating = false;
 		this.coordOnGround = new Vector2(0, 0);
@@ -51,11 +51,11 @@ export class CameraGod {
 
 	start() {
 		this.camera.up.set(0, -1, 0);
-		this.pointer = new Mesh(new SphereGeometry(this.globe.meter * 200, 16, 7), new MeshBasicMaterial({color: 0x00ff00}));
+		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x00ff00}));
 		Renderer.scene.add(this.pointer);
-		this.clicPointer = new Mesh(new SphereGeometry(this.globe.meter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
+		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
 		Renderer.scene.add(this.clicPointer);
-		this.debugPointer = new Mesh(new SphereGeometry(this.globe.meter * 150, 16, 7), new MeshBasicMaterial({color: 0xfffc00}));
+		this.debugPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0xfffc00}));
 		Renderer.scene.add(this.debugPointer);
 		if (this.startPosition) {
 			this.zoomCur = this.startPosition.z;
@@ -93,7 +93,7 @@ export class CameraGod {
 
 	setDestination( _lon, _lat, _zoom, _duration) {
 		if (_duration == undefined) {
-			const distance = GEO.coordDistance(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
+			const distance = GEO.metersBetweenCoords(this.coordLookat.x, this.coordLookat.y, _lon, _lat);
 			_duration = Math.min(5000, distance / 10);
 		}
 		this.tweens.lon.value = this.coordLookat.x;
@@ -141,8 +141,8 @@ export class CameraGod {
 	drag() {
 		const depX = (Mouse.curMouseX - this.mouseLastPos[0]) / Math.pow(2.0, this.zoomCur);
 		const depY = (Mouse.curMouseY - this.mouseLastPos[1]) / Math.pow(2.0, this.zoomCur);
-		const finalLon = this.coordLookat.x + (depX * Math.cos(this.camRotation[0]) - depY * Math.sin(this.camRotation[0]));
-		const finalLat = this.coordLookat.y - (depY * Math.cos(this.camRotation[0]) + depX * Math.sin(this.camRotation[0]));
+		const finalLon = this.coordLookat.x - (depX * Math.cos(this.camRotation[0]) + depY * Math.sin(this.camRotation[0]));
+		const finalLat = this.coordLookat.y + (depY * Math.cos(this.camRotation[0]) - depX * Math.sin(this.camRotation[0]));
 		this.setLookAt(finalLon, finalLat);
 	}
 
@@ -161,7 +161,7 @@ export class CameraGod {
 	rotate() {
 		var depX = (Mouse.curMouseX - this.mouseLastPos[0]) / 100.0;
 		var depY = (Mouse.curMouseY - this.mouseLastPos[1]) / 100.0;
-		this.camRotation[0] += depX;
+		this.camRotation[0] -= depX;
 		this.camRotation[1] += depY;
 		if (this.camRotation[0] > Math.PI) {
 			this.camRotation[0] = 0 - this.camRotation[0];
@@ -174,9 +174,9 @@ export class CameraGod {
 	}
 
 	updateCamera() {
-		this.coordLookat.z = this.globe.getElevationAtCoords(this.coordLookat.x, this.coordLookat.y, true);
+		this.coordLookat.z = this.globe.getElevationMetersAtCoords(this.coordLookat.x, this.coordLookat.y);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
-		this.coordCam.z = this.globe.altitude(this.zoomCur);
+		this.coordCam.z = this.globe.getElevationUnitsForZoom(this.zoomCur);
 		let posCam;
 		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();
@@ -186,7 +186,7 @@ export class CameraGod {
 		this.camera.position.x = posCam[0];
 		this.camera.position.y = posCam[1];
 		this.camera.position.z = posCam[2];
-		const tmpCoords = this.globe.coordFromPos(posCam[0], posCam[2]);
+		const tmpCoords = this.globe.webglUnitsToCoord(posCam[0], posCam[2]);
 		this.coordCam.x = tmpCoords[0];
 		this.coordCam.y = tmpCoords[1];
 		this.lookAtVector.x = posLookat[0];
@@ -195,7 +195,7 @@ export class CameraGod {
 		this.camera.lookAt(this.lookAtVector);
 		this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
-		this.globe.checkLOD();
+		// this.globe.checkLOD();
 		const wpScale = (this.coordCam.z / this.globe.radius) * 500;
 		this.pointer.scale.x = wpScale;
 		this.pointer.scale.y = wpScale;
@@ -206,6 +206,9 @@ export class CameraGod {
 		this.debugPointer.scale.x = wpScale;
 		this.debugPointer.scale.y = wpScale;
 		this.debugPointer.scale.z = wpScale;
+		
+		this.#updateFogScale();
+
 		Renderer.MUST_RENDER = true;
 
 		const evtDatas = {
@@ -223,6 +226,17 @@ export class CameraGod {
 		};
 
 		this.evt.fireEvent('CAM_UPDATED', evtDatas);
+	}
+
+	#updateFogScale() {
+		if (!Renderer.scene.fog) {
+			return;
+		}
+
+		// console.log(this.coordCam.z);
+		
+		Renderer.scene.fog.near = this.coordCam.z;
+		Renderer.scene.fog.far = this.globe.webglUnitsByMeter * 50000;
 	}
 
 	updateOnSphere() {
@@ -265,12 +279,12 @@ export class CameraGod {
 	}
 
 	updateOnPlane(_posLookat) {
-		this.camera.up.set(0, -1, 0);
+		this.camera.up.set(0, 1, 0);
 		this.coordCam.z *= this.globe.globalScale;
 		const orbitRadius = Math.sin(this.camRotation[1]) * this.coordCam.z;
 		return [
 			_posLookat[0] + Math.sin(this.camRotation[0]) * orbitRadius, 
-			_posLookat[1] - Math.cos(this.camRotation[1]) * (this.coordCam.z), 
+			_posLookat[1] + Math.cos(this.camRotation[1]) * (this.coordCam.z), 
 			_posLookat[2] + Math.cos(this.camRotation[0]) * orbitRadius, 
 		];
 	}

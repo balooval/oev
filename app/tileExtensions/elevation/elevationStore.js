@@ -97,9 +97,9 @@ function interpolate(_struct, _lon, _lat) {
 	const prctFromLat = mapValue(_lat, _struct.endLat, _struct.startLat);
 
 	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> 17
-	const bufferYMin = vertBySide - Math.floor(prctFromLat * vertBySide);
+	const bufferYMin = Math.floor(prctFromLat * vertBySide);
 	const bufferXMax = Math.ceil(prctFromLon * vertBySide); // 0 -> 17
-	const bufferYMax = vertBySide - Math.ceil(prctFromLat * vertBySide);
+	const bufferYMax = Math.ceil(prctFromLat * vertBySide);
 	
 	const bufferIndexMinXMinY = (bufferXMin * vertBySideMax) + bufferYMin;
 	const bufferIndexMaxXMinY = (bufferXMax * vertBySideMax) + bufferYMin;

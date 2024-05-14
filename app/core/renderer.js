@@ -1,11 +1,14 @@
 import {
+    CameraHelper,
     PCFSoftShadowMap,
     PerspectiveCamera,
     Raycaster,
     Scene,
     Vector2,
+    VSMShadowMap,
     WebGLRenderer,
 } from '../vendor/three.module.js';
+import { OrbitControls } from '../vendor/OrbitControls.module.js';
 
 let webGlRenderer = undefined;
 let sceneWidth = 0;
@@ -26,6 +29,9 @@ let raycaster;
 //     ]
 // } );
 
+// let controls;
+// let orbitCamera;
+
 const api = {
     scene : undefined, 
     camera : undefined, 
@@ -42,6 +48,7 @@ const api = {
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new Scene();
         api.camera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
+        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 200000);
         var canvas = document.createElement( 'canvas' );
         var context = canvas.getContext('webgl2');
         webGlRenderer = new WebGLRenderer({
@@ -55,11 +62,22 @@ const api = {
         elmtHtmlContainer.appendChild(webGlRenderer.domElement);
         api.camera.position.x = 0;
         api.camera.position.y = 0;
-        api.camera.position.z = 500;	
+        api.camera.position.z = -500;	
         webGlRenderer.setClearColor(0x101020, 1);
         webGlRenderer.shadowMap.enabled = true;
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
+        // webGlRenderer.shadowMap.type = VSMShadowMap;
         raycaster = new Raycaster();
+
+        // const helper = new CameraHelper(api.camera);
+        // api.scene.add(helper);
+
+        
+        // orbitCamera.position.x = 0;
+        // orbitCamera.position.y = 0;
+        // orbitCamera.position.z = 500;	
+        // controls = new OrbitControls(orbitCamera, webGlRenderer.domElement);
+        // controls.update();
     },  
 
     domContainer : function() {
@@ -71,8 +89,12 @@ const api = {
     }, 
 
     render : function() {
+        // controls.update();
+        // api.MUST_RENDER = true;
+
         if (!api.MUST_RENDER) return;
         // rS( 'frame' ).start();
+        // webGlRenderer.render(api.scene, orbitCamera);
         webGlRenderer.render(api.scene, api.camera);
         api.MUST_RENDER = false;
         // rS( 'frame' ).end();

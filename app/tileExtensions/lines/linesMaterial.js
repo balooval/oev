@@ -1,4 +1,7 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+    DoubleSide,
+    MeshPhysicalMaterial,
+} from '../../vendor/three.module.js';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_TEXTURES from '../../net/textures.js';
@@ -40,10 +43,10 @@ function onActivateExtension() {
 }
 
 function createMaterials() {
-    materials.set('fence', new THREE.MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side:THREE.DoubleSide, transparent:true, alphaTest:0.2}));
-    materials.set('wall', new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF}));
-    materials.set('highway', new THREE.MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918}));
-    materials.set('vehicle', new THREE.MeshPhysicalMaterial({roughness:0.2,metalness:0, color: 0xffffff}));
+    materials.set('fence', new MeshPhysicalMaterial({roughness:0.5,metalness:0.5, color:0xFFFFFF, side: DoubleSide, transparent:true, alphaTest:0.2}));
+    materials.set('wall', new MeshPhysicalMaterial({roughness:1,metalness:0, color:0xFFFFFF}));
+    materials.set('highway', new MeshPhysicalMaterial({roughness:1,metalness:0, color:0x0a1918}));
+    materials.set('vehicle', new MeshPhysicalMaterial({roughness:0.2,metalness:0, color: 0xffffff}));
 }
 
 function loadTextures() {

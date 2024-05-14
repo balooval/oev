@@ -25,7 +25,7 @@ class Geo {
 		const p = [];
 		const n = Math.PI - ((2.0 * Math.PI * tileY) / Math.pow(2.0, zoom));
 		p[0] = ((tileX / Math.pow(2.0, zoom) * 360.0) - 180.0);
-		p[1]= (180.0 / Math.PI * Math.atan(Math.sinh(n)));
+		p[1] = (180.0 / Math.PI * Math.atan(Math.sinh(n)));
 		return p;
 	}
 
@@ -35,16 +35,28 @@ class Geo {
 	}
 
 	coordDistance(_startLon, _startLat, _endLon, _endLat){
-		const R = 6371000; // metres
-		const sigma1 = MATH.radians( _startLat );
-		const sigma2 = MATH.radians( _endLat );
-		const deltaSigma = MATH.radians( _endLat-_startLat )
-		const deltaTruc = MATH.radians( _endLon - _startLon );
+		const rayon = 6371000; // metres
+		const sigma1 = MATH.radians(_startLat);
+		const sigma2 = MATH.radians(_endLat);
+		const deltaSigma = MATH.radians(_endLat - _startLat)
+		const deltaTruc = MATH.radians(_endLon - _startLon);
 		const a = Math.sin(deltaSigma / 2) * Math.sin(deltaSigma / 2) +
 			Math.cos(sigma1) * Math.cos(sigma2) *
 			Math.sin(deltaTruc / 2) * Math.sin(deltaTruc / 2);
 		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		const distance = R * c;
+		const distance = rayon * c;
+		return distance;
+	}
+
+	metersBetweenCoords(lon1, lat1, lon2, lat2) {
+		const rayon = 6371000;
+		const dLat = MATH.radians(lat2 - lat1);
+		const dLon = MATH.radians(lon2 - lon1); 
+		const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos(MATH.radians(lat1)) * Math.cos(MATH.radians(lat2)) * 
+			Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+		const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+		const distance = rayon * c;
 		return distance;
 	}
 
@@ -65,7 +77,7 @@ class Geo {
 		}
 
 		if (projection === 'PLANE') {
-			return ((radius * Math.PI * 2) / Math.pow(2, zoomlevel));
+			return ((radius * 800) * Math.PI * 2) / Math.pow(2, zoomlevel);
 		}
 	}
 		

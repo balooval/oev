@@ -17,20 +17,20 @@ export function buildGeometry(_line, _tile) {
     }
 }
 
-export function addVerticesToBuffer(_offset, _buffer, _coords, _elevationOffset) {
-    for (let i = 0; i < _coords.length; i ++) {
-        const coord = _coords[i];
+export function addVerticesToBuffer(offset, buffer, coords, elevationOffset) {
+    for (let i = 0; i < coords.length; i ++) {
+        const coord = coords[i];
         const vertPos = GLOBE.coordToXYZ(
             coord[0], 
             coord[1], 
-            coord[2] + _elevationOffset, 
+            coord[2] + elevationOffset, 
         );
-        _buffer[_offset + 0] = vertPos[0];
-        _buffer[_offset + 1] = vertPos[1];
-        _buffer[_offset + 2] = vertPos[2];
-        _offset += 3;
+        buffer[offset + 0] = vertPos[0];
+        buffer[offset + 1] = vertPos[1];
+        buffer[offset + 2] = vertPos[2];
+        offset += 3;
     }
-    return _offset;
+    return offset;
 }
 
 export function addUvToBuffer(_offset, _buffer, _coords, _uvFactor, _tile, _offsetY) {

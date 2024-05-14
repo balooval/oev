@@ -1,6 +1,7 @@
 import {
 	BufferGeometry,
 	BufferAttribute,
+	DoubleSide,
 	MeshPhysicalMaterial,
 	Mesh,
 } from '../../vendor/three.module.js';
@@ -18,8 +19,8 @@ export function extensionClass() {
 	return BuildingExtension;
 }
 
-const materialWalls = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true});
-const materialRoof = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true});
+const materialWalls = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true, side: DoubleSide});
+const materialRoof = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
 
 const workerEvent = new Evt();
 const worker = new Worker('/app/tileExtensions/building/workerBuildingMaker.js', {type:'module'});
@@ -94,7 +95,7 @@ class BuildingExtension {
 		}
 		this.#buildRoof(_datas.roofsBuffers);
 		this.#buildWalls(_datas.wallsBuffers);
-		this.#buildEntrances(_datas.entrancesDatas);
+		// this.#buildEntrances(_datas.entrancesDatas);
 		Renderer.MUST_RENDER = true;
 	}
 
@@ -105,7 +106,7 @@ class BuildingExtension {
 		for (let i = 0; i < _entrancesDatas.length; i ++) {
 			const entrance = _entrancesDatas[i];
 			const alt = ElevationStore.get(entrance.coord[0], entrance.coord[1]);
-			const distance = (GLOBE.meter * 0.001) * 3;
+			const distance = (GLOBE.webglUnitsByMeter * 0.001) * 3;
 			const corners = [];
 			const angleStep = Math.PI / 2;
 			for (let a = 0; a < 4; a ++) {
@@ -144,12 +145,10 @@ class BuildingExtension {
 			];
 			const bufferFaces = Uint32Array.from(facesIndex);
 
-			// const bufferGeometry = new BufferGeometry();
 			const bufferGeometry = CachedGeometry.getGeometry();
 			bufferGeometry.setAttribute('position', new BufferAttribute(bufferCoord, 3));
 			bufferGeometry.setIndex(new BufferAttribute(bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
-			// bufferGeometry.computeFaceNormals();
 			entrancesGeometries[i] = bufferGeometry;
 		}
 		const mergedGeometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(entrancesGeometries);

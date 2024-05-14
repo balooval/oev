@@ -4,12 +4,20 @@
 		<title>OpenEarthViewer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" href="css/styles.css" type="text/css" />
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./app/vendor/three.module.js"
+				}
+			}
+		</script>
 		<script src="app/vendor/rStats.js"></script>
 		<script src="client/appClient.js" type="module"></script>
 
 		<!-- rollup js/app.js --format iife --name "oev" --file oev.js -->
 		<!-- <script src="js/oev-bundle.js"></script> -->
 	</head>
+
 	
 	<body>
 		<div id="modalContainer">

@@ -1,13 +1,17 @@
 import * as Jsts from '../../vendor/jsts.module.js';
 import Earcut from '../../vendor/Earcut.module.js';
-import * as THREE from '../../vendor/three.module.js';
+import { BufferGeometryUtils } from '../../vendor/BufferGeometryUtils.module.js';
+import {
+    BufferAttribute,
+    BufferGeometry,
+} from '../../vendor/three.module.js';
 import GLOBE from '../../core/globe.js';
 import MATH from '../../core/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _tile, _id) {
     if (_line.border.length < 2) console.log('ATTENTION', _line.border.length);
-    const distance = (GLOBE.meter * 0.001) * (_line.props.width * 2);
+    const distance = (GLOBE.webglUnitsByMeter * 0.001) * (_line.props.width * 2);
     let offsetCoords = inflate(_line.border, distance);
     if (offsetCoords.length > 2) {
         console.warn('Wall', _id, 'had 3 borders');
@@ -38,15 +42,15 @@ export function buildGeometry(_line, _tile, _id) {
             facesIndex.push(layerOffset + i);
         }
         const bufferFaces = Uint32Array.from(facesIndex);
-        const bufferGeometry = new THREE.BufferGeometry();
-        bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-        bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
-        bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+        const bufferGeometry = new BufferGeometry();
+        bufferGeometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+        bufferGeometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+        bufferGeometry.setIndex(new BufferAttribute(bufferFaces, 1));
         bufferGeometry.computeVertexNormals();
         wallGeometries.push(bufferGeometry);
     }
     wallGeometries.push(buildRoof(offsetCoords, _line.props));
-    return THREE.BufferGeometryUtils.mergeBufferGeometries(wallGeometries);
+    return BufferGeometryUtils.mergeBufferGeometries(wallGeometries);
 }
 
 function buildRoof(_offsetCoords, _props) {
@@ -72,12 +76,12 @@ function buildRoof(_offsetCoords, _props) {
     const bufferVertices = new Float32Array(fullCoords.length * 3);
     let verticeId = 0;
     verticeId = GeoBuilder.addVerticesToBuffer(verticeId, bufferVertices, fullCoords,  + _props.height);
-    const bufferGeometry = new THREE.BufferGeometry();
+    const bufferGeometry = new BufferGeometry();
     const bufferUvs = new Float32Array(fullCoords.length * 2);
     bufferUvs.fill(0);
-    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-    bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
-    bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+    bufferGeometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+    bufferGeometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+    bufferGeometry.setIndex(new BufferAttribute(bufferFaces, 1));
     bufferGeometry.computeVertexNormals();
     return bufferGeometry;
 }

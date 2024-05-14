@@ -1,4 +1,6 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+    Vector3,
+} from '../../vendor/three.module.js';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';
@@ -23,7 +25,7 @@ const api = {
 
 function applyTransformation(_geometrie) {
     const scaleValue = 0.8;
-    const scale = new THREE.Vector3(scaleValue, scaleValue, scaleValue);
+    const scale = new Vector3(scaleValue, scaleValue, scaleValue);
     // const rotation = 0;
     _geometrie.scale(scale.x, scale.y, scale.z);
     // _geometrie.rotateY(rotation);
