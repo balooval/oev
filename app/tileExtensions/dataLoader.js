@@ -1,6 +1,7 @@
 import Evt from '../core/event.js';
 import {evt as TileExtensionEvt} from './tileExtension.js';
 
+const USE_CACHE = false;
 const registeredLoaders = {};
 const loadersParams = {};
 export let evt;
@@ -43,7 +44,9 @@ export class Loader {
 		_params.priority = _params.priority || 1;
 		_params.key = this.#genKey(_params);
 		_params.callback = _callback;
-		if (this.#sendCachedData(_params) === true) return true;
+		if (this.#sendCachedData(_params) === true) {
+			return true;
+		}
 		if (this.#isWaiting(_params.key) || this.#isLoading(_params.key)) {
 			this.clientsWaiting.push(_params);
 			return false;
@@ -68,7 +71,8 @@ export class Loader {
 		_params.callback(_data);
 		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
 		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
-		if (this.loaderParams.useCache) {
+
+		if (USE_CACHE && this.loaderParams.useCache) {
 			this._datasLoaded[_params.key] = _data;
 		}
 

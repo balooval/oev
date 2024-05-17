@@ -171,6 +171,23 @@ function prepareRoofFlat(_building) {
 	};
 }
 
+function prepareRoofSkeleton(building) {
+	const minAlt = building.props.minAlt;
+	const floorsNb = building.props.floorsNb;
+	const floorHeight = building.props.floorHeight;
+	const roofAlt = minAlt + (floorsNb * floorHeight)
+	const border = building.coords; 
+	border.push(building.coords[0]);
+
+	return {
+		skeleton: true,
+		color: building.props.roofColor,
+		border : border, 
+		roofAlt : roofAlt, 
+		roofHeight: building.props.roofHeight ?? 2,
+	};
+}
+
 function prepareRoofsGeometry(_buildings) {
 	if (_buildings.length == 0) {
 		return null;
@@ -183,10 +200,15 @@ function prepareRoofsGeometry(_buildings) {
 		const curBuilding = _buildings[b];
 		centroids[b] = curBuilding.centroid;
 		let roofBuffers;
+
+		// console.log('curBuilding.props.roofShape', curBuilding.props.roofShape);
+
 		if (curBuilding.props.roofShape == 'pyramidal') {
 			roofBuffers = prepareRoofPyramidal(curBuilding);
 		} else if (curBuilding.props.roofShape == 'dome') {
 			roofBuffers = prepareRoofDome(curBuilding);
+		// } else if (roofShapeToSkeleton.includes(curBuilding.props.roofShape) === true) {
+		// 	roofBuffers = prepareRoofSkeleton(curBuilding);
 		} else {
 			roofBuffers = prepareRoofFlat(curBuilding);
 		}
@@ -303,3 +325,13 @@ function fixDirection(_way) {
 	curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
 	if (curve > 0) _way.reverse();
 }
+
+const roofShapeToSkeleton = [
+	'gabled',
+	'hipped',
+	'saltbox',
+	'gambrel',
+	'mansard',
+	'skillion',
+	'half-hipped',
+];

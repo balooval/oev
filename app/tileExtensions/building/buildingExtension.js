@@ -1,17 +1,17 @@
 import {
-	BufferGeometry,
 	BufferAttribute,
 	DoubleSide,
 	MeshPhysicalMaterial,
-	Mesh,
 } from '../../vendor/three.module.js';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
 import Evt from '../../core/event.js';
+import Earcut from '../../vendor/Earcut.module.js';
 import GLOBE from '../../core/globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
 import * as CachedGeometry from '../../utils/cacheGeometry.js';
+import MATH from '../../core/math.js';
 
 export {setApiUrl} from './buildingLoader.js';
 
@@ -41,7 +41,6 @@ class BuildingExtension {
 		this.waiting = false;
 		this.tile = _tile;
 		this.isActive = this.tile.zoom == 15;
-		// this.isActive = this.tile.key == '16597_11268_15';
 		this.tileKey = this.tile.zoom + '_' + this.tile.tileX + '_' + this.tile.tileY;
 		this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
@@ -163,22 +162,38 @@ class BuildingExtension {
 	}
 
 	#buildRoof(roofsDatas) {
-		if (!roofsDatas) return;
-		const roofsGeometries = new Array(roofsDatas.buildingNb);
-		for (let r = 0; r < roofsDatas.buildingNb; r ++) {
-			const roofBuffers = roofsDatas.buffers[r];
-			this.#applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[r]);
+		if (!roofsDatas) {
+			return;
+		}
+
+		const roofsGeometries = [];
+
+		for (let roofIndex = 0; roofIndex < roofsDatas.buildingNb; roofIndex ++) {
+			let roofBuffers = roofsDatas.buffers[roofIndex];
+
+			if (roofBuffers.skeleton) {
+				roofBuffers = this.#buildSkeletonRoof(roofBuffers);
+				if (roofBuffers === null) {
+					continue;
+				}
+			}
+
+			this.#applyElevationToVerticesRoof(roofBuffers, roofsDatas.centroids[roofIndex]);
 			this.#convertCoordToPositionRoof(roofBuffers.bufferCoord);
 			const bufferGeometry = CachedGeometry.getGeometry();
 			bufferGeometry.setAttribute('position', new BufferAttribute(roofBuffers.bufferCoord, 3));
 			bufferGeometry.setAttribute('color', new BufferAttribute(roofBuffers.bufferColor, 3, true));
 			bufferGeometry.setIndex(new BufferAttribute(roofBuffers.bufferFaces, 1));
 			bufferGeometry.computeVertexNormals();
-			roofsGeometries[r] = bufferGeometry;
+			roofsGeometries.push(bufferGeometry);
 		}
+
+		if (roofsGeometries.length === 0) {
+			return;
+		}
+
 		const mergedGeometry = BufferGeometryUtils.BufferGeometryUtils.mergeBufferGeometries(roofsGeometries);
 		CachedGeometry.storeGeometries(roofsGeometries);
-		// this.meshRoof = new Mesh(mergedGeometry, materialRoof);
 		this.meshRoof = CachedGeometry.getMesh();
 		this.meshRoof.geometry = mergedGeometry;
 		this.meshRoof.material = materialRoof;
@@ -186,6 +201,58 @@ class BuildingExtension {
 		this.meshRoof.receiveShadow = true;
 		this.meshRoof.castShadow = true;
 		Renderer.scene.add(this.meshRoof);
+	}
+
+	#buildSkeletonRoof(roofBuffers) {
+		const orientedBorder = MATH.fixPolygonDirection(roofBuffers.border, false);
+		const polygon = [
+			orientedBorder
+		];
+
+		const result = SkeletonBuilder.buildFromPolygon(polygon);
+
+		if (result === null) {
+			return null;
+		}
+
+		const verticesPositions = [];
+		const colors = [];
+		for (let i = 0; i < result.vertices.length; i ++) {
+			let vertAlt = 0;
+			if (result.vertices[i][2] > 0) {
+				vertAlt = roofBuffers.roofHeight;
+			}
+			verticesPositions.push(
+				result.vertices[i][0],
+				result.vertices[i][1],
+				roofBuffers.roofAlt + vertAlt,
+			);
+			colors.push(...roofBuffers.color);
+		}
+
+		const facesIndex = [];
+
+		for (let i = 0; i < result.polygons.length; i ++) {
+			const positions = result.polygons[i].map(vertexIndex => {
+				return [
+					result.vertices[vertexIndex][0],
+					result.vertices[vertexIndex][1],
+				];
+			});
+
+			const earcutResult = Earcut(positions.flat());
+
+			for (let j = 0; j < earcutResult.length; j ++) {
+				const index = earcutResult[j];
+				facesIndex.push(result.polygons[i][index]);
+			}
+		}
+
+		roofBuffers.bufferFaces = Uint32Array.from(facesIndex);
+		roofBuffers.bufferCoord = new Float32Array(verticesPositions);
+		roofBuffers.bufferColor = new Uint8Array(colors);
+
+		return roofBuffers;
 	}
 
 	#applyElevationToVerticesRoof(_buffers, _centroid) {
@@ -242,7 +309,6 @@ class BuildingExtension {
 	}
 
 	#convertCoordToPosition(_bufferCoord) {
-		// const bufferPos = new Float32Array(_bufferCoord);
 		let bufferVertIndex = 0;
 		const length = _bufferCoord.length / 3;
 		for (let c = 0; c < length; c ++) {
@@ -256,7 +322,6 @@ class BuildingExtension {
 			_bufferCoord[bufferVertIndex + 2] = vertPos[2];
 			bufferVertIndex += 3;
 		}
-		// return bufferPos;
 	}
 
 	dispose() {
@@ -270,14 +335,17 @@ class BuildingExtension {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
 			Renderer.scene.remove(this.meshEntrances);
-			// this.meshWalls.geometry.dispose();
 			CachedGeometry.storeGeometries(this.meshWalls.geometry);
 			CachedGeometry.storeMesh(this.meshWalls);
 			this.meshWalls = undefined;
+		}
+		
+		if (this.meshRoof) {
 			this.meshRoof.geometry.dispose();
 			CachedGeometry.storeMesh(this.meshRoof);
 			this.meshRoof = undefined;
 		}
+
 		if (this.meshEntrances) {
 			this.meshEntrances.geometry.dispose();
 			CachedGeometry.storeMesh(this.meshEntrances);

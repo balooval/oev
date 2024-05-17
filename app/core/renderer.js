@@ -101,13 +101,13 @@ const api = {
         // rS().update();
     }, 
 
-    checkMouseWorldPos : function(_x, _y, _object) {
-		const mX = ((_x - containerOffset.x) / sceneWidth) * 2 - 1;
-		const mY = -((_y - containerOffset.y) / sceneHeight) * 2 + 1;
+    checkMouseWorldPos : function(x, y, object) {
+		const mX = ((x - containerOffset.x) / sceneWidth) * 2 - 1;
+		const mY = -((y - containerOffset.y) / sceneHeight) * 2 + 1;
 		raycaster.near = api.camera.near;
 		raycaster.far = api.camera.far;
 		raycaster.setFromCamera(new Vector2(mX, mY), api.camera);
-		const intersects = raycaster.intersectObjects(_object.children);
+		const intersects = raycaster.intersectObjects(object.children);
 		let coord = undefined;
 		intersects.forEach(i => coord = i.point);
 		return coord;

@@ -35,7 +35,6 @@ export class CameraGod {
 			lat : new Animation.TweenValue(this.coordLookat.y), 
 		};
 		this.clicPointer = undefined;
-		this.debugPointer = undefined;
 		this.evt = new Evt();
 		Mouse.evt.addEventListener('MOUSE_WHEEL', this, this.onMouseWheel);
 		Mouse.evt.addEventListener('MOUSE_LEFT_DOWN', this, this.onMouseDownLeft);
@@ -45,18 +44,17 @@ export class CameraGod {
 		this.MUST_UPDATE = false;
 	}
 
-	init(_globe) {
-		this.globe = _globe;
+	init(globe) {
+		this.globe = globe;
 	}
 
 	start() {
 		this.camera.up.set(0, -1, 0);
-		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x00ff00}));
+		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x808080}));
 		Renderer.scene.add(this.pointer);
 		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
 		Renderer.scene.add(this.clicPointer);
-		this.debugPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0xfffc00}));
-		Renderer.scene.add(this.debugPointer);
+		
 		if (this.startPosition) {
 			this.zoomCur = this.startPosition.z;
 			this.zoomDest = this.zoomCur;
@@ -68,6 +66,7 @@ export class CameraGod {
 			this.globe.updateZoom(this.zoomCur);
 			this.MUST_UPDATE = true;
 		}
+
 		this.updateCamera();
 		this.evt.fireEvent('READY');
 	}
@@ -195,17 +194,17 @@ export class CameraGod {
 		this.camera.lookAt(this.lookAtVector);
 		this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
-		// this.globe.checkLOD();
-		const wpScale = (this.coordCam.z / this.globe.radius) * 500;
-		this.pointer.scale.x = wpScale;
-		this.pointer.scale.y = wpScale;
-		this.pointer.scale.z = wpScale;
+		
+		const pointerScale = this.coordCam.z / 10;
+		this.pointer.scale.x = pointerScale;
+		this.pointer.scale.y = pointerScale;
+		this.pointer.scale.z = pointerScale;
 		this.pointer.position.x = posLookat[0];
 		this.pointer.position.y = posLookat[1];
 		this.pointer.position.z = posLookat[2];
-		this.debugPointer.scale.x = wpScale;
-		this.debugPointer.scale.y = wpScale;
-		this.debugPointer.scale.z = wpScale;
+		this.clicPointer.scale.x = pointerScale;
+		this.clicPointer.scale.y = pointerScale;
+		this.clicPointer.scale.z = pointerScale;
 		
 		this.#updateFogScale();
 
@@ -232,8 +231,6 @@ export class CameraGod {
 		if (!Renderer.scene.fog) {
 			return;
 		}
-
-		// console.log(this.coordCam.z);
 		
 		Renderer.scene.fog.near = this.coordCam.z;
 		Renderer.scene.fog.far = this.globe.webglUnitsByMeter * 50000;
@@ -295,11 +292,11 @@ export class CameraGod {
 
 	onMouseDownLeft() {
 		this.coordOnGround = this.globe.screenToSurfacePosition(Mouse.curMouseX, Mouse.curMouseY);
-		if (!this.coordOnGround) return;
-		const scale = (this.coordCam.z / this.globe.radius) * 500;
-		this.clicPointer.scale.x = scale;
-		this.clicPointer.scale.y = scale;
-		this.clicPointer.scale.z = scale;
+		
+		if (!this.coordOnGround) {
+			return;
+		}
+
 		this.clicPointer.position.x = this.coordOnGround.x;
 		this.clicPointer.position.y = this.coordOnGround.y;
 		this.clicPointer.position.z = this.coordOnGround.z;

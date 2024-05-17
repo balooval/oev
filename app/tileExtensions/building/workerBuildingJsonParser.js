@@ -269,9 +269,11 @@ function cleanTags(_tags) {
 	_tags['building:min_level'] = _tags['building:min_level'] || '0';
 	tags.roofShape = _tags['roof:shape'] || 'flat';
 	
-	const mainColor = _tags['building:colour'] || 'white';
-	tags.wallColor = _tags['building:facade:colour'] || mainColor;
-	tags.roofColor = _tags['roof:colour'] || mainColor;
+	tags.wallColor = getMaterialColor(_tags['building:material']) || 'white';
+	tags.wallColor = _tags['building:facade:colour'] || tags.wallColor;
+
+	tags.roofColor = getMaterialColor(_tags['roof:material']) || 'white';
+	tags.roofColor = _tags['roof:colour'] || tags.roofColor;
 	tags.roofColor = _tags['building:roof:colour'] || tags.roofColor;
 
 	tags.wallColor = parseColor(tags.wallColor);

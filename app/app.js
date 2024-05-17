@@ -136,6 +136,9 @@ const OEV = {
 			return OEV.loadShaders();
 		})
 		.then(() => {
+			return SkeletonBuilder.init();
+		})
+		.then(() => {
 			_callback();
 		});
 		OEV.isBuild = true;
