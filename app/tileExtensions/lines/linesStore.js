@@ -69,13 +69,13 @@ function registerDatas(_tile, _extractedDatas) {
     tileToLines.get(_tile.key).push(..._extractedDatas.map(line => line.id));
 }
 
-function buildLine(_tile, _extractedDatas, _nodesList) {
+function buildLine(tile, extractedDatas, nodesList) {
     let lineAdded = 0;
-    for (let i = 0; i < _extractedDatas.length; i ++) {
-        const way = _extractedDatas[i];
+    for (let i = 0; i < extractedDatas.length; i ++) {
+        const way = extractedDatas[i];
         if (isLineKnowed(way.id)) continue;
         knowIds.push(way.id);
-        const lineBuilded = buildWay(way, _nodesList);
+        const lineBuilded = buildWay(way, nodesList);
         if (lineBuilded.border.length < 2) return;
         storedLines.set('LINE_' + lineBuilded.id, {
             id : lineBuilded.id, 
@@ -86,7 +86,7 @@ function buildLine(_tile, _extractedDatas, _nodesList) {
         if (lineBuilded.type == 'highway') {
             searchTilesUnderWay(lineBuilded);
         }
-        drawLine(lineBuilded, _tile);
+        drawLine(lineBuilded, tile);
         lineAdded ++;
     }
     return lineAdded;
@@ -252,15 +252,15 @@ function extractTags(_tags, _type) {
         res.width = 1;
         res.height = 2;
     }
-    if (_type == 'highway') {
-        res.highway = _tags.highway;
-        res.width = 4;
-        res.height = 0.5;
-        const highwayProps = getHighwayTags(_tags.highway);
-        highwayProps.forEach((value, prop) => {
-            res[prop] = value;
-        })
-    }
+    // if (_type == 'highway') {
+    //     res.highway = _tags.highway;
+    //     res.width = 4;
+    //     res.height = 0.5;
+    //     const highwayProps = getHighwayTags(_tags.highway);
+    //     highwayProps.forEach((value, prop) => {
+    //         res[prop] = value;
+    //     })
+    // }
     if (_tags.width) {
         _tags.width = _tags.width.replace('m', '');
         _tags.width = _tags.width.replace(' ', '');

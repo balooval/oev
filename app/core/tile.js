@@ -421,7 +421,10 @@ export class TileBasic {
 	}
 
 	#createChilds() {
-		if (this.childTiles.length > 0) return false;
+		if (this.childTiles.length > 0) {
+			return false;
+		}
+
 		this.#addChild(0, 0, 0, 1);
 		this.#addChild(0, 1, 0, 0);
 		this.#addChild(1, 0, 1, 1);
@@ -464,11 +467,7 @@ export class TileBasic {
 		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge * 2)) {
 
 			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
-				this.#createChilds();
-				for (let c = 0; c < this.childTiles.length; c ++) {
-					this.childTiles[c].updateDetails(coords);
-				}
-				this.hide();
+				addTileToSplit(this, coords);
 				return;
 			}
 			
@@ -485,6 +484,16 @@ export class TileBasic {
 		}
 		
 		this.show();
+	}
+
+	split(coords) {
+		this.#createChilds();
+
+		for (let c = 0; c < this.childTiles.length; c ++) {
+			this.childTiles[c].updateDetails(coords);
+		}
+
+		this.hide();
 	}
 	
 	getCurTile(coords) {
@@ -553,4 +562,46 @@ export class TileBasic {
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
 	}
+}
+
+const tilesToSplit = new Map();
+let splitTimeoutId = null;
+
+function addTileToSplit(tile, coords) {
+	tile.distToCam = Math.abs(GLOBE.coordDetails.x - tile.middleCoord.x) + Math.abs(GLOBE.coordDetails.y - tile.middleCoord.y);
+
+	tilesToSplit.set(tile, coords);
+	tilesToSplit.delete(tile.parentTile);
+	if (splitTimeoutId === null) {
+		splitNextTile();
+	}
+}
+
+function splitNextTile() {
+	if (tilesToSplit.size === 0) {
+		splitTimeoutId = null;
+		console.log('END');
+		return;
+	}
+
+	const nextTile = getNextTileToSplit();
+	nextTile.tile.split(nextTile.coords);
+	splitTimeoutId = setTimeout(splitNextTile, 1);
+}
+
+function getNextTileToSplit() {
+	const nearest = {
+		distance: 99999999,
+		tile: null,
+	};
+	for (const tile of tilesToSplit.keys()) {
+		const modulatedDistance = tile.distToCam / tile.zoom;
+		if (modulatedDistance < nearest.distance) {
+			nearest.distance = modulatedDistance,
+			nearest.tile = tile;
+		}
+	}
+	const coords = tilesToSplit.get(nearest.tile);
+	tilesToSplit.delete(nearest.tile);
+	return {tile: nearest.tile, coords};
 }

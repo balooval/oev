@@ -103,15 +103,16 @@ function buildWallRoof(_offsetCoords, _props) {
 function inflate(coords, distance) {
     const res = [];
     const geoInput = [];
-
+    
     for (let i = 0; i < coords.length; i ++) {
         geoInput.push(new Jsts.geom.Coordinate(coords[i][0], coords[i][1]));
     }
-
+    
     const geometryFactory = new Jsts.geom.GeometryFactory();
-    const isClosed = MATH.isClosedPath(coords);
     let shell;
-
+    
+    const isClosed = MATH.isClosedPath(coords);
+    
     if (isClosed) {
         shell = geometryFactory.createPolygon(geoInput);
     } else {

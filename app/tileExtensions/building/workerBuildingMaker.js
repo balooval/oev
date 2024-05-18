@@ -1,16 +1,19 @@
 import Earcut from '../../vendor/Earcut.module.js';
 
-onmessage = function(_msg) {
-	let buildings = _msg.data.buildingsDatas;
-	if (_msg.data.bbox) {
-		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
+onmessage = function(message) {
+	let buildings = message.data.buildingsDatas;
+
+	if (message.data.bbox) {
+		buildings = buildings.filter(b => bboxContainCoord(message.data.bbox, b.centroid));
 	}
+
 	buildings = buildings.filter(b => b.coords.length > 2);
 	const wallsDatas = prepareWallsGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
 	const entrancesDatas = prepareEntrancesGeometry(buildings);
+
 	postMessage({
-		tileKey : _msg.data.tileKey, 
+		tileKey : message.data.tileKey, 
 		result : {
 			wallsBuffers : wallsDatas, 
 			roofsBuffers : roofsDatas, 

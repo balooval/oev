@@ -40,40 +40,40 @@ export class Loader {
 		return loaders;
 	}
 
-	getData(_params, _callback) {
-		_params.priority = _params.priority || 1;
-		_params.key = this.#genKey(_params);
-		_params.callback = _callback;
-		if (this.#sendCachedData(_params) === true) {
+	getData(params, callback) {
+		params.priority = params.priority || 1;
+		params.key = this.#genKey(params);
+		params.callback = callback;
+		if (this.#sendCachedData(params) === true) {
 			return true;
 		}
-		if (this.#isWaiting(_params.key) || this.#isLoading(_params.key)) {
-			this.clientsWaiting.push(_params);
+		if (this.#isWaiting(params.key) || this.#isLoading(params.key)) {
+			this.clientsWaiting.push(params);
 			return false;
 		};
-		this.#addSorted(_params);
+		this.#addSorted(params);
 		this.#checkForNextLoad();
 	}
 	
-	#genKey(_params) {
-		_params.keyOpt = _params.keyOpt || '';
-		return _params.z + '-' + _params.x + '-' + _params.y + '-' + _params.keyOpt;
+	#genKey(params) {
+		params.keyOpt = params.keyOpt || '';
+		return params.z + '-' + params.x + '-' + params.y + '-' + params.keyOpt;
 	}
 	
-	onDataLoaded(_data, _params) {
+	onDataLoaded(data, params) {
 		onRessourceLoaded(this._type, this._datasWaiting.length);
-		if (_data === null) {
+		if (data === null) {
 			console.warn('Error loading ressource');
-			console.log(_params);
+			console.log(params);
 			return false;
 		}
-		this._datasLoading = this._datasLoading.filter(l => l.key != _params.key);
-		_params.callback(_data);
-		this.clientsWaiting.filter(c => c.key == _params.key).forEach(c => c.callback(_data));
-		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
+		this._datasLoading = this._datasLoading.filter(l => l.key != params.key);
+		params.callback(data);
+		this.clientsWaiting.filter(c => c.key == params.key).forEach(c => c.callback(data));
+		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != params.key);
 
 		if (USE_CACHE && this.loaderParams.useCache) {
-			this._datasLoaded[_params.key] = _data;
+			this._datasLoaded[params.key] = data;
 		}
 
 		if (!this.loaderParams.delay) {
@@ -83,28 +83,31 @@ export class Loader {
 		}
 	}
 	
-	#addSorted(_params) {
-		_params.priority /= _params.z;
+	#addSorted(params) {
+		params.priority /= params.z;
 		for (let i = 0; i < this._datasWaiting.length; i ++) {
-			if (_params.priority < this._datasWaiting[i].priority) {
-				this._datasWaiting.splice(i, 0, _params);
+			if (params.priority < this._datasWaiting[i].priority) {
+				this._datasWaiting.splice(i, 0, params);
 				return true;
 			}
 		}
-		this._datasWaiting.push(_params);
+		this._datasWaiting.push(params);
 		return false;
 	}
 	
-	#sendCachedData(_params) {
-		if (!this._datasLoaded[_params.key]) return false;
-		_params.callback(this._datasLoaded[_params.key]);
+	#sendCachedData(params) {
+		if (!this._datasLoaded[params.key]) {
+			return false;
+		}
+
+		params.callback(this._datasLoaded[params.key]);
 		return true;
 	}
 	
-	abort(_params) {
-		if (_params.key === undefined) _params.key = this.#genKey(_params);
-		this._datasWaiting = this._datasWaiting.filter(w => w.key != _params.key);
-		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != _params.key);
+	abort(params) {
+		if (params.key === undefined) params.key = this.#genKey(params);
+		this._datasWaiting = this._datasWaiting.filter(w => w.key != params.key);
+		this.clientsWaiting = this.clientsWaiting.filter(c => c.key != params.key);
 	}
 	
 	clear() {

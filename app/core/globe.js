@@ -309,9 +309,18 @@ class Globe {
 	
 	#onCurTileChange(newTile){
 		this.#currentTile = newTile;
+
+		const date = new Date();
+		const now = date.getTime();
+		
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
 			this.#rootTiles[i].updateDetails(this.coordDetails);
 		}
+		
+		const toto = new Date();
+		const after = toto.getTime();
+		const elapsedTime = after - now;
+		console.log('elapsedTime', elapsedTime);
 	}
 
 	updateCurrentTile(coordX, coordY) {

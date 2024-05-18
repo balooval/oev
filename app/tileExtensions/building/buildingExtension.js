@@ -23,11 +23,11 @@ const materialWalls = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0
 const materialRoof = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
 
 const workerEvent = new Evt();
-const worker = new Worker('/app/tileExtensions/building/workerBuildingMaker.js', {type:'module'});
-worker.onmessage = onWorkerMessage;
+const workerBuildingMaker = new Worker('/app/tileExtensions/building/workerBuildingMaker.js', {type:'module'});
+workerBuildingMaker.onmessage = onWorkerMessage;
 
-function onWorkerMessage(_res) {
-	workerEvent.fireEvent('BUILDING_READY_' + _res.data.tileKey, _res.data.result);
+function onWorkerMessage(res) {
+	workerEvent.fireEvent('BUILDING_READY_' + res.data.tileKey, res.data.result);
 }
 
 class BuildingExtension {
@@ -74,7 +74,7 @@ class BuildingExtension {
 			maxLat : this.tile.startCoord.y
 		};
 		workerEvent.addEventListener('BUILDING_READY_' + this.tileKey, this, this.#onWorkerFinishedBuild);
-		worker.postMessage({
+		workerBuildingMaker.postMessage({
 			tileKey : this.tileKey,
 			buildingsDatas : this.datas,  
 			bbox : bbox, 
@@ -278,14 +278,16 @@ class BuildingExtension {
 		}
 	}
 
-	#buildWalls(_buffers) {
-		if (!_buffers) return;
-		this.#applyElevationToVertices(_buffers);
-		this.#convertCoordToPosition(_buffers.bufferCoord);
+	#buildWalls(buildingsWallsBuffers) {
+		if (!buildingsWallsBuffers) {
+			return;
+		}
+		this.#applyElevationToVertices(buildingsWallsBuffers);
+		this.#convertCoordToPosition(buildingsWallsBuffers.bufferCoord);
 		const bufferGeometry = CachedGeometry.getGeometry();
-		bufferGeometry.setAttribute('position', new BufferAttribute(_buffers.bufferCoord, 3));
-		bufferGeometry.setAttribute('color', new BufferAttribute(_buffers.bufferColor, 3, true));
-		bufferGeometry.setIndex(new BufferAttribute(_buffers.bufferFaces, 1));
+		bufferGeometry.setAttribute('position', new BufferAttribute(buildingsWallsBuffers.bufferCoord, 3));
+		bufferGeometry.setAttribute('color', new BufferAttribute(buildingsWallsBuffers.bufferColor, 3, true));
+		bufferGeometry.setIndex(new BufferAttribute(buildingsWallsBuffers.bufferFaces, 1));
         bufferGeometry.computeVertexNormals();
 		this.meshWalls = CachedGeometry.getMesh();
 		this.meshWalls.geometry = bufferGeometry;
@@ -296,13 +298,15 @@ class BuildingExtension {
 		Renderer.scene.add(this.meshWalls);
 	}
 
-	#applyElevationToVertices(_buffers) {
+	#applyElevationToVertices(buildingsWallsBuffers) {
 		let bufferVertIndex = 0;
-		for (let b = 0; b < _buffers.buildingNb; b ++) {
-			const center = _buffers.centroids[b];
+		
+		for (let b = 0; b < buildingsWallsBuffers.buildingNb; b ++) {
+			const center = buildingsWallsBuffers.centroids[b];
 			const alt = ElevationStore.get(center[0], center[1]);
-			for (let v = 0; v < _buffers.verticesNbs[b]; v ++) {
-				_buffers.bufferCoord[bufferVertIndex + 2] += alt;
+
+			for (let v = 0; v < buildingsWallsBuffers.verticesNbs[b]; v ++) {
+				buildingsWallsBuffers.bufferCoord[bufferVertIndex + 2] += alt;
 				bufferVertIndex += 3;
 			}
 		}
