@@ -21,8 +21,6 @@ const LOD_PLANET = 0;
 const LOD_CITY = 10;
 const PROJECTION_PLANE = 'PLANE';
 const PROJECTION_SPHERE = 'SPHERE';
-const RAD2DEG = 180 / Math.PI;
-const PI_4 = Math.PI / 4;
 
 class Globe {
 	#time = 0.5;
@@ -257,7 +255,8 @@ class Globe {
 			this.#curLOD = LOD_CITY;
 			this.#updateLOD();
 			this.#setProjection(PROJECTION_PLANE);
-			Renderer.camera.far = this.webglUnitsByMeter * 100000;
+			// Renderer.camera.far = this.webglUnitsByMeter * 100000;
+			Renderer.camera.far = this.webglUnitsByMeter * 500000;
 			Renderer.camera.near = this.webglUnitsByMeter * 1;
 			Renderer.camera.updateProjectionMatrix();
 
@@ -296,6 +295,10 @@ class Globe {
 	getElevationMetersAtCoords(lon, lat) {
 		let elevation = ElevationStore.get(lon, lat);
 		return elevation;
+	}
+
+	getCoordsDistanceToCamera(lon, lat) {
+		return this.ruler.distance([lon, lat], [this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y]);
 	}
 	
 	#getCurTile() {

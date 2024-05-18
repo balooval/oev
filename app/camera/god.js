@@ -176,6 +176,7 @@ export class CameraGod {
 		this.coordLookat.z = this.globe.getElevationMetersAtCoords(this.coordLookat.x, this.coordLookat.y);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
 		this.coordCam.z = this.globe.getElevationUnitsForZoom(this.zoomCur);
+		// this.coordCam.z = 50000;
 		let posCam;
 		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();
@@ -232,8 +233,8 @@ export class CameraGod {
 			return;
 		}
 		
-		Renderer.scene.fog.near = this.coordCam.z;
-		Renderer.scene.fog.far = this.globe.webglUnitsByMeter * 50000;
+		Renderer.scene.fog.near = this.globe.webglUnitsByMeter * 10000;
+		Renderer.scene.fog.far = this.globe.webglUnitsByMeter * 100000;
 	}
 
 	updateOnSphere() {

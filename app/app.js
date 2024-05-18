@@ -62,7 +62,7 @@ const OEV = {
 			_params.EXTENSIONS[extension].url = _choose(_params.EXTENSIONS[extension].url, serverURL + 'index.php?ressource=' + extension);
 		});
 		_params.EXTENSIONS.elevation.active = true;
-		// _params.EXTENSIONS.normal.active = true;
+		_params.EXTENSIONS.normal.active = true;
 		_params.EXTENSIONS.coast = {
 			url : serverURL + 'index.php?ressource=coastline', 
 		};

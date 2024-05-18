@@ -235,15 +235,20 @@ function prepareEntrancesGeometry(_buildings) {
 function prepareWallsGeometry(_buildings) {
 	if (_buildings.length == 0) return null;
 	const walls = [];
+
 	for (let i = 0; i < _buildings.length; i ++) {
 		const building = _buildings[i];
-		if (building.props.wall && building.props.wall == 'no') continue;
+		if (building.props.wall && building.props.wall == 'no') {
+			continue;
+		}
 		walls.push(building);
 	}
+
 	let nbVertWall = 0;
 	let nbFaces = 0;
 	const centers = new Array(walls.length);
 	const verticesNbs = new Array(walls.length);
+
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
 		centers[i] = building.centroid;
@@ -253,19 +258,26 @@ function prepareWallsGeometry(_buildings) {
 		nbVertWall += buildingNbVert;
 		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
 	}
+
 	const bufferCoord = new Float32Array(nbVertWall * 3);
 	const bufferFaces = new Uint32Array(nbFaces * 3);
 	let bufferVertIndex = 0;
 	let bufferFaceIndex = 0;
 	let pastFaceNb = 0;
 	const colorVertices = [];
+
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
 		let buildingCoordNb = building.coords.length;
 		fixDirection(building.coords, building.id);
 		let fondationsEle = 0;
-		if (building.props.minAlt == 0) fondationsEle = -10;
+		
+		if (building.props.minAlt == 0) {
+			fondationsEle = -10;
+		}
+
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
+			
 			for (let c = 0; c < buildingCoordNb; c ++) {
 				colorVertices.push(...building.props.wallColor);
 				if (floor > 0) {
@@ -295,6 +307,7 @@ function prepareWallsGeometry(_buildings) {
 		}
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
 	}
+
 	return {
 		buildingNb : walls.length, 
 		centroids : centers, 

@@ -47,7 +47,7 @@ const api = {
         sceneWidth = Math.min(intElemClientWidth, 13000);
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new Scene();
-        api.camera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
+        api.camera = new PerspectiveCamera(75, sceneWidth / sceneHeight, 0.1, 20000);
         // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 200000);
         var canvas = document.createElement( 'canvas' );
         var context = canvas.getContext('webgl2');
@@ -63,7 +63,7 @@ const api = {
         api.camera.position.x = 0;
         api.camera.position.y = 0;
         api.camera.position.z = -500;	
-        webGlRenderer.setClearColor(0x101020, 1);
+        webGlRenderer.setClearColor(0x91b8fb, 1);
         webGlRenderer.shadowMap.enabled = true;
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
         // webGlRenderer.shadowMap.type = VSMShadowMap;

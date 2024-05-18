@@ -461,64 +461,30 @@ export class TileBasic {
 	}
 
 	updateDetails(coords) {
-		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge)) {
+		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge * 2)) {
+
 			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
 				this.#createChilds();
 				for (let c = 0; c < this.childTiles.length; c ++) {
 					this.childTiles[c].updateDetails(coords);
 				}
 				this.hide();
-
-			} else {
-				this.#clearChildrens();
-				this.show();
+				return;
 			}
-
-		} else {
+			
 			this.#clearChildrens();
-			if( this.zoom + 5 < GLOBE.CUR_ZOOM ){
-				this.hide();
-
-			} else {
-				const tests = [
-					// '62_45_7',
-					'62_46_7',
-					// '62_47_7',
-					// '62_48_7',
-					// '62_49_7',
-					// '63_44_7',
-					// '63_45_7',
-					// '63_46_7',
-					// '63_47_7',
-					// '63_48_7',
-					// '63_49_7',
-					// '64_44_7',
-					// '64_48_7',
-					// '64_49_7',
-					// '65_44_7',
-					// '65_48_7',
-					// '65_49_7',
-					// '66_44_7',
-					// '66_48_7',
-					// '66_49_7',
-					// '67_44_7',
-					// '67_45_7',
-					// '67_46_7',
-					// '67_47_7',
-					// '67_48_7',
-					// '67_49_7',
-				];
-				// if (this.zoom === 7) {
-				// 	console.log('SHOW', this.zoom, this.tileX, this.tileY);
-				// }
-				// const key = this.zoom+'/'+this.tileX+'/'+this.tileY;
-				// if (tests.includes(this.key)) {
-				// 	console.log('key', this.key);
-				// 	this.show();
-				// }
-				this.show();
-			}
+			this.show();
+			return;
 		}
+		
+		this.#clearChildrens();
+
+		if (this.zoom + 5 < Math.min(GLOBE.CUR_ZOOM, 16)) {
+			this.hide();
+			return;
+		}
+		
+		this.show();
 	}
 	
 	getCurTile(coords) {

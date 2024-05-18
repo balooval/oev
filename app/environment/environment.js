@@ -69,7 +69,7 @@ const api = {
 	activate : function(_state) {
 		api.addDebugCube();
 		SUN.activate(_state);
-		SKY.activate(_state);
+		// SKY.activate(_state);
 		if (_state) {
 			// CLOUDS.create();
 			api.onTimeChanged(0.5);

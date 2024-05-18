@@ -271,12 +271,12 @@ function cleanTags(_tags) {
 	
 	tags.wallColor = getMaterialColor(_tags['building:material']) || 'white';
 	tags.wallColor = _tags['building:facade:colour'] || tags.wallColor;
+	tags.wallColor = parseColor(tags.wallColor);
 
 	tags.roofColor = getMaterialColor(_tags['roof:material']) || 'white';
 	tags.roofColor = _tags['roof:colour'] || tags.roofColor;
 	tags.roofColor = _tags['building:roof:colour'] || tags.roofColor;
 
-	tags.wallColor = parseColor(tags.wallColor);
 	tags.roofColor = parseColor(tags.roofColor);
 	tags.wall = _tags.wall || '';
 
