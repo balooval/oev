@@ -58,7 +58,6 @@ function loadGlb(_nextModel) {
 	gltflLoader.load(
 		'assets/models/' + _nextModel.url, 
 		gltf => {
-			// gltf.asset.rotation.x = Math.PI;
 			modelsLoaded[_nextModel.id] = gltf.scene.children[0].geometry;
 			if (curBatch.list.length == 0) {
 				curBatch.callback();
@@ -76,7 +75,7 @@ function loadJson(_nextModel) {
 	objectLoader.load(
 		'assets/models/' + _nextModel.url, 
 		object => {
-			object.rotation.x = Math.PI;
+			// object.rotation.x = Math.PI;
 			modelsLoaded[_nextModel.id] = object;
 			if (curBatch.list.length == 0) {
 				curBatch.callback();

@@ -4,6 +4,7 @@ uniform float skyRadius;
 varying float vSunLight;
 varying float vRedish;
 varying float vRedishFactor;
+
 void main() {
 	vec3 sunDistance = vec3(0.0, 0.0, 0.0);
 	sunDistance.x = position.x - sunPos.x;

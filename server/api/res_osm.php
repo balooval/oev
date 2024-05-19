@@ -33,6 +33,9 @@ class Api_osm extends Api_default {
         if ($age > 2600000) { // 30 jours
             return true;
         }
+        if (!filesize($_filePath)) {
+            return true;
+        }
         return false;
     }
 

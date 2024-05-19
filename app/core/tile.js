@@ -4,6 +4,7 @@ import * as TileExtension from '../tileExtensions/tileExtension.js';
 import {
 	BufferAttribute,
 	BufferGeometry,
+	DoubleSide,
 	Mesh,
 	Texture,
 	MeshPhysicalMaterial,
@@ -26,6 +27,10 @@ export class TileBasic {
 		this.onStage = true;
 		this.parentTile = parent;
 		this.parentOffset = {
+			x: 0,
+			y: 0,
+		};
+		this.uvOffset = {
 			x: 0,
 			y: 0,
 		};
@@ -61,8 +66,13 @@ export class TileBasic {
 		this.diffuseTexture.needsUpdate = true;
 		this.diffuseMap = null;
 
-		this.material = new MeshPhysicalMaterial({color: 0xffffff, roughness:1, metalness:0, map: this.diffuseTexture});
-		// this.material = new MeshBasicMaterial({color: 0xffffff, map: this.diffuseTexture});
+		this.material = new MeshPhysicalMaterial({
+			color: 0xffffff,
+			roughness:1,
+			metalness:0,
+			map: this.diffuseTexture,
+			// side: DoubleSide,
+		});
 
 		this.extensions = new Map();
 		TileExtension.listActives().forEach(p => this.addExtension(p));
@@ -161,13 +171,14 @@ export class TileBasic {
 
 		let curParent = this.parentTile;
 		let uvReduc = 0.5;
-		let curOffsetX = this.parentOffset.x * 0.5;
-		let curOffsetY = this.parentOffset.y * 0.5;
+
+		let curOffsetX = this.uvOffset.x * 0.5;
+		let curOffsetY = this.uvOffset.y * 0.5;
 
 		while (curParent && !curParent.textureLoaded) {
 			uvReduc *= 0.5;
-			curOffsetX = curParent.parentOffset.x * 0.5 + (curOffsetX * 0.5);
-			curOffsetY = curParent.parentOffset.y * 0.5 + (curOffsetY * 0.5);
+			curOffsetX = curParent.uvOffset.x * 0.5 + (curOffsetX * 0.5);
+			curOffsetY = curParent.uvOffset.y * 0.5 + (curOffsetY * 0.5);
 			curParent = curParent.parentTile;
 		}
 
@@ -201,7 +212,7 @@ export class TileBasic {
 			for (let y = 0; y < vertBySide; y ++) {
 				uvIndex = (x * vertBySide) + y;
 				bufferUvs[uvIndex * 2] = textureDatas.offsetX + (stepUV * x);
-				bufferUvs[uvIndex * 2 + 1] = 1 - (stepUV * y) - textureDatas.offsetY;
+				bufferUvs[uvIndex * 2 + 1] = textureDatas.offsetY + (stepUV * y);
 			}
 		}
 
@@ -218,14 +229,13 @@ export class TileBasic {
 		const bufferCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / GLOBE.tilesDefinition;
-		const stepCoordY = (this.endCoord.y - this.startCoord.y) / GLOBE.tilesDefinition;
+		const stepCoordY = (this.startCoord.y - this.endCoord.y) / GLOBE.tilesDefinition;
 
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
 				bufferCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
-				bufferCoords[coordId + 1] = this.startCoord.y + (stepCoordY * y);
+				bufferCoords[coordId + 1] = this.endCoord.y + (stepCoordY * y);
 				coordId += 2;
-
 			}
 		}
 		return bufferCoords;
@@ -263,11 +273,12 @@ export class TileBasic {
 		for (let x = 0; x < def; x ++) {
 			for (let y = 0; y < def; y ++) {
 				bufferFaces[faceId + 0] = (x * vertBySide) + y;
-				bufferFaces[faceId + 1] = (x * vertBySide) + y + 1;
-				bufferFaces[faceId + 2] = ((x + 1) * vertBySide) + y + 1;
+				bufferFaces[faceId + 2] = (x * vertBySide) + y + 1;
+				bufferFaces[faceId + 1] = ((x + 1) * vertBySide) + y + 1;
+				
 				bufferFaces[faceId + 3] = ((x + 1) * vertBySide) + y + 1;
-				bufferFaces[faceId + 4] = ((x + 1) * vertBySide) + y;
-				bufferFaces[faceId + 5] = (x * vertBySide) + y;
+				bufferFaces[faceId + 5] = ((x + 1) * vertBySide) + y;
+				bufferFaces[faceId + 4] = (x * vertBySide) + y;
 				faceId += 6;
 			}
 		}
@@ -291,7 +302,7 @@ export class TileBasic {
 
 		this.meshe.castShadow = true;
 		this.meshe.receiveShadow = true;
-		let parentTexture = this.#nearestTextures();
+		const parentTexture = this.#nearestTextures();
 		this.#applyTexture(parentTexture);
 		this.isReady = true;
 		this.evt.fireEvent('TILE_READY');
@@ -351,17 +362,53 @@ export class TileBasic {
 		return true;
 	}
 
+	debug() {
+		if (this.zoom < 7) {
+			for (let i = 0; i < this.childTiles.length; i ++) {
+				this.childTiles[i].debug();
+			}
+		}
+
+		if (this.onStage === true) {
+			console.log('this.tileX', this.tileX);
+			// if (this.tileX === 67) {
+			// 	console.log('debug', this.zoom, this.tileX, this.tileY);
+				this.hide();
+			// }
+		}
+	}
+
 	show() {
 		if (this.onStage) return false;
 		this.onStage = true;
 		GLOBE.addMeshe(this.meshe);
+
+		let test = '7/65/46';
+		// test = '10/523/373';
+		if (this.zoom + '/' + this.tileX + '/' + this.tileY === test) {
+			this.meshe.material.visible = true;
+		}
+		this.meshe.material.visible = true;
+
+
 		this.evt.fireEvent('SHOW');
 	}
 	
 	hide() {
-		if (!this.onStage) return false;
+		if (!this.onStage) {
+			return false;
+		}
+
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
+
+		let test = '7/65/46';
+		// test = '10/523/373';
+		if (this.zoom + '/' + this.tileX + '/' + this.tileY === test) {
+			this.meshe.material.visible = false;
+		}
+		this.meshe.material.visible = false;
+
 		if (!this.textureLoaded) {
 			MapLoader.abort({
 				z : this.zoom, 
@@ -369,28 +416,36 @@ export class TileBasic {
 				y : this.tileY
 			});
 		}
+
 		this.evt.fireEvent('HIDE');
 	}
 
 	#createChilds() {
-		if (this.childTiles.length > 0) return false;
-		this.#addChild(0, 0);
-		this.#addChild(0, 1);
-		this.#addChild(1, 0);
-        this.#addChild(1, 1);
+		if (this.childTiles.length > 0) {
+			return false;
+		}
+
+		this.#addChild(0, 0, 0, 1);
+		this.#addChild(0, 1, 0, 0);
+		this.#addChild(1, 0, 1, 1);
+        this.#addChild(1, 1, 1, 0);
         this.evt.fireEvent('ADD_CHILDRENS');
 	}
 		
-	#addChild(offsetX, offsetY) {
+	#addChild(tileOffsetX, tileOffsetY, uvOffsetX, uvOffsetY) {
 		const newTile = new TileBasic(
-			this.tileX * 2 + offsetX,
-			this.tileY * 2 + offsetY,
+			this.tileX * 2 + tileOffsetX,
+			this.tileY * 2 + tileOffsetY,
 			this.zoom + 1,
 			this
 		);
 		newTile.parentOffset = {
-			x: offsetX,
-			y: offsetY,
+			x: tileOffsetX,
+			y: tileOffsetY,
+		};
+		newTile.uvOffset = {
+			x: uvOffsetX,
+			y: uvOffsetY,
 		};
 		newTile.buildGeometry();
 		this.childTiles.push(newTile);
@@ -409,28 +464,36 @@ export class TileBasic {
 	}
 
 	updateDetails(coords) {
-		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge)) {
+		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge * 2)) {
+
 			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
-				this.#createChilds();
-				for (let c = 0; c < this.childTiles.length; c ++) {
-					this.childTiles[c].updateDetails(coords);
-				}
-				this.hide();
-
-			} else {
-				this.#clearChildrens();
-				this.show();
+				addTileToSplit(this, coords);
+				return;
 			}
-
-		} else {
+			
 			this.#clearChildrens();
-			if( this.zoom + 5 < GLOBE.CUR_ZOOM ){
-				this.hide();
-
-			} else {
-				this.show();	
-			}
+			this.show();
+			return;
 		}
+		
+		this.#clearChildrens();
+
+		if (this.zoom + 5 < Math.min(GLOBE.CUR_ZOOM, 16)) {
+			this.hide();
+			return;
+		}
+		
+		this.show();
+	}
+
+	split(coords) {
+		this.#createChilds();
+
+		for (let c = 0; c < this.childTiles.length; c ++) {
+			this.childTiles[c].updateDetails(coords);
+		}
+
+		this.hide();
 	}
 	
 	getCurTile(coords) {
@@ -499,4 +562,46 @@ export class TileBasic {
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
 	}
+}
+
+const tilesToSplit = new Map();
+let splitTimeoutId = null;
+
+function addTileToSplit(tile, coords) {
+	tile.distToCam = Math.abs(GLOBE.coordDetails.x - tile.middleCoord.x) + Math.abs(GLOBE.coordDetails.y - tile.middleCoord.y);
+
+	tilesToSplit.set(tile, coords);
+	tilesToSplit.delete(tile.parentTile);
+	if (splitTimeoutId === null) {
+		splitNextTile();
+	}
+}
+
+function splitNextTile() {
+	if (tilesToSplit.size === 0) {
+		splitTimeoutId = null;
+		console.log('END');
+		return;
+	}
+
+	const nextTile = getNextTileToSplit();
+	nextTile.tile.split(nextTile.coords);
+	splitTimeoutId = setTimeout(splitNextTile, 1);
+}
+
+function getNextTileToSplit() {
+	const nearest = {
+		distance: 99999999,
+		tile: null,
+	};
+	for (const tile of tilesToSplit.keys()) {
+		const modulatedDistance = tile.distToCam / tile.zoom;
+		if (modulatedDistance < nearest.distance) {
+			nearest.distance = modulatedDistance,
+			nearest.tile = tile;
+		}
+	}
+	const coords = tilesToSplit.get(nearest.tile);
+	tilesToSplit.delete(nearest.tile);
+	return {tile: nearest.tile, coords};
 }

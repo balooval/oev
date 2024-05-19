@@ -1,4 +1,3 @@
-import * as THREE from '../../vendor/three.module.js';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';
@@ -13,20 +12,17 @@ const modelsToLoad = [
     ['street_lamp', 'lamp.json'], 
 ];
 
-let testTreeCircumference = 0;
-
 const api = {
     evt : new Evt(), 
     isReady : false, 
 
-    get : function(_node) {
-        let type = _node.type;
+    get : function(node) {
+        let type = node.type;
         if (type == 'tree') {
-            type = getTreeModel(_node.props);
-            // console.log('tree', type);
+            type = getTreeModel(node.props);
         }
         const geometry = NET_MODELS.get(type).geometry.clone();
-        applyTransformation(_node, geometry);
+        applyTransformation(node, geometry);
         return geometry;
     }
 };
@@ -38,8 +34,12 @@ function getTreeModel(_props) {
     return 'tree_leaves';
 }
 
-function applyTransformation(_node, _geometrie) {
-    const scale = new THREE.Vector3(1, 1, 1);
+function applyTransformation(_node, geometry) {
+    const scale = {
+        x: 1,
+        y: 1,
+        z: 1,
+    };
     if (_node.props.circumference && _node.props.circumference > 0) {
         _node.props.circumference = Math.min(_node.props.circumference, 10);
         scale.x = _node.props.circumference / 5;
@@ -56,8 +56,11 @@ function applyTransformation(_node, _geometrie) {
         scale.y = 1;
         scale.z = 1;
     }
-    _geometrie.scale(scale.x, scale.y, scale.z);
-    _geometrie.rotateY(Math.random() * 6);
+    const factor = 50;
+    geometry.scale(scale.x * factor, scale.y * factor, scale.z * factor);
+    geometry.rotateX(3.14);
+    geometry.rotateY(Math.random() * 6);
+    // geometry.translate(0, 10, 0);
 }
 
 function onActivateExtension() {

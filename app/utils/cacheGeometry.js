@@ -39,7 +39,9 @@ const cachedMeshes = [];
 let freeMeshesIndex = -1;
 
 export function getMesh() {
-    if (freeMeshesIndex < 0) return new THREE.Mesh();
+    if (freeMeshesIndex < 0) {
+        return new THREE.Mesh();
+    }
     const mesh = cachedMeshes[freeMeshesIndex];
     freeMeshesIndex --;
     return mesh;

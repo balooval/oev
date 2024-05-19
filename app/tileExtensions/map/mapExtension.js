@@ -89,7 +89,11 @@ export class MapExtension {
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.removeEventListener('HIDE', this, this.hide);
-		if (this.texture) this.texture.dispose();
+
+		if (this.texture) {
+			this.texture.dispose();
+		}
+		
         this.texture = null;
 		this.dataLoaded = false;
 		this.dataLoading = false;

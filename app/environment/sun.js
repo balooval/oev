@@ -1,7 +1,9 @@
 import {
 	AmbientLight,
+	CameraHelper,
 	Color,
 	DirectionalLight,
+	DirectionalLightHelper,
 	Matrix4,
 	Mesh,
 	ShaderMaterial,
@@ -13,7 +15,7 @@ import GLOBE from '../core/globe.js';
 import * as NET_TEXTURES from '../net/textures.js';
 import {get as Shader} from '../net/shader.js';
 
-let isInit = false;
+let cameraHelper;
 let lightAmbiant = undefined;
 let colorsGradient = undefined;
 let lightSun;
@@ -33,16 +35,23 @@ const api = {
 		colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
 		lightSun = new DirectionalLight(0xffffff, 2);
 		Renderer.scene.add(lightSun);
+		const directionalLightHelper = new DirectionalLightHelper(lightSun, 10);
+		Renderer.scene.add(directionalLightHelper);
 		lightAmbiant = new AmbientLight(0x25282d);
 		Renderer.scene.add(lightAmbiant);
+		
 		GLOBE.evt.addEventListener('ZOOM_CHANGE', null, onZoomChanged);
+		
 		lightSun.castShadow = true;
+		cameraHelper = new CameraHelper(lightSun.shadow.camera);
+		// Renderer.scene.add(cameraHelper);
+		
 		updateShadow(4);
 	}, 
 	
 	activate : function(_state) {
 		if (_state) {
-			createSun(GLOBE.radius * 0.7);
+			createSun(GLOBE.webglUnitsByMeter * 1000);
 			api.setTime(0.5);
 		} else {
 			removeSun();
@@ -50,6 +59,8 @@ const api = {
 	}, 
 
 	setTime : function(_time) {
+		sunParams.azimuth = (_time * 2) - 1;
+		sunParams.inclinaison = Math.cos(_time * Math.PI * 2) * -1;
 		updateSunColor(_time);
 		updateSunPosition();
 		return sunParams;
@@ -69,7 +80,8 @@ function onZoomChanged(_zoom) {
 
 function createSun(_skyRadius) {
 	if (meshSun) return false;
-	orbitRadius = _skyRadius * 0.9;
+	// orbitRadius = _skyRadius * 0.9;
+	orbitRadius = _skyRadius;
 	const sunRadius = _skyRadius / 40;
 	const uniformsSun = {
 		sunElevation : {value : 0.5}, 
@@ -84,13 +96,11 @@ function createSun(_skyRadius) {
 	const materialSun = new ShaderMaterial(parametersSun);
 	const geoSun = new SphereGeometry(sunRadius, 16, 16);
 	meshSun = new Mesh(geoSun, materialSun);
-	Renderer.scene.add(meshSun);
+	// Renderer.scene.add(meshSun);
 }
 
 function updateSunColor(_time) {
 	if (meshSun === null) return false;
-	sunParams.azimuth = (_time * -2) + 1;
-	sunParams.inclinaison = Math.cos(_time * Math.PI * 2);
 	let dayLightTime = Math.sin((_time) * Math.PI);
 	dayLightTime = Math.max(dayLightTime - 0.67, 0.02);
 	dayLightTime *= 3;
@@ -106,33 +116,36 @@ function updateSunColor(_time) {
 	Renderer.MUST_RENDER = true;
 }
 
-function updateShadow(_zoom) {
-	// const factor = 0.002;
-	const factor = (20 - _zoom) / 50000;
-	lightSun.shadow.camera.far = GLOBE.radius * GLOBE.globalScale;
+function updateShadow(zoom) {
+	const factor = 50000000 / Math.pow(2, zoom);
+	lightSun.shadow.bias = -0.001;
+	const shadowSize = GLOBE.webglUnitsByMeter * factor;
+	lightSun.shadow.camera.far = orbitRadius * 2;
 	lightSun.shadow.camera.near = 1;
 	lightSun.shadow.mapSize.width = 2048;
 	lightSun.shadow.mapSize.height = 2048;
-	lightSun.shadow.camera.left = lightSun.shadow.camera.far * factor * -1;
-	lightSun.shadow.camera.right = lightSun.shadow.camera.far * factor;
-	lightSun.shadow.camera.top = lightSun.shadow.camera.far * factor;
-	lightSun.shadow.camera.bottom = lightSun.shadow.camera.far * factor * -1;
-	lightSun.shadow.camera.updateProjectionMatrix();
+	lightSun.shadow.camera.left = shadowSize * -1;
+	lightSun.shadow.camera.right = shadowSize;
+	lightSun.shadow.camera.top = shadowSize;
+	lightSun.shadow.camera.bottom = shadowSize * -1;
+	// lightSun.shadow.camera.updateProjectionMatrix();
+	cameraHelper.update();
 	Renderer.MUST_RENDER = true;
 }
 
 function updateSunPosition() {
 	if (!meshSun) return false;
-	sunParams.position.x = Math.sin(sunParams.azimuth * Math.PI * 1) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
+	sunParams.position.x = Math.sin(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
 	sunParams.position.y = Math.sin(sunParams.inclinaison * Math.PI * 0.5) * orbitRadius;
-	sunParams.position.z = 0 - Math.cos(sunParams.azimuth * Math.PI * 1) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
+	sunParams.position.z = Math.cos(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
 	meshSun.position.x = sunParams.position.x + posCenter.x;
 	meshSun.position.y = sunParams.position.y + posCenter.y;
-	meshSun.position.z = sunParams.position.z + posCenter.y;
+	meshSun.position.z = sunParams.position.z + posCenter.z;
 	lightSun.position.x = meshSun.position.x;
 	lightSun.position.y = meshSun.position.y;
 	lightSun.position.z = meshSun.position.z;
 	lightSun.target = GLOBE.cameraControler.pointer;
+	lightSun.shadow.camera.updateProjectionMatrix();
 	Renderer.MUST_RENDER = true;
 }
 

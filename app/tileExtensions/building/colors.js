@@ -1,7 +1,48 @@
 
+function getMaterialColor(material) {
+	if (!material) {
+		return null;
+	}
+
+	return materialColors[material];
+}
+
+const materialColors = {
+	// roof
+	'roof_tiles': '754e3b',
+	'copper': '21bfb2',
+	'concrete': 'c1c9c9',
+	'glass': 'b6dbdb',
+	'slate': '243029',
+	'stone': '5c594f',
+	'tar_paper': '454441',
+	'grass': '6c8f51',
+	'plants': '5f964d',
+	'gravel': 'd0dbd7',
+	'wood': 'a68d55',
+	'metal': '9c9fa1',
+	'eternit': '7f7c80',
+	'thatch': '7d7531',
+	// wall
+	'cement_block': 'adadaa',
+	'plaster': 'd1c4a7',
+	'brick': 'cf9f82',
+	'mirror': 'b6dbdb',
+	'sandstone': 'e6d3b5',
+	'steel': 'd1e1e3',
+	'timber_framing': '544d42',
+	'metal_plates': '9c9fa1',
+	'plastic': 'bcc4c0',
+	'vinyl': 'dbdbd5',
+}
+
 function parseColor(_color) {
 	let res = getColorByName(_color);
-	if (res) return res;
+	
+	if (res) {
+		return res;
+	}
+	
 	res = hexToRgb(_color);
 	return res;
 }

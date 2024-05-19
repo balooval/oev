@@ -1,11 +1,14 @@
 import {
+    CameraHelper,
     PCFSoftShadowMap,
     PerspectiveCamera,
     Raycaster,
     Scene,
     Vector2,
+    VSMShadowMap,
     WebGLRenderer,
 } from '../vendor/three.module.js';
+import { OrbitControls } from '../vendor/OrbitControls.module.js';
 
 let webGlRenderer = undefined;
 let sceneWidth = 0;
@@ -26,6 +29,10 @@ let raycaster;
 //     ]
 // } );
 
+let controls;
+let orbitCamera;
+let helper;
+
 const api = {
     scene : undefined, 
     camera : undefined, 
@@ -41,7 +48,7 @@ const api = {
         sceneWidth = Math.min(intElemClientWidth, 13000);
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new Scene();
-        api.camera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 20000);
+        api.camera = new PerspectiveCamera(75, sceneWidth / sceneHeight, 0.1, 20000);
         var canvas = document.createElement( 'canvas' );
         var context = canvas.getContext('webgl2');
         webGlRenderer = new WebGLRenderer({
@@ -55,11 +62,22 @@ const api = {
         elmtHtmlContainer.appendChild(webGlRenderer.domElement);
         api.camera.position.x = 0;
         api.camera.position.y = 0;
-        api.camera.position.z = 500;	
-        webGlRenderer.setClearColor(0x101020, 1);
+        api.camera.position.z = -500;	
+        webGlRenderer.setClearColor(0x91b8fb, 1);
         webGlRenderer.shadowMap.enabled = true;
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
+        // webGlRenderer.shadowMap.type = VSMShadowMap;
         raycaster = new Raycaster();
+        
+
+        // helper = new CameraHelper(api.camera);
+        // api.scene.add(helper);
+        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
+        // orbitCamera.position.x = 0;
+        // orbitCamera.position.y = 0;
+        // orbitCamera.position.z = 500;	
+        // controls = new OrbitControls(orbitCamera, webGlRenderer.domElement);
+        // controls.update();
     },  
 
     domContainer : function() {
@@ -71,21 +89,26 @@ const api = {
     }, 
 
     render : function() {
+        // controls.update();
+        // api.MUST_RENDER = true;
+        // helper.update();
+
         if (!api.MUST_RENDER) return;
         // rS( 'frame' ).start();
+        // webGlRenderer.render(api.scene, orbitCamera);
         webGlRenderer.render(api.scene, api.camera);
         api.MUST_RENDER = false;
         // rS( 'frame' ).end();
         // rS().update();
     }, 
 
-    checkMouseWorldPos : function(_x, _y, _object) {
-		const mX = ((_x - containerOffset.x) / sceneWidth) * 2 - 1;
-		const mY = -((_y - containerOffset.y) / sceneHeight) * 2 + 1;
+    checkMouseWorldPos : function(x, y, object) {
+		const mX = ((x - containerOffset.x) / sceneWidth) * 2 - 1;
+		const mY = -((y - containerOffset.y) / sceneHeight) * 2 + 1;
 		raycaster.near = api.camera.near;
 		raycaster.far = api.camera.far;
 		raycaster.setFromCamera(new Vector2(mX, mY), api.camera);
-		const intersects = raycaster.intersectObjects(_object.children);
+		const intersects = raycaster.intersectObjects(object.children);
 		let coord = undefined;
 		intersects.forEach(i => coord = i.point);
 		return coord;

@@ -183,34 +183,34 @@ function setModelsToGeometries() {
 
 function createInstanceGeometryTree(lod) {
     const geometry = NET_MODELS.get('tree-forest-lod' + lod).clone();
-    const scale = 0.05;
+    const scale = 2;
     geometry.scale(scale, scale, scale);
-    geometry.rotateX(Math.PI);
-    geometry.translate(0, -0.2, 0);
+    // geometry.rotateX(Math.PI);
+    geometry.translate(0, 6, 0);
     return geometry;
 }
 
 function createInstanceGeometryForestSapin(lod) {
     const geometry = NET_MODELS.get('tree-sapin-lod' + lod).clone();
-    const scale = 0.05;
+    const scale = 2;
     geometry.scale(scale, scale, scale);
-    geometry.rotateX(Math.PI);
-    geometry.translate(0, -0.2, 0);
+    // geometry.rotateX(Math.PI);
+    geometry.translate(0, 5, 0);
     return geometry;
 }
 
 function createInstanceGeometryScrub(lod) {
     const geometry = NET_MODELS.get('scrub-lod' + lod).clone();
-    const scale = 0.08;
+    const scale = 2;
     geometry.scale(scale, scale, scale);
-    geometry.rotateX(Math.PI);
-    geometry.translate(0, -0.2, 0);
+    // geometry.rotateX(Math.PI);
+    geometry.translate(0, 5, 0);
     return geometry;
 }
 
 function createInstanceGeometryVineyard(lod) {
     const geometry = NET_MODELS.get('vigne-lod' + lod).clone();
-    const scale = -0.02;
+    const scale = 2;
     geometry.scale(scale, scale, scale)
     return geometry;
 }

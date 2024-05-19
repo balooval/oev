@@ -1,16 +1,19 @@
 import Earcut from '../../vendor/Earcut.module.js';
 
-onmessage = function(_msg) {
-	let buildings = _msg.data.buildingsDatas;
-	if (_msg.data.bbox) {
-		buildings = buildings.filter(b => bboxContainCoord(_msg.data.bbox, b.centroid));
+onmessage = function(message) {
+	let buildings = message.data.buildingsDatas;
+
+	if (message.data.bbox) {
+		buildings = buildings.filter(b => bboxContainCoord(message.data.bbox, b.centroid));
 	}
+
 	buildings = buildings.filter(b => b.coords.length > 2);
 	const wallsDatas = prepareWallsGeometry(buildings);
 	const roofsDatas = prepareRoofsGeometry(buildings);
 	const entrancesDatas = prepareEntrancesGeometry(buildings);
+
 	postMessage({
-		tileKey : _msg.data.tileKey, 
+		tileKey : message.data.tileKey, 
 		result : {
 			wallsBuffers : wallsDatas, 
 			roofsBuffers : roofsDatas, 
@@ -171,6 +174,23 @@ function prepareRoofFlat(_building) {
 	};
 }
 
+function prepareRoofSkeleton(building) {
+	const minAlt = building.props.minAlt;
+	const floorsNb = building.props.floorsNb;
+	const floorHeight = building.props.floorHeight;
+	const roofAlt = minAlt + (floorsNb * floorHeight)
+	const border = building.coords; 
+	border.push(building.coords[0]);
+
+	return {
+		skeleton: true,
+		color: building.props.roofColor,
+		border : border, 
+		roofAlt : roofAlt, 
+		roofHeight: building.props.roofHeight ?? 2,
+	};
+}
+
 function prepareRoofsGeometry(_buildings) {
 	if (_buildings.length == 0) {
 		return null;
@@ -183,10 +203,15 @@ function prepareRoofsGeometry(_buildings) {
 		const curBuilding = _buildings[b];
 		centroids[b] = curBuilding.centroid;
 		let roofBuffers;
+
+		// console.log('curBuilding.props.roofShape', curBuilding.props.roofShape);
+
 		if (curBuilding.props.roofShape == 'pyramidal') {
 			roofBuffers = prepareRoofPyramidal(curBuilding);
 		} else if (curBuilding.props.roofShape == 'dome') {
 			roofBuffers = prepareRoofDome(curBuilding);
+		// } else if (roofShapeToSkeleton.includes(curBuilding.props.roofShape) === true) {
+		// 	roofBuffers = prepareRoofSkeleton(curBuilding);
 		} else {
 			roofBuffers = prepareRoofFlat(curBuilding);
 		}
@@ -213,15 +238,20 @@ function prepareEntrancesGeometry(_buildings) {
 function prepareWallsGeometry(_buildings) {
 	if (_buildings.length == 0) return null;
 	const walls = [];
+
 	for (let i = 0; i < _buildings.length; i ++) {
 		const building = _buildings[i];
-		if (building.props.wall && building.props.wall == 'no') continue;
+		if (building.props.wall && building.props.wall == 'no') {
+			continue;
+		}
 		walls.push(building);
 	}
+
 	let nbVertWall = 0;
 	let nbFaces = 0;
 	const centers = new Array(walls.length);
 	const verticesNbs = new Array(walls.length);
+
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
 		centers[i] = building.centroid;
@@ -231,19 +261,26 @@ function prepareWallsGeometry(_buildings) {
 		nbVertWall += buildingNbVert;
 		nbFaces += (buildingCoordNb * 2) * building.props.floorsNb;
 	}
+
 	const bufferCoord = new Float32Array(nbVertWall * 3);
 	const bufferFaces = new Uint32Array(nbFaces * 3);
 	let bufferVertIndex = 0;
 	let bufferFaceIndex = 0;
 	let pastFaceNb = 0;
 	const colorVertices = [];
+
 	for (let i = 0; i < walls.length; i ++) {
 		const building = walls[i];
 		let buildingCoordNb = building.coords.length;
 		fixDirection(building.coords, building.id);
 		let fondationsEle = 0;
-		if (building.props.minAlt == 0) fondationsEle = -10;
+		
+		if (building.props.minAlt == 0) {
+			fondationsEle = -10;
+		}
+
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
+			
 			for (let c = 0; c < buildingCoordNb; c ++) {
 				colorVertices.push(...building.props.wallColor);
 				if (floor > 0) {
@@ -273,6 +310,7 @@ function prepareWallsGeometry(_buildings) {
 		}
 		pastFaceNb += buildingCoordNb * (building.props.floorsNb + 1);
 	}
+
 	return {
 		buildingNb : walls.length, 
 		centroids : centers, 
@@ -303,3 +341,13 @@ function fixDirection(_way) {
 	curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
 	if (curve > 0) _way.reverse();
 }
+
+const roofShapeToSkeleton = [
+	'gabled',
+	'hipped',
+	'saltbox',
+	'gambrel',
+	'mansard',
+	'skillion',
+	'half-hipped',
+];

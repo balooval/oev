@@ -1,4 +1,7 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+    BufferAttribute,
+    BufferGeometry,
+} from '../../vendor/three.module.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _tile) {
@@ -7,7 +10,7 @@ export function buildGeometry(_line, _tile) {
 
     const fullCoords = GeoBuilder.packCoordsWithElevation(_line.border, elevationsDatas);
     const verticesNb = fullCoords.length * 2;
-    const bufferGeometry = new THREE.BufferGeometry();
+    const bufferGeometry = new BufferGeometry();
     const bufferVertices = new Float32Array(verticesNb * 3);
     let verticeId = 0;
     verticeId = GeoBuilder.addVerticesToBuffer(verticeId, bufferVertices, fullCoords, -1);
@@ -27,9 +30,9 @@ export function buildGeometry(_line, _tile) {
         facesIndex.push(layerOffset + i);
     }
     const bufferFaces = Uint32Array.from(facesIndex);
-    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-    bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
-    bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+    bufferGeometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+    bufferGeometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+    bufferGeometry.setIndex(new BufferAttribute(bufferFaces, 1));
     bufferGeometry.computeVertexNormals();
     return bufferGeometry;
 }

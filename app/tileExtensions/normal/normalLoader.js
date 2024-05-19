@@ -1,10 +1,11 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+	TextureLoader,
+} from '../../vendor/three.module.js';
 import * as DataLoader from '../dataLoader.js';
-import GLOBE from '../../core/globe.js';
 
 const PARAMS = {
-	nbLoaders : 1, 
-	useCache : false, 
+	nbLoaders : 2,
+	useCache : false,
 };
 
 let API_URL = '';
@@ -18,7 +19,7 @@ class LoaderNormal {
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
-		this.textureLoader = new THREE.TextureLoader();
+		this.textureLoader = new TextureLoader();
 	}
 
 	load(_params) {

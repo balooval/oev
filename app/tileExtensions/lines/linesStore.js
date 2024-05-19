@@ -1,10 +1,12 @@
-import * as THREE from '../../vendor/three.module.js';
+import {
+    BufferGeometry,
+    Mesh,
+} from '../../vendor/three.module.js';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
 import GEO from '../../core/geo.js';
 import GLOBE from '../../core/globe.js';
 import * as OsmReader from '../../utils/osmReader.js';
-// import NavigationGraph from '../../utils/navigationGraph.js';
 import LinesMaterial from './linesMaterial.js';
 import * as GEO_BUILDER from './linesGeometryBuilder.js';
 
@@ -20,17 +22,13 @@ const api = {
         const nodesList = OsmReader.extractNodes(parsedJson);
         tileToLines.set(_tile.key, []);
         const extractedWays = extractElements(parsedJson, _tile.zoom);
-        // NavigationGraph.build(extractedWays, nodesList);
         registerDatas(_tile, extractedWays);
         let lineAdded = buildLine(_tile, extractedWays, nodesList);
         if (lineAdded > 0) scheduleDraw();
     }, 
 
     tileRemoved : function(_tile) {
-        // console.log('A tileRemoved');
         if (!tileToLines.get(_tile.key)) return false;
-        // console.log('B tileRemoved');
-        // NavigationGraph.cleanTile(_tile);
         tileToLines.get(_tile.key)
         .forEach(lineId => {
             if (!storedLines.get('LINE_' + lineId)) return false;
@@ -42,7 +40,6 @@ const api = {
             storedLines.delete('LINE_' + lineId);
 
             const zoom = 13;
-            // console.log('stored.buildDatas.border', stored.buildDatas.border);
             const bbox = calcBbox(stored.buildDatas.border);
             const tileA = GEO.coordsToTile(bbox.minLon, bbox.minLat, zoom);
             const tileB = GEO.coordsToTile(bbox.maxLon, bbox.maxLat, zoom);
@@ -72,13 +69,13 @@ function registerDatas(_tile, _extractedDatas) {
     tileToLines.get(_tile.key).push(..._extractedDatas.map(line => line.id));
 }
 
-function buildLine(_tile, _extractedDatas, _nodesList) {
+function buildLine(tile, extractedDatas, nodesList) {
     let lineAdded = 0;
-    for (let i = 0; i < _extractedDatas.length; i ++) {
-        const way = _extractedDatas[i];
+    for (let i = 0; i < extractedDatas.length; i ++) {
+        const way = extractedDatas[i];
         if (isLineKnowed(way.id)) continue;
         knowIds.push(way.id);
-        const lineBuilded = buildWay(way, _nodesList);
+        const lineBuilded = buildWay(way, nodesList);
         if (lineBuilded.border.length < 2) return;
         storedLines.set('LINE_' + lineBuilded.id, {
             id : lineBuilded.id, 
@@ -89,7 +86,7 @@ function buildLine(_tile, _extractedDatas, _nodesList) {
         if (lineBuilded.type == 'highway') {
             searchTilesUnderWay(lineBuilded);
         }
-        drawLine(lineBuilded, _tile);
+        drawLine(lineBuilded, tile);
         lineAdded ++;
     }
     return lineAdded;
@@ -152,7 +149,7 @@ function redrawMeshes() {
 function saveLineGeometries(_id, _geometry, _type) {
     if (!typedGeometries.get(_type)) {
         const meshes = [];
-        const mesh = new THREE.Mesh(new THREE.BufferGeometry(), LinesMaterial.material(_type));
+        const mesh = new Mesh(new BufferGeometry(), LinesMaterial.material(_type));
         mesh.receiveShadow = true;
         mesh.castShadow = true;
         meshes.push(mesh);
@@ -255,15 +252,15 @@ function extractTags(_tags, _type) {
         res.width = 1;
         res.height = 2;
     }
-    if (_type == 'highway') {
-        res.highway = _tags.highway;
-        res.width = 4;
-        res.height = 0.5;
-        const highwayProps = getHighwayTags(_tags.highway);
-        highwayProps.forEach((value, prop) => {
-            res[prop] = value;
-        })
-    }
+    // if (_type == 'highway') {
+    //     res.highway = _tags.highway;
+    //     res.width = 4;
+    //     res.height = 0.5;
+    //     const highwayProps = getHighwayTags(_tags.highway);
+    //     highwayProps.forEach((value, prop) => {
+    //         res[prop] = value;
+    //     })
+    // }
     if (_tags.width) {
         _tags.width = _tags.width.replace('m', '');
         _tags.width = _tags.width.replace(' ', '');
