@@ -92,7 +92,7 @@ function createButton(_parent, _content, _id = '', _classes = []) {
 
 function onCamRotate(_radian) {
 	const degree = 180 * _radian / Math.PI;
-	elmtCamHeading.style.transform = 'rotate(' + (180 + degree) + 'deg)';
+	elmtCamHeading.style.transform = 'rotate(' + (0 - degree) + 'deg)';
 }
 
 function onWaypointsChanged(_waypoints) {

@@ -19,6 +19,7 @@ const glCurLodOrigine = GlMatrix.create(0, 0, 0);
 
 const LOD_PLANET = 0; 
 const LOD_CITY = 10;
+// const LOD_CITY = 16;
 const PROJECTION_PLANE = 'PLANE';
 const PROJECTION_SPHERE = 'SPHERE';
 
@@ -41,7 +42,8 @@ class Globe {
 		this.CUR_ZOOM = 14;
 		this.tilesDetailsMarge = 2;
 		this.coordDetails = new Vector2( 0, 0 );
-		this.radius = 10000;
+		// this.radius = 10000;
+		this.radius = 6371000;
 		this.webglUnitsByMeter = this.radius / 40075017.0;
 		this.globalScale = 1;
 		this.meshe = null;
@@ -51,9 +53,8 @@ class Globe {
 		this.coordToXYZ = this.#coordToXYZPlane;
 
 		this.offset = [0, 0];
-		this.coordOrigin = [0, 0];
 
-		this.ruler = new CheapRuler(this.coordOrigin[1], 'meters');
+		this.ruler = new CheapRuler(0, 'meters');
 	}
 
 	debug() {
@@ -66,7 +67,26 @@ class Globe {
 		this.cameraControler = _controler;
 		this.cameraControler.init(this);
 
+		this.cameraControler.evt.addEventListener('READY', this, this.#onCameraReady);
 		this.cameraControler.evt.addEventListener('CAM_UPDATED', this, this.#onCameraUpdated);
+	}
+	
+	#onCameraReady() {
+		this.cameraControler.evt.removeEventListener('READY', this, this.#onCameraReady);
+
+		this.ruler = new CheapRuler(this.cameraControler.coordLookat.y, 'meters');
+		this.webglUnitsByMeter = 1;
+		this.#setCoordToWebglUnitsOffset(this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y);
+	}
+
+	#setCoordToWebglUnitsOffset(lon, lat) {
+		this.offset[0] = this.ruler.distance([0, 0], [lon, 0]) * this.webglUnitsByMeter;
+		this.offset[1] = this.ruler.distance([0, 0], [0, lat]) * this.webglUnitsByMeter;
+
+		const sensLon = Math.sign(lon);
+		const sensLat = Math.sign(lat);
+		this.offset[0] *= sensLon;
+		this.offset[1] *= sensLat;
 	}
 
 	#onCameraUpdated(cameraDatas) {
@@ -175,13 +195,12 @@ class Globe {
 	}
 
 	#coordToXYZSphere(lon, lat, elevation) {
-		elevation *= this.webglUnitsByMeter;
-		elevation += this.radius;
+		const radius = this.radius + this.#altitudeToWebglUnit(elevation, lat);
 		const radY = MATH.radians((lon - 180) * -1);
 		const radX = MATH.radians(lat * -1);
-		let x = Math.cos(radY) * ((elevation) * Math.cos(radX));
-		let y = Math.sin(radX) * elevation * -1;
-		let z = Math.sin(radY) * (elevation * Math.cos(radX));
+		let x = Math.cos(radY) * ((radius) * Math.cos(radX));
+		let y = Math.sin(radX) * radius * -1;
+		let z = Math.sin(radY) * (radius * Math.cos(radX));
 		if (this.#curLOD == LOD_CITY) {
 			x -= glCurLodOrigine[0];
 			y -= glCurLodOrigine[1];
@@ -241,34 +260,33 @@ class Globe {
 
 		if (targetLod === LOD_CITY) {
 			this.globalScale = 1;
+			this.radius = 6371000;
 			this.#updateUnitsByMeter();
+			
+			this.ruler = new CheapRuler(this.coordDetails.y, 'meters');
+			this.#setCoordToWebglUnitsOffset(this.coordDetails.x, this.coordDetails.y);
+			
 			const origin = this.coordToXYZ(this.coordDetails.x, this.coordDetails.y, 0);
 			GlMatrix.set(glCurLodOrigine, origin[0], origin[1], origin[2]);
-
-			this.ruler = new CheapRuler(this.coordDetails.y, 'meters');
-
-			this.coordOrigin[0] = this.coordDetails.x;
-			this.coordOrigin[1] = this.coordDetails.y;
-			this.offset[0] = GEO.metersBetweenCoords(0, 0, this.coordDetails.x, 0) * this.webglUnitsByMeter;
-			this.offset[1] = GEO.metersBetweenCoords(0, 0, 0, this.coordDetails.y) * this.webglUnitsByMeter;
-
+			
 			this.#curLOD = LOD_CITY;
 			this.#updateLOD();
 			this.#setProjection(PROJECTION_PLANE);
-			// Renderer.camera.far = this.webglUnitsByMeter * 100000;
 			Renderer.camera.far = this.webglUnitsByMeter * 500000;
 			Renderer.camera.near = this.webglUnitsByMeter * 1;
 			Renderer.camera.updateProjectionMatrix();
 
 		} else if (targetLod === LOD_PLANET) {
 			GlMatrix.set(glCurLodOrigine, 0, 0, 0)
-			this.globalScale = 1;
+			this.globalScale = 0.01;
+			this.radius = 63710;
 			this.#updateUnitsByMeter();
+
 			this.#curLOD = LOD_PLANET;
 			this.#setProjection(PROJECTION_SPHERE);
 			this.#updateLOD();
-			Renderer.camera.far = (this.radius * 2 ) * this.globalScale;
-			Renderer.camera.near = (this.radius * this.globalScale) / 1000000;
+			Renderer.camera.near = 1;
+			Renderer.camera.far = this.radius;
 			Renderer.camera.updateProjectionMatrix();
 		}
 

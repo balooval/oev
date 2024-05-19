@@ -11,7 +11,7 @@ import GLOBE from '../core/globe.js';
 import SUN from './sun.js';
 import * as SKY from './sky.js';
 
-let fogActive = true;
+let fogActive = false;
 const posCenter = new Vector3(0, 0, 0);
 
 const api = {
@@ -32,38 +32,35 @@ const api = {
 	},
 
 	addDebugCube() {
-		let size = 50;
+		let size = 1000;
 		let geometry = new BoxGeometry(size, size, size); 
 		let material = new MeshBasicMaterial( {color: 0xffffff} ); 
 		let cube = new Mesh(geometry, material); 
-		Renderer.scene.add(cube);
+		// Renderer.scene.add(cube);
 
-		size = 50;
 		geometry = new BoxGeometry(size, size, size); 
 		material = new MeshBasicMaterial( {color: 0xff0000} ); 
 		cube = new Mesh(geometry, material); 
-		cube.position.x = 100;
+		cube.position.x = size * 2;
 		cube.position.y = 0;
 		cube.position.z = 0;
-		Renderer.scene.add(cube);
+		// Renderer.scene.add(cube);
 
-		size = 50;
 		geometry = new BoxGeometry(size, size, size); 
 		material = new MeshBasicMaterial( {color: 0x00ff00} ); 
 		cube = new Mesh(geometry, material); 
 		cube.position.x = 0;
-		cube.position.y = 100;
+		cube.position.y = size * 2;
 		cube.position.z = 0;
-		Renderer.scene.add(cube);
+		// Renderer.scene.add(cube);
 
-		size = 50;
 		geometry = new BoxGeometry(size, size, size); 
 		material = new MeshBasicMaterial( {color: 0x0000ff} ); 
 		cube = new Mesh(geometry, material); 
 		cube.position.x = 0;
 		cube.position.y = 0;
-		cube.position.z = 100;
-		Renderer.scene.add(cube);
+		cube.position.z = size * 2;
+		// Renderer.scene.add(cube);
 	}, 
 	
 	activate : function(_state) {
