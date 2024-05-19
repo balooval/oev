@@ -1,8 +1,8 @@
 import Renderer from '../../core/renderer.js';
 import * as LanduseDataParser from './landuseDataParser.js';
-// import * as LanduseGeometry from './landuseGeometryMap.js';
+import * as LanduseGeometry from './landuseGeometryMap.js';
 // import * as LanduseGeometry from './landuseGeometryPlane.js';
-import * as LanduseGeometry from './landuseGeometryInstances.js';
+// import * as LanduseGeometry from './landuseGeometryInstances.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
 import GLOBE from '../../core/globe.js';
@@ -74,6 +74,7 @@ class LanduseExtension {
     }
     
     #onCameraUpdated(cameraDatas) {
+        return;
         const currentLod = this.lod;
         let nextLod = this.#getLod(cameraDatas);
 

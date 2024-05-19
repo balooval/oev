@@ -5,6 +5,7 @@ import {
     Raycaster,
     Scene,
     Vector2,
+    Vector3,
     VSMShadowMap,
     WebGLRenderer,
 } from '../vendor/three.module.js';
@@ -32,6 +33,7 @@ let raycaster;
 let controls;
 let orbitCamera;
 let helper;
+let cameraToUse;
 
 const api = {
     scene : undefined, 
@@ -70,14 +72,21 @@ const api = {
         raycaster = new Raycaster();
         
 
-        // helper = new CameraHelper(api.camera);
-        // api.scene.add(helper);
-        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
-        // orbitCamera.position.x = 0;
-        // orbitCamera.position.y = 0;
-        // orbitCamera.position.z = 500;	
+        helper = new CameraHelper(api.camera);
+        orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
+        orbitCamera.position.x = 0;
+        orbitCamera.position.y = 8000;
+        orbitCamera.position.z = 8000;	
+        orbitCamera.lookAt(new Vector3(0, 0, 0));
+        
         // controls = new OrbitControls(orbitCamera, webGlRenderer.domElement);
         // controls.update();
+
+
+        // api.scene.add(helper);
+        // cameraToUse = orbitCamera;
+        cameraToUse = api.camera;
+
     },  
 
     domContainer : function() {
@@ -95,8 +104,10 @@ const api = {
 
         if (!api.MUST_RENDER) return;
         // rS( 'frame' ).start();
+
         // webGlRenderer.render(api.scene, orbitCamera);
-        webGlRenderer.render(api.scene, api.camera);
+        webGlRenderer.render(api.scene, cameraToUse);
+
         api.MUST_RENDER = false;
         // rS( 'frame' ).end();
         // rS().update();

@@ -12,6 +12,7 @@ import Evt from '../core/event.js';
 import {Mouse} from '../input/input.js';
 import GEO from '../core/geo.js';
 import MATH from '../core/math.js';
+import * as GlMatrix from "../vendor/gl-matrix/vec3.js";
 
 export class CameraGod {
 	constructor(_camera, _startPosition = null) {
@@ -21,6 +22,7 @@ export class CameraGod {
 		this.pointer = undefined;
 		this.mouseLastPos = [0, 0];
 		this.zoomCur = 14;
+		this.viewDirection = new Vector2(0, -1);
 		this.coordLookat = new Vector3(4.1862, 43.7682, 0);
 		this.lookAtVector = new Vector3(0, 0, 0);
 		this.zoomDest = this.zoomCur;
@@ -51,6 +53,7 @@ export class CameraGod {
 	start() {
 		this.camera.up.set(0, -1, 0);
 		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x808080}));
+		this.pointer.visible = false;
 		Renderer.scene.add(this.pointer);
 		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
 		// Renderer.scene.add(this.clicPointer);
@@ -192,7 +195,6 @@ export class CameraGod {
 		this.lookAtVector.y = posLookat[1];
 		this.lookAtVector.z = posLookat[2];
 		this.camera.lookAt(this.lookAtVector);
-		this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
 		
 		const pointerScale = this.coordCam.z / 10;
@@ -206,12 +208,22 @@ export class CameraGod {
 		this.clicPointer.scale.y = pointerScale;
 		this.clicPointer.scale.z = pointerScale;
 		
+		this.viewDirection.subVectors(
+			new Vector2(this.coordLookat.x, this.coordLookat.y),
+			new Vector2(this.coordCam.x, this.coordCam.y)
+		).normalize();
+		
 		this.#updateFogScale();
 
 		Renderer.MUST_RENDER = true;
 
 		const evtDatas = {
-			posLookat : posLookat, 
+			zoom: this.zoomCur,
+			posCamera : posCam,
+			posLookat : posLookat,
+			viewDirection: this.viewDirection,
+			coordLookat: this.coordLookat,
+			coordCam: this.coordCam,
 			coord : {
 				lon : Math.round(this.coordLookat.x * 10000) / 10000, 
 				lat : Math.round(this.coordLookat.y * 10000) / 10000, 

@@ -1,66 +1,91 @@
 import {
     CanvasTexture,
+    DataTexture,
     DoubleSide,
     MeshPhysicalMaterial,
     Mesh,
+    UVMapping,
+    RepeatWrapping,
+    LinearFilter,
+    RGBAFormat,
+    UnsignedByteType,
 } from '../../vendor/three.module.js';
 import GEO from '../../core/geo.js';
-import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
 import GLOBE from '../../core/globe.js';
 import * as TILE from '../../core/tile.js';
-import * as Poly2Tri from '../../vendor/poly2tri.module.js';
-import ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
-import MATH from '../../core/math.js';
 import * as NET_TEXTURES from '../../net/textures.js';
 
 const rejectedIds = [];
-
 const meshesByTiles = new Map();
-const canvasByTiles = new Map();
-
-const material = new MeshPhysicalMaterial({
-    color: 0xff0000,
-    side: DoubleSide,
-    vertexColors: false,
-});
+const textureSize = TILE.mapSize * 2;
+const canvas = createCanvas(textureSize);
+const context = canvas.getContext('2d', {willReadFrequently: true});
 
 export function setDatas(landusesDatas, tile) {
-    const keysFilter = [
-        // '4189_2985_13', // Sommieres
-        // '4190_2985_13', // Nages
-        // '4191_2985_13', // Nages
-        // '4192_2985_13', // Nages
-        '4192_2986_13', // Nages
-    ];
-
-    if (keysFilter.includes(tile.key) === false) {
-        // return;
-    }
-    
     meshesByTiles.set(tile, []);
     
-    const canvas = createCanvas(TILE.mapSize);
-    const canvasTexture = new CanvasTexture(canvas);
     const material = new MeshPhysicalMaterial({
         color: 0xffffff,
-        map: canvasTexture,
+        roughness: 0.7,
         transparent: true,
     });
 
     const geometry = tile.meshe.geometry.clone();
-    geometry.translate(0, -1, 0);
+    geometry.translate(0, 5, 0);
     const mesh = new Mesh(geometry, material);
     mesh.receiveShadow = true;
     GLOBE.addMeshe(mesh);
     meshesByTiles.get(tile).push(mesh);
 
-    for (let i = 0; i < landusesDatas.length; i ++) {
-        buildLanduse(landusesDatas[i], tile, material, canvas);
+    const textureMaps = [
+        'map',
+        'normalMap',
+        'roughnessMap',
+    ];
+
+    
+    for (const mapType of textureMaps) {
+        fillWithEmptyTexture(mapType, context);
+        for (let i = 0; i < landusesDatas.length; i ++) {
+            const textureImage = NET_TEXTURES.texture(`landuse_${mapType}_${landusesDatas[i].type}`).image;
+            // console.log(landusesDatas[i].type);
+            buildLanduse(landusesDatas[i], tile, material, context, textureImage);
+        }
+        material[mapType] = createRawTexture(context);
     }
+    material.needsUpdate = true;
     
     Renderer.MUST_RENDER = true;
+}
+
+function fillWithEmptyTexture(mapType, context) {
+    const map = NET_TEXTURES.texture(`landuse_${mapType}_empty`).image;
+    const pattern = context.createPattern(map, 'repeat');
+    context.fillStyle = pattern;
+    context.beginPath();
+    context.fillRect(0, 0, textureSize, textureSize);
+    context.closePath();
+}
+
+function createRawTexture(context) {
+    const imageData = context.getImageData(0, 0, textureSize, textureSize);
+    context.clearRect(0, 0, textureSize, textureSize);
+    const dataTexture = new DataTexture(
+        imageData.data,
+        textureSize,
+        textureSize,
+        RGBAFormat,
+        UnsignedByteType,
+        UVMapping,
+        RepeatWrapping,
+        RepeatWrapping,
+        LinearFilter,
+        LinearFilter,
+    );
+    dataTexture.needsUpdate = true;
+    return dataTexture;
 }
 
 export function tileRemoved(_tileKey, tile) {
@@ -69,6 +94,11 @@ export function tileRemoved(_tileKey, tile) {
         for (const [key, mesh] of instancedTile.entries()) {
             GLOBE.removeMeshe(mesh);
             mesh.geometry.dispose();
+            if (mesh.material.map) {
+                mesh.material.map.dispose();
+                mesh.material.normalMap.dispose();
+                mesh.material.roughnessMap.dispose();
+            }
             mesh.material.dispose();
             meshesByTiles.delete(tile);
         }
@@ -79,16 +109,11 @@ export function setLod(tile, lod) {
     
 }
 
-function buildLanduse(landuse, tile, material, canvas) {
+function buildLanduse(landuse, tile, material, context, map) {
     if (rejectedIds.includes(landuse.id)) {
         return false;
     }
     
-    if (landuse.id !== 11770235) {
-        // return;
-    }
-    // console.log('OK', landuse.type);
-
     const tilePolygon = [
         [tile.startCoord.x, tile.endCoord.y], 
         [tile.endCoord.x, tile.endCoord.y], 
@@ -107,8 +132,6 @@ function buildLanduse(landuse, tile, material, canvas) {
         return false;
     }
 
-    const context = canvas.getContext('2d');
-
     for (let i = 0; i < multipolygons.length; i ++) {
         const polygon = multipolygons[i];
         
@@ -118,16 +141,23 @@ function buildLanduse(landuse, tile, material, canvas) {
         const canvasBorderPositions = convertCoordToCanvasPositions([border], tile.bbox);
         const canvasHolesPositions = convertCoordToCanvasPositions(holes, tile.bbox);
 
-        drawCanvasShape(canvasBorderPositions[0], canvasHolesPositions, context);
-        material.needsUpdate = true;
+        drawCanvasShape(
+            canvasBorderPositions[0],
+            canvasHolesPositions,
+            context,
+            map,
+        );
     }
+    
+    material.needsUpdate = true;
 
     return true;
 }
 
-function drawCanvasShape(coords, holesCoords, context) {
+function drawCanvasShape(coords, holesCoords, context, map) {
     // context.fillStyle = 'rgba(255, 0, 0, 0.5)';
-    const pattern = context.createPattern(NET_TEXTURES.texture('forest-top').image, 'repeat');
+    // const pattern = context.createPattern(NET_TEXTURES.texture('forest-top').image, 'repeat');
+    const pattern = context.createPattern(map, 'repeat');
     context.fillStyle = pattern;
     context.beginPath();
     
@@ -153,7 +183,7 @@ function convertCoordToCanvasPositions(coords, tileBox) {
     const res = [];
 
     for (let i = 0; i < coords.length; i ++) {
-        const positions = GEO.coordToCanvas(tileBox, TILE.mapSize, coords[i]);
+        const positions = GEO.coordToCanvas(tileBox, textureSize, coords[i]);
         res.push(positions);
     }
 
@@ -165,8 +195,8 @@ function createCanvas(size) {
     canvas.width = size;
     canvas.height = size;
 
-    const context = canvas.getContext('2d');
-    context.fillStyle = 'rgba(255, 255, 255, 0)';
-    context.fillRect(0, 0, size, size);
+    // const context = canvas.getContext('2d');
+    // context.fillStyle = 'rgba(255, 255, 255, 0)';
+    // context.fillRect(0, 0, size, size);
     return canvas;
 }

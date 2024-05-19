@@ -90,7 +90,16 @@ class Globe {
 	}
 
 	#onCameraUpdated(cameraDatas) {
-		this.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
+		this.coordDetails.x = cameraDatas.coordLookat;
+		this.coordDetails.y = cameraDatas.coordLookat;
+		
+		const newTile = GEO.coordsToTile(this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM);
+		this.#currentTile = newTile;
+		
+		for (let i = 0; i < this.#rootTiles.length; i ++) {
+				this.#rootTiles[i].onCameraUpdated(cameraDatas);
+		}
+		// this.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
 	}
 	
 	start() {
@@ -324,30 +333,11 @@ class Globe {
 			return t.getCurTile(this.coordDetails)
 		}).filter(res => res).pop();
 	}
-	
-	#onCurTileChange(newTile){
-		this.#currentTile = newTile;
-
-		const date = new Date();
-		const now = date.getTime();
-		
-		for (let i = 0; i < this.#rootTiles.length; i ++) {
-			this.#rootTiles[i].updateDetails(this.coordDetails);
-		}
-		
-		const toto = new Date();
-		const after = toto.getTime();
-		const elapsedTime = after - now;
-		console.log('elapsedTime', elapsedTime);
-	}
 
 	updateCurrentTile(coordX, coordY) {
 		this.coordDetails.x = coordX;
 		this.coordDetails.y = coordY;
 		const newTile = GEO.coordsToTile(this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM);
-		if (newTile.x != this.#currentTile.x || newTile.y != this.#currentTile.y || newTile.z != this.#currentTile.z) {
-			this.#onCurTileChange(newTile);
-		}
 		this.#currentTile = newTile;
 	}
 
