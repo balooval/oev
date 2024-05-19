@@ -29,8 +29,9 @@ let raycaster;
 //     ]
 // } );
 
-// let controls;
-// let orbitCamera;
+let controls;
+let orbitCamera;
+let helper;
 
 const api = {
     scene : undefined, 
@@ -48,7 +49,6 @@ const api = {
         sceneHeight = Math.min(intElemClientHeight, 10000);
         api.scene = new Scene();
         api.camera = new PerspectiveCamera(75, sceneWidth / sceneHeight, 0.1, 20000);
-        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 200000);
         var canvas = document.createElement( 'canvas' );
         var context = canvas.getContext('webgl2');
         webGlRenderer = new WebGLRenderer({
@@ -68,11 +68,11 @@ const api = {
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
         // webGlRenderer.shadowMap.type = VSMShadowMap;
         raycaster = new Raycaster();
-
-        // const helper = new CameraHelper(api.camera);
-        // api.scene.add(helper);
-
         
+
+        // helper = new CameraHelper(api.camera);
+        // api.scene.add(helper);
+        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
         // orbitCamera.position.x = 0;
         // orbitCamera.position.y = 0;
         // orbitCamera.position.z = 500;	
@@ -91,6 +91,7 @@ const api = {
     render : function() {
         // controls.update();
         // api.MUST_RENDER = true;
+        // helper.update();
 
         if (!api.MUST_RENDER) return;
         // rS( 'frame' ).start();

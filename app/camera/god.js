@@ -53,7 +53,7 @@ export class CameraGod {
 		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x808080}));
 		Renderer.scene.add(this.pointer);
 		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
-		Renderer.scene.add(this.clicPointer);
+		// Renderer.scene.add(this.clicPointer);
 		
 		if (this.startPosition) {
 			this.zoomCur = this.startPosition.z;
@@ -176,7 +176,6 @@ export class CameraGod {
 		this.coordLookat.z = this.globe.getElevationMetersAtCoords(this.coordLookat.x, this.coordLookat.y);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
 		this.coordCam.z = this.globe.getElevationUnitsForZoom(this.zoomCur);
-		// this.coordCam.z = 50000;
 		let posCam;
 		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();
@@ -249,18 +248,20 @@ export class CameraGod {
 		matZ.makeRotationZ(radLat);
 		matGlob.multiplyMatrices(matY, matZ);
 		matGlob.multiply(matX);
-		const tmpG = new Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
+		// const tmpG = new Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
+		const tmpG = new Vector3(this.globe.radius, 0, 0);
 		tmpG.applyMatrix4(matGlob);
 		// rotation locale
 		const matLocX = new Matrix4();
 		const matLocY = new Matrix4();
 		const matLocZ = new Matrix4();
-		matLocX.makeRotationX(this.camRotation[0] * -1);
+		matLocX.makeRotationX(this.camRotation[0] * 1);
 		matLocY.makeRotationY(0);
-		matLocZ.makeRotationZ(this.camRotation[1] * 1);
+		matLocZ.makeRotationZ(this.camRotation[1] * -1);
 		matGlob.multiply(matLocX);
 		matGlob.multiply(matLocZ);
-		const tmpL = new Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
+		// const tmpL = new Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
+		const tmpL = new Vector3(this.coordCam.z, 0, 0);
 		tmpL.applyMatrix4(matGlob);
 		tmpG.x += tmpL.x;
 		tmpG.y += tmpL.y;
