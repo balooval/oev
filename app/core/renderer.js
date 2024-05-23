@@ -75,8 +75,8 @@ const api = {
         helper = new CameraHelper(api.camera);
         orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
         orbitCamera.position.x = 0;
-        orbitCamera.position.y = 8000;
-        orbitCamera.position.z = 8000;	
+        orbitCamera.position.y = 6000;
+        orbitCamera.position.z = 6000;	
         orbitCamera.lookAt(new Vector3(0, 0, 0));
         
         // controls = new OrbitControls(orbitCamera, webGlRenderer.domElement);

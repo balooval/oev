@@ -60,6 +60,13 @@ export class TileBasic {
 			this.endCoord.y, // min Y
 			this.startCoord.y, // max Y
 		];
+		this.corners = [
+			[this.startCoord.x, this.startCoord.y],
+			[this.startCoord.x, this.endCoord.y],
+			[this.endCoord.x, this.startCoord.y],
+			[this.endCoord.x, this.endCoord.y],
+			[this.middleCoord.x, this.middleCoord.y],
+		];
 
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
         
@@ -475,8 +482,8 @@ export class TileBasic {
 			return;
 		}
 		
-		if (this.#cameraIsOver(cameraDatas.coordCam, GLOBE.tilesDetailsMarge * 2)) {
-		// if (this.#cameraIsOver(cameraDatas.coordCam, 1)) {
+		// if (this.#cameraIsOver(cameraDatas.coordCam, GLOBE.tilesDetailsMarge * 2)) {
+		if (this.#cameraIsOver(cameraDatas.coordCam, cameraDatas.detailMargin)) {
 			addTileToSplit(this, cameraDatas);
 			return;
 		}
@@ -500,17 +507,9 @@ export class TileBasic {
 			return true;
 		}
 
-		const corners = [
-			[this.startCoord.x, this.startCoord.y],
-			[this.startCoord.x, this.endCoord.y],
-			[this.endCoord.x, this.startCoord.y],
-			[this.endCoord.x, this.endCoord.y],
-			[this.middleCoord.x, this.middleCoord.y],
-		];
-
-		for (let i = 0; i < corners.length; i ++) {
+		for (let i = 0; i < this.corners.length; i ++) {
 			this.directionToCamera.subVectors(
-				new Vector2(corners[i][0], corners[i][1]) ,
+				new Vector2(this.corners[i][0], this.corners[i][1]) ,
 				new Vector2(cameraDatas.coordCam.x, cameraDatas.coordCam.y),
 			).normalize();
 

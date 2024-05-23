@@ -12,7 +12,7 @@ import Evt from '../core/event.js';
 import {Mouse} from '../input/input.js';
 import GEO from '../core/geo.js';
 import MATH from '../core/math.js';
-import * as GlMatrix from "../vendor/gl-matrix/vec3.js";
+import {evt as DataLoaderEvent} from '../tileExtensions/dataLoader.js';
 
 export class CameraGod {
 	constructor(_camera, _startPosition = null) {
@@ -43,7 +43,12 @@ export class CameraGod {
 		Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
 		Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 		Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
+		DataLoaderEvent.addEventListener('ALL_LOADER_IDLE', this, this.onAllRessourcesLoaded);
 		this.MUST_UPDATE = false;
+
+		this.updateData = {};
+		this.detailMarginTimeoutId = undefined;
+		this.maxDetailMargin = 4;
 	}
 
 	init(globe) {
@@ -217,7 +222,10 @@ export class CameraGod {
 
 		Renderer.MUST_RENDER = true;
 
-		const evtDatas = {
+		// clearTimeout(this.detailMarginTimeoutId);
+
+		this.updateData = {
+			detailMargin: 2,
 			zoom: this.zoomCur,
 			posCamera : posCam,
 			posLookat : posLookat,
@@ -236,7 +244,24 @@ export class CameraGod {
 			}
 		};
 
-		this.evt.fireEvent('CAM_UPDATED', evtDatas);
+		this.evt.fireEvent('CAM_UPDATED', this.updateData);
+
+		// this.detailMarginTimeoutId = setTimeout(() => this.#onAddDetailMargin(), 2000);
+	}
+
+	onAllRessourcesLoaded() {
+		clearTimeout(this.detailMarginTimeoutId);
+		this.detailMarginTimeoutId = setTimeout(() => this.#onAddDetailMargin(), 1000);
+	}
+
+	#onAddDetailMargin() {
+		if (this.updateData.detailMargin >= this.maxDetailMargin) {
+			return;
+		}
+
+		this.updateData.detailMargin = Math.min(this.maxDetailMargin, this.updateData.detailMargin + 1);
+		console.log('detailMargin', this.updateData.detailMargin);
+		this.evt.fireEvent('CAM_UPDATED', this.updateData);
 	}
 
 	#updateFogScale() {

@@ -9,7 +9,6 @@ import * as Shader from './net/shader.js';
 import * as NET_TEXTURES from './net/textures.js';
 import * as BuildingExtension from './tileExtensions/building/buildingExtension.js';
 import * as CoastExtension from './tileExtensions/coast/coastExtension.js';
-import * as DataLoader from './tileExtensions/dataLoader.js';
 import * as ElevationExtension from './tileExtensions/elevation/elevationExtension.js';
 import * as LanduseExtension from './tileExtensions/landuse/landuseExtension.js';
 import * as LinesExtension from './tileExtensions/lines/linesExtension.js';
@@ -74,7 +73,6 @@ const OEV = {
 		Renderer.init(_htmlContainer);
 		NET_TEXTURES.init('assets/textures');
 		NET_MODELS.init();
-		DataLoader.init();
 		INPUT.init();
 		Navigation.init();
 		MapExtension.setApiUrl(OEV.params.EXTENSIONS.map.url);
