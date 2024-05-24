@@ -104,6 +104,7 @@ export class TileBasic {
 		// }
 
 		this.viewByCamera = false;
+		this.detailMargin = 1;
     }
     
     redrawDiffuse() {
@@ -471,10 +472,13 @@ export class TileBasic {
 		this.viewByCamera = this.#isViewByCamera(cameraDatas);
 
 		if (this.viewByCamera === false) {
+			this.detailMargin = 1;
 			this.#clearChildrens();
 			this.show();
 			return;
 		}
+
+		this.detailMargin = Math.max(cameraDatas.detailMargin, this.detailMargin);
 		
 		if (this.zoom === Math.floor(cameraDatas.zoom)) {
 			this.#clearChildrens();
@@ -483,7 +487,7 @@ export class TileBasic {
 		}
 		
 		// if (this.#cameraIsOver(cameraDatas.coordCam, GLOBE.tilesDetailsMarge * 2)) {
-		if (this.#cameraIsOver(cameraDatas.coordCam, cameraDatas.detailMargin)) {
+		if (this.#cameraIsOver(cameraDatas.coordCam, this.detailMargin)) {
 			addTileToSplit(this, cameraDatas);
 			return;
 		}

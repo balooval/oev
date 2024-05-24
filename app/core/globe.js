@@ -31,12 +31,6 @@ class Globe {
 
 	#rootTiles = [];
 
-	#currentTile = {
-		x: 0,
-		y: 0,
-		z: 0,
-	};
-
 	constructor() {
 		this.evt = new Evt();
 		this.cameraControler = null;
@@ -92,9 +86,6 @@ class Globe {
 	#onCameraUpdated(cameraDatas) {
 		this.coordDetails.x = cameraDatas.coordLookat;
 		this.coordDetails.y = cameraDatas.coordLookat;
-		
-		const newTile = GEO.coordsToTile(this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM);
-		this.#currentTile = newTile;
 		
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
 				this.#rootTiles[i].onCameraUpdated(cameraDatas);
@@ -327,18 +318,10 @@ class Globe {
 	getCoordsDistanceToCamera(lon, lat) {
 		return this.ruler.distance([lon, lat], [this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y]);
 	}
-	
-	#getCurTile() {
-		return this.#rootTiles.map(t => {
-			return t.getCurTile(this.coordDetails)
-		}).filter(res => res).pop();
-	}
 
 	updateCurrentTile(coordX, coordY) {
 		this.coordDetails.x = coordX;
 		this.coordDetails.y = coordY;
-		const newTile = GEO.coordsToTile(this.coordDetails.x, this.coordDetails.y, this.CUR_ZOOM);
-		this.#currentTile = newTile;
 	}
 
 	getElevationUnitsForZoom(zoomlevel) { // return altitude in opengl unit

@@ -257,7 +257,7 @@ const OEV = {
 	}, 
 
 	onCameraUpdate : function(evtDatas) {
-		OEV.evt.fireEvent('CAMERA_UPDATED', evtDatas);
+		OEV.evt.fireEvent('APP_CAMERA_UPDATED', evtDatas);
 	}
 
 };

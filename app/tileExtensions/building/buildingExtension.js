@@ -19,8 +19,8 @@ export function extensionClass() {
 	return BuildingExtension;
 }
 
-const materialWalls = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true, side: DoubleSide});
-const materialRoof = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
+const materialWalls = new MeshPhysicalMaterial({roughness:0.7, metalness:0,color:0xffffff,vertexColors:true, side: DoubleSide});
+const materialRoof = new MeshPhysicalMaterial({roughness:0.7, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
 
 const workerEvent = new Evt();
 const workerBuildingMaker = new Worker('/app/tileExtensions/building/workerBuildingMaker.js', {type:'module'});

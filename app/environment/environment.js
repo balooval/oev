@@ -11,7 +11,7 @@ import GLOBE from '../core/globe.js';
 import SUN from './sun.js';
 import * as SKY from './sky.js';
 
-let fogActive = true;
+let fogActive = false;
 const posCenter = new Vector3(0, 0, 0);
 
 const api = {
