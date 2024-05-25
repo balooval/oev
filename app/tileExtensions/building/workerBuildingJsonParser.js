@@ -48,6 +48,10 @@ function readJson(_datas) {
 		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
 		for (let j = 0; j < holes.length; j ++) {
 			const holeWay = waysList.get('WAY_' + holes[j].ref);
+			if (!holeWay) {
+				console.warn('Building hole not found');
+				continue;
+			}
 			let curHoleNodes = getWayNodes(holeWay.nodes, nodesList);
 			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
 			for (let j = 0; j < curHoleNodes.length; j ++) {
@@ -176,10 +180,15 @@ function getWayNodes(_nodesIds, _nodesList) {
 }
 
 function mergeContinuousWays(_outers, _waysList, _nodesList) {
+	const res = [];
 	const outersLimits = new Array(_outers.length);
 	let outerNodes = null;
 	for (let i = 0; i < _outers.length; i ++) {
 		const outerWay = _waysList.get('WAY_' + _outers[i].ref);
+		if (!outerWay) {
+			console.warn('Pas trouvé de outerWay');
+			return res;
+		}
 		outerNodes = getWayNodes(outerWay.nodes, _nodesList);
 		outersLimits[i] = [
 			outerNodes.shift(), 
@@ -216,7 +225,7 @@ function mergeContinuousWays(_outers, _waysList, _nodesList) {
 		curBorderPart = [];
 	}
 	differentsBorders.push(curBorderPart);
-	const res = [];
+	
 	let contiguousWays = null;
 	let contiguousNodes = null;
 	let curOuter = null;

@@ -108,6 +108,35 @@ function loadTextures() {
             id: 'forest-top',
             url: 'forest-top.png',
         },
+
+        {id: 'landuse_map_empty', url: '/landuse/worn_rock_natural_01_diff_4k.png'},
+        {id: 'landuse_normalMap_empty', url: '/landuse/worn_rock_natural_01_nor_gl_4k.png'},
+        {id: 'landuse_roughnessMap_empty', url: '/landuse/worn_rock_natural_01_rough_4k.png'},
+
+        // {id: 'landuse_map_forest', url: '/landuse/Hedge_001_BaseColor.jpg'},
+        // {id: 'landuse_normalMap_forest', url: '/landuse/Hedge_001_Normal.jpg'},
+        // {id: 'landuse_roughnessMap_forest', url: '/landuse/Hedge_001_Roughness.jpg'},
+        {id: 'landuse_map_forest', url: '/landuse/aerial_grass_rock_diff_4k.png'},
+        {id: 'landuse_normalMap_forest', url: '/landuse/aerial_grass_rock_nor_gl_4k.png'},
+        {id: 'landuse_roughnessMap_forest', url: '/landuse/aerial_grass_rock_rough_4k.png'},
+        
+        {id: 'landuse_map_scrub', url: '/landuse/coast_sand_rocks_02_diff_4k.png'},
+        {id: 'landuse_normalMap_scrub', url: '/landuse/coast_sand_rocks_02_nor_gl_4k.png'},
+        {id: 'landuse_roughnessMap_scrub', url: '/landuse/coast_sand_rocks_02_rough_4k.png'},
+        // {id: 'landuse_map_scrub', url: '/landuse/Pebbles_007_COLOR.jpg'},
+        // {id: 'landuse_normalMap_scrub', url: '/landuse/Pebbles_007_NORM.jpg'},
+        // {id: 'landuse_roughnessMap_scrub', url: '/landuse/Pebbles_007_ROUGH.jpg'},
+
+        // {id: 'landuse_map_rock', url: '/landuse/Ground_Dirt_009_baseColor.jpg'},
+        // {id: 'landuse_normalMap_rock', url: '/landuse/Ground_Dirt_009_normal.jpg'},
+        // {id: 'landuse_roughnessMap_rock', url: '/landuse/Ground_Dirt_009_roughness.jpg'},
+        {id: 'landuse_map_rock', url: '/landuse/aerial_rocks_04_diff_4k.png'},
+        {id: 'landuse_normalMap_rock', url: '/landuse/aerial_rocks_04_nor_gl_4k.png'},
+        {id: 'landuse_roughnessMap_rock', url: '/landuse/aerial_rocks_04_rough_4k.png'},
+
+        {id: 'landuse_map_residential', url: '/landuse/ground_grey_diff_4k.png'},
+        {id: 'landuse_normalMap_residential', url: '/landuse/ground_grey_nor_gl_4k.png'},
+        {id: 'landuse_roughnessMap_residential', url: '/landuse/ground_grey_rough_4k.png'},
     ];
     
     return new Promise((resolve) => {

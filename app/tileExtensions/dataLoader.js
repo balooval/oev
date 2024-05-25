@@ -2,21 +2,33 @@ import Evt from '../core/event.js';
 import {evt as TileExtensionEvt} from './tileExtension.js';
 
 const USE_CACHE = false;
-const registeredLoaders = {};
-const loadersParams = {};
-export let evt;
+const registeredLoaders = new Map();
+const loadersParams = new Map();
+const instanciedLoaders = [];
 
-export function init() {
-	evt = new Evt();
+export const evt = new Evt();
+
+export function registerLoader(type, className, params) {
+	registeredLoaders.set(type, className);
+	loadersParams.set(type, params);
 }
 
 function onRessourceLoaded(_type, _nb) {
 	evt.fireEvent('DATA_LOADED', {type:_type, nb:_nb});
 }
 
-export function registerLoader(_type, _class, _params) {
-	registeredLoaders[_type] = _class;
-	loadersParams[_type] = _params;
+function registerLoaderInstance(loader) {
+	instanciedLoaders.push(loader);
+}
+
+function onloaderIdle() {
+	for (const loader of instanciedLoaders) {
+		if (loader.isIdle() === false) {
+			return;
+		}
+	}
+	
+	evt.fireEvent('ALL_LOADER_IDLE');
 }
 
 export class Loader {
@@ -26,15 +38,18 @@ export class Loader {
 		this._datasWaiting = [];
 		this._datasLoading = [];
 		this.clientsWaiting = [];
-		this.loaderParams = loadersParams[_type];
+		this.loaderParams = loadersParams.get(_type);
 		this._loaders = this.#initLoaders(this.loaderParams.nbLoaders);
 		TileExtensionEvt.addEventListener('TILE_EXTENSION_DESACTIVATE_' + this._type, this, this.clear);
+
+		registerLoaderInstance(this);
 	}
 
 	#initLoaders(_nb) {
 		const loaders = [];
 		for (let i = 0; i < _nb; i ++) {
-			const loader = new registeredLoaders[this._type]((_datas, _params) => this.onDataLoaded(_datas, _params));
+			const className = registeredLoaders.get(this._type);
+			const loader = new className((_datas, _params) => this.onDataLoaded(_datas, _params));
 			loaders.push(loader);
 		}
 		return loaders;
@@ -116,17 +131,28 @@ export class Loader {
 		this._datasLoading = [];
 		this.clientsWaiting = [];
 	}
+
+	isIdle() {
+		return this._datasWaiting.length === 0;
+	}
 	
 	#checkForNextLoad() {
-		if (this._datasLoading.length >= this.loaderParams.nbLoaders) return false;
+		if (this._datasLoading.length >= this.loaderParams.nbLoaders) {
+			return false;
+		}
 		this.#loadNext();
 		return true;
 	}
 	
 	#loadNext() {
-		if (this._datasWaiting.length == 0) return false;
+		if (this._datasWaiting.length == 0) {
+			onloaderIdle(this._type);
+			return false;
+		}
 		var freeLoader = this.#getAvailableLoader();
-		if (!freeLoader) return false;
+		if (!freeLoader) {
+			return false;
+		}
 		const currentLoadingParams = this._datasWaiting.shift();
 		this._datasLoading.push(currentLoadingParams);
 		freeLoader.load(currentLoadingParams);

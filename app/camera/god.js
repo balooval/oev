@@ -1,7 +1,10 @@
 import {
+	CircleGeometry,
 	Matrix4,
 	Mesh,
 	MeshBasicMaterial,
+	Object3D,
+	Quaternion,
 	SphereGeometry,
 	Vector2,
 	Vector3,
@@ -12,6 +15,9 @@ import Evt from '../core/event.js';
 import {Mouse} from '../input/input.js';
 import GEO from '../core/geo.js';
 import MATH from '../core/math.js';
+import {evt as DataLoaderEvent} from '../tileExtensions/dataLoader.js';
+import * as GlMatrix from "../vendor/gl-matrix/vec3.js";
+
 
 export class CameraGod {
 	constructor(_camera, _startPosition = null) {
@@ -20,11 +26,12 @@ export class CameraGod {
 		this.globe = undefined;
 		this.pointer = undefined;
 		this.mouseLastPos = [0, 0];
-		this.zoomCur = 14;
-		this.coordLookat = new Vector3(4.1862, 43.7682, 0);
+		this.zoomCur = _startPosition.z;
+		this.viewDirection = new Vector2(0, -1);
+		this.coordLookat = new Vector3(_startPosition.x, _startPosition.y, 0);
 		this.lookAtVector = new Vector3(0, 0, 0);
 		this.zoomDest = this.zoomCur;
-		this.coordCam = new Vector3(this.coordLookat.x, this.coordLookat.y, 0);
+		this.cameraCoord = new Vector3(this.coordLookat.x, this.coordLookat.y, 0);
 		this.camRotation = [0, 0.2];
 		this.dragging = false;
 		this.rotating = false;
@@ -41,7 +48,31 @@ export class CameraGod {
 		Mouse.evt.addEventListener('MOUSE_RIGHT_DOWN', this, this.onMouseDownRight);
 		Mouse.evt.addEventListener('MOUSE_LEFT_UP', this, this.onMouseUpLeft);
 		Mouse.evt.addEventListener('MOUSE_RIGHT_UP', this, this.onMouseUpRight);
+		DataLoaderEvent.addEventListener('ALL_LOADER_IDLE', this, this.onAllRessourcesLoaded);
 		this.MUST_UPDATE = false;
+
+		this.updateData = {};
+		this.detailMarginTimeoutId = undefined;
+		this.maxDetailMargin = 4;
+
+		this.containerRotationLon = new Object3D();
+		this.containerRotationLat = new Object3D();
+		this.containerRotationLon.add(this.containerRotationLat);
+		Renderer.scene.add(this.containerRotationLon);
+		Renderer.scene.add(this.camera);
+		
+		this.containerLocalRotationY = new Object3D();
+		this.containerLocalRotationX = new Object3D();
+		this.containerLocalRotationY.add(this.containerLocalRotationX);
+		this.containerRotationLat.add(this.containerLocalRotationY);
+
+		this.finalCameraPositionObject = new Object3D();
+		this.containerLocalRotationX.add(this.finalCameraPositionObject);
+
+		this.localRotationAxisY = new Vector3(0, 0, 1);
+		this.localRotationAxisX = new Vector3(1, 0, 0);
+		this.globalRotationAxisLon = new Vector3(0, 1, 0);
+		this.globalRotationAxisLat = new Vector3(-1, 0, 0);
 	}
 
 	init(globe) {
@@ -49,14 +80,15 @@ export class CameraGod {
 	}
 
 	start() {
+
 		this.camera.up.set(0, -1, 0);
 		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x808080}));
+		this.pointer.visible = false;
 		Renderer.scene.add(this.pointer);
 		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
 		// Renderer.scene.add(this.clicPointer);
 		
 		if (this.startPosition) {
-			this.zoomCur = this.startPosition.z;
 			this.zoomDest = this.zoomCur;
 			this.tweens.zoom.value = this.zoomCur;
 			this.setLookAt(this.startPosition.x, this.startPosition.y);
@@ -145,9 +177,9 @@ export class CameraGod {
 		this.setLookAt(finalLon, finalLat);
 	}
 
-	setLookAt(_lon, _lat) {
-		this.coordLookat.x = _lon;
-		this.coordLookat.y = _lat;
+	setLookAt(lon, lat) {
+		this.coordLookat.x = lon;
+		this.coordLookat.y = lat;
 		if (this.coordLookat.x > 180 ){
 			this.coordLookat.x = this.coordLookat.x - 360;
 		} else if (this.coordLookat.x < -180) {
@@ -175,7 +207,7 @@ export class CameraGod {
 	updateCamera() {
 		this.coordLookat.z = this.globe.getElevationMetersAtCoords(this.coordLookat.x, this.coordLookat.y);
 		const posLookat = this.globe.coordToXYZ(this.coordLookat.x, this.coordLookat.y, this.coordLookat.z);
-		this.coordCam.z = this.globe.getElevationUnitsForZoom(this.zoomCur);
+		this.cameraCoord.z = this.globe.getElevationUnitsForZoom(this.zoomCur);
 		let posCam;
 		if (this.globe.projection == "SPHERE") {
 			posCam = this.updateOnSphere();
@@ -185,17 +217,16 @@ export class CameraGod {
 		this.camera.position.x = posCam[0];
 		this.camera.position.y = posCam[1];
 		this.camera.position.z = posCam[2];
-		const tmpCoords = this.globe.webglUnitsToCoord(posCam[0], posCam[2]);
-		this.coordCam.x = tmpCoords[0];
-		this.coordCam.y = tmpCoords[1];
+		const tmpCoords = this.globe.webglUnitsToCoord(posCam[0], posCam[1], posCam[2]);
+		this.cameraCoord.x = tmpCoords[0];
+		this.cameraCoord.y = tmpCoords[1];
 		this.lookAtVector.x = posLookat[0];
 		this.lookAtVector.y = posLookat[1];
 		this.lookAtVector.z = posLookat[2];
 		this.camera.lookAt(this.lookAtVector);
-		this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
 		this.globe.zoomDetails = this.zoomCur;
 		
-		const pointerScale = this.coordCam.z / 10;
+		const pointerScale = this.cameraCoord.z / 10;
 		this.pointer.scale.x = pointerScale;
 		this.pointer.scale.y = pointerScale;
 		this.pointer.scale.z = pointerScale;
@@ -206,25 +237,51 @@ export class CameraGod {
 		this.clicPointer.scale.y = pointerScale;
 		this.clicPointer.scale.z = pointerScale;
 		
+		this.viewDirection.subVectors(
+			new Vector2(this.coordLookat.x, this.coordLookat.y),
+			new Vector2(this.cameraCoord.x, this.cameraCoord.y)
+		).normalize();
+		
 		this.#updateFogScale();
 
 		Renderer.MUST_RENDER = true;
 
-		const evtDatas = {
-			posLookat : posLookat, 
+		this.updateData = {
+			detailMargin: 2,
+			zoom: this.zoomCur,
+			posCamera : posCam,
+			posLookat : posLookat,
+			viewDirection: this.viewDirection,
+			coordLookat: this.coordLookat,
+			coordCam: this.cameraCoord,
 			coord : {
 				lon : Math.round(this.coordLookat.x * 10000) / 10000, 
 				lat : Math.round(this.coordLookat.y * 10000) / 10000, 
 				zoom : Math.round(this.zoomDest * 10000) / 10000,
 			},
 			position: {
-				lon : Math.round(this.coordCam.x * 10000) / 10000, 
-				lat : Math.round(this.coordCam.y * 10000) / 10000, 
+				lon : Math.round(this.cameraCoord.x * 10000) / 10000, 
+				lat : Math.round(this.cameraCoord.y * 10000) / 10000, 
 				zoom : Math.round(this.zoomDest * 10000) / 10000,
 			}
 		};
 
-		this.evt.fireEvent('CAM_UPDATED', evtDatas);
+		this.evt.fireEvent('CAM_UPDATED', this.updateData);
+	}
+
+	onAllRessourcesLoaded() {
+		clearTimeout(this.detailMarginTimeoutId);
+		this.detailMarginTimeoutId = setTimeout(() => this.#onAddDetailMargin(), 1000);
+	}
+
+	#onAddDetailMargin() {
+		if (this.updateData.detailMargin >= this.maxDetailMargin) {
+			return;
+		}
+
+		this.updateData.detailMargin = Math.min(this.maxDetailMargin, this.updateData.detailMargin + 1);
+		console.log('detailMargin', this.updateData.detailMargin);
+		this.evt.fireEvent('CAM_UPDATED', this.updateData);
 	}
 
 	#updateFogScale() {
@@ -239,51 +296,53 @@ export class CameraGod {
 	updateOnSphere() {
 		const radLon = MATH.radians(this.coordLookat.x);
 		const radLat = MATH.radians(this.coordLookat.y);
-		const matGlob = new Matrix4();
-		const matZ = new Matrix4();
-		const matY = new Matrix4();
-		const matX = new Matrix4();
-		matX.makeRotationX(0);
-		matY.makeRotationY(radLon);
-		matZ.makeRotationZ(radLat);
-		matGlob.multiplyMatrices(matY, matZ);
-		matGlob.multiply(matX);
-		// const tmpG = new Vector3(this.globe.radius / this.globe.globalScale, 0, 0);
-		const tmpG = new Vector3(this.globe.radius, 0, 0);
-		tmpG.applyMatrix4(matGlob);
-		// rotation locale
-		const matLocX = new Matrix4();
-		const matLocY = new Matrix4();
-		const matLocZ = new Matrix4();
-		matLocX.makeRotationX(this.camRotation[0] * 1);
-		matLocY.makeRotationY(0);
-		matLocZ.makeRotationZ(this.camRotation[1] * -1);
-		matGlob.multiply(matLocX);
-		matGlob.multiply(matLocZ);
-		// const tmpL = new Vector3(this.coordCam.z / this.globe.globalScale, 0, 0);
-		const tmpL = new Vector3(this.coordCam.z, 0, 0);
-		tmpL.applyMatrix4(matGlob);
-		tmpG.x += tmpL.x;
-		tmpG.y += tmpL.y;
-		tmpG.z += tmpL.z;
-		const posCamX = -tmpG.x;
-		const posCamY = tmpG.y;
-		const posCamZ = -tmpG.z;
-		this.camera.up.set(-Math.cos(radLat * -1) * Math.cos(radLon), -Math.sin(radLat * -1), Math.cos(radLat * -1) * Math.sin(radLon));
+
+		this.containerLocalRotationY.setRotationFromAxisAngle(
+			this.localRotationAxisY,
+			this.camRotation[0],
+		);
+
+		this.containerLocalRotationX.setRotationFromAxisAngle(
+			this.localRotationAxisX,
+			this.camRotation[1],
+		);
+		
+		this.containerRotationLon.setRotationFromAxisAngle(
+			this.globalRotationAxisLon,
+			radLon,
+		);
+
+		this.containerRotationLat.setRotationFromAxisAngle(
+			this.globalRotationAxisLat,
+			radLat,
+		);
+
+		this.containerLocalRotationY.position.z = this.globe.radius;
+		this.finalCameraPositionObject.position.z = this.cameraCoord.z;
+
+		const cameraWebglPosition = new Vector3();
+		this.finalCameraPositionObject.getWorldPosition(cameraWebglPosition);
+
+		this.camera.up.set(
+			Math.sin(radLon) * Math.cos(radLat),
+			Math.sin(radLat),
+			Math.cos(radLon) * Math.cos(radLat),
+		);
+
 		return [
-			posCamX,
-			posCamY,
-			posCamZ,
+			cameraWebglPosition.x,
+			cameraWebglPosition.y,
+			cameraWebglPosition.z,
 		];
 	}
 
 	updateOnPlane(_posLookat) {
 		this.camera.up.set(0, 1, 0);
-		this.coordCam.z *= this.globe.globalScale;
-		const orbitRadius = Math.sin(this.camRotation[1]) * this.coordCam.z;
+		this.cameraCoord.z *= this.globe.globalScale;
+		const orbitRadius = Math.sin(this.camRotation[1]) * this.cameraCoord.z;
 		return [
 			_posLookat[0] + Math.sin(this.camRotation[0]) * orbitRadius, 
-			_posLookat[1] + Math.cos(this.camRotation[1]) * (this.coordCam.z), 
+			_posLookat[1] + Math.cos(this.camRotation[1]) * (this.cameraCoord.z), 
 			_posLookat[2] + Math.cos(this.camRotation[0]) * orbitRadius, 
 		];
 	}

@@ -12,7 +12,7 @@ const api = {
         parseHash(location.hash);
         _app.evt.addEventListener('TILE_EXTENSION_ACTIVATE', null, onExtensionActivate);
         _app.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', null, onExtensionDesctivate);
-        _app.evt.addEventListener('CAMERA_UPDATED', null, onCameraUpdate);
+        _app.evt.addEventListener('APP_CAMERA_UPDATED', null, onCameraUpdate);
     }, 
 
     cameraLocation : function() {

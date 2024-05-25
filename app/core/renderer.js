@@ -1,10 +1,15 @@
 import {
     CameraHelper,
+    Mesh,
+    MeshBasicMaterial,
+    Object3D,
     PCFSoftShadowMap,
     PerspectiveCamera,
     Raycaster,
     Scene,
+    SphereGeometry,
     Vector2,
+    Vector3,
     VSMShadowMap,
     WebGLRenderer,
 } from '../vendor/three.module.js';
@@ -32,6 +37,15 @@ let raycaster;
 let controls;
 let orbitCamera;
 let helper;
+let cameraToUse;
+
+let containerA;
+let containerB;
+let debugA;
+let debugB;
+
+let time = 0;
+
 
 const api = {
     scene : undefined, 
@@ -70,14 +84,33 @@ const api = {
         raycaster = new Raycaster();
         
 
-        // helper = new CameraHelper(api.camera);
-        // api.scene.add(helper);
-        // orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
-        // orbitCamera.position.x = 0;
-        // orbitCamera.position.y = 0;
-        // orbitCamera.position.z = 500;	
+        helper = new CameraHelper(api.camera);
+        orbitCamera = new PerspectiveCamera(90, sceneWidth / sceneHeight, 0.1, 2000000);
+        orbitCamera.position.x = 0;
+        orbitCamera.position.y = 20000;
+        orbitCamera.position.z = 80000;	
+        orbitCamera.lookAt(new Vector3(0, 0, 0));
+        
         // controls = new OrbitControls(orbitCamera, webGlRenderer.domElement);
         // controls.update();
+
+
+        // api.scene.add(helper);
+        // cameraToUse = orbitCamera;
+        cameraToUse = api.camera;
+
+        /*
+        containerA = new Object3D();
+        debugA = new Mesh(new SphereGeometry(500, 16, 7), new MeshBasicMaterial({color: 0xff0000}));
+        containerB = new Object3D();
+        debugB = new Mesh(new SphereGeometry(500, 16, 7), new MeshBasicMaterial({color: 0x00ff00}));
+        debugB.position.z = 5000;
+
+        containerB.add(debugB);
+        containerA.add(debugA);
+        containerA.add(containerB);
+        api.scene.add(containerA);
+        */
     },  
 
     domContainer : function() {
@@ -89,14 +122,32 @@ const api = {
     }, 
 
     render : function() {
+        // time ++;
+
+        // containerA.setRotationFromAxisAngle(
+		// 	new Vector3(0, 1, 0),
+		// 	time * 0.01,
+		// );
+
+        // containerB.setRotationFromAxisAngle(
+		// 	new Vector3(1, 0, 0),
+		// 	Math.sin(time * 0.02),
+		// );
+
+        // containerA.rotateY(0.01)
+        // containerB.rotateX(0.5)
+
+
         // controls.update();
         // api.MUST_RENDER = true;
         // helper.update();
 
         if (!api.MUST_RENDER) return;
         // rS( 'frame' ).start();
+
         // webGlRenderer.render(api.scene, orbitCamera);
-        webGlRenderer.render(api.scene, api.camera);
+        webGlRenderer.render(api.scene, cameraToUse);
+
         api.MUST_RENDER = false;
         // rS( 'frame' ).end();
         // rS().update();

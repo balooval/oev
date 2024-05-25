@@ -4,6 +4,8 @@ import * as TileExtension from '../tileExtensions/tileExtension.js';
 import {
 	BufferAttribute,
 	BufferGeometry,
+	Color,
+	DataTexture,
 	DoubleSide,
 	Mesh,
 	Texture,
@@ -11,11 +13,13 @@ import {
 	MeshStandardMaterial,
 	MeshBasicMaterial,
 	Vector2,
+	Vector3,
 } from '../vendor/three.module.js';
 import Evt from './event.js';
 import GEO from './geo.js';
 import GLOBE from './globe.js';
 import Renderer from './renderer.js';
+import * as NET_TEXTURES from '../net/textures.js';
 
 export const mapSize = 256;
 
@@ -56,6 +60,13 @@ export class TileBasic {
 			this.endCoord.y, // min Y
 			this.startCoord.y, // max Y
 		];
+		this.corners = [
+			[this.startCoord.x, this.startCoord.y],
+			[this.startCoord.x, this.endCoord.y],
+			[this.endCoord.x, this.startCoord.y],
+			[this.endCoord.x, this.endCoord.y],
+			[this.middleCoord.x, this.middleCoord.y],
+		];
 
 		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
         
@@ -66,11 +77,16 @@ export class TileBasic {
 		this.diffuseTexture.needsUpdate = true;
 		this.diffuseMap = null;
 
+
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
-			roughness:1,
-			metalness:0,
+			roughness: 0.7,
+			metalness: 0,
 			map: this.diffuseTexture,
+			// map: dataTexture,
+			// map: NET_TEXTURES.texture('landuse_color'),
+			// roughnessMap: NET_TEXTURES.texture('landuse_roughness'),
+			// normalMap: NET_TEXTURES.texture('landuse_normal'),
 			// side: DoubleSide,
 		});
 
@@ -78,6 +94,17 @@ export class TileBasic {
 		TileExtension.listActives().forEach(p => this.addExtension(p));
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.#onExtensionActivation);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.#onExtensionDisabled);
+
+		// Coupé car ça bug : certaines tuiles parent sont encore affichées en même temps que leurs enfants, voir l'inverse aussi
+		// this.isFacingCamera = true;
+		this.directionToCamera = new Vector2();
+		// this.tileUnitsPosition = GLOBE.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
+		// if (this.zoom === 14) {
+			// GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
+		// }
+
+		this.viewByCamera = false;
+		this.detailMargin = 1;
     }
     
     redrawDiffuse() {
@@ -90,6 +117,8 @@ export class TileBasic {
         this.extensionsMaps.forEach(map => {
             this.composeContext.drawImage(map, 0, 0);
         });
+
+		// this.#debugDot(this.zoom);
 		
         this.diffuseTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
@@ -286,7 +315,6 @@ export class TileBasic {
 		geoBuffer.setAttribute('position', new BufferAttribute(bufferVertices, 3));
 		geoBuffer.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
 		geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
-		// geoBuffer.computeFaceNormals();
 		geoBuffer.computeVertexNormals();
 
 		if (this.meshe !== undefined) {
@@ -363,34 +391,17 @@ export class TileBasic {
 	}
 
 	debug() {
-		if (this.zoom < 7) {
-			for (let i = 0; i < this.childTiles.length; i ++) {
-				this.childTiles[i].debug();
-			}
-		}
-
-		if (this.onStage === true) {
-			console.log('this.tileX', this.tileX);
-			// if (this.tileX === 67) {
-			// 	console.log('debug', this.zoom, this.tileX, this.tileY);
-				this.hide();
-			// }
-		}
+		
 	}
 
 	show() {
-		if (this.onStage) return false;
+		if (this.onStage) {
+			return false;
+		}
+
 		this.onStage = true;
 		GLOBE.addMeshe(this.meshe);
-
-		let test = '7/65/46';
-		// test = '10/523/373';
-		if (this.zoom + '/' + this.tileX + '/' + this.tileY === test) {
-			this.meshe.material.visible = true;
-		}
 		this.meshe.material.visible = true;
-
-
 		this.evt.fireEvent('SHOW');
 	}
 	
@@ -401,12 +412,6 @@ export class TileBasic {
 
 		this.onStage = false;
 		GLOBE.removeMeshe(this.meshe);
-
-		let test = '7/65/46';
-		// test = '10/523/373';
-		if (this.zoom + '/' + this.tileX + '/' + this.tileY === test) {
-			this.meshe.material.visible = false;
-		}
 		this.meshe.material.visible = false;
 
 		if (!this.textureLoaded) {
@@ -463,37 +468,63 @@ export class TileBasic {
 		this.childTiles = [];
 	}
 
-	updateDetails(coords) {
-		if (this.#cameraIsOver(coords, GLOBE.tilesDetailsMarge * 2)) {
+	onCameraUpdated(cameraDatas) {
+		this.viewByCamera = this.#isViewByCamera(cameraDatas);
 
-			if (this.zoom < Math.floor(GLOBE.CUR_ZOOM)) {
-				addTileToSplit(this, coords);
-				return;
-			}
-			
+		if (this.viewByCamera === false) {
+			this.detailMargin = 1;
+			this.#clearChildrens();
+			this.show();
+			return;
+		}
+
+		this.detailMargin = Math.max(cameraDatas.detailMargin, this.detailMargin);
+		
+		if (this.zoom === Math.floor(cameraDatas.zoom)) {
 			this.#clearChildrens();
 			this.show();
 			return;
 		}
 		
-		this.#clearChildrens();
-
-		if (this.zoom + 5 < Math.min(GLOBE.CUR_ZOOM, 16)) {
-			this.hide();
+		// if (this.#cameraIsOver(cameraDatas.coordCam, GLOBE.tilesDetailsMarge * 2)) {
+		if (this.#cameraIsOver(cameraDatas.coordCam, this.detailMargin)) {
+			addTileToSplit(this, cameraDatas);
 			return;
 		}
 		
+		this.#clearChildrens();
 		this.show();
-	}
+    }
 
-	split(coords) {
+	split(cameraDatas) {
 		this.#createChilds();
+		this.hide();
 
 		for (let c = 0; c < this.childTiles.length; c ++) {
-			this.childTiles[c].updateDetails(coords);
+			this.childTiles[c].onCameraUpdated(cameraDatas);
+		}
+	}
+	
+	#isViewByCamera(cameraDatas) {
+		const cameraTargetCoord = new Vector2(cameraDatas.coordCam.x, cameraDatas.coordCam.y);
+		if (this.#cameraIsOver(cameraTargetCoord, 1) === true) {
+			return true;
 		}
 
-		this.hide();
+		for (let i = 0; i < this.corners.length; i ++) {
+			this.directionToCamera.subVectors(
+				new Vector2(this.corners[i][0], this.corners[i][1]) ,
+				new Vector2(cameraDatas.coordCam.x, cameraDatas.coordCam.y),
+			).normalize();
+
+			const dot = this.directionToCamera.dot(cameraDatas.viewDirection);
+			
+			if (dot > 0.4) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 	
 	getCurTile(coords) {
@@ -542,7 +573,17 @@ export class TileBasic {
 		this.material.map = TextureLoader('checker');
 	}
 
+	#debugDot(dotValue) {
+		this.composeContext.fillStyle = "#ffffff";
+		this.composeContext.fillRect(100, 100, 100, 100);
+		this.composeContext.fillStyle = "#000000";
+		this.composeContext.font = "40px serif";
+		this.composeContext.fillText(' ' + dotValue, 120, 130);
+        this.diffuseTexture.needsUpdate = true
+	}
+
 	dispose() {
+		// GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.#onExtensionActivation);
 		this.#clearChildrens();
 		this.hide();
@@ -567,10 +608,10 @@ export class TileBasic {
 const tilesToSplit = new Map();
 let splitTimeoutId = null;
 
-function addTileToSplit(tile, coords) {
-	tile.distToCam = Math.abs(GLOBE.coordDetails.x - tile.middleCoord.x) + Math.abs(GLOBE.coordDetails.y - tile.middleCoord.y);
+function addTileToSplit(tile, cameraData) {
+	tile.distToCam = Math.abs(cameraData.coordLookat.x - tile.middleCoord.x) + Math.abs(cameraData.coordLookat.y - tile.middleCoord.y);
 
-	tilesToSplit.set(tile, coords);
+	tilesToSplit.set(tile, cameraData);
 	tilesToSplit.delete(tile.parentTile);
 	if (splitTimeoutId === null) {
 		splitNextTile();
@@ -580,12 +621,12 @@ function addTileToSplit(tile, coords) {
 function splitNextTile() {
 	if (tilesToSplit.size === 0) {
 		splitTimeoutId = null;
-		console.log('END');
+		// console.log('END');
 		return;
 	}
 
-	const nextTile = getNextTileToSplit();
-	nextTile.tile.split(nextTile.coords);
+	const nextTileData = getNextTileToSplit();
+	nextTileData.tile.split(nextTileData.cameraData);
 	splitTimeoutId = setTimeout(splitNextTile, 1);
 }
 
@@ -594,6 +635,7 @@ function getNextTileToSplit() {
 		distance: 99999999,
 		tile: null,
 	};
+
 	for (const tile of tilesToSplit.keys()) {
 		const modulatedDistance = tile.distToCam / tile.zoom;
 		if (modulatedDistance < nearest.distance) {
@@ -601,7 +643,9 @@ function getNextTileToSplit() {
 			nearest.tile = tile;
 		}
 	}
-	const coords = tilesToSplit.get(nearest.tile);
+
+	const cameraData = tilesToSplit.get(nearest.tile);
 	tilesToSplit.delete(nearest.tile);
-	return {tile: nearest.tile, coords};
+
+	return {tile: nearest.tile, cameraData: cameraData};
 }

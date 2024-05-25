@@ -9,7 +9,6 @@ import * as Shader from './net/shader.js';
 import * as NET_TEXTURES from './net/textures.js';
 import * as BuildingExtension from './tileExtensions/building/buildingExtension.js';
 import * as CoastExtension from './tileExtensions/coast/coastExtension.js';
-import * as DataLoader from './tileExtensions/dataLoader.js';
 import * as ElevationExtension from './tileExtensions/elevation/elevationExtension.js';
 import * as LanduseExtension from './tileExtensions/landuse/landuseExtension.js';
 import * as LinesExtension from './tileExtensions/lines/linesExtension.js';
@@ -36,7 +35,7 @@ const OEV = {
 		_params.CAMERA = _choose(_params.CAMERA, {});
 		_params.CAMERA.x = _choose(_params.CAMERA.x, 2.3831);
 		_params.CAMERA.y = _choose(_params.CAMERA.y, 48.8809);
-		_params.CAMERA.z = _choose(_params.CAMERA.z, 13);
+		_params.CAMERA.z = _choose(_params.CAMERA.z, 11);
 		_params.UI = _choose(_params.UI, {});
 		_params.UI.extensions = _choose(_params.UI.extensions, false);
 		_params.UI.waypoints = _choose(_params.UI.waypoints, false);
@@ -74,7 +73,6 @@ const OEV = {
 		Renderer.init(_htmlContainer);
 		NET_TEXTURES.init('assets/textures');
 		NET_MODELS.init();
-		DataLoader.init();
 		INPUT.init();
 		Navigation.init();
 		MapExtension.setApiUrl(OEV.params.EXTENSIONS.map.url);
@@ -164,11 +162,22 @@ const OEV = {
 		const textList = [];
 		const toLoad = [
 			['checker', 'loading.png'], 
-			// ['tree-forest', 'tree-forest-flip.png'], 
-			// ['tree-forest-sapin', 'tree-forest-sapin.png'], 
-			// ['vigne', 'vigne.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
 			['waypoint', 'waypoint.png'], 
+			// ['landuse_normal', '/landuse/Pebbles_026_normal.jpg'], 
+			// ['landuse_normal', '/landuse/Dried_Soil_001_NRM.jpg'], 
+			// ['landuse_color', '/landuse/Pebbles_007_COLOR.jpg'], 
+			// ['landuse_normal', '/landuse/Pebbles_007_NORM.jpg'], 
+			// ['landuse_roughness', '/landuse/Pebbles_007_ROUGH.jpg'], 
+			// ['landuse_normal', '/landuse/Hedge_001_Normal.jpg'], 
+			// ['landuse_color', '/landuse/Hedge_001_BaseColor.jpg'], 
+			// ['landuse_roughness', '/landuse/Hedge_001_Roughness.jpg'], 
+			// ['landuse_normal', '/landuse/Ground_Dirt_008_normal.jpg'], 
+			// ['landuse_color', '/landuse/Ground_Dirt_008_baseColor.jpg'], 
+			// ['landuse_roughness', '/landuse/Ground_Dirt_008_roughness.jpg'], 
+			// ['landuse_color', '/landuse/Ground_Dirt_009_baseColor.jpg'],
+			// ['landuse_normal', '/landuse/Ground_Dirt_009_normal.jpg'],
+			// ['landuse_roughness', '/landuse/Ground_Dirt_009_roughness.jpg'],
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		return new Promise((resolve) => {
@@ -248,7 +257,7 @@ const OEV = {
 	}, 
 
 	onCameraUpdate : function(evtDatas) {
-		OEV.evt.fireEvent('CAMERA_UPDATED', evtDatas);
+		OEV.evt.fireEvent('APP_CAMERA_UPDATED', evtDatas);
 	}
 
 };

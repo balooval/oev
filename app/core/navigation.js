@@ -89,7 +89,7 @@ class WayPoint {
 		this.sprite.position.x = position[0];
 		this.sprite.position.y = position[1];
 		this.sprite.position.z = position[2];
-		let wpScale = (GLOBE.cameraControler.coordCam.z / GLOBE.radius) * 1000;
+		let wpScale = (GLOBE.cameraControler.cameraCoord.z / GLOBE.radius) * 1000;
 		wpScale = Math.max(wpScale, 1);
 		this.sprite.scale.x = wpScale;
 		this.sprite.scale.y = wpScale;

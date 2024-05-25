@@ -183,13 +183,14 @@ const equalsTags = {
 };
 
 const tagsZoom = {
+    residential : 13, 
     forest : 13, 
     scrub : 13, 
-    vineyard : 16, 
-    grass : 17, 
     rock : 13, 
     water : 15, 
     wetland : 15, 
+    vineyard : 16, 
+    grass : 17, 
 };
 
 const supportedTags = [
@@ -200,6 +201,7 @@ const supportedTags = [
             'wood', 
             'vineyard', 
             'scrub',
+            'residential',
             
             // 'basin', 
             

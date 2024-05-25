@@ -19,8 +19,8 @@ export function extensionClass() {
 	return BuildingExtension;
 }
 
-const materialWalls = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true, side: DoubleSide});
-const materialRoof = new MeshPhysicalMaterial({roughness:1, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
+const materialWalls = new MeshPhysicalMaterial({roughness:0.7, metalness:0,color:0xffffff,vertexColors:true, side: DoubleSide});
+const materialRoof = new MeshPhysicalMaterial({roughness:0.7, metalness:0,color:0xffffff,vertexColors:true,side: DoubleSide});
 
 const workerEvent = new Evt();
 const workerBuildingMaker = new Worker('/app/tileExtensions/building/workerBuildingMaker.js', {type:'module'});
@@ -64,7 +64,9 @@ class BuildingExtension {
 	}
 
 	#onBuildingsLoaded(_datas) {
-		if (!this.tile) return false;
+		if (!this.tile) {
+			return false;
+		}
 		this.dataLoaded = true;
 		this.datas = _datas;
 		var bbox = { 
@@ -330,11 +332,17 @@ class BuildingExtension {
 
 	dispose() {
 		this.tile.evt.removeEventListener('DISPOSE', this, this.dispose);
-		if (!this.isActive) return false;
+
+		if (!this.isActive) {
+			return false;
+		}
+
 		if (!this.dataLoaded){
 			BuildingsDatas.store.abort(this.tile.zoom, this.tile.tileX, this.tile.tileY);
 		}
+
 		workerEvent.removeEventListener('BUILDING_READY_' + this.tileKey, this, this.#onWorkerFinishedBuild);
+		
 		if (this.meshWalls != undefined) {
 			Renderer.scene.remove(this.meshWalls);
 			Renderer.scene.remove(this.meshRoof);
@@ -355,6 +363,7 @@ class BuildingExtension {
 			CachedGeometry.storeMesh(this.meshEntrances);
 			this.meshEntrances = undefined;
 		}
+		
 		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
