@@ -92,7 +92,6 @@ const api = {
 		if (fogActive) {
 			if (projection === 'SPHERE') {
 				Renderer.scene.fog.density = 0.00002;
-				console.log('A');
 			} else {
 				Renderer.scene.fog.density = 0.00001;
 			}

@@ -35,6 +35,12 @@ function readJson(_datas) {
 		if (rel.tags['building:parts']) {
 			continue;
 		}
+		
+		const outlines = rel.members.filter(member => member.role == 'outline');
+		if (outlines.length > 0) {
+			console.log('Building outline', rel.id, outlines);
+		}
+
 		if (excludedIds.includes(rel.id)) {
 			continue;
 		}
@@ -383,4 +389,43 @@ const excludedIds = [
 	23762981, 
 	3071549, 
 	226413508, 
+	446646206, // Burj Khalifa outline
+	5013364, // Tour Effeil
+	261509934, //Central Park Tower
+	261504064, // Steinway Tower
+	266010393, // Olympic Tower
+	109284807, // International Building
+	487519790,
+	86121621, // Bank of America Tower
+	34633854, // Empire State Building
+	264768910, // One Madison
+	160963310, // Merchandise Mart Building
+	1089873004,
+	166839381, // 3 World Trade Center
+	713565776, // One World Trade Center
+	293052032, // Equitable Building
+	279530782, // 28 Liberty
+	278039445, // Millennium
+	214744070,
+	261499924, // 432 Park Avenue
+	289852832, // 1214 Fifth Avenue
+	162764018, // Lotte New York Palace
+	73850655, // Helmsley Building
+	160326780, // AT&T
+	42496284, // Morgan Stanley Building
+	265338408, // One Worldwide Plaza
+	259890861,
+	265344258, // The Regent
+	265355139, // One Columbus Place
+	265355141, // South Park Tower
+	3071645, // Tour Eqho
+	3344870, // Sainte-Chapelle
+	201611261, // Cathédrale Notre-Dame de Paris
+	1255782, // Maison de la Radio et de la Musique
+	123463802, // Ministère de l'Économie, des Finances et du Budget
+	70001850, // Église Notre-Dame-de-la-Croix
+	272804945, //Cathédrale Saint-Pierre
+	75320800, // Université de Montpellier - Faculté de Droit et Science Politique
+	273241904, // Le Triangle
+	273265525, // Église Sainte-Anne
 ];
