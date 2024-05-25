@@ -8,28 +8,44 @@ export function extensionClass() {
 }
 
 class NormalExtension {
-	constructor(_tile) {
+	constructor(tile) {
         this.id = 'NORMAL';
 		this.dataLoading = false;
         this.dataLoaded = false;
         this.texture = null;
-		this.tile = _tile;
+		this.tile = tile;
 		this.tile.evt.addEventListener('DISPOSE', this, this.onTileDispose);
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
         this.tile.evt.addEventListener('HIDE', this, this.hide);
-		if (this.tile.isReady) this.onTileReady();
+        this.normalScale = this.#getNormalScale(this.tile.zoom);
+
+		if (this.tile.isReady) {
+            this.onTileReady();
+        }
 	}
 
 	onTileReady() {
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
+
 		if (this.dataLoaded) {
             this.tile.material.normalMap = this.texture;
+            this.tile.material.normalScale.x = this.tile.material.normalScale.y = this.normalScale;
             this.tile.material.needsUpdate = true;
             return true;
         }
-        if (this.tile.zoom < 8) return false;
-        if (this.tile.zoom > 15) return false;
-		if (this.dataLoading) return false;
+
+        if (this.tile.zoom < 6) {
+            return false;
+        }
+
+        if (this.tile.zoom > 15) {
+            return false;
+        }
+
+		if (this.dataLoading) {
+            return false;
+        }
+
 		this.dataLoading = true;
 		NormalLoader.loader.getData(
 			{
@@ -38,18 +54,34 @@ class NormalExtension {
 				y : this.tile.tileY, 
 				priority : this.tile.distToCam
 			}, 
-			_datas => this.onMapLoaded(_datas)
+			datas => this.onMapLoaded(datas)
 		);
     }
+
+    #getNormalScale(zoom) {
+        if (this.tile.zoom >= 10) {
+            return 1;
+        }
+        const gap = (10 - zoom) / 10;
+        return 1 - (gap * 2);
+    }
     
-    onMapLoaded(_datas) {
-        if (!this.tile) return false;
-        this.texture = _datas;
+    onMapLoaded(datas) {
+        if (!this.tile) {
+            return false;
+        }
+
+        this.texture = datas;
 		this.dataLoading = false;
 		this.dataLoaded = true;
-        if (!this.tile.isReady) return false;
+        
+        if (!this.tile.isReady) {
+            return false;
+        }
+
         this.tile.material.normalMap = this.texture;
         this.tile.material.needsUpdate = true;
+        this.tile.material.normalScale.x = this.tile.material.normalScale.y = this.normalScale;
         Renderer.MUST_RENDER = true;
     }
     
@@ -71,7 +103,11 @@ class NormalExtension {
         this.tile.evt.removeEventListener('HIDE', this, this.hide);
 		this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         this.hide();
-        if (this.texture) this.texture.dispose();
+        
+        if (this.texture) {
+            this.texture.dispose();
+        }
+
         this.texture = null;
 		this.dataLoaded = false;
         this.dataLoading = false;

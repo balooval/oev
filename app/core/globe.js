@@ -69,6 +69,8 @@ class Globe {
 		this.#setCoordToWebglUnitsOffset(this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y);
 
 		this.checkLOD();
+
+		ENVIRONMENT.activate(true);
 	}
 
 	#setCoordToWebglUnitsOffset(lon, lat) {
@@ -151,11 +153,11 @@ class Globe {
 
 	#setProjection(projectionMode) {
 		if (projectionMode == PROJECTION_PLANE) {
-			ENVIRONMENT.activate(true);
+			// ENVIRONMENT.activate(true);
 			this.coordToXYZ = this.#coordToXYZPlane;
 
 		} else if (projectionMode == PROJECTION_SPHERE) {
-			ENVIRONMENT.activate(false);
+			// ENVIRONMENT.activate(true);
 			this.coordToXYZ = this.#coordToXYZSphere;
 		}
 
@@ -164,6 +166,8 @@ class Globe {
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
 			this.#rootTiles[i].updateVertex();
 		}
+
+		this.evt.fireEvent('PROJECTION_CHANGE', this.projection);
 
 		Renderer.MUST_RENDER = true;
 	}
