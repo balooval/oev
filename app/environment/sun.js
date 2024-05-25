@@ -66,10 +66,10 @@ const api = {
 		return sunParams;
 	}, 	
 	
-	setPosition : function(_pos) {
-		posCenter.x = _pos.x;
-		posCenter.y = _pos.y;
-		posCenter.z = _pos.z;
+	setPosition : function(cameraLookAtPosition) {
+		posCenter.x = cameraLookAtPosition.x;
+		posCenter.y = cameraLookAtPosition.y;
+		posCenter.z = cameraLookAtPosition.z;
 		updateSunPosition();
 	}
 };
@@ -134,7 +134,9 @@ function updateShadow(zoom) {
 }
 
 function updateSunPosition() {
-	if (!meshSun) return false;
+	if (!meshSun) {
+		return false;
+	}
 	sunParams.position.x = Math.sin(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
 	sunParams.position.y = Math.sin(sunParams.inclinaison * Math.PI * 0.5) * orbitRadius;
 	sunParams.position.z = Math.cos(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));

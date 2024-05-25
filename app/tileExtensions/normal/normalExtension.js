@@ -27,7 +27,7 @@ class NormalExtension {
             this.tile.material.needsUpdate = true;
             return true;
         }
-        if (this.tile.zoom < 11) return false;
+        if (this.tile.zoom < 8) return false;
         if (this.tile.zoom > 15) return false;
 		if (this.dataLoading) return false;
 		this.dataLoading = true;

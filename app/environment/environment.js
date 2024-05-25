@@ -79,16 +79,21 @@ const api = {
 		// CLOUDS.setTime(_time);
 	}, 	
 	
-	onCameraUpdated : function(_datas) {
-		posCenter.x = _datas.posLookat[0];
-		posCenter.y = _datas.posLookat[1];
-		posCenter.z = _datas.posLookat[2];
+	onCameraUpdated : function(cameraDatas) {
+		posCenter.x = cameraDatas.posLookat[0];
+		posCenter.y = cameraDatas.posLookat[1];
+		posCenter.z = cameraDatas.posLookat[2];
 		SKY.setPosition(posCenter);
 		SUN.setPosition(posCenter);
 	}, 
 
-	onLodChanged : function() {
+	onLodChanged : function(lod) {
+		if (lod === 0) {
+			SKY.activate(false);
 
+		} else {
+			SKY.activate(true);
+		}
 	}, 
 };
 

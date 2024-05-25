@@ -48,6 +48,10 @@ function readJson(_datas) {
 		// TODO : gérer les trous composés de plusieurs ways (si ça existe)
 		for (let j = 0; j < holes.length; j ++) {
 			const holeWay = waysList.get('WAY_' + holes[j].ref);
+			if (!holeWay) {
+				console.warn('Building hole not found');
+				continue;
+			}
 			let curHoleNodes = getWayNodes(holeWay.nodes, nodesList);
 			curHoleNodes = removeWayDuplicateLimits(curHoleNodes);
 			for (let j = 0; j < curHoleNodes.length; j ++) {
