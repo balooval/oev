@@ -14,7 +14,6 @@ import Evt from './event.js';
 import GEO from './geo.js';
 import {GLOBE} from './globe.js';
 import Renderer from './renderer.js';
-import * as NET_TEXTURES from '../net/textures.js';
 
 export const mapSize = 256;
 
@@ -96,7 +95,9 @@ export class TileBasic {
     }
 
     redrawDiffuse() {
-		if (!this.diffuseMap) return;
+		if (!this.diffuseMap) {
+			return;
+		}
 
 		this.composeContext.fillStyle = "#ffffff";
 		this.composeContext.fillRect(0, 0, mapSize, mapSize);
@@ -236,7 +237,6 @@ export class TileBasic {
 		this.meshe.geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
         this.diffuseMap = textureDatas.map.image;
-        this.evt.fireEvent('TEXTURE_CHANGED');
         this.redrawDiffuse();
 	}
 
