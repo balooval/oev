@@ -1,7 +1,7 @@
 import GPXParser from '../vendor/GPXParser.module.js';
 import * as THREE from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
-import GLOBE from '../core/globe.js';
+import {GLOBE} from '../core/globe.js';
 
 function load(_url) {
     fetch(_url)

@@ -11,7 +11,7 @@ import {
     UnsignedByteType,
 } from '../../vendor/three.module.js';
 import GEO from '../../core/geo.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import * as TILE from '../../core/tile.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
@@ -194,9 +194,5 @@ function createCanvas(size) {
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
-
-    // const context = canvas.getContext('2d');
-    // context.fillStyle = 'rgba(255, 255, 255, 0)';
-    // context.fillRect(0, 0, size, size);
     return canvas;
 }

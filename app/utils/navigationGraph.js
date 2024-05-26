@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.module.js';
 import Renderer from '../renderer.js';
-import GLOBE from '../core/globe.js';
+import {GLOBE} from '../core/globe.js';
 import * as Animation from './animation.js';
 import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 import LinesModel from '../tileExtensions/lines/linesModels.js';

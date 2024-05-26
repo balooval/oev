@@ -1,4 +1,4 @@
-import GLOBE from '../app/core/globe.js';
+import {GLOBE} from '../app/core/globe.js';
 import * as TileExtension from '../app/tileExtensions/tileExtension.js';
 import PlaneStore from '../app/tileExtensions/plane/planeStore.js';
 

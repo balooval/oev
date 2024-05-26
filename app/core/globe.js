@@ -2,7 +2,6 @@ import {
 	BufferGeometry,
 	Mesh,
 	Vector2,
-	Vector3,
 } from '../vendor/three.module.js';
 import Renderer from './renderer.js';
 import * as TILE from './tile.js';
@@ -14,25 +13,23 @@ import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 import CheapRuler from '../vendor/cheap-ruler.js';
 
 
+export const PROJECTION_PLANE = 'PLANE';
+export const PROJECTION_SPHERE = 'SPHERE';
 const EARTH_RADIUS_METERS = 6371000;
 const LOD_PLANET = 0; 
 const LOD_CITY = 10;
-const PROJECTION_PLANE = 'PLANE';
-const PROJECTION_SPHERE = 'SPHERE';
 
 class Globe {
-	#time = 0.5;
-
 	#curLOD = LOD_PLANET;
-
+	#currentZoom = 4;
 	#rootTiles = [];
+	#coordDetails = new Vector2(0, 0);
+	#offset = [0, 0];
 
 	constructor() {
 		this.evt = new Evt();
 		this.cameraControler = null;
-		this.CUR_ZOOM = 11;
 		this.tilesDetailsMarge = 2;
-		this.coordDetails = new Vector2(0, 0);
 		this.radius = EARTH_RADIUS_METERS;
 		this.webglUnitsByMeter = this.radius / 40075017.0;
 		this.globalScale = 1;
@@ -40,17 +37,8 @@ class Globe {
 		this.tilesDefinition = 32;
 		this.objToUpdate = [];
 		this.meshe = new Mesh(new BufferGeometry());
-		this.coordToXYZ = this.#coordToXYZPlane;
-		this.offset = [0, 0];
+		this.coordToXYZ = this.#coordToXYZSphere;
 		this.ruler = new CheapRuler(0, 'meters');
-
-		// this.#curLOD = this.#getLodByZoom(this.CUR_ZOOM);
-	}
-
-	debug() {
-		for (let i = 0; i < this.#rootTiles.length; i ++) {
-			this.#rootTiles[i].debug();
-		}
 	}
 	
 	setCameraControler(_controler) {
@@ -64,33 +52,35 @@ class Globe {
 	#onCameraReady() {
 		this.cameraControler.evt.removeEventListener('READY', this, this.#onCameraReady);
 
-		this.ruler = new CheapRuler(this.cameraControler.coordLookat.y, 'meters');
+		this.#coordDetails.x = this.cameraControler.coordLookat.x;
+		this.#coordDetails.y = this.cameraControler.coordLookat.y;
+
 		this.webglUnitsByMeter = 1;
 		this.#setCoordToWebglUnitsOffset(this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y);
 
-		this.checkLOD();
+		this.#applySphereProjection();
+		this.updateZoom(this.cameraControler.zoomCur);
 
 		ENVIRONMENT.activate(true);
 	}
 
 	#setCoordToWebglUnitsOffset(lon, lat) {
-		this.offset[0] = this.ruler.distance([0, 0], [lon, 0]) * this.webglUnitsByMeter;
-		this.offset[1] = this.ruler.distance([0, 0], [0, lat]) * this.webglUnitsByMeter;
+		this.#offset[0] = this.ruler.distance([0, 0], [lon, 0]) * this.webglUnitsByMeter;
+		this.#offset[1] = this.ruler.distance([0, 0], [0, lat]) * this.webglUnitsByMeter;
 
 		const sensLon = Math.sign(lon);
 		const sensLat = Math.sign(lat);
-		this.offset[0] *= sensLon;
-		this.offset[1] *= sensLat;
+		this.#offset[0] *= sensLon;
+		this.#offset[1] *= sensLat;
 	}
 
 	#onCameraUpdated(cameraDatas) {
-		this.coordDetails.x = cameraDatas.coordLookat.x;
-		this.coordDetails.y = cameraDatas.coordLookat.y;
+		this.#coordDetails.x = cameraDatas.coordLookat.x;
+		this.#coordDetails.y = cameraDatas.coordLookat.y;
 		
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
 				this.#rootTiles[i].onCameraUpdated(cameraDatas);
 		}
-		// this.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
 	}
 	
 	start() {
@@ -109,8 +99,7 @@ class Globe {
 	}
 
 	setTime(timeValue) {
-		this.#time = timeValue;
-		this.evt.fireEvent('TIME_CHANGED', this.#time);	
+		this.evt.fireEvent('TIME_CHANGED', timeValue);	
 	}
 
 	screenToSurfacePosition(_x, _y) {
@@ -139,19 +128,20 @@ class Globe {
 	}
 
 	updateZoom(zoomValue){
-		if (this.CUR_ZOOM == zoomValue) {
+		if (this.#currentZoom == zoomValue) {
 			return false;
 		}
+		
+		this.#currentZoom = zoomValue;
 
-		if (Math.floor(this.CUR_ZOOM) != Math.floor(zoomValue)) {
+		if (Math.floor(this.#currentZoom) != Math.floor(zoomValue)) {
 			this.evt.fireEvent('ZOOM_CHANGE', Math.floor(zoomValue));
 		}
 
-		this.CUR_ZOOM = zoomValue;
 		this.checkLOD();
 	}
 
-	#setProjection(projectionMode) {
+	#applyNewProjection(projectionMode) {
 		if (projectionMode == PROJECTION_PLANE) {
 			// ENVIRONMENT.activate(true);
 			this.coordToXYZ = this.#coordToXYZPlane;
@@ -183,8 +173,8 @@ class Globe {
 
 		let y = this.#altitudeToWebglUnit(elevation, lat);
 
-		x -= this.offset[0];
-		z += this.offset[1];
+		x -= this.#offset[0];
+		z += this.#offset[1];
 
 		return [x, y, z];
 	}
@@ -197,6 +187,7 @@ class Globe {
 		let y = Math.sin(radianY) * radius * -1;
 		let z = Math.cos(radianX) * (radius * Math.cos(radianY));
 		if (this.#curLOD == LOD_CITY) {
+			console.log('ICI');
 			x *= this.globalScale;
 			y *= this.globalScale;
 			z *= this.globalScale;
@@ -218,13 +209,12 @@ class Globe {
 
 	webglUnitsToCoord(webglX, webglY, webglZ, elevationMeter = 0) {
 		if (this.projection === PROJECTION_PLANE) {
-			// A vérifier, notamment pour les X/Lon
-			const absolutePosY = webglZ - this.offset[1];
+			const absolutePosY = webglZ - this.#offset[1];
 			const pxlStart = this.coordToXYZ(-180, 85.0511, 0);
 			const pxlEnd = this.coordToXYZ(180, -85.0511, 0);
 			const pxlWidth = Math.abs(pxlEnd[0] - pxlStart[0]);
 			const latUnitSize = this.coordToXYZ(0, 85.0511, 0);
-			const absoluteLatUnitSize = Math.abs(latUnitSize[2]  - this.offset[1]);
+			const absoluteLatUnitSize = Math.abs(latUnitSize[2]  - this.#offset[1]);
 			const prctW = (webglX - pxlStart[0]) / pxlWidth;
 			const prctH = (absolutePosY / absoluteLatUnitSize) * -1;
 			const coordX = -180 + (prctW * 360);
@@ -261,55 +251,66 @@ class Globe {
 		}
 
 		if (targetLod === LOD_CITY) {
-			this.globalScale = 1;
-			this.radius = EARTH_RADIUS_METERS * this.globalScale;
-			this.#updateUnitsByMeter();
-			
-			this.ruler = new CheapRuler(this.coordDetails.y, 'meters');
-			this.#setCoordToWebglUnitsOffset(this.coordDetails.x, this.coordDetails.y);
-			
-			this.#curLOD = LOD_CITY;
-			this.#setProjection(PROJECTION_PLANE);
-			
-			Renderer.camera.near = this.webglUnitsByMeter * 1;
-			Renderer.camera.far = this.webglUnitsByMeter * 500000;
-			Renderer.camera.updateProjectionMatrix();
+			this.#applyPlaneProjection();
 
 		} else if (targetLod === LOD_PLANET) {
-			this.globalScale = 0.01;
-			this.radius = EARTH_RADIUS_METERS * this.globalScale;
-			this.#updateUnitsByMeter();
-
-			this.#curLOD = LOD_PLANET;
-			this.#setProjection(PROJECTION_SPHERE);
-
-			Renderer.camera.near = 1;
-			Renderer.camera.far = this.radius;
-			// Renderer.camera.far = this.radius * 0.2;
-			Renderer.camera.updateProjectionMatrix();
+			this.#applySphereProjection();
 		}
 
 		this.evt.fireEvent('LOD_CHANGED', this.#curLOD);
 	}
 
 	#mustChangeToLod() {
-		if (this.CUR_ZOOM >= LOD_CITY && this.#curLOD != LOD_CITY) {
-			return LOD_CITY;
-		}
+		const expectedLod = this.#getExpectedLod(this.#currentZoom);
 
-		if (this.CUR_ZOOM >= LOD_PLANET && this.CUR_ZOOM < LOD_CITY && this.#curLOD != LOD_PLANET) {
-			return LOD_PLANET;
+		if (expectedLod !== this.#curLOD) {
+			return expectedLod;
 		}
 
 		return null;
 	}
 
-	#getLodByZoom(zoom) {
+	#getExpectedLod(zoom) {
 		if (zoom >= LOD_CITY) {
 			return LOD_CITY;
 		}
-
+		
 		return LOD_PLANET;
+	}
+
+	#applyPlaneProjection() {
+		this.globalScale = 1;
+		this.radius = EARTH_RADIUS_METERS * this.globalScale;
+		this.#updateUnitsByMeter();
+		
+		this.ruler = new CheapRuler(this.#coordDetails.y, 'meters');
+		this.#setCoordToWebglUnitsOffset(this.#coordDetails.x, this.#coordDetails.y);
+		
+		this.#curLOD = LOD_CITY;
+		this.#applyNewProjection(PROJECTION_PLANE);
+		
+		Renderer.camera.near = this.webglUnitsByMeter * 1;
+		Renderer.camera.far = this.webglUnitsByMeter * 500000;
+		Renderer.camera.updateProjectionMatrix();
+	}
+
+	#applySphereProjection() {
+		this.globalScale = 0.01;
+		this.radius = EARTH_RADIUS_METERS * this.globalScale;
+		this.#updateUnitsByMeter();
+
+		this.#curLOD = LOD_PLANET;
+		this.#applyNewProjection(PROJECTION_SPHERE);
+
+		Renderer.camera.near = 1;
+		Renderer.camera.far = this.radius;
+		Renderer.camera.updateProjectionMatrix();
+	}
+
+	getTileDistance(tile) {
+		const distLon = this.#coordDetails.x - tile.middleCoord.x;
+		const distLat = this.#coordDetails.y - tile.middleCoord.y;
+		return Math.sqrt(Math.pow(distLon, 2) + Math.pow(distLat, 2));
 	}
 	
 	getElevationUnitsAtCoords(lon, lat) {
@@ -322,15 +323,6 @@ class Globe {
 		return elevation;
 	}
 
-	getCoordsDistanceToCamera(lon, lat) {
-		return this.ruler.distance([lon, lat], [this.cameraControler.coordLookat.x, this.cameraControler.coordLookat.y]);
-	}
-
-	updateCurrentTile(coordX, coordY) {
-		this.coordDetails.x = coordX;
-		this.coordDetails.y = coordY;
-	}
-
 	getElevationUnitsForZoom(zoomlevel) { // return altitude in opengl unit
 		return GEO.getAltitude(zoomlevel, this.radius, this.projection);
 	}
@@ -340,7 +332,4 @@ class Globe {
 	}
 }
 
-const globe = new Globe();
-
-
-export { globe as default}
+export const GLOBE = new Globe();

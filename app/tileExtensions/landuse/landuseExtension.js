@@ -5,7 +5,6 @@ import * as LanduseGeometry from './landuseGeometryMap.js';
 // import * as LanduseGeometry from './landuseGeometryInstances.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
-import GLOBE from '../../core/globe.js';
 
 export {setApiUrl} from './landuseLoader.js';
 
@@ -53,8 +52,6 @@ class LanduseExtension {
                 priority : this.tile.distToCam
             }, datas => this.#onLanduseLoaded(datas)
 		);
-
-        GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
     }
 
     #onLanduseLoaded(datas) {
@@ -71,18 +68,6 @@ class LanduseExtension {
 
         const landusesDatas = LanduseDataParser.parseDatas(datas, this.tile);
         LanduseGeometry.setDatas(landusesDatas, this.tile);
-    }
-    
-    #onCameraUpdated(cameraDatas) {
-        return;
-        const currentLod = this.lod;
-        let nextLod = this.#getLod(cameraDatas);
-
-        if (currentLod !== nextLod) {
-            LanduseGeometry.setLod(this.tile, nextLod);
-        }
-
-        this.lod = nextLod;
     }
 
     #getLod(cameraDatas) {
@@ -118,7 +103,6 @@ class LanduseExtension {
         this.tile.evt.removeEventListener('SHOW', this, this.#onTileReady);
         this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
         this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
-        GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.#onCameraUpdated);
 
         LanduseGeometry.tileRemoved(this.tile.key, this.tile);
 

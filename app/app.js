@@ -1,6 +1,6 @@
 import { CameraGod } from './camera/god.js';
 import Evt from './core/event.js';
-import GLOBE from './core/globe.js';
+import {GLOBE} from './core/globe.js';
 import Navigation from './core/navigation.js';
 import Renderer from './core/renderer.js';
 import * as INPUT from './input/input.js';
@@ -31,11 +31,6 @@ const OEV = {
 
 	parseParams : function(_params) {
 		const serverURL = 'https://ns378984.ip-5-196-69.eu/server/api/';
-		_params = _choose(_params, {});
-		_params.CAMERA = _choose(_params.CAMERA, {});
-		_params.CAMERA.x = _choose(_params.CAMERA.x, 2.3831);
-		_params.CAMERA.y = _choose(_params.CAMERA.y, 48.8809);
-		_params.CAMERA.z = _choose(_params.CAMERA.z, 11);
 		_params.UI = _choose(_params.UI, {});
 		_params.UI.extensions = _choose(_params.UI.extensions, false);
 		_params.UI.waypoints = _choose(_params.UI.waypoints, false);

@@ -6,7 +6,7 @@ import {
 	Vector3,
 } from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
-import GLOBE from '../core/globe.js';
+import {GLOBE} from '../core/globe.js';
 import {get as Shader} from '../net/shader.js';
 
 let meshSky = null;

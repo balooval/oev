@@ -1,6 +1,6 @@
 import * as THREE from '../../vendor/three.module.js';
 import Renderer from '../../core/renderer.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import MATH from '../../core/math.js';
 import Evt from '../../core/event.js';
 import * as Animation from '../../utils/animation.js';

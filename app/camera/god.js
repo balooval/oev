@@ -83,10 +83,9 @@ export class CameraGod {
 
 		this.camera.up.set(0, -1, 0);
 		this.pointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 200, 16, 7), new MeshBasicMaterial({color: 0x808080}));
-		this.pointer.visible = false;
+		this.pointer.visible = false; // Utilisé par l'environnement (Sky ou Sun ?)
 		Renderer.scene.add(this.pointer);
 		this.clicPointer = new Mesh(new SphereGeometry(this.globe.webglUnitsByMeter * 150, 16, 7), new MeshBasicMaterial({color: 0x0000ff}));
-		// Renderer.scene.add(this.clicPointer);
 		
 		if (this.startPosition) {
 			this.zoomDest = this.zoomCur;
@@ -94,13 +93,11 @@ export class CameraGod {
 			this.setLookAt(this.startPosition.x, this.startPosition.y);
 			this.tweens.lon.value = this.coordLookat.x;
 			this.tweens.lat.value = this.coordLookat.y;
-			this.globe.updateCurrentTile(this.coordLookat.x, this.coordLookat.y);
-			this.globe.updateZoom(this.zoomCur);
 			this.MUST_UPDATE = true;
 		}
 
-		this.updateCamera();
 		this.evt.fireEvent('READY');
+		this.updateCamera();
 	}
 
 	setZoomDest(_zoom, _duration) {
