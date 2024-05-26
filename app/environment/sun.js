@@ -90,12 +90,11 @@ function onZoomChanged(_zoom) {
 	updateShadow(_zoom);
 }
 
-function createSun(_skyRadius) {
+function createSun(skyRadius) {
 	if (meshSun) {
 		return false;
 	}
-	// orbitRadius = _skyRadius * 0.9;
-	orbitRadius = _skyRadius;
+	orbitRadius = skyRadius;
 
 	const sunRadius = 50;
 
@@ -125,13 +124,25 @@ function updateSunColor(_time) {
 	dayLightTime *= 3;
 	sunParams.luminosity = dayLightTime;
 	meshSun.material.uniforms.sunElevation.value = Math.abs(sunParams.inclinaison);
-	var gradientValue = Math.round((Math.min(Math.max(_time, 0), 1)) * 127);
-	var rampColorLight = getPixel(colorsGradient, 60, gradientValue);
-	var sunCol = new Color('rgb(' + rampColorLight.r + ',' + rampColorLight.g + ',' + rampColorLight.b + ')');
+	const gradientValue = Math.round((Math.min(Math.max(_time, 0), 1)) * 127);
+	const rampColorLight = getPixel(colorsGradient, 60, gradientValue);
+	const sunCol = new Color('rgb(' + rampColorLight.r + ',' + rampColorLight.g + ',' + rampColorLight.b + ')');
 	lightSun.color = sunCol;
 	lightAmbiant.color.r = rampColorLight.r / 400;
 	lightAmbiant.color.g = rampColorLight.g / 400;
 	lightAmbiant.color.b = rampColorLight.b / 400;
+
+
+	if (Renderer.scene.fog) {
+		const rampColorFog = getPixel(colorsGradient, 1, gradientValue);
+		Renderer.scene.fog.color.setRGB(
+			rampColorFog.r / 255,
+			rampColorFog.g / 255,
+			rampColorFog.b / 255
+		);
+		Renderer.setBackgroundColor(Renderer.scene.fog.color);
+	}
+
 	Renderer.MUST_RENDER = true;
 }
 
@@ -156,23 +167,38 @@ function updateSunPosition() {
 	if (!meshSun) {
 		return false;
 	}
-	updatePositionFunction();
-	
-	lightSun.position.x = meshSun.position.x;
-	lightSun.position.y = meshSun.position.y;
-	lightSun.position.z = meshSun.position.z;
+	const position = updatePositionFunction();
+
+	lightSun.position.x = position[0];
+	lightSun.position.y = position[1];
+	lightSun.position.z = position[2];
+
 	lightSun.target = GLOBE.cameraControler.pointer;
 	lightSun.shadow.camera.updateProjectionMatrix();
 	Renderer.MUST_RENDER = true;
 }
 
 function updatePositionPlane() {
-	sunParams.position.x = Math.sin(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
-	sunParams.position.y = Math.sin(sunParams.inclinaison * Math.PI * 0.5) * orbitRadius;
-	sunParams.position.z = Math.cos(sunParams.azimuth * Math.PI) * (orbitRadius * Math.cos(sunParams.inclinaison * Math.PI * 0.5));
-	meshSun.position.x = sunParams.position.x + posCenter.x;
-	meshSun.position.y = sunParams.position.y + posCenter.y;
-	meshSun.position.z = sunParams.position.z + posCenter.z;
+	const xSin = Math.sin(sunParams.azimuth * Math.PI);
+	const xCos = Math.cos(sunParams.inclinaison * Math.PI * 0.5);
+	const ySin = Math.sin(sunParams.inclinaison * Math.PI * 0.5);
+	const zCos1 = Math.cos(sunParams.azimuth * Math.PI);
+	const zCos2 = xCos;
+
+	sunParams.position.x = xSin * (orbitRadius * xCos);
+	sunParams.position.y = ySin * orbitRadius;
+	sunParams.position.z = zCos1 * (orbitRadius * zCos2);
+
+	const sunMeshDistance = orbitRadius * 4;
+	meshSun.position.x = (xSin * (sunMeshDistance * xCos)) + posCenter.x;
+	meshSun.position.y = (ySin * sunMeshDistance) + posCenter.y;
+	meshSun.position.z = (zCos1 * (sunMeshDistance * zCos2)) + posCenter.z;
+
+	return [
+		sunParams.position.x + posCenter.x,
+		sunParams.position.y + posCenter.y,
+		sunParams.position.z + posCenter.z,
+	];
 }
 
 function updatePositionSphere() {
@@ -183,10 +209,13 @@ function updatePositionSphere() {
 	sunParams.position.x = position[0];
 	sunParams.position.y = position[1];
 	sunParams.position.z = position[2];
+	
+	const meshPosition = GLOBE.coordToXYZ(sunLon, sunLat, 500000);
+	meshSun.position.x = meshPosition[0];
+	meshSun.position.y = meshPosition[1];
+	meshSun.position.z = meshPosition[2];
 
-	meshSun.position.x = sunParams.position.x;
-	meshSun.position.y = sunParams.position.y;
-	meshSun.position.z = sunParams.position.z;
+	return position;
 }
 
 function removeSun() {

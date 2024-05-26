@@ -64,7 +64,7 @@ const api = {
 	activate : function(state) {
 		api.addDebugCube();
 		SUN.activate(state);
-		// SKY.activate(_state);
+		// SKY.activate(state);
 
 		if (state) {
 			api.onTimeChanged(0.5);

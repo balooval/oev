@@ -39,14 +39,6 @@ let orbitCamera;
 let helper;
 let cameraToUse;
 
-let containerA;
-let containerB;
-let debugA;
-let debugB;
-
-let time = 0;
-
-
 const api = {
     scene : undefined, 
     camera : undefined, 
@@ -98,15 +90,15 @@ const api = {
         // api.scene.add(helper);
         // cameraToUse = orbitCamera;
         cameraToUse = api.camera;
-    },  
+    },
 
     domContainer : function() {
         return webGlRenderer.domElement;
-    }, 
+    },
 
     sceneSize : function() {
         return [sceneWidth, sceneHeight];
-    }, 
+    },
 
     render : function() {
         // controls.update();
@@ -124,7 +116,7 @@ const api = {
         api.MUST_RENDER = false;
         // rS( 'frame' ).end();
         // rS().update();
-    }, 
+    },
 
     checkMouseWorldPos : function(x, y, object) {
 		const mX = ((x - containerOffset.x) / sceneWidth) * 2 - 1;
@@ -136,7 +128,11 @@ const api = {
 		let coord = undefined;
 		intersects.forEach(i => coord = i.point);
 		return coord;
-	}, 
+	},
+
+    setBackgroundColor(color) {
+        webGlRenderer.setClearColor(color, 1);
+    },
 };
 
 window.debug = () => console.log(webGlRenderer.info)
