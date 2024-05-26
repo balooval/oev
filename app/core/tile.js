@@ -5,19 +5,14 @@ import {
 	BufferAttribute,
 	BufferGeometry,
 	Color,
-	DataTexture,
-	DoubleSide,
 	Mesh,
 	Texture,
 	MeshPhysicalMaterial,
-	MeshStandardMaterial,
-	MeshBasicMaterial,
 	Vector2,
-	Vector3,
 } from '../vendor/three.module.js';
 import Evt from './event.js';
 import GEO from './geo.js';
-import GLOBE from './globe.js';
+import {GLOBE} from './globe.js';
 import Renderer from './renderer.js';
 import * as NET_TEXTURES from '../net/textures.js';
 
@@ -68,7 +63,7 @@ export class TileBasic {
 			[this.middleCoord.x, this.middleCoord.y],
 		];
 
-		this.distToCam = ((GLOBE.coordDetails.x - this.middleCoord.x) * (GLOBE.coordDetails.x - this.middleCoord.x) + (GLOBE.coordDetails.y - this.middleCoord.y) * (GLOBE.coordDetails.y - this.middleCoord.y));
+		this.distToCam = GLOBE.getTileDistance(this);
         
         this.extensionsMaps = new Map();
 		this.composeMap = this.#createCanvas();
@@ -95,18 +90,11 @@ export class TileBasic {
 		TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE', this, this.#onExtensionActivation);
 		TileExtension.evt.addEventListener('TILE_EXTENSION_DESACTIVATE', this, this.#onExtensionDisabled);
 
-		// Coupé car ça bug : certaines tuiles parent sont encore affichées en même temps que leurs enfants, voir l'inverse aussi
-		// this.isFacingCamera = true;
 		this.directionToCamera = new Vector2();
-		// this.tileUnitsPosition = GLOBE.coordToXYZ(this.middleCoord.x, this.middleCoord.y, 0);
-		// if (this.zoom === 14) {
-			// GLOBE.evt.addEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
-		// }
-
 		this.viewByCamera = false;
 		this.detailMargin = 1;
     }
-    
+
     redrawDiffuse() {
 		if (!this.diffuseMap) return;
 
@@ -390,10 +378,6 @@ export class TileBasic {
 		return true;
 	}
 
-	debug() {
-		
-	}
-
 	show() {
 		if (this.onStage) {
 			return false;
@@ -583,7 +567,6 @@ export class TileBasic {
 	}
 
 	dispose() {
-		// GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
 		TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE', this, this.#onExtensionActivation);
 		this.#clearChildrens();
 		this.hide();

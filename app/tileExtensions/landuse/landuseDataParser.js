@@ -1,4 +1,4 @@
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import * as OsmReader from '../../utils/osmReader.js';
 import MATH from '../../core/math.js';
 

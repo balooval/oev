@@ -7,7 +7,7 @@ import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js
 import Renderer from '../../core/renderer.js';
 import Evt from '../../core/event.js';
 import Earcut from '../../vendor/Earcut.module.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
 import * as CachedGeometry from '../../utils/cacheGeometry.js';
@@ -57,10 +57,17 @@ class BuildingExtension {
 			maxLat : this.tile.startCoord.y
 		};
 		this.waiting = true;
-		BuildingsDatas.store.get(this.tile.zoom, this.tile.tileX, this.tile.tileY, bbox, this.tile.distToCam, _datas => {
-			this.waiting = false;
-			this.#onBuildingsLoaded(_datas);
-		});
+		BuildingsDatas.store.get(
+			this.tile.zoom,
+			this.tile.tileX,
+			this.tile.tileY,
+			bbox,
+			this.tile.distToCam,
+			datas => {
+				this.waiting = false;
+				this.#onBuildingsLoaded(datas);
+			}
+		);
 	}
 
 	#onBuildingsLoaded(_datas) {

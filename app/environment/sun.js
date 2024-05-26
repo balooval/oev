@@ -11,7 +11,10 @@ import {
 	Vector3,
 } from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
-import GLOBE from '../core/globe.js';
+import {
+	GLOBE,
+	PROJECTION_PLANE
+} from '../core/globe.js';
 import * as NET_TEXTURES from '../net/textures.js';
 import {get as Shader} from '../net/shader.js';
 
@@ -60,7 +63,7 @@ export function activate(_state) {
 }
 
 export function setProjection(projection) {
-	if (projection === 'PLANE') {
+	if (projection === PROJECTION_PLANE) {
 		updatePositionFunction = updatePositionPlane;
 
 	} else {

@@ -1,4 +1,4 @@
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import * as FenceBuilder from './linesGeometryFence.js';
 import * as WallBuilder from './linesGeometryWall.js';

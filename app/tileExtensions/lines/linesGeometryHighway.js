@@ -5,7 +5,7 @@ import {
     BufferAttribute,
     BufferGeometry,
 } from '../../vendor/three.module.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import MATH from '../../core/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 

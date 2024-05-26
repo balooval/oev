@@ -2,7 +2,7 @@ import * as THREE from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import Evt from '../core/event.js';
 import {texture as Texture} from '../net/textures.js';
-import GLOBE from '../core/globe.js';
+import {GLOBE} from '../core/globe.js';
 
 let waypointMat;
 const waypointsList = [];

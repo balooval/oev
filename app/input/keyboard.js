@@ -1,5 +1,5 @@
 import Evt from '../core/event.js';
-import GLOBE from '../core/globe.js';
+import {GLOBE} from '../core/globe.js';
 
 let majActiv = false;
 let ctrlActiv = false;
@@ -48,8 +48,6 @@ const api ={
 		}else if( key == 66 ){ // b
 			
 		}else if( key == 67 ){ // c
-
-			GLOBE.debug();
 			
 		}else if( key == 68 ){ // d
 			

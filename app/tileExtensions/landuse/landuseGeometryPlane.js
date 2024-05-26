@@ -4,7 +4,7 @@ import {
     Mesh,
 } from '../../vendor/three.module.js';
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';
 import ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';

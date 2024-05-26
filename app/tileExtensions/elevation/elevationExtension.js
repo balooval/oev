@@ -1,5 +1,5 @@
 import Renderer from '../../core/renderer.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
@@ -14,7 +14,7 @@ class ElevationExtension {
 		this.id = 'ELEVATION';
 		this.dataLoading = false;
 		this.dataLoaded = false;
-		this.elevationBuffer = new Uint16Array((32 * 32) / 4);
+		this.elevationBuffer = new Uint16Array((32 * 32) / 4); // TODO: 32 devrait être GLOBE.tilesDefinition. Voir même l'initialiser vide ...
 		this.tile = tile;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);

@@ -1,4 +1,4 @@
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 
 const store = [{
 	zoom : 1, 

@@ -1,5 +1,5 @@
 import * as DataLoader from '../dataLoader.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 
 const PARAMS = {
 	nbLoaders : 4, 

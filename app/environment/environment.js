@@ -6,7 +6,10 @@ import {
 	Vector3,
 } from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
-import GLOBE from '../core/globe.js';
+import {
+	GLOBE,
+	PROJECTION_SPHERE
+} from '../core/globe.js';
 import * as SUN from './sun.js';
 import * as SKY from './sky.js';
 
@@ -90,7 +93,7 @@ const api = {
 	
 	onProjectionChanged : function(projection) {
 		if (fogActive) {
-			if (projection === 'SPHERE') {
+			if (projection === PROJECTION_SPHERE) {
 				Renderer.scene.fog.density = 0.00002;
 			} else {
 				Renderer.scene.fog.density = 0.00001;

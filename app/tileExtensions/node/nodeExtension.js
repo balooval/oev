@@ -1,6 +1,6 @@
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
-import GLOBE from '../../core/globe.js';
+import {GLOBE} from '../../core/globe.js';
 import * as NodeLoader from './nodeLoader.js';
 import NodeMaterial from './nodeMaterial.js';
 import NodeModels from './nodeModels.js';
