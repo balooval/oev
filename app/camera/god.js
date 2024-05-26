@@ -242,7 +242,7 @@ export class CameraGod {
 			new Vector2(this.cameraCoord.x, this.cameraCoord.y)
 		).normalize();
 		
-		this.#updateFogScale();
+		// this.#updateFogScale();
 
 		Renderer.MUST_RENDER = true;
 
@@ -282,15 +282,6 @@ export class CameraGod {
 		this.updateData.detailMargin = Math.min(this.maxDetailMargin, this.updateData.detailMargin + 1);
 		console.log('detailMargin', this.updateData.detailMargin);
 		this.evt.fireEvent('CAM_UPDATED', this.updateData);
-	}
-
-	#updateFogScale() {
-		if (!Renderer.scene.fog) {
-			return;
-		}
-		
-		Renderer.scene.fog.near = this.globe.webglUnitsByMeter * 10000;
-		Renderer.scene.fog.far = this.globe.webglUnitsByMeter * 100000;
 	}
 
 	updateOnSphere() {

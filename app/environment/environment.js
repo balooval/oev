@@ -1,29 +1,27 @@
 import {
 	BoxGeometry,
-	Fog,
+	FogExp2,
 	Mesh,
 	MeshBasicMaterial,
 	Vector3,
 } from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import GLOBE from '../core/globe.js';
-// import CLOUDS from './clouds.js';
-import SUN from './sun.js';
+import * as SUN from './sun.js';
 import * as SKY from './sky.js';
 
-let fogActive = false;
+let fogActive = true;
 const posCenter = new Vector3(0, 0, 0);
 
 const api = {
 	
 	init : function() {
-		GLOBE.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
-		GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
-		if (fogActive){
-			// Renderer.scene.fog = new Fog(0x9de3eb, 200, 500);
-			Renderer.scene.fog = new Fog(0x91b8fb, 200, 500);
-			// Renderer.scene.fog = new Fog(0x86aaff, 500, 2000);
+		if (fogActive) {
+			Renderer.scene.fog = new FogExp2(0x91b8fb, 0.00001);
 		}
+		GLOBE.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
+		GLOBE.evt.addEventListener('PROJECTION_CHANGE', api, api.onProjectionChanged);
+		GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
 		SUN.init();
 		GLOBE.evt.addEventListener('LOD_CHANGED', api, api.onLodChanged);
 		api.onLodChanged();
@@ -63,12 +61,12 @@ const api = {
 		// Renderer.scene.add(cube);
 	}, 
 	
-	activate : function(_state) {
+	activate : function(state) {
 		api.addDebugCube();
-		SUN.activate(_state);
-		// SKY.activate(_state);
-		if (_state) {
-			// CLOUDS.create();
+		SUN.activate(state);
+		// SKY.activate(state);
+
+		if (state) {
 			api.onTimeChanged(0.5);
 		}
 	}, 
@@ -76,7 +74,6 @@ const api = {
 	onTimeChanged : function(time) {
 		const sunParams = SUN.setTime(time);
 		SKY.setTime(time, sunParams);
-		// CLOUDS.setTime(_time);
 	}, 	
 	
 	onCameraUpdated : function(cameraDatas) {
@@ -90,6 +87,18 @@ const api = {
 	onLodChanged : function(lod) {
 		
 	}, 
+	
+	onProjectionChanged : function(projection) {
+		if (fogActive) {
+			if (projection === 'SPHERE') {
+				Renderer.scene.fog.density = 0.00002;
+			} else {
+				Renderer.scene.fog.density = 0.00001;
+			}
+		}
+
+		SUN.setProjection(projection);
+	},
 };
 
 export {api as default}

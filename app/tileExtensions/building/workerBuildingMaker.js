@@ -274,15 +274,25 @@ function prepareWallsGeometry(_buildings) {
 		let buildingCoordNb = building.coords.length;
 		fixDirection(building.coords, building.id);
 		let fondationsEle = 0;
+
+		let luminosityBase = 0;
+		let luminosityStep = 1 / building.props.floorsNb;
 		
 		if (building.props.minAlt == 0) {
 			fondationsEle = -10;
+		} else {
+			luminosityBase = 0.5;
+			luminosityStep = 0.5 / building.props.floorsNb;
 		}
 
+		const wallColor = building.props.wallColor;
+
 		for (let floor = 0; floor < building.props.floorsNb + 1; floor ++) {
+			const wallLuminosity = luminosityBase + (luminosityStep * floor);
+			const floorColor = wallColor.map(colorPart => colorPart * wallLuminosity);
 			
 			for (let c = 0; c < buildingCoordNb; c ++) {
-				colorVertices.push(...building.props.wallColor);
+				colorVertices.push(...floorColor);
 				if (floor > 0) {
 					const faceTopLeft = buildingCoordNb + c;
 					const faceBottomLeft = c;

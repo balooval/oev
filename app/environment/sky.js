@@ -18,7 +18,7 @@ const skyParams = {
 
 export function activate(state) {
 	if (state === true) {
-		const size = GLOBE.webglUnitsByMeter * 70000;
+		const size = GLOBE.webglUnitsByMeter * 100000;
 		createSky(size);
 	} else {
 		removeSky();
