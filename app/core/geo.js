@@ -13,8 +13,8 @@ class Geo {
 		for (let i = 0; i < coords.length; i ++) {
 			const coord = coords[i];
 			const point = [
-                MATH.mapValue(coord[0], box[0], box[1]) * canvasSize, 
-                MATH.mapValue(coord[1], box[2], box[3]) * canvasSize, 
+                MATH.mapValue(coord[0], box[0], box[1]) * canvasSize,
+                canvasSize - (MATH.mapValue(coord[1], box[2], box[3]) * canvasSize),
 			];
 			points[i] = point;
 		}

@@ -56,12 +56,34 @@ const api = {
 
 		while(true) {
 			prevParent = validParent;
-			let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
-			if (!parent) break;
+			// let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
+
+			let parent = null;
+
+			for (const struct of parents) {
+				if (structContainCoord(struct, midLon, midLat) === true) {
+					parent = struct;
+					break;
+				}
+			}
+
+			if (!parent) {
+				break;
+			}
 			validParent = parent;
 			parents = parent.childs;
 			if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
-				prevParent.childs = prevParent.childs.filter(s => !isStructure(s, startLon, startLat, endLon, endLat));
+				// prevParent.childs = prevParent.childs.filter(s => !isStructure(s, startLon, startLat, endLon, endLat));
+
+				const newChilds = []
+				for (const child of prevParent.childs) {
+					if (!isStructure(child, startLon, startLat, endLon, endLat)) {
+						newChilds.push(child);
+					}
+				}
+
+				prevParent.childs = newChilds;
+
 				break;
 			}
 		}

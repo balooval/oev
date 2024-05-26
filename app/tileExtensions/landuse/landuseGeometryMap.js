@@ -29,6 +29,7 @@ workerCanvasComposer.port.onmessage = (e) => {
 };
 
 function createLanduseMesh(tile, textureMaps) {
+    /*
     const material = new MeshPhysicalMaterial({
         color: 0xffffff,
         roughness: 0.7,
@@ -61,6 +62,24 @@ function createLanduseMesh(tile, textureMaps) {
 
     material.needsUpdate = true;
     Renderer.MUST_RENDER = true;
+    */
+
+    createImageBitmap(textureMaps.map, 0, 0, TILE.mapSize, TILE.mapSize)
+    .then(image => {
+        tile.drawOnDiffuseMap('landuse_' + tile.key, image);
+    });
+
+    createImageBitmap(textureMaps.normalMap, 0, 0, TILE.mapSize, TILE.mapSize)
+   .then(image => {
+       tile.drawOnNormalMap('landuse_' + tile.key, image);
+   });
+
+    // for (const mapType in textureMaps) {
+    //     createImageBitmap(textureMaps[mapType], 0, 0, TILE.mapSize, TILE.mapSize)
+    //     .then(image => {
+    //         tile.drawOnDiffuseMap('landuse_' + tile.key, image);
+    //     });
+    // }
 }
 
 export function setDatas(landusesDatas, tile) {
@@ -83,7 +102,12 @@ export function setDatas(landusesDatas, tile) {
     });
 }
 
-export function tileRemoved(_tileKey, tile) {
+export function tileRemoved(tileKey, tile) {
+    
+    tilesWaitingWorker.delete(tileKey);
+    tile.clearDiffuseLayer('landuse_' + tileKey);
+    tile.clearNormalLayer('landuse_' + tileKey);
+    
     const tileMesh = meshesByTiles.get(tile);
     if (!tileMesh) {
         return;
@@ -93,7 +117,11 @@ export function tileRemoved(_tileKey, tile) {
     tileMesh.geometry.dispose();
     if (tileMesh.material.map) {
         tileMesh.material.map.dispose();
+    }
+    if (tileMesh.material.normalMap) {
         tileMesh.material.normalMap.dispose();
+    }
+    if (tileMesh.material.roughnessMap) {
         tileMesh.material.roughnessMap.dispose();
     }
     tileMesh.material.dispose();

@@ -144,10 +144,15 @@ function coordGrid(tile, _bbox, _border) {
     return grid;
 }
 
-function isTagSupported(_element, _zoom) {
-    const type = extractType(_element);
-    if (!type) return false;
-    if (_zoom != tagsZoom[type]) return false;
+function isTagSupported(element, zoom) {
+    const type = extractType(element);
+    if (!type) {
+        return false;
+    }
+    // if (zoom != tagsZoom[type]) {
+    if (zoom < tagsZoom[type]) {
+        return false;
+    }
 	return true;
 }
 

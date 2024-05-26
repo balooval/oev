@@ -159,6 +159,7 @@ const OEV = {
 			['checker', 'loading.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
 			['waypoint', 'waypoint.png'],
+			['neutralNormal', 'neutral-normal.png'],
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		return new Promise((resolve) => {

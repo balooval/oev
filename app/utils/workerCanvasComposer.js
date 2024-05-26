@@ -1,8 +1,8 @@
 import GEO from '../core/geo.js';
 import PolygonClipping from '../vendor/polygon-clipping.module.js';
 
-const canvasSize = 512;
-const textureSize = 512;
+const canvasSize = 256;
+const textureSize = 256;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
 const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true});
@@ -47,13 +47,16 @@ function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
     const textureMaps = [
         'map',
         'normalMap',
-        'roughnessMap',
+        // 'roughnessMap',
     ];
 
     for (const mapType of textureMaps) {
         fillWithEmptyTexture(mapType); // Attention, remplit aussi les mers !
         for (let i = 0; i < landusesDatas.length; i ++) {
             const textureImage = texturesImages[`${mapType}_${landusesDatas[i].type}`];
+            if (!textureImage) {
+                console.warn(`Aucune texture pour ${mapType} et ${landusesDatas[i].type}`);
+            }
             buildLanduse(landusesDatas[i], tilePolygon, tileBbox, textureImage);
         }
 
