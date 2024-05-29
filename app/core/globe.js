@@ -132,12 +132,11 @@ class Globe {
 			return false;
 		}
 		
-		this.#currentZoom = zoomValue;
-
 		if (Math.floor(this.#currentZoom) != Math.floor(zoomValue)) {
 			this.evt.fireEvent('ZOOM_CHANGE', Math.floor(zoomValue));
 		}
-
+		
+		this.#currentZoom = zoomValue;
 		this.checkLOD();
 	}
 

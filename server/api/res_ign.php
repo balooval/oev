@@ -8,10 +8,18 @@ class Api_ign extends Api_default {
     private $dirRaw = PATH_DATAS . 'rge_alti';
     private $params;
 
+    private $fileCache;
+    private $readTotalTime;
+
     public function __construct($params) {
         // $this->useCache = false;
         $this->params = $params;
         parent::__construct($params);
+
+        $this->fileCache = [];
+        $this->readTotalTime = 0;
+
+        ini_set('memory_limit', '512M');
     }
     
     public function process() {
@@ -20,6 +28,7 @@ class Api_ign extends Api_default {
         if ($this->mustFetchDatas($filePath)) {
             $this->buildElevationImage($filePath);
         }
+        // echo '$this->readTotalTime: ' . $this->readTotalTime . '<br>';
         return file_get_contents($filePath);
     }
 
@@ -74,9 +83,9 @@ class Api_ign extends Api_default {
                 
                 $tmpElevation = $this->extractElevation($curLon, $curLat);
                 
-                if ($tmpElevation == 0) {
+                // if ($tmpElevation == 0) {
                     // echo '$tmpElevation : ' . $tmpElevation . '<br>';
-                }
+                // }
                 
                 // echo 'X : ' . $pixX . ', Y : ' . ($imageSize - 1) - $pixY . ', $tmpElevation : ' . $tmpElevation . '<br>';
 
@@ -96,6 +105,7 @@ class Api_ign extends Api_default {
 
             $pixX ++;
         }
+
         imagepng($imageObject, $_filePath, 9);
         imagedestroy($imageObject);
     }
@@ -118,53 +128,71 @@ class Api_ign extends Api_default {
         $indexY = 1000 - round($meterY * 1000);
 
         if ($indexY == 1000) {
-            // echo 'FIX $indexY' . '<br>';
             $indexY = 0;
             $lambertY -= 1;
         }
-        
-        $file = $this->getEleFileFromCoord($lambertX, $lambertY);
 
+        $fileIndex = $this->getEleFileIndex($lambertX, $lambertY);
+        $cacheKey = $fileIndex['x'] . '_' . $fileIndex['y'];
         
-        $fh = fopen($file, 'r') or die("Error opening $file. Aborting!");
+        $ele = 0;
         
-        for ($i = 0; $i < 6; $i ++) {
-            $line = fgets($fh);
-        }
-        
-        $curY = 0;
-        
-        while (($line = fgets($fh)) !== false) {
+        if (array_key_exists($cacheKey, $this->fileCache) === false) {
+            // $avant = microtime(true);
+            // $this->fileCache = [];
+            $this->fileCache[$cacheKey] = [];
             
-            if ($curY == $indexY) {
-                $values = explode(' ', trim($line));
-                $ele = round($values[$indexX]); // TODO : gérer les centimetres dans l'image retournée
-                return $ele;
+            $fileName = $this->getEleFileFromCoord($lambertX, $lambertY);
+
+            /*
+            $fh = fopen($fileName, 'r') or die("Error opening $fileName. Aborting!");
+            
+            for ($i = 0; $i < 6; $i ++) {
+                $line = fgets($fh);
             }
 
-            $curY ++;
+
+            $curY = 0;
+            
+            while (($line = fgets($fh)) !== false) {
+                $values = explode(' ', trim($line));
+                $this->fileCache[$cacheKey][$curY] = $values;
+                $curY ++;
+            }
+
+
+            fclose($fh);
+            */
+
+            $fileContent = file_get_contents($fileName);
+            $fileLines = explode(PHP_EOL, $fileContent);
+
+            $headerSize = 6;
+            $lineCount = count($fileLines);
+
+            // echo 'Read file ' . $cacheKey . '<br>';
+
+            for ($i = $headerSize; $i < $lineCount; $i ++) {
+                $values = explode(' ', trim($fileLines[$i]));
+                $this->fileCache[$cacheKey][$i - 6] = $values;
+            }
+
+            // $after = microtime(true);
+
+            // var_dump($after - $avant); // en micro secondes
+            // $this->readTotalTime += $after - $avant;
         }
 
+        $ele = $this->fileCache[$cacheKey][$indexY][$indexX];
+        $ele = round($ele); // TODO : gérer les centimetres dans l'image retournée
 
-        fclose($fh);
-
-        // echo 'NO FOUND, $indexY : ' . $indexY . ', $indexX : ' . $indexX . '<br>';
-        // echo '$lambertX : ' . $lambertX . ', $lambertY : ' . $lambertY . '<br>';
-        // echo '$file : ' . basename($file) . '<br>';
-        // echo '<br>';
-
-        return 0;
+        return $ele;
     }
 
     protected function getEleFileFromCoord($x, $y) {
-        $x = floor($x / 1000);
-        $x = str_pad($x, 4, '0', STR_PAD_LEFT);
-
-        $y = floor($y / 1000);
-        $y += 1;
-        $y = str_pad($y, 4, '0', STR_PAD_LEFT);
-
-        $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $x . '_' . $y . '_MNT_LAMB93_IGN69.asc';
+        $fileIndex = $this->getEleFileIndex($x, $y);
+        
+        $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_LAMB93_IGN69.asc';
 
         if (!is_file($fileName)) {
             // echo 'file ' . $fileName . ' not exist' . PHP_EOL;
@@ -172,6 +200,20 @@ class Api_ign extends Api_default {
         }
 
         return $fileName;
+    }
+
+    protected function getEleFileIndex($x, $y) {
+        $x = floor($x / 1000);
+        $x = str_pad($x, 4, '0', STR_PAD_LEFT);
+
+        $y = floor($y / 1000);
+        $y += 1;
+        $y = str_pad($y, 4, '0', STR_PAD_LEFT);
+
+        return [
+            'x' => $x,
+            'y' => $y,
+        ];
     }
 
     private function tileToCoords($_tile_x, $_tile_y, $_zoom) {

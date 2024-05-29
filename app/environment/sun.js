@@ -192,7 +192,7 @@ function updatePositionPlane() {
 	sunParams.position.y = ySin * orbitRadius;
 	sunParams.position.z = zCos1 * (orbitRadius * zCos2);
 
-	const sunMeshDistance = orbitRadius * 4;
+	const sunMeshDistance = orbitRadius * 8;
 	meshSun.position.x = (xSin * (sunMeshDistance * xCos)) + posCenter.x;
 	meshSun.position.y = (ySin * sunMeshDistance) + posCenter.y;
 	meshSun.position.z = (zCos1 * (sunMeshDistance * zCos2)) + posCenter.z;

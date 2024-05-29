@@ -2,7 +2,7 @@ import * as DataLoader from '../dataLoader.js';
 import {GLOBE} from '../../core/globe.js';
 
 const PARAMS = {
-	nbLoaders : 1,
+	nbLoaders : 2,
 	useCache : false, 
 };
 
