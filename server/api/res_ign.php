@@ -7,13 +7,13 @@ class Api_ign extends Api_default {
     // public $contentType = 'text';
     // public $contentType = 'text/html';
     protected $dirCache = PATH_CACHE . 'ign_alti';
-    private $dirRaw = PATH_DATAS . 'rge_alti';
+    private $dirRaw = PATH_DATAS . 'rge_alt_zip';
     private $params;
 
     private $fileCache;
-    private $readTotalTime;
     private $outOfBound;
     private $srtmElevation;
+    private ZipArchive $zip;
 
     public function __construct($params) {
         // $this->useCache = false;
@@ -24,14 +24,13 @@ class Api_ign extends Api_default {
         parent::__construct($params);
 
         $this->fileCache = [];
-        $this->readTotalTime = 0;
         $this->outOfBound = false;
 
         $this->srtmElevation = new Api_elevation($params);
 
         ini_set('memory_limit', '1024M');
 
-
+        $this->zip = new ZipArchive;
         /*
         $zip = new ZipArchive;
         $zip->open(PATH_DATAS . '/RGEALTI_FXX_0721_6333_MNT_LAMB93_IGN69.zip');
@@ -46,10 +45,11 @@ class Api_ign extends Api_default {
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
+
         if ($this->mustFetchDatas($filePath)) {
             $filePath = $this->buildElevationImage($filePath);
         }
-        // echo '$this->readTotalTime: ' . $this->readTotalTime . '<br>';
+
         return file_get_contents($filePath);
     }
 
@@ -164,7 +164,12 @@ class Api_ign extends Api_default {
 
             $this->fileCache[$cacheKey] = [];
 
-            $fileContent = file_get_contents($fileName);
+            $this->zip->open($fileName . '.zip');
+            $fileContent = $this->zip->getFromName(basename($fileName) . '.asc');
+            $test = $this->zip->getNameIndex(0);
+            $this->zip->close();
+
+            // $fileContent = file_get_contents($fileName);
             $fileLines = explode(PHP_EOL, $fileContent);
 
             $headerSize = 6;
@@ -185,9 +190,9 @@ class Api_ign extends Api_default {
     protected function getEleFileFromCoord($x, $y) {
         $fileIndex = $this->getEleFileIndex($x, $y);
         
-        $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_LAMB93_IGN69.asc';
+        $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_LAMB93_IGN69';
 
-        if (!is_file($fileName)) {
+        if (!is_file($fileName . '.zip')) {
             $this->outOfBound = true;
             return null;
         }
