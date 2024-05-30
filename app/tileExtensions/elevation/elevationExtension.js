@@ -90,7 +90,10 @@ class ElevationExtension {
 	}
 	
 	#applyElevationToGeometry(elevationBuffer) {
-		if (!this.tile.isReady) return false;
+		if (!this.tile.isReady) {
+			return false;
+		}
+		
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
 		const vertCoords = this.tile.getVerticesPlaneCoords();
@@ -121,9 +124,9 @@ class ElevationExtension {
 		if (this.dataLoaded) {
 			ElevationStore.delete(this.tile);
 			const def = GLOBE.tilesDefinition + 1;
-			const buffer = new Uint16Array(def * def);
-			buffer.fill(0);
-			this.#applyElevationToGeometry(buffer);
+			// const buffer = new Uint16Array(def * def);
+			// buffer.fill(0);
+			// this.#applyElevationToGeometry(buffer);
 		}
 
 		this.dataLoaded = false;
