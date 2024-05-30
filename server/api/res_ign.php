@@ -1,4 +1,6 @@
 <?php
+require_once(dirname(__FILE__) . '/res_elevation.php');
+
 class Api_ign extends Api_default {
 
     public $contentType = 'image/png';
@@ -10,23 +12,42 @@ class Api_ign extends Api_default {
 
     private $fileCache;
     private $readTotalTime;
+    private $outOfBound;
+    private $srtmElevation;
 
     public function __construct($params) {
         // $this->useCache = false;
         $this->params = $params;
+        if (isset($_params['output']) && $_params['output'] == 'text') {
+            $this->contentType = 'text/html';
+        }
         parent::__construct($params);
 
         $this->fileCache = [];
         $this->readTotalTime = 0;
+        $this->outOfBound = false;
 
-        ini_set('memory_limit', '512M');
+        $this->srtmElevation = new Api_elevation($params);
+
+        ini_set('memory_limit', '1024M');
+
+
+        /*
+        $zip = new ZipArchive;
+        $zip->open(PATH_DATAS . '/RGEALTI_FXX_0721_6333_MNT_LAMB93_IGN69.zip');
+        $fileContent = $zip->getFromName('RGEALTI_FXX_0721_6333_MNT_LAMB93_IGN69.asc');
+        $zip->close();
+        echo 'A<br>';
+        echo $fileContent;
+        exit();
+        */
     }
     
     public function process() {
         $filePath = $this->dirCache . '/' . $this->buildFilePath($this->params);
         $this->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
         if ($this->mustFetchDatas($filePath)) {
-            $this->buildElevationImage($filePath);
+            $filePath = $this->buildElevationImage($filePath);
         }
         // echo '$this->readTotalTime: ' . $this->readTotalTime . '<br>';
         return file_get_contents($filePath);
@@ -79,15 +100,7 @@ class Api_ign extends Api_default {
             $pixY = 0;
             for ($i = 0; $i <= $def; $i ++) {
                 $curLat = ($south + ($i * $stepLat));
-
-                
                 $tmpElevation = $this->extractElevation($curLon, $curLat);
-                
-                // if ($tmpElevation == 0) {
-                    // echo '$tmpElevation : ' . $tmpElevation . '<br>';
-                // }
-                
-                // echo 'X : ' . $pixX . ', Y : ' . ($imageSize - 1) - $pixY . ', $tmpElevation : ' . $tmpElevation . '<br>';
 
                 if ($tmpElevation >= 0) {
                     $elevation = $tmpElevation;
@@ -106,8 +119,14 @@ class Api_ign extends Api_default {
             $pixX ++;
         }
 
+        if ($this->outOfBound === true) {
+            $_filePath = $this->srtmElevation->dirCache . '/' . $this->buildFilePath($this->params);
+            $this->srtmElevation->makeFolders([$this->params['z'], $this->params['x'], $this->params['y']]);
+        }
         imagepng($imageObject, $_filePath, 9);
         imagedestroy($imageObject);
+
+        return $_filePath;
     }
 
     private function extractElevation($lon, $lat) {
@@ -116,8 +135,6 @@ class Api_ign extends Api_default {
         $lambertCoord = $this->coordToLambert($lon, $lat);
         $lambertX = round($lambertCoord[0]);
         $lambertY = round($lambertCoord[1]);
-
-        // echo '$lambertX : ' . $lambertX . ', $lambertY : ' . $lambertY . '<br>';
 
         $kmX = $lambertX / 1000;
         $meterX = $kmX - floor($kmX);
@@ -138,31 +155,14 @@ class Api_ign extends Api_default {
         $ele = 0;
         
         if (array_key_exists($cacheKey, $this->fileCache) === false) {
-            // $avant = microtime(true);
-            // $this->fileCache = [];
-            $this->fileCache[$cacheKey] = [];
-            
             $fileName = $this->getEleFileFromCoord($lambertX, $lambertY);
-
-            /*
-            $fh = fopen($fileName, 'r') or die("Error opening $fileName. Aborting!");
             
-            for ($i = 0; $i < 6; $i ++) {
-                $line = fgets($fh);
+            if ($fileName === null) {
+                // Fallback to SRTM
+                return $this->srtmElevation->extractElevation($lat, $lon);
             }
 
-
-            $curY = 0;
-            
-            while (($line = fgets($fh)) !== false) {
-                $values = explode(' ', trim($line));
-                $this->fileCache[$cacheKey][$curY] = $values;
-                $curY ++;
-            }
-
-
-            fclose($fh);
-            */
+            $this->fileCache[$cacheKey] = [];
 
             $fileContent = file_get_contents($fileName);
             $fileLines = explode(PHP_EOL, $fileContent);
@@ -170,17 +170,10 @@ class Api_ign extends Api_default {
             $headerSize = 6;
             $lineCount = count($fileLines);
 
-            // echo 'Read file ' . $cacheKey . '<br>';
-
             for ($i = $headerSize; $i < $lineCount; $i ++) {
                 $values = explode(' ', trim($fileLines[$i]));
                 $this->fileCache[$cacheKey][$i - 6] = $values;
             }
-
-            // $after = microtime(true);
-
-            // var_dump($after - $avant); // en micro secondes
-            // $this->readTotalTime += $after - $avant;
         }
 
         $ele = $this->fileCache[$cacheKey][$indexY][$indexX];
@@ -195,8 +188,8 @@ class Api_ign extends Api_default {
         $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_LAMB93_IGN69.asc';
 
         if (!is_file($fileName)) {
-            // echo 'file ' . $fileName . ' not exist' . PHP_EOL;
-            exit;
+            $this->outOfBound = true;
+            return null;
         }
 
         return $fileName;

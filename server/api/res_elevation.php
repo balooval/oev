@@ -3,13 +3,14 @@ class Api_elevation extends Api_default {
 
     public $contentType = 'image/png';
     // public $contentType = 'text';
-    protected $dirCache = PATH_CACHE . 'srtm_1';
+    public $dirCache = PATH_CACHE . 'srtm_1';
     private $dirRaw = PATH_DATAS . 'srtm_1_unpack';
     private $params;
 
-    public function __construct($_params) {
+    public function __construct($params) {
         // $this->useCache = false;
-        $this->params = $_params;
+        $this->params = $params;
+        parent::__construct($params);
     }
     
     public function process() {
@@ -72,7 +73,7 @@ class Api_elevation extends Api_default {
         imagedestroy($imageObject);
     }
 
-    private function extractElevation($_lat, $_lon) {
+    public function extractElevation($_lat, $_lon) {
         set_time_limit(30);
         // $measPerDeg = 1201; // 3 second data
         $measPerDeg = 3601; // 1 second data ?
