@@ -124,6 +124,8 @@ class ElevationExtension {
 		if (this.dataLoaded) {
 			ElevationStore.delete(this.tile);
 			const def = GLOBE.tilesDefinition + 1;
+
+			// Si on désactive l'extension, il faut aplatir la tile :
 			// const buffer = new Uint16Array(def * def);
 			// buffer.fill(0);
 			// this.#applyElevationToGeometry(buffer);

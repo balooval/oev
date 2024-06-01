@@ -12,6 +12,19 @@ let store = [{
 
 
 const api = {
+
+	debug: function(count, parent) {
+		const res = api.debugCount(0, store[0]);
+		console.log('res', res);
+	},
+
+	debugCount: function(count, parent) {
+		count += parent.childs.length;
+		for (let i = 0; i < parent.childs.length; i ++) {
+			count = api.debugCount(count, parent.childs[i]);
+		}
+		return count;
+	},
 	
 	set : function(tile, buffer) {
 		const struct = {
@@ -24,7 +37,6 @@ const api = {
 			midLat : tile.middleCoord.y, 
 			datas : buffer, 
 			childs : [], 
-			// key : tile.zoom + '-' + tile.tileX + '-' + tile.tileY, 
 		};
 		addStruct(struct, store);
 	}, 
@@ -56,7 +68,6 @@ const api = {
 
 		while(true) {
 			prevParent = validParent;
-			// let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
 
 			let parent = null;
 
@@ -75,7 +86,6 @@ const api = {
 			parents = parent.childs;
 
 			if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
-				// prevParent.childs = prevParent.childs.filter(s => !isStructure(s, startLon, startLat, endLon, endLat));
 
 				validParent.datas = null;
 				validParent.childs = [];
@@ -170,8 +180,6 @@ function searchCoord(_lon, _lat) {
 			break;
 		}
 
-		// let parent = parents.filter(s => structContainCoord(s, _lon, _lat)).pop();
-		// if (!parent) break;
 		validParent = parent;
 		parents = parent.childs;
 	}

@@ -31,15 +31,6 @@ class Api_ign extends Api_default {
         ini_set('memory_limit', '1024M');
 
         $this->zip = new ZipArchive;
-        /*
-        $zip = new ZipArchive;
-        $zip->open(PATH_DATAS . '/RGEALTI_FXX_0721_6333_MNT_LAMB93_IGN69.zip');
-        $fileContent = $zip->getFromName('RGEALTI_FXX_0721_6333_MNT_LAMB93_IGN69.asc');
-        $zip->close();
-        echo 'A<br>';
-        echo $fileContent;
-        exit();
-        */
     }
     
     public function process() {
@@ -133,8 +124,8 @@ class Api_ign extends Api_default {
         set_time_limit(30);
 
         $lambertCoord = $this->coordToLambert($lon, $lat);
-        $lambertX = round($lambertCoord[0]);
-        $lambertY = round($lambertCoord[1]);
+        $lambertX = round($lambertCoord['x']);
+        $lambertY = round($lambertCoord['y']);
 
         $kmX = $lambertX / 1000;
         $meterX = $kmX - floor($kmX);
@@ -155,7 +146,13 @@ class Api_ign extends Api_default {
         $ele = 0;
         
         if (array_key_exists($cacheKey, $this->fileCache) === false) {
-            $fileName = $this->getEleFileFromCoord($lambertX, $lambertY);
+            $fileName = $this->getEleFileFromCoord(
+                $lambertX,
+                $lambertY,
+                $lambertCoord['projection'],
+                $lambertCoord['eleRef'],
+                $lambertCoord['zone'],
+            );
             
             if ($fileName === null) {
                 // Fallback to SRTM
@@ -187,10 +184,12 @@ class Api_ign extends Api_default {
         return $ele;
     }
 
-    protected function getEleFileFromCoord($x, $y) {
+    protected function getEleFileFromCoord($x, $y, $projection, $eleRef, $zone) {
         $fileIndex = $this->getEleFileIndex($x, $y);
         
-        $fileName = $this->dirRaw . '/' . 'RGEALTI_FXX_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_LAMB93_IGN69';
+        $fileName = $this->dirRaw . '/' . 'RGEALTI_' . $zone . '_' . $fileIndex['x'] . '_' . $fileIndex['y'] . '_MNT_' . $projection . '_' . $eleRef;
+        // echo $fileName;
+        // exit();
 
         if (!is_file($fileName . '.zip')) {
             $this->outOfBound = true;
@@ -214,13 +213,6 @@ class Api_ign extends Api_default {
         ];
     }
 
-    private function tileToCoords($_tile_x, $_tile_y, $_zoom) {
-        $p = [0, 0];
-        $n = pi() - ((2.0 * pi() * $_tile_y) / pow(2.0, $_zoom));
-        $p[0] = (($_tile_x / pow(2.0, $_zoom) * 360.0) - 180.0);
-        $p[1] = (180.0 / pi() * atan(sinh($n)));
-        return $p;
-    }
-
 }
+
 ?>

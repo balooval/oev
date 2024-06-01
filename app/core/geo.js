@@ -71,7 +71,7 @@ class Geo {
 
 	// Return altitude in webgl unit
 	getAltitude(zoomlevel, radius, projection) {
-		return (radius * 6) / Math.pow(2, zoomlevel);
+		return (radius * 8) / Math.pow(2, zoomlevel);
 		if (projection === 'SPHERE') {
 			return (radius * Math.PI * 2) / Math.pow(2, zoomlevel);
 		}

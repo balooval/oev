@@ -97,13 +97,5 @@ class Api_node extends Api_default {
         return $this->serversOverpass[$index];
     }
 
-    private function tileToCoords($_tileX, $_tileY, $_zoom) {
-        $p = [0, 0];
-        $n = pi() - ((2.0 * pi() * $_tileY) / pow(2.0, $_zoom));
-        $p[0] = (($_tileX / pow(2.0, $_zoom) * 360.0) - 180.0);
-        $p[1] = (180.0 / pi() * atan(sinh($n)));
-        return $p;
-    }
-
 }
 ?>

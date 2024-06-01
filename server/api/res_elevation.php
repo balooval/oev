@@ -136,13 +136,5 @@ class Api_elevation extends Api_default {
         return $fileName;
     }
 
-    private function tileToCoords($_tile_x, $_tile_y, $_zoom) {
-        $p = [0, 0];
-        $n = pi() - ((2.0 * pi() * $_tile_y) / pow(2.0, $_zoom));
-        $p[0] = (($_tile_x / pow(2.0, $_zoom) * 360.0) - 180.0);
-        $p[1] = (180.0 / pi() * atan(sinh($n)));
-        return $p;
-    }
-
 }
 ?>
