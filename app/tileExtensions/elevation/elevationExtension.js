@@ -14,7 +14,7 @@ class ElevationExtension {
 		this.id = 'ELEVATION';
 		this.dataLoading = false;
 		this.dataLoaded = false;
-		this.elevationBuffer = new Uint16Array((32 * 32) / 4); // TODO: 32 devrait être GLOBE.tilesDefinition. Voir même l'initialiser vide ...
+		this.elevationBuffer = new Float32Array((32 * 32) / 4); // TODO: 32 devrait être GLOBE.tilesDefinition. Voir même l'initialiser vide ...
 		this.tile = tile;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
@@ -63,7 +63,7 @@ class ElevationExtension {
 
 	#nearestElevationDatas() {
 		const def = GLOBE.tilesDefinition + 1;
-		const buffer = new Uint16Array(def * def);
+		const buffer = new Float32Array(def * def);
 		const vertCoords = this.tile.getVerticesPlaneCoords();
 
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
@@ -126,7 +126,7 @@ class ElevationExtension {
 			const def = GLOBE.tilesDefinition + 1;
 
 			// Si on désactive l'extension, il faut aplatir la tile :
-			// const buffer = new Uint16Array(def * def);
+			// const buffer = new Float32Array(def * def);
 			// buffer.fill(0);
 			// this.#applyElevationToGeometry(buffer);
 		}

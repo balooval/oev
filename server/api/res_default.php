@@ -116,9 +116,16 @@ abstract class Api_default {
         $x93 = $x0 + $c * exp(-1 * $n * $gl) * sin($n * ($l - $lc));
         $y93 = $ys - $c * exp(-1 * $n * $gl) * cos($n * ($l - $lc));
 
+        $eleRef = 'IGN69';
+
+        // Corse
+        if ($latitude > 41.3 && $latitude < 43.5 && $longitude > 8.4 && $longitude < 9.7) {
+            $eleRef = 'IGN78C';
+        }
+
         return [
             'zone' => 'FXX',
-            'eleRef' => 'IGN69',
+            'eleRef' => $eleRef,
             'projection' => 'LAMB93',
             'x' => $x93,
             'y' => $y93,

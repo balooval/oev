@@ -96,10 +96,13 @@ class Api_ign extends Api_default {
                 if ($tmpElevation >= 0) {
                     $elevation = $tmpElevation;
                 }
+
+                $elevationMeter = floor($elevation);
                 
-                $red = floor($elevation / 256);
-                $blue = $elevation - ($red * 256);
-                $green = 0;
+                $red = floor($elevationMeter / 256);
+                $blue = $elevationMeter - ($red * 256);
+                $green = $elevation - floor($elevation);
+                $green = round($green * 100);
                 
                 $pixColor = imagecolorallocate($imageObject, $red, $green, $blue);
                 imagesetpixel($imageObject, $pixX, ($imageSize - 1) - $pixY, $pixColor);
@@ -179,7 +182,7 @@ class Api_ign extends Api_default {
         }
 
         $ele = $this->fileCache[$cacheKey][$indexY][$indexX];
-        $ele = round($ele); // TODO : gérer les centimetres dans l'image retournée
+        // $ele = round($ele); // TODO : gérer les centimetres dans l'image retournée
 
         return $ele;
     }

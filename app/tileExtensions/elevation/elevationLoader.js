@@ -59,7 +59,7 @@ const context = canvas.getContext('2d', {willReadFrequently: true});
 function extractElevation(image, imageWidth, imageHeight) {
     context.drawImage(image, 0, 0, imageWidth, imageHeight);
     const imageData = context.getImageData(0, 0, imageWidth, imageHeight).data;
-    const eleBuffer = new Uint16Array(imageData.length / 4);
+    const eleBuffer = new Float32Array(imageData.length / 4);
     let bufferIndex = 0;
 
     for (let x = 0; x < imageWidth; ++x) {
@@ -69,7 +69,9 @@ function extractElevation(image, imageWidth, imageHeight) {
             const red = imageData[index];
             index ++;
             const blue = imageData[++index];
-            const alt = red * 256 + blue;
+            const green = imageData[++index];
+			const centimeters = green / 100;
+            const alt = red * 256 + blue + centimeters;
             eleBuffer[bufferIndex] = alt;
             bufferIndex ++;
         }
