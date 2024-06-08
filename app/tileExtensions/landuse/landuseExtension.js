@@ -41,9 +41,15 @@ class LanduseExtension {
     }
 
     #onTileReady() {
-		if (this.dataLoaded) return true;
-        if (this.dataLoading) return false;
-        if (!this.isActive) return false;
+		if (this.dataLoaded) {
+            return true;
+        }
+        if (this.dataLoading) {
+            return false;
+        }
+        if (!this.isActive) {
+            return false;
+        }
 		this.dataLoading = true;
 		LanduseLoader.loader.getData({
                 z : this.tile.zoom, 

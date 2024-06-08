@@ -144,10 +144,15 @@ function coordGrid(tile, _bbox, _border) {
     return grid;
 }
 
-function isTagSupported(_element, _zoom) {
-    const type = extractType(_element);
-    if (!type) return false;
-    if (_zoom != tagsZoom[type]) return false;
+function isTagSupported(element, zoom) {
+    const type = extractType(element);
+    if (!type) {
+        return false;
+    }
+    // if (zoom != tagsZoom[type]) {
+    if (zoom < tagsZoom[type]) {
+        return false;
+    }
 	return true;
 }
 
@@ -168,29 +173,29 @@ function extractType(_element) {
 }
 
 const equalsTags = {
-    wood : 'forest', 
-    farmyard : 'grass', 
-    farmland : 'grass', 
-    grassland : 'grass', 
-    orchard : 'grass', 
-    meadow : 'grass', 
-    greenfield : 'grass', 
-    village_green : 'grass', 
-    bare_rock : 'rock', 
-    scree : 'rock', 
-    basin : 'water', 
-    riverbank : 'water', 
+    wood: 'forest',
+    farmyard: 'grass',
+    farmland: 'grass',
+    grassland: 'grass',
+    orchard: 'grass',
+    meadow: 'grass',
+    greenfield: 'grass',
+    village_green: 'grass',
+    bare_rock: 'rock',
+    scree: 'rock',
+    basin: 'water',
+    riverbank: 'water',
 };
 
 const tagsZoom = {
-    residential : 13, 
-    forest : 13, 
-    scrub : 13, 
-    rock : 13, 
-    water : 15, 
-    wetland : 15, 
-    vineyard : 16, 
-    grass : 17, 
+    residential: 13,
+    forest: 13,
+    scrub: 13,
+    rock: 13,
+    water: 15,
+    wetland: 15,
+    vineyard: 16,
+    grass: 17,
 };
 
 const supportedTags = [

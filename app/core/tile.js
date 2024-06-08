@@ -70,6 +70,14 @@ export class TileBasic {
 		this.composeContext = this.composeMap.getContext('2d');
 		this.diffuseTexture = new Texture(this.composeMap);
 		this.diffuseTexture.needsUpdate = true;
+		
+        this.extensionsNormalsMaps = new Map();
+		this.composeNormalMap = this.#createCanvas();
+		this.composeNormalContext = this.composeNormalMap.getContext('2d');
+		this.composeNormalContext.drawImage(NET_TEXTURES.texture('neutralNormal').image, 0, 0, mapSize, mapSize);
+		this.normalTexture = new Texture(this.composeNormalMap);
+		this.normalTexture.needsUpdate = true;
+
 		this.diffuseMap = null;
 
 
@@ -81,7 +89,7 @@ export class TileBasic {
 			// map: dataTexture,
 			// map: NET_TEXTURES.texture('landuse_color'),
 			// roughnessMap: NET_TEXTURES.texture('landuse_roughness'),
-			// normalMap: NET_TEXTURES.texture('landuse_normal'),
+			normalMap: this.normalTexture,
 			// side: DoubleSide,
 		});
 
@@ -95,27 +103,59 @@ export class TileBasic {
 		this.detailMargin = 1;
     }
 
-    redrawDiffuse() {
-		if (!this.diffuseMap) return;
+	drawOnDiffuseMap(drawerId, image) {
+		this.extensionsMaps.set(drawerId, image);
+		this.redrawDiffuse();
+	}
+	
+	clearDiffuseLayer(drawerId) {
+		this.extensionsMaps.delete(drawerId);
+		this.redrawDiffuse();
+	}
+
+	redrawDiffuse() {
+		if (!this.diffuseMap) {
+			return;
+		}
 
 		this.composeContext.fillStyle = "#ffffff";
 		this.composeContext.fillRect(0, 0, mapSize, mapSize);
 
 		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, mapSize, mapSize);
         this.extensionsMaps.forEach(map => {
-            this.composeContext.drawImage(map, 0, 0);
+			this.composeContext.drawImage(map, 0, 0);
         });
 
-		// this.#debugDot(this.zoom);
-		
         this.diffuseTexture.needsUpdate = true
+        Renderer.MUST_RENDER = true;
+
+		// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
+    }
+
+	// TODO: gérer ces "calques" dans une classe dédiée qui saur as'occuper de tous les types de map de la même manière (diffuse, normal, ...)
+	drawOnNormalMap(drawerId, image) {
+		this.extensionsNormalsMaps.set(drawerId, image);
+		this.redrawNormalMap();
+	}
+	
+	clearNormalLayer(drawerId) {
+		this.extensionsNormalsMaps.delete(drawerId);
+		this.redrawNormalMap();
+	}
+
+	redrawNormalMap() {
+		this.composeNormalContext.drawImage(NET_TEXTURES.texture('neutralNormal').image, 0, 0, mapSize, mapSize);
+
+        this.extensionsNormalsMaps.forEach(map => {
+			this.composeNormalContext.drawImage(map, 0, 0);
+        });
+
+        this.normalTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
     }
 
 	#createCanvas() {
-		const canvas = document.createElement('canvas');
-		canvas.width = mapSize;
-		canvas.height = mapSize;
+		const canvas = new OffscreenCanvas(mapSize, mapSize);
 		return canvas;
 	}
 	
@@ -236,7 +276,6 @@ export class TileBasic {
 		this.meshe.geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
         this.meshe.geometry.attributes.uv.needsUpdate = true;
         this.diffuseMap = textureDatas.map.image;
-        this.evt.fireEvent('TEXTURE_CHANGED');
         this.redrawDiffuse();
 	}
 
@@ -557,12 +596,12 @@ export class TileBasic {
 		this.material.map = TextureLoader('checker');
 	}
 
-	#debugDot(dotValue) {
+	#debug(value) {
 		this.composeContext.fillStyle = "#ffffff";
-		this.composeContext.fillRect(100, 100, 100, 100);
+		this.composeContext.fillRect(50, 100, 150, 100);
 		this.composeContext.fillStyle = "#000000";
-		this.composeContext.font = "40px serif";
-		this.composeContext.fillText(' ' + dotValue, 120, 130);
+		this.composeContext.font = "20px serif";
+		this.composeContext.fillText(' ' + value, 50, 130);
         this.diffuseTexture.needsUpdate = true
 	}
 
@@ -583,6 +622,7 @@ export class TileBasic {
 
 		this.extensions.clear();
         this.extensionsMaps.clear();
+        this.extensionsNormalsMaps.clear();
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
 	}

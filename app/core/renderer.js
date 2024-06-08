@@ -69,7 +69,8 @@ const api = {
         api.camera.position.x = 0;
         api.camera.position.y = 0;
         api.camera.position.z = -500;	
-        webGlRenderer.setClearColor(0x91b8fb, 1);
+        // webGlRenderer.setClearColor(0x91b8fb, 1);
+        webGlRenderer.setClearColor(0x000000, 1);
         webGlRenderer.shadowMap.enabled = true;
         webGlRenderer.shadowMap.type = PCFSoftShadowMap;
         // webGlRenderer.shadowMap.type = VSMShadowMap;

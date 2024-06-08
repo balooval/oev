@@ -2,11 +2,12 @@ import * as DataLoader from '../dataLoader.js';
 import {GLOBE} from '../../core/globe.js';
 
 const PARAMS = {
-	nbLoaders : 4, 
+	nbLoaders : 2,
 	useCache : false, 
 };
 
 let API_URL = '';
+const IGN_URL = 'https://ns378984.ip-5-196-69.eu/server/api/index.php?ressource=ign';
 
 export function setApiUrl(_url) {
 	API_URL = _url;
@@ -30,7 +31,15 @@ class LoaderElevation {
 	load(params) {
 		this.isLoading = true;
 		this.params = params;
-		this.imageObj.src = API_URL + '&def=' + this.definition + '&z='+params.z+'&x='+params.x+'&y='+params.y;
+
+		let baseUrl = API_URL;
+		
+		if (params.z >= 15) {
+			baseUrl = IGN_URL;
+		}
+
+		let url = baseUrl + '&def=' + this.definition + '&z=' + params.z + '&x='+params.x+'&y='+params.y;
+		this.imageObj.src = url;
 	}
 	
 	onImgReady(image) {
@@ -43,27 +52,26 @@ class LoaderElevation {
 	}
 }
 
-
-const canvas = document.createElement('canvas');
 const canvasSize = GLOBE.tilesDefinition + 1;
-canvas.width = canvasSize;
-canvas.height = canvasSize;
+const canvas = new OffscreenCanvas(canvasSize, canvasSize);
 const context = canvas.getContext('2d', {willReadFrequently: true});
 
-function extractElevation(_img, _imgWidth, _imgHeight) {
-    context.drawImage(_img, 0, 0, _imgWidth, _imgHeight);
-    const imageData = context.getImageData(0, 0, _imgWidth, _imgHeight).data;
-    const eleBuffer = new Uint16Array(imageData.length / 4);
+function extractElevation(image, imageWidth, imageHeight) {
+    context.drawImage(image, 0, 0, imageWidth, imageHeight);
+    const imageData = context.getImageData(0, 0, imageWidth, imageHeight).data;
+    const eleBuffer = new Float32Array(imageData.length / 4);
     let bufferIndex = 0;
 
-    for (let x = 0; x < _imgWidth; ++x) {
+    for (let x = 0; x < imageWidth; ++x) {
         // for (let y = 0; y < _imgHeight; ++y) {
-        for (let y = _imgHeight - 1; y >= 0; y --) {
-            let index = (y * _imgWidth + x) * 4;
+        for (let y = imageHeight - 1; y >= 0; y --) {
+            let index = (y * imageWidth + x) * 4;
             const red = imageData[index];
             index ++;
             const blue = imageData[++index];
-            const alt = red * 256 + blue;
+            const green = imageData[++index];
+			const centimeters = green / 100;
+            const alt = red * 256 + blue + centimeters;
             eleBuffer[bufferIndex] = alt;
             bufferIndex ++;
         }

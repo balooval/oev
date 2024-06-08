@@ -1,6 +1,6 @@
 import {GLOBE} from '../../core/globe.js';
 
-const store = [{
+let store = [{
 	zoom : 1, 
 	startLon : -180, 
 	startLat : 90, 
@@ -12,6 +12,19 @@ const store = [{
 
 
 const api = {
+
+	debug: function(count, parent) {
+		const res = api.debugCount(0, store[0]);
+		console.log('res', res);
+	},
+
+	debugCount: function(count, parent) {
+		count += parent.childs.length;
+		for (let i = 0; i < parent.childs.length; i ++) {
+			count = api.debugCount(count, parent.childs[i]);
+		}
+		return count;
+	},
 	
 	set : function(tile, buffer) {
 		const struct = {
@@ -24,7 +37,6 @@ const api = {
 			midLat : tile.middleCoord.y, 
 			datas : buffer, 
 			childs : [], 
-			key : tile.zoom + '-' + tile.tileX + '-' + tile.tileY, 
 		};
 		addStruct(struct, store);
 	}, 
@@ -56,12 +68,37 @@ const api = {
 
 		while(true) {
 			prevParent = validParent;
-			let parent = parents.filter(s => structContainCoord(s, midLon, midLat)).pop();
-			if (!parent) break;
+
+			let parent = null;
+
+			for (const struct of parents) {
+				if (structContainCoord(struct, midLon, midLat) === true) {
+					parent = struct;
+					break;
+				}
+			}
+
+			if (!parent) {
+				break;
+			}
+
 			validParent = parent;
 			parents = parent.childs;
+
 			if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
-				prevParent.childs = prevParent.childs.filter(s => !isStructure(s, startLon, startLat, endLon, endLat));
+
+				validParent.datas = null;
+				validParent.childs = [];
+
+				const newChilds = []
+				for (const child of prevParent.childs) {
+					if (!isStructure(child, startLon, startLat, endLon, endLat)) {
+						newChilds.push(child);
+					}
+				}
+				
+				prevParent.childs = newChilds;
+				
 				break;
 			}
 		}
@@ -96,9 +133,9 @@ function interpolate(_struct, _lon, _lat) {
 	const prctFromLon = mapValue(_lon, _struct.startLon, _struct.endLon); // 0 -> 1
 	const prctFromLat = mapValue(_lat, _struct.endLat, _struct.startLat);
 
-	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> 17
+	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> GLOBE.tilesDefinition + 1
 	const bufferYMin = Math.floor(prctFromLat * vertBySide);
-	const bufferXMax = Math.ceil(prctFromLon * vertBySide); // 0 -> 17
+	const bufferXMax = Math.ceil(prctFromLon * vertBySide); // 0 -> GLOBE.tilesDefinition + 1
 	const bufferYMax = Math.ceil(prctFromLat * vertBySide);
 	
 	const bufferIndexMinXMinY = (bufferXMin * vertBySideMax) + bufferYMin;
@@ -111,7 +148,7 @@ function interpolate(_struct, _lon, _lat) {
 	const elevationMinXMaxY = _struct.datas[bufferIndexMinXMaxY];
 	const elevationMaxXMaxY = _struct.datas[bufferIndexMaxXMaxY];
 
-	const prctX = mapValue(prctFromLon * vertBySide, Math.floor(prctFromLon * vertBySide), Math.ceil(prctFromLon * vertBySide)); // 0 -> 16
+	const prctX = mapValue(prctFromLon * vertBySide, Math.floor(prctFromLon * vertBySide), Math.ceil(prctFromLon * vertBySide)); // 0 -> GLOBE.tilesDefinition
 	const prctY = mapValue(prctFromLat * vertBySide, Math.floor(prctFromLat * vertBySide), Math.ceil(prctFromLat * vertBySide));
 	
 	const interpolXMin = slideValue(elevationMinXMinY, elevationMaxXMinY, prctX);
@@ -129,8 +166,20 @@ function searchCoord(_lon, _lat) {
 	let validParent;
 	let parents = store;
 	while(true) {
-		let parent = parents.filter(s => structContainCoord(s, _lon, _lat)).pop();
-		if (!parent) break;
+
+		let parent = null;
+
+		for (let i = 0; i < parents.length; i ++) {
+			const struct = parents[i];
+			if (structContainCoord(struct, _lon, _lat) === true) {
+				parent = struct
+			}
+		}
+
+		if (parent === null) {
+			break;
+		}
+
 		validParent = parent;
 		parents = parent.childs;
 	}
@@ -139,6 +188,7 @@ function searchCoord(_lon, _lat) {
 
 function addStruct(_struct, _parents) {
 	let validParent;
+	
 	while(true) {
 		let parent = _parents.filter(s => structContainStruct(s, _struct)).pop();
 		if (parent) {
@@ -148,6 +198,7 @@ function addStruct(_struct, _parents) {
 			break;
 		}
 	}
+
 	_struct.childs = validParent.childs.filter(s => structContainStruct(_struct, s));
 	validParent.childs = validParent.childs.filter(s => !structContainStruct(_struct, s));
 	validParent.childs.push(_struct);

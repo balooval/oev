@@ -13,8 +13,8 @@ class Geo {
 		for (let i = 0; i < coords.length; i ++) {
 			const coord = coords[i];
 			const point = [
-                MATH.mapValue(coord[0], box[0], box[1]) * canvasSize, 
-                MATH.mapValue(coord[1], box[2], box[3]) * canvasSize, 
+                MATH.mapValue(coord[0], box[0], box[1]) * canvasSize,
+                canvasSize - (MATH.mapValue(coord[1], box[2], box[3]) * canvasSize),
 			];
 			points[i] = point;
 		}
@@ -71,7 +71,7 @@ class Geo {
 
 	// Return altitude in webgl unit
 	getAltitude(zoomlevel, radius, projection) {
-		return (radius * 6) / Math.pow(2, zoomlevel);
+		return (radius * 8) / Math.pow(2, zoomlevel);
 		if (projection === 'SPHERE') {
 			return (radius * Math.PI * 2) / Math.pow(2, zoomlevel);
 		}

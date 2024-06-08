@@ -158,21 +158,8 @@ const OEV = {
 		const toLoad = [
 			['checker', 'loading.png'], 
 			['sky_gradient', 'sky_gradient.png'], 
-			['waypoint', 'waypoint.png'], 
-			// ['landuse_normal', '/landuse/Pebbles_026_normal.jpg'], 
-			// ['landuse_normal', '/landuse/Dried_Soil_001_NRM.jpg'], 
-			// ['landuse_color', '/landuse/Pebbles_007_COLOR.jpg'], 
-			// ['landuse_normal', '/landuse/Pebbles_007_NORM.jpg'], 
-			// ['landuse_roughness', '/landuse/Pebbles_007_ROUGH.jpg'], 
-			// ['landuse_normal', '/landuse/Hedge_001_Normal.jpg'], 
-			// ['landuse_color', '/landuse/Hedge_001_BaseColor.jpg'], 
-			// ['landuse_roughness', '/landuse/Hedge_001_Roughness.jpg'], 
-			// ['landuse_normal', '/landuse/Ground_Dirt_008_normal.jpg'], 
-			// ['landuse_color', '/landuse/Ground_Dirt_008_baseColor.jpg'], 
-			// ['landuse_roughness', '/landuse/Ground_Dirt_008_roughness.jpg'], 
-			// ['landuse_color', '/landuse/Ground_Dirt_009_baseColor.jpg'],
-			// ['landuse_normal', '/landuse/Ground_Dirt_009_normal.jpg'],
-			// ['landuse_roughness', '/landuse/Ground_Dirt_009_roughness.jpg'],
+			['waypoint', 'waypoint.png'],
+			['neutralNormal', 'neutral-normal.png'],
 		];
 		toLoad.forEach(d => NET_TEXTURES.addToList(textList, d[0], d[1]));
 		return new Promise((resolve) => {
