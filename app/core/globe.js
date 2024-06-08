@@ -114,6 +114,10 @@ class Globe {
 		this.meshe.remove(mesh);
 	}
 
+	getRadius() {
+		return this.radius;
+	}
+
 	update() {
 		this.objToUpdate.forEach(o => o.update());
 	}
@@ -302,7 +306,7 @@ class Globe {
 		this.#applyNewProjection(PROJECTION_SPHERE);
 
 		Renderer.camera.near = 1;
-		Renderer.camera.far = this.radius;
+		Renderer.camera.far = this.radius * 2;
 		Renderer.camera.updateProjectionMatrix();
 	}
 

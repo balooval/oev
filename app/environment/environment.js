@@ -26,6 +26,7 @@ const api = {
 		GLOBE.evt.addEventListener('PROJECTION_CHANGE', api, api.onProjectionChanged);
 		GLOBE.cameraControler.evt.addEventListener('CAM_UPDATED', api, api.onCameraUpdated);
 		SUN.init();
+		SKY.init();
 		GLOBE.evt.addEventListener('LOD_CHANGED', api, api.onLodChanged);
 		api.onLodChanged();
 		api.onTimeChanged(0.5);
@@ -67,7 +68,7 @@ const api = {
 	activate : function(state) {
 		api.addDebugCube();
 		SUN.activate(state);
-		// SKY.activate(state);
+		SKY.activate(state);
 
 		if (state) {
 			api.onTimeChanged(0.5);
@@ -83,7 +84,7 @@ const api = {
 		posCenter.x = cameraDatas.posLookat[0];
 		posCenter.y = cameraDatas.posLookat[1];
 		posCenter.z = cameraDatas.posLookat[2];
-		SKY.setPosition(posCenter);
+		SKY.setPosition(posCenter, cameraDatas.orientation);
 		SUN.setPosition(posCenter);
 	}, 
 
@@ -100,6 +101,7 @@ const api = {
 			}
 		}
 
+		SKY.setProjection(projection);
 		SUN.setProjection(projection);
 	},
 };

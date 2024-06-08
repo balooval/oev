@@ -28,6 +28,7 @@ export class CameraGod {
 		this.mouseLastPos = [0, 0];
 		this.zoomCur = _startPosition.z;
 		this.viewDirection = new Vector2(0, -1);
+		this.orientation = new Vector3(0, 0, 1);
 		this.coordLookat = new Vector3(_startPosition.x, _startPosition.y, 0);
 		this.lookAtVector = new Vector3(0, 0, 0);
 		this.zoomDest = this.zoomCur;
@@ -241,9 +242,15 @@ export class CameraGod {
 		
 		// this.#updateFogScale();
 
+		this.orientation.subVectors(
+			new Vector3(posLookat[0], posLookat[1], posLookat[2]),
+			new Vector3(posCam[0], posCam[1], posCam[2]),
+		).normalize();
+
 		Renderer.MUST_RENDER = true;
 
 		this.updateData = {
+			orientation: this.orientation,
 			detailMargin: 2,
 			zoom: this.zoomCur,
 			posCamera : posCam,

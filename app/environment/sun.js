@@ -73,10 +73,10 @@ export function setProjection(projection) {
 	updateSunPosition();
 }
 
-export function setTime(_time) {
-	sunParams.azimuth = (_time * 2) - 1;
-	sunParams.inclinaison = Math.cos(_time * Math.PI * 2) * -1;
-	updateSunColor(_time);
+export function setTime(time) {
+	sunParams.azimuth = (time * 2) - 1;
+	sunParams.inclinaison = Math.cos(time * Math.PI * 2) * -1;
+	updateSunColor(time);
 	updateSunPosition();
 	return sunParams;
 }
@@ -143,7 +143,7 @@ function updateSunColor(_time) {
 			rampColorFog.g / 255,
 			rampColorFog.b / 255
 		);
-		Renderer.setBackgroundColor(Renderer.scene.fog.color);
+		// Renderer.setBackgroundColor(Renderer.scene.fog.color);
 	}
 
 	Renderer.MUST_RENDER = true;
@@ -232,11 +232,9 @@ function removeSun() {
 }
 
 function getImageData(image) {
-	var canvas = document.createElement('canvas');
-	canvas.width = image.width;
-	canvas.height = image.height;
-	var context = canvas.getContext( '2d' );
-	context.drawImage( image, 0, 0 );
+	const canvas = new OffscreenCanvas(image.width, image.height);
+	const context = canvas.getContext( '2d' );
+	context.drawImage(image, 0, 0);
 	return context.getImageData(0, 0, image.width, image.height);
 }
 
