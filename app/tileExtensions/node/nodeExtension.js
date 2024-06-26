@@ -4,7 +4,7 @@ import {GLOBE} from '../../core/globe.js';
 import * as NodeLoader from './nodeLoader.js';
 import NodeMaterial from './nodeMaterial.js';
 import NodeModels from './nodeModels.js';
-import ElevationStore from '../elevation/elevationStore.js';
+import * as ElevationStore from '../elevation/elevationStore.js';
 import * as CachedGeometry from '../../utils/cacheGeometry.js';
 
 export {setApiUrl} from './nodeLoader.js';

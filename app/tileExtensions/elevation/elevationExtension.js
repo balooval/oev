@@ -1,6 +1,6 @@
 import Renderer from '../../core/renderer.js';
 import {GLOBE} from '../../core/globe.js';
-import ElevationStore from './elevationStore.js';
+import * as ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
 export {setApiUrl} from './elevationLoader.js';
@@ -14,7 +14,6 @@ class ElevationExtension {
 		this.id = 'ELEVATION';
 		this.dataLoading = false;
 		this.dataLoaded = false;
-		this.elevationBuffer = new Float32Array((32 * 32) / 4); // TODO: 32 devrait être GLOBE.tilesDefinition. Voir même l'initialiser vide ...
 		this.tile = tile;
 		this.tile.evt.addEventListener('TILE_READY', this, this.onTileReady);
 		this.tile.evt.addEventListener('DISPOSE', this, this.dispose);
@@ -84,9 +83,8 @@ class ElevationExtension {
 		}
 
 		this.dataLoaded = true;
-		this.elevationBuffer = datas;
-		ElevationStore.set(this.tile, this.elevationBuffer);
-		this.#applyElevationToGeometry(this.elevationBuffer);
+		ElevationStore.set(this.tile, datas);
+		this.#applyElevationToGeometry(datas);
 	}
 	
 	#applyElevationToGeometry(elevationBuffer) {
@@ -110,11 +108,7 @@ class ElevationExtension {
 			curVertId += 3;
 		}
 
-		verticePositions.needsUpdate = true;
-		this.tile.meshe.geometry.verticesNeedUpdate = true;
-		this.tile.meshe.geometry.uvsNeedUpdate = true;
-		this.tile.meshe.geometry.computeVertexNormals();
-		Renderer.MUST_RENDER = true;
+		this.tile.refreshVertices();
 	} 
 	
 	dispose() {
@@ -122,7 +116,7 @@ class ElevationExtension {
 		this.hide();
 
 		if (this.dataLoaded) {
-			ElevationStore.delete(this.tile);
+			ElevationStore.clear(this.tile);
 			const def = GLOBE.tilesDefinition + 1;
 
 			// Si on désactive l'extension, il faut aplatir la tile :
@@ -133,7 +127,6 @@ class ElevationExtension {
 
 		this.dataLoaded = false;
 		this.dataLoading = false;
-		this.elevationBuffer = null;
 		Renderer.MUST_RENDER = true;
 	}
 	

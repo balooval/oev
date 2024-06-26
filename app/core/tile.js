@@ -363,14 +363,23 @@ export class TileBasic {
 		this.evt.fireEvent('TILE_READY');
 	}
 
-	updateVertex() {
+	updategeometry() {
 		GLOBE.removeMeshe(this.meshe);
 		this.meshe.geometry.dispose();
 		this.buildGeometry();
 
 		for (let i = 0; i < this.childTiles.length; i ++) {
-			this.childTiles[i].updateVertex();
+			this.childTiles[i].updategeometry();
 		}
+	}
+
+	refreshVertices() {
+		const verticePositions = this.meshe.geometry.getAttribute('position');
+		verticePositions.needsUpdate = true;
+		this.meshe.geometry.verticesNeedUpdate = true;
+		this.meshe.geometry.uvsNeedUpdate = true;
+		this.meshe.geometry.computeVertexNormals();
+		Renderer.MUST_RENDER = true;
 	}
 
 	searchTileAtXYZ(_tileX, _tileY, _zoom) {
@@ -620,11 +629,19 @@ export class TileBasic {
 			this.remoteTex.dispose();
 		}
 
+		this.composeMap = null;
+		this.normalTexture.dispose();
+		this.normalTexture = null;
+		this.diffuseTexture.dispose();
+		this.diffuseTexture = null;
+
 		this.extensions.clear();
         this.extensionsMaps.clear();
         this.extensionsNormalsMaps.clear();
 		this.isReady = false;
 		this.evt.fireEvent('DISPOSE');
+
+		this.evt.clear();
 	}
 }
 

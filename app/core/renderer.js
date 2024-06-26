@@ -134,6 +134,10 @@ const api = {
     setBackgroundColor(color) {
         webGlRenderer.setClearColor(color, 1);
     },
+
+    debug() {
+        console.log(webGlRenderer.info.memory);
+    },
 };
 
 window.debug = () => console.log(webGlRenderer.info)

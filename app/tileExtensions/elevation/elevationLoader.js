@@ -1,5 +1,6 @@
 import * as DataLoader from '../dataLoader.js';
 import {GLOBE} from '../../core/globe.js';
+import {extractElevation} from './elevationDecoder.js';
 
 const PARAMS = {
 	nbLoaders : 2,
@@ -16,6 +17,8 @@ export function setApiUrl(_url) {
 class LoaderElevation {
 
 	constructor(_callback) {
+		const bufferSize = Math.pow(GLOBE.tilesDefinition + 1, 2);
+		this.eleBuffer = new Float32Array(bufferSize);
 		this.definition = GLOBE.tilesDefinition;
 		this.isLoading = false;
 		this.callback = _callback;
@@ -43,41 +46,13 @@ class LoaderElevation {
 	}
 	
 	onImgReady(image) {
-		const res = extractElevation(image, image.width, image.height);
+		const res = extractElevation(this.eleBuffer, image, image.width, image.height);
 		this.isLoading = false;
 
 		if (this.callback) {
 			this.callback(res, this.params);
 		}
 	}
-}
-
-const canvasSize = GLOBE.tilesDefinition + 1;
-const canvas = new OffscreenCanvas(canvasSize, canvasSize);
-const context = canvas.getContext('2d', {willReadFrequently: true});
-
-function extractElevation(image, imageWidth, imageHeight) {
-    context.drawImage(image, 0, 0, imageWidth, imageHeight);
-    const imageData = context.getImageData(0, 0, imageWidth, imageHeight).data;
-    const eleBuffer = new Float32Array(imageData.length / 4);
-    let bufferIndex = 0;
-
-    for (let x = 0; x < imageWidth; ++x) {
-        // for (let y = 0; y < _imgHeight; ++y) {
-        for (let y = imageHeight - 1; y >= 0; y --) {
-            let index = (y * imageWidth + x) * 4;
-            const red = imageData[index];
-            index ++;
-            const blue = imageData[++index];
-            const green = imageData[++index];
-			const centimeters = green / 100;
-            const alt = red * 256 + blue + centimeters;
-            eleBuffer[bufferIndex] = alt;
-            bufferIndex ++;
-        }
-    }
-
-    return eleBuffer;
 }
 
 DataLoader.registerLoader('ELEVATION', LoaderElevation, PARAMS);

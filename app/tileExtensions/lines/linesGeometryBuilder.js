@@ -1,5 +1,5 @@
 import {GLOBE} from '../../core/globe.js';
-import ElevationStore from '../elevation/elevationStore.js';
+import * as ElevationStore from '../elevation/elevationStore.js';
 import * as FenceBuilder from './linesGeometryFence.js';
 import * as WallBuilder from './linesGeometryWall.js';
 import * as HighwayBuilder from './linesGeometryHighway.js';

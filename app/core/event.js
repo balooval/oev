@@ -36,6 +36,11 @@ class Evt {
 		listeners.splice(index, 1);
 	}
 
+	clear() {
+		this.events.clear();
+		this.listeners.clear();
+	}
+
 	fireEvent(_evtName, _args = []) {
 		if (!this.events.has(_evtName)) return false;
 		var evs = this.events.get(_evtName).slice(0);

@@ -27,7 +27,7 @@ class LoaderTile2D {
 		this.params = _params;
 		this.isLoading = true;
 		var loader = this;
-		this.textureLoader.load(API_URL + '&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y, 
+		this.textureLoader.load(API_URL + '&z='+this.params.z+'&x='+this.params.x+'&y='+this.params.y + '&cache=1',
 			texture => loader.onDataLoadSuccess(texture), 
 			xhr => {},
 			xhr => loader.onDataLoadError()

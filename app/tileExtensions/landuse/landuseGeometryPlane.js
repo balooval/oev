@@ -6,7 +6,7 @@ import {
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
 import {GLOBE} from '../../core/globe.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';
-import ElevationStore from '../elevation/elevationStore.js';
+import * as ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 import MATH from '../../core/math.js';

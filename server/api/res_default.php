@@ -45,6 +45,8 @@ abstract class Api_default {
 
     // de lon -10 à lon 20 (France metropole)
     protected function coordToLambert($longitude, $latitude) {
+        // Nord France : lat = 51.2
+        // Sud Corse : lat = 41.3
         if ($longitude > -10 && $longitude < 20) {
             return $this->coordToLambertMetropole($longitude, $latitude);
         }
@@ -72,6 +74,13 @@ abstract class Api_default {
 
         /// Guadeloupe
         if ($latitude > 15.9 && $latitude < 16.6) {
+            // La Desirade
+            if ($longitude > -61.11 && $longitude < -60.95) {
+                return [
+                    'zone' => 'GLP',
+                    'eleRef' => 'GUAD92LD',
+                ];    
+            }
             return [
                 'zone' => 'GLP',
                 'eleRef' => 'GUAD88',

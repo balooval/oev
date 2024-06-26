@@ -11,100 +11,96 @@ let store = [{
 }];
 
 
-const api = {
+export function debug() {
+	const res = debugCount(0, store[0]);
+	console.log('res', res);
+}
 
-	debug: function(count, parent) {
-		const res = api.debugCount(0, store[0]);
-		console.log('res', res);
-	},
+function debugCount(count, parent) {
+	count += parent.childs.length;
+	for (let i = 0; i < parent.childs.length; i ++) {
+		count = debugCount(count, parent.childs[i]);
+	}
+	return count;
+}
 
-	debugCount: function(count, parent) {
-		count += parent.childs.length;
-		for (let i = 0; i < parent.childs.length; i ++) {
-			count = api.debugCount(count, parent.childs[i]);
-		}
-		return count;
-	},
-	
-	set : function(tile, buffer) {
-		const struct = {
-			zoom : tile.zoom, 
-			startLon : tile.startCoord.x, 
-			startLat : tile.startCoord.y, 
-			endLon : tile.endCoord.x, 
-			endLat : tile.endCoord.y, 
-			midLon : tile.middleCoord.x, 
-			midLat : tile.middleCoord.y, 
-			datas : buffer, 
-			childs : [], 
-		};
-		addStruct(struct, store);
-	}, 
+export function set(tile, buffer) {
+	const struct = {
+		zoom : tile.zoom, 
+		startLon : tile.startCoord.x, 
+		startLat : tile.startCoord.y, 
+		endLon : tile.endCoord.x, 
+		endLat : tile.endCoord.y, 
+		midLon : tile.middleCoord.x, 
+		midLat : tile.middleCoord.y, 
+		datas : buffer, 
+		childs : [], 
+	};
+	addStruct(struct, store);
+}
 
-	get : function(lon, lat) {
-		const struct = searchCoord(lon, lat);
+export function get(lon, lat) {
+	const struct = searchCoord(lon, lat);
 
-		if (!struct) {
-			return 0;
-		}
+	if (struct === null) {
+		return 0;
+	}
 
-		if (!struct.datas) {
-			return 0;
-		}
+	if (!struct.datas) {
+		return 0;
+	}
 
-		return interpolate(struct, lon, lat);
-	}, 
+	return interpolate(struct, lon, lat);
+}
 
-	delete : function(tile) {
-		let startLon = tile.startCoord.x;
-		let startLat = tile.startCoord.y;
-		let endLon = tile.endCoord.x;
-		let endLat = tile.endCoord.y;
-		let midLon = tile.middleCoord.x;
-		let midLat = tile.middleCoord.y;
-		let validParent;
-		let parents = store;
-		let prevParent;
+export function clear(tile) {
+	const startLon = tile.startCoord.x;
+	const startLat = tile.startCoord.y;
+	const endLon = tile.endCoord.x;
+	const endLat = tile.endCoord.y;
+	const midLon = tile.middleCoord.x;
+	const midLat = tile.middleCoord.y;
+	let validParent;
+	let parents = store;
+	let prevParent;
 
-		while(true) {
-			prevParent = validParent;
+	while(true) {
+		prevParent = validParent;
 
-			let parent = null;
+		let parent = null;
 
-			for (const struct of parents) {
-				if (structContainCoord(struct, midLon, midLat) === true) {
-					parent = struct;
-					break;
-				}
-			}
-
-			if (!parent) {
-				break;
-			}
-
-			validParent = parent;
-			parents = parent.childs;
-
-			if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
-
-				validParent.datas = null;
-				validParent.childs = [];
-
-				const newChilds = []
-				for (const child of prevParent.childs) {
-					if (!isStructure(child, startLon, startLat, endLon, endLat)) {
-						newChilds.push(child);
-					}
-				}
-				
-				prevParent.childs = newChilds;
-				
+		for (const struct of parents) {
+			if (structContainCoord(struct, midLon, midLat) === true) {
+				parent = struct;
 				break;
 			}
 		}
-	}, 
-	
-};
+
+		if (!parent) {
+			break;
+		}
+
+		validParent = parent;
+		parents = parent.childs;
+
+		if (isStructure(validParent, startLon, startLat, endLon, endLat)) {
+
+			validParent.datas = null;
+			validParent.childs = [];
+
+			const newChilds = []
+			for (const child of prevParent.childs) {
+				if (!isStructure(child, startLon, startLat, endLon, endLat)) {
+					newChilds.push(child);
+				}
+			}
+			
+			prevParent.childs = newChilds;
+			
+			break;
+		}
+	}
+}
 
 function isStructure(_struct, _startLon, _startLat, _endLon, _endLat) {
 	if (_struct.startLon != _startLon) return false;
@@ -126,12 +122,12 @@ function slideValue(_min, _max, _prct) {
 	return _min + diff * _prct;
 }
 
-function interpolate(_struct, _lon, _lat) {
+function interpolate(struct, lon, lat) {
 	const vertBySide = GLOBE.tilesDefinition + 0;
 	const vertBySideMax = GLOBE.tilesDefinition + 1;
 
-	const prctFromLon = mapValue(_lon, _struct.startLon, _struct.endLon); // 0 -> 1
-	const prctFromLat = mapValue(_lat, _struct.endLat, _struct.startLat);
+	const prctFromLon = mapValue(lon, struct.startLon, struct.endLon); // 0 -> 1
+	const prctFromLat = mapValue(lat, struct.endLat, struct.startLat);
 
 	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> GLOBE.tilesDefinition + 1
 	const bufferYMin = Math.floor(prctFromLat * vertBySide);
@@ -143,10 +139,10 @@ function interpolate(_struct, _lon, _lat) {
 	const bufferIndexMinXMaxY = (bufferXMin * vertBySideMax) + bufferYMax;
 	const bufferIndexMaxXMaxY = (bufferXMax * vertBySideMax) + bufferYMax;
 
-	const elevationMinXMinY = _struct.datas[bufferIndexMinXMinY];
-	const elevationMaxXMinY = _struct.datas[bufferIndexMaxXMinY];
-	const elevationMinXMaxY = _struct.datas[bufferIndexMinXMaxY];
-	const elevationMaxXMaxY = _struct.datas[bufferIndexMaxXMaxY];
+	const elevationMinXMinY = struct.datas[bufferIndexMinXMinY];
+	const elevationMaxXMinY = struct.datas[bufferIndexMaxXMinY];
+	const elevationMinXMaxY = struct.datas[bufferIndexMinXMaxY];
+	const elevationMaxXMaxY = struct.datas[bufferIndexMaxXMaxY];
 
 	const prctX = mapValue(prctFromLon * vertBySide, Math.floor(prctFromLon * vertBySide), Math.ceil(prctFromLon * vertBySide)); // 0 -> GLOBE.tilesDefinition
 	const prctY = mapValue(prctFromLat * vertBySide, Math.floor(prctFromLat * vertBySide), Math.ceil(prctFromLat * vertBySide));
@@ -163,10 +159,10 @@ function interpolate(_struct, _lon, _lat) {
 }
 
 function searchCoord(_lon, _lat) {
-	let validParent;
+	let validParent = null;
 	let parents = store;
+	
 	while(true) {
-
 		let parent = null;
 
 		for (let i = 0; i < parents.length; i ++) {
@@ -186,39 +182,45 @@ function searchCoord(_lon, _lat) {
 	return validParent;
 }
 
-function addStruct(_struct, _parents) {
+function addStruct(struct, parents) {
 	let validParent;
-	
+
 	while(true) {
-		let parent = _parents.filter(s => structContainStruct(s, _struct)).pop();
-		if (parent) {
-			_parents = parent.childs;
-			validParent = parent;
+		let currentParent;
+
+		for (const parent of parents) {
+			if (structContainStruct(parent, struct) === true) {
+				currentParent = parent;
+				break;
+			}
+		}
+
+		if (currentParent) {
+			parents = currentParent.childs;
+			validParent = currentParent;
 		} else {
 			break;
 		}
 	}
 
-	_struct.childs = validParent.childs.filter(s => structContainStruct(_struct, s));
-	validParent.childs = validParent.childs.filter(s => !structContainStruct(_struct, s));
-	validParent.childs.push(_struct);
+	struct.childs = validParent.childs.filter(s => structContainStruct(struct, s));
+	validParent.childs = validParent.childs.filter(s => !structContainStruct(struct, s));
+	validParent.childs.push(struct);
 }
 
-function structContainStruct(_structA, _structB) {
-	if (_structA.zoom >= _structB.zoom) return false;
-	if (_structA.startLon > _structB.midLon) return false;
-	if (_structA.endLon < _structB.midLon) return false;
-	if (_structA.startLat < _structB.midLat) return false;
-	if (_structA.endLat > _structB.midLat) return false;
+function structContainStruct(structA, structB) {
+	if (structA.zoom >= structB.zoom) return false;
+	if (structA.startLon > structB.midLon) return false;
+	if (structA.endLon < structB.midLon) return false;
+	if (structA.startLat < structB.midLat) return false;
+	if (structA.endLat > structB.midLat) return false;
 	return true;
 }
 
-function structContainCoord(_struct, _lon, _lat) {
-	if (_lon < _struct.startLon) return false;
-	if (_lon >= _struct.endLon) return false;
-	if (_lat > _struct.startLat) return false;
-	if (_lat <= _struct.endLat) return false;
+function structContainCoord(struct, lon, lat) {
+	if (lon < struct.startLon) return false;
+	if (lon >= struct.endLon) return false;
+	if (lat > struct.startLat) return false;
+	if (lat <= struct.endLat) return false;
 	return true;
 }
-
-export { api as default}

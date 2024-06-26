@@ -9,7 +9,7 @@ import Evt from './event.js';
 import GEO from './geo.js';
 import ENVIRONMENT from '../environment/environment.js';
 import MATH from './math.js';
-import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
+import * as ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 import CheapRuler from '../vendor/cheap-ruler.js';
 
 
@@ -157,7 +157,7 @@ class Globe {
 		this.projection = projectionMode;
 
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
-			this.#rootTiles[i].updateVertex();
+			this.#rootTiles[i].updategeometry();
 		}
 
 		this.evt.fireEvent('PROJECTION_CHANGE', this.projection);

@@ -8,7 +8,7 @@ import Renderer from '../../core/renderer.js';
 import Evt from '../../core/event.js';
 import Earcut from '../../vendor/Earcut.module.js';
 import {GLOBE} from '../../core/globe.js';
-import ElevationStore from '../elevation/elevationStore.js';
+import * as ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
 import * as CachedGeometry from '../../utils/cacheGeometry.js';
 import MATH from '../../core/math.js';

@@ -26,8 +26,8 @@ class LoaderNormal {
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + GLOBE.tilesDefinition, 
-		// this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + 16, 
+		// this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + GLOBE.tilesDefinition, 
+		this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + 16, 
 			_texture => this.onDataLoadSuccess(_texture), 
 			xhr => {},
 			xhr => this.onDataLoadError()

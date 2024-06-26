@@ -1,6 +1,7 @@
 import Evt from '../core/event.js';
 import {GLOBE} from '../core/globe.js';
-import ElevationStore from '../tileExtensions/elevation/elevationStore.js';
+import * as ElevationStore from '../tileExtensions/elevation/elevationStore.js';
+import Renderer from '../core/renderer.js';
 
 let majActiv = false;
 let ctrlActiv = false;
@@ -73,7 +74,7 @@ const api ={
 		}else if( key == 109 ){ // -
 			
 		}else if( key == 88 ){ // x
-			
+			Renderer.debug();
 		}
 	}, 
 			
