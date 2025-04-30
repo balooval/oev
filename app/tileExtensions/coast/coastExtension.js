@@ -1,7 +1,7 @@
 import Evt from '../../core/event.js';
 import * as GEO from '../../core/geo.js';
 import Renderer from '../../core/renderer.js';
-import * as TILE from '../../core/tile.js';
+import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import * as NET_TEXTURES from '../../net/textures.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 import * as THREE from '../../vendor/three.module.js';
@@ -83,7 +83,7 @@ class CoastExtension {
         }
 
         if (!this.canvasDiffuse) {
-            this.canvasDiffuse = createCanvas(TILE.mapSize);
+            this.canvasDiffuse = createCanvas(TILE_MAP_SIZE);
         }
 
 		if (this.dataLoaded) {
@@ -120,7 +120,7 @@ class CoastExtension {
         //     debug = true;
         // }
 
-        this.canvasDiffuse = createCanvas(TILE.mapSize);
+        this.canvasDiffuse = createCanvas(TILE_MAP_SIZE);
         const parentExtensionCoast = parentTile.extensions.get(this.id)
         const parentDatas = parentExtensionCoast.datas;
 
@@ -192,7 +192,7 @@ class CoastExtension {
             /*
             const context = this.canvas.getContext('2d');
             context.fillStyle = '#ff0000';
-            context.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
+            context.fillRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
 
             const canvasPositions = [];
             convertCoordToCanvasPositions(_datas, canvasPositions, this.tile.bbox);
@@ -210,19 +210,19 @@ class CoastExtension {
             const context = this.canvasDiffuse.getContext('2d');
             context.drawImage(oceanTexture, 0, 0);
             
-            const canvasRough = createCanvas(TILE.mapSize);
+            const canvasRough = createCanvas(TILE_MAP_SIZE);
             const contextRough = canvasRough.getContext('2d');
             contextRough.fillStyle = "#ffffff";
-            contextRough.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
+            contextRough.fillRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
 
-            const canvasBump = createCanvas(TILE.mapSize);
+            const canvasBump = createCanvas(TILE_MAP_SIZE);
             const contextBump = canvasBump.getContext('2d');
             contextBump.drawImage(NET_TEXTURES.texture('coastOceanBump').image, 0, 0);
             
-            const canvasShape = createCanvas(TILE.mapSize);
+            const canvasShape = createCanvas(TILE_MAP_SIZE);
             const contextShape = canvasShape.getContext('2d');
             contextShape.fillStyle = "#000000";
-            contextShape.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
+            contextShape.fillRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
 
             const canvasPositions = [];
             convertCoordToCanvasPositions(_datas, canvasPositions, this.tile.bbox);
@@ -308,7 +308,7 @@ function createCanvas(_size) {
 
 function convertCoordToCanvasPositions(_coords, _res, _tileBox) {
     for (let s = 0; s < _coords.length; s ++) {
-        const positions = GEO.coordToCanvas(_tileBox, TILE.mapSize, _coords[s]);
+        const positions = GEO.coordToCanvas(_tileBox, TILE_MAP_SIZE, _coords[s]);
       _res.push(positions);
     }
   }

@@ -8,7 +8,7 @@ import {
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';
-import * as NET_TEXTURES from '../../net/textures.js';
+import { texture as TextureLoader, loadBatch as TextureLoadBatch } from '../../net/textures.js';
 
 TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
 
@@ -62,21 +62,21 @@ function sendTexturesToWorker() {
     return new Promise((resolve) => {
 
         Promise.all([
-            createImageBitmap(NET_TEXTURES.texture('landuse_map_empty').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_normalMap_empty').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_roughnessMap_empty').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_map_scrub').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_normalMap_scrub').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_roughnessMap_scrub').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_map_rock').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_normalMap_rock').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_roughnessMap_rock').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_map_residential').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_normalMap_residential').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_roughnessMap_residential').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_map_forest').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_normalMap_forest').image, 0, 0, 512, 512),
-            createImageBitmap(NET_TEXTURES.texture('landuse_roughnessMap_forest').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_map_empty').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_normalMap_empty').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_roughnessMap_empty').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_map_scrub').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_normalMap_scrub').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_roughnessMap_scrub').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_map_rock').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_normalMap_rock').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_roughnessMap_rock').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_map_residential').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_normalMap_residential').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_roughnessMap_residential').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_map_forest').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_normalMap_forest').image, 0, 0, 512, 512),
+            createImageBitmap(TextureLoader('landuse_roughnessMap_forest').image, 0, 0, 512, 512),
 
         ]).then(imagesDatas => {
             workerCanvasComposer.port.postMessage(
@@ -210,14 +210,14 @@ function loadTextures() {
     ];
     
     return new Promise((resolve) => {
-        NET_TEXTURES.loadBatch(texturesList, resolve);
+        TextureLoadBatch(texturesList, resolve);
     });
 }
 
 function setMapToMaterials() {
-    instanceMaterial.get('forest').map = NET_TEXTURES.texture('tree-forest');
-    instanceMaterial.get('sapin').map = NET_TEXTURES.texture('tree-forest-sapin');
-    instanceMaterial.get('vineyard').map = NET_TEXTURES.texture('vigne');
+    instanceMaterial.get('forest').map = TextureLoader('tree-forest');
+    instanceMaterial.get('sapin').map = TextureLoader('tree-forest-sapin');
+    instanceMaterial.get('vineyard').map = TextureLoader('vigne');
 
     return new Promise((resolve) => {
         resolve();

@@ -9,11 +9,11 @@ import {
     UnsignedByteType,
 } from '../../vendor/three.module.js';
 import {GLOBE} from '../../core/globe.js';
-import * as TILE from '../../core/tile.js';
+import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import Renderer from '../../core/renderer.js';
 
 const meshesByTiles = new Map();
-const textureSize = TILE.mapSize * 2;
+const textureSize = TILE_MAP_SIZE * 2;
 
 const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 const tilesWaitingWorker = new Map();
@@ -64,18 +64,18 @@ function createLanduseMesh(tile, textureMaps) {
     Renderer.MUST_RENDER = true;
     */
 
-    createImageBitmap(textureMaps.map, 0, 0, TILE.mapSize, TILE.mapSize)
+    createImageBitmap(textureMaps.map, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
     .then(image => {
         tile.drawOnDiffuseMap('landuse_' + tile.key, image);
     });
 
-    createImageBitmap(textureMaps.normalMap, 0, 0, TILE.mapSize, TILE.mapSize)
+    createImageBitmap(textureMaps.normalMap, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
    .then(image => {
        tile.drawOnNormalMap('landuse_' + tile.key, image);
    });
 
     // for (const mapType in textureMaps) {
-    //     createImageBitmap(textureMaps[mapType], 0, 0, TILE.mapSize, TILE.mapSize)
+    //     createImageBitmap(textureMaps[mapType], 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
     //     .then(image => {
     //         tile.drawOnDiffuseMap('landuse_' + tile.key, image);
     //     });

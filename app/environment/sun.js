@@ -15,7 +15,7 @@ import {
 	GLOBE,
 	PROJECTION_PLANE
 } from '../core/globe.js';
-import * as NET_TEXTURES from '../net/textures.js';
+import { texture as TextureLoader } from '../net/textures.js';
 import {get as Shader} from '../net/shader.js';
 
 let cameraHelper;
@@ -36,7 +36,7 @@ let updatePositionFunction = updatePositionPlane;
 
 	
 export function init() {
-	colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);	
+	colorsGradient = getImageData(TextureLoader('sky_gradient').image);	
 	lightSun = new DirectionalLight(0xffffff, 2);
 	Renderer.scene.add(lightSun);
 	const directionalLightHelper = new DirectionalLightHelper(lightSun, 10);

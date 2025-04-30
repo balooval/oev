@@ -13,9 +13,8 @@ import {
 import Evt from './event.js';
 import * as GEO from './geo.js';
 import Renderer from './renderer.js';
-import * as NET_TEXTURES from '../net/textures.js';
 
-export const mapSize = 256;
+export const MAP_SIZE = 256;
 
 export class TileBasic {
 		
@@ -56,11 +55,11 @@ export class TileBasic {
 			this.startCoord.y, // max Y
 		];
 		this.corners = [
-			[this.startCoord.x, this.startCoord.y],
-			[this.startCoord.x, this.endCoord.y],
-			[this.endCoord.x, this.startCoord.y],
-			[this.endCoord.x, this.endCoord.y],
-			[this.middleCoord.x, this.middleCoord.y],
+			new Vector2(this.startCoord.x, this.startCoord.y),
+			new Vector2(this.startCoord.x, this.endCoord.y),
+			new Vector2(this.endCoord.x, this.startCoord.y),
+			new Vector2(this.endCoord.x, this.endCoord.y),
+			new Vector2(this.middleCoord.x, this.middleCoord.y),
 		];
 
 		this.distToCam = this.globe.getTileDistance(this);
@@ -74,7 +73,7 @@ export class TileBasic {
         this.extensionsNormalsMaps = new Map();
 		this.composeNormalMap = this.#createCanvas();
 		this.composeNormalContext = this.composeNormalMap.getContext('2d');
-		this.composeNormalContext.drawImage(NET_TEXTURES.texture('neutralNormal').image, 0, 0, mapSize, mapSize);
+		this.composeNormalContext.drawImage(TextureLoader('neutralNormal').image, 0, 0, MAP_SIZE, MAP_SIZE);
 		this.normalTexture = new Texture(this.composeNormalMap);
 		this.normalTexture.needsUpdate = true;
 
@@ -87,8 +86,8 @@ export class TileBasic {
 			metalness: 0,
 			map: this.diffuseTexture,
 			// map: dataTexture,
-			// map: NET_TEXTURES.texture('landuse_color'),
-			// roughnessMap: NET_TEXTURES.texture('landuse_roughness'),
+			// map: TextureLoader('landuse_color'),
+			// roughnessMap: TextureLoader('landuse_roughness'),
 			normalMap: this.normalTexture,
 			// side: DoubleSide,
 		});
@@ -101,6 +100,14 @@ export class TileBasic {
 		this.directionToCamera = new Vector2();
 		this.viewByCamera = false;
 		this.detailMargin = 1;
+
+		this.viewByCameraCornerVector = new Vector2();
+		this.viewByCameraCoordVector = new Vector2();
+
+
+		const vertBySide = this.globe.tilesDefinition + 1;
+		const vertNb = vertBySide * vertBySide;
+		this.bufferVerticesPlaneCoords = new Float32Array(vertNb * 2);
     }
 
 	drawOnDiffuseMap(drawerId, image) {
@@ -119,9 +126,9 @@ export class TileBasic {
 		}
 
 		this.composeContext.fillStyle = "#ffffff";
-		this.composeContext.fillRect(0, 0, mapSize, mapSize);
+		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, mapSize, mapSize);
+		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, MAP_SIZE, MAP_SIZE);
         this.extensionsMaps.forEach(map => {
 			this.composeContext.drawImage(map, 0, 0);
         });
@@ -144,7 +151,7 @@ export class TileBasic {
 	}
 
 	redrawNormalMap() {
-		this.composeNormalContext.drawImage(NET_TEXTURES.texture('neutralNormal').image, 0, 0, mapSize, mapSize);
+		this.composeNormalContext.drawImage(TextureLoader('neutralNormal').image, 0, 0, MAP_SIZE, MAP_SIZE);
 
         this.extensionsNormalsMaps.forEach(map => {
 			this.composeNormalContext.drawImage(map, 0, 0);
@@ -155,7 +162,7 @@ export class TileBasic {
     }
 
 	#createCanvas() {
-		const canvas = new OffscreenCanvas(mapSize, mapSize);
+		const canvas = new OffscreenCanvas(MAP_SIZE, MAP_SIZE);
 		return canvas;
 	}
 	
@@ -281,20 +288,18 @@ export class TileBasic {
 
 	getVerticesPlaneCoords() {
 		const vertBySide = this.globe.tilesDefinition + 1;
-		const vertNb = vertBySide * vertBySide;
-		const bufferCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / this.globe.tilesDefinition;
 		const stepCoordY = (this.startCoord.y - this.endCoord.y) / this.globe.tilesDefinition;
 
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
-				bufferCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
-				bufferCoords[coordId + 1] = this.endCoord.y + (stepCoordY * y);
+				this.bufferVerticesPlaneCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
+				this.bufferVerticesPlaneCoords[coordId + 1] = this.endCoord.y + (stepCoordY * y);
 				coordId += 2;
 			}
 		}
-		return bufferCoords;
+		return this.bufferVerticesPlaneCoords;
 	}
 
 	buildGeometry() {
@@ -539,15 +544,17 @@ export class TileBasic {
 	}
 	
 	#isViewByCamera(cameraDatas) {
-		const cameraTargetCoord = new Vector2(cameraDatas.coordCam.x, cameraDatas.coordCam.y);
-		if (this.#cameraIsOver(cameraTargetCoord, 1) === true) {
+		if (this.#cameraIsOver(cameraDatas.coordCam, 1) === true) {
 			return true;
 		}
 
+		this.viewByCameraCoordVector.x = cameraDatas.coordCam.x;
+		this.viewByCameraCoordVector.y = cameraDatas.coordCam.y;
+		
 		for (let i = 0; i < this.corners.length; i ++) {
 			this.directionToCamera.subVectors(
-				new Vector2(this.corners[i][0], this.corners[i][1]) ,
-				new Vector2(cameraDatas.coordCam.x, cameraDatas.coordCam.y),
+				this.corners[i],
+				this.viewByCameraCoordVector
 			).normalize();
 
 			const dot = this.directionToCamera.dot(cameraDatas.viewDirection);

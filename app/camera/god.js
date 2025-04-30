@@ -74,6 +74,14 @@ export class CameraGod {
 		this.localRotationAxisX = new Vector3(1, 0, 0);
 		this.globalRotationAxisLon = new Vector3(0, 1, 0);
 		this.globalRotationAxisLat = new Vector3(-1, 0, 0);
+
+
+		// Pour la perf
+		this.viewDirectionVectorSubLookAt = new Vector2();
+		this.viewDirectionVectorSubCamCoord = new Vector2();
+
+		this.orientationVectorSubLookAt = new Vector3();
+		this.orientationVectorSubCamPos = new Vector3();
 	}
 
 	init(globe) {
@@ -212,15 +220,23 @@ export class CameraGod {
 		}else{
 			posCam = this.updateOnPlane(posLookat);
 		}
-		this.camera.position.x = posCam[0];
-		this.camera.position.y = posCam[1];
-		this.camera.position.z = posCam[2];
+
+		this.orientationVectorSubLookAt.x = posLookat[0];
+		this.orientationVectorSubLookAt.y = posLookat[1];
+		this.orientationVectorSubLookAt.z = posLookat[2];
+
+		this.orientationVectorSubCamPos.x = posCam[0];
+		this.orientationVectorSubCamPos.y = posCam[1];
+		this.orientationVectorSubCamPos.z = posCam[2];
+
+		this.camera.position.copy(this.orientationVectorSubCamPos);
+
 		const tmpCoords = this.globe.webglUnitsToCoord(posCam[0], posCam[1], posCam[2]);
 		this.cameraCoord.x = tmpCoords[0];
 		this.cameraCoord.y = tmpCoords[1];
-		this.lookAtVector.x = posLookat[0];
-		this.lookAtVector.y = posLookat[1];
-		this.lookAtVector.z = posLookat[2];
+
+		this.lookAtVector.copy(this.orientationVectorSubLookAt);
+
 		this.camera.lookAt(this.lookAtVector);
 		this.globe.zoomDetails = this.zoomCur;
 		
@@ -234,17 +250,22 @@ export class CameraGod {
 		this.clicPointer.scale.x = pointerScale;
 		this.clicPointer.scale.y = pointerScale;
 		this.clicPointer.scale.z = pointerScale;
+
+		this.viewDirectionVectorSubLookAt.x = this.coordLookat.x;
+		this.viewDirectionVectorSubLookAt.y = this.coordLookat.y;
+		this.viewDirectionVectorSubCamCoord.x = this.cameraCoord.x;
+		this.viewDirectionVectorSubCamCoord.y = this.cameraCoord.y;
 		
 		this.viewDirection.subVectors(
-			new Vector2(this.coordLookat.x, this.coordLookat.y),
-			new Vector2(this.cameraCoord.x, this.cameraCoord.y)
+			this.viewDirectionVectorSubLookAt,
+			this.viewDirectionVectorSubCamCoord
 		).normalize();
 		
 		// this.#updateFogScale();
 
 		this.orientation.subVectors(
-			new Vector3(posLookat[0], posLookat[1], posLookat[2]),
-			new Vector3(posCam[0], posCam[1], posCam[2]),
+			this.orientationVectorSubLookAt,
+			this.orientationVectorSubCamPos,
 		).normalize();
 
 		Renderer.MUST_RENDER = true;

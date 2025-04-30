@@ -1,7 +1,7 @@
 import Lineclip from '../../vendor/lineclip.module.js';
 import Evt from '../../core/event.js';
 import Renderer from '../../core/renderer.js';
-import * as TILE from '../../core/tile.js';
+import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import * as LinesLoader from './linesLoader.js';
 import LinesMaterial from './linesMaterial.js';
 import LinesModel from './linesModels.js';
@@ -129,8 +129,8 @@ class LinesExtension {
         if (this.canvas) return;
         this.canvas = document.createElement('canvas');
         this.context = this.canvas.getContext('2d');
-		this.canvas.width = TILE.mapSize;
-		this.canvas.height = TILE.mapSize;
+		this.canvas.width = TILE_MAP_SIZE;
+		this.canvas.height = TILE_MAP_SIZE;
         this.tile.extensionsMaps.set(this.id, this.canvas);
         workerEvt.addEventListener('LINE_DRAW_' + this.tile.key, this, this.onWorkerFinished);
     }
@@ -168,14 +168,14 @@ class LinesExtension {
     drawCanvas() {
         this.scheduleNb --;
         if (!this.tile) return false
-        this.context.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
+        this.context.clearRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
 
         if (this.shapes.size) {
             const localWays = [];
             this.shapes.forEach(curWay => {
                 if (!curWay.bordersSplit.length) return false;
                 for (let i = 0; i < curWay.bordersSplit.length; i ++ ){
-                    const local = GEO.coordToCanvas(this.tile.bbox, TILE.mapSize, curWay.bordersSplit[i]);
+                    const local = GEO.coordToCanvas(this.tile.bbox, TILE_MAP_SIZE, curWay.bordersSplit[i]);
                     localWays.push({
                         positions : local, 
                         props : curWay.props, 

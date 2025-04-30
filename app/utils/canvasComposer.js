@@ -1,16 +1,16 @@
 import * as GEO from '../core/geo.js';
-import * as NET_TEXTURES from '../net/textures.js'
-import * as TILE from '../core/tile.js'
+import { texture as TextureLoader } from '../net/textures.js';
+import {MAP_SIZE as TILE_MAP_SIZE} from '../core/tile.js'
 import * as LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';
 
 const canvasFinal = document.createElement('canvas');
-canvasFinal.width = TILE.mapSize;
-canvasFinal.height = TILE.mapSize;
+canvasFinal.width = TILE_MAP_SIZE;
+canvasFinal.height = TILE_MAP_SIZE;
 const contextFinal = canvasFinal.getContext("2d");
 
 const canvasTypes = new Map();
-canvasTypes.set('forest', createCanvas(TILE.mapSize));
-canvasTypes.set('scrub', createCanvas(TILE.mapSize));
+canvasTypes.set('forest', createCanvas(TILE_MAP_SIZE));
+canvasTypes.set('scrub', createCanvas(TILE_MAP_SIZE));
 
 const splatSize = 16;
 
@@ -35,14 +35,14 @@ const groundImage = {
 
 function onMaterialReady() {
     // LanduseMaterial.evt.removeEventListener('READY', null, onMaterialReady);
-    groundImage.forest = NET_TEXTURES.texture('shell_tree_0').image 
-    groundImage.scrub = NET_TEXTURES.texture('shell_scrub_1').image;
+    groundImage.forest = TextureLoader('shell_tree_0').image 
+    groundImage.scrub = TextureLoader('shell_scrub_1').image;
 
     let contextLine;
     contextLine = linePatterns.get('forest').canvas.getContext('2d');
-    contextLine.drawImage(NET_TEXTURES.texture('landuse_border_forest').image, 0, 0);
+    contextLine.drawImage(TextureLoader('landuse_border_forest').image, 0, 0);
     contextLine = linePatterns.get('scrub').canvas.getContext('2d');
-    contextLine.drawImage(NET_TEXTURES.texture('landuse_border_scrub').image, 0, 0);
+    contextLine.drawImage(TextureLoader('landuse_border_scrub').image, 0, 0);
 }
 
 const typedDatas = {
@@ -67,7 +67,7 @@ const api = {
   
 	draw : function(_landuses, _tileBBox, _zoom) {
         const sizeFactor = getSizeFactor(_zoom);
-        contextFinal.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
+        contextFinal.clearRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
         if (!_landuses.size) return canvasFinal;
         clearTypedDatas();
         
@@ -84,7 +84,7 @@ const api = {
             const datas = typedDatas[type];
             const canvasTemp = canvasTypes.get(type);
             const contextTemp = canvasTemp.getContext('2d');
-            contextTemp.clearRect(0, 0, TILE.mapSize, TILE.mapSize);
+            contextTemp.clearRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
 
             for (let i = 0; i < datas.borders.length; i ++) {
                 const coords = datas.borders[i];
@@ -101,7 +101,7 @@ const api = {
             }
             contextTemp.globalCompositeOperation = 'source-in';
             contextTemp.fillStyle = contextTemp.createPattern(groundImage[type], 'repeat');
-            contextTemp.fillRect(0, 0, TILE.mapSize, TILE.mapSize);
+            contextTemp.fillRect(0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE);
             contextFinal.drawImage(canvasTemp, 0, 0);
         }
 
@@ -117,7 +117,7 @@ function getSizeFactor(_zoom) {
 
 function convertCoordToCanvasPositions(_coords, _res, _tileBox) {
   for (let s = 0; s < _coords.length; s ++) {
-    _res.push(GEO.coordToCanvas(_tileBox, TILE.mapSize, _coords[s]));
+    _res.push(GEO.coordToCanvas(_tileBox, TILE_MAP_SIZE, _coords[s]));
   }
 }
 

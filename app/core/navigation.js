@@ -1,7 +1,7 @@
 import * as THREE from '../vendor/three.module.js';
 import Renderer from '../core/renderer.js';
 import Evt from '../core/event.js';
-import {texture as Texture} from '../net/textures.js';
+import {texture as TextureLoader} from '../net/textures.js';
 import {GLOBE} from '../core/globe.js';
 
 let waypointMat;
@@ -18,7 +18,7 @@ var api = {
 	
 	onAppStart : function() {
 		GLOBE.evt.removeEventListener('READY', api, api.onAppStart);
-		waypointMat = new THREE.SpriteMaterial({map:Texture('waypoint'), color:0xffffff, fog:false})
+		waypointMat = new THREE.SpriteMaterial({map:TextureLoader('waypoint'), color:0xffffff, fog:false})
 		if (localStorage.getItem('waypoints') == undefined) {
 			localStorage.setItem('waypoints', JSON.stringify(wpStored));
 		}else{

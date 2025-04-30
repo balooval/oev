@@ -14,7 +14,7 @@ import {
 	PROJECTION_PLANE
 } from '../core/globe.js';
 import {get as Shader} from '../net/shader.js';
-import * as NET_TEXTURES from '../net/textures.js';
+import { texture as TextureLoader } from '../net/textures.js';
 
 let meshSky = null;
 let skyMaterialSphere = null;
@@ -32,7 +32,7 @@ const skyParams = {
 };
 
 export function init() {
-	colorsGradient = getImageData(NET_TEXTURES.texture('sky_gradient').image);
+	colorsGradient = getImageData(TextureLoader('sky_gradient').image);
 }
 
 export function activate(state) {
