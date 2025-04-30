@@ -11,7 +11,7 @@ import {GLOBE} from '../../core/globe.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
 import * as BuildingsDatas from './buildingStore.js';
 import * as CachedGeometry from '../../utils/cacheGeometry.js';
-import MATH from '../../core/math.js';
+import * as MATH from '../../core/math.js';
 
 export {setApiUrl} from './buildingLoader.js';
 

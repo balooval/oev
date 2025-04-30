@@ -1,5 +1,5 @@
 import Evt from '../../core/event.js';
-import GEO from '../../core/geo.js';
+import * as GEO from '../../core/geo.js';
 import Renderer from '../../core/renderer.js';
 import * as TILE from '../../core/tile.js';
 import * as NET_TEXTURES from '../../net/textures.js';

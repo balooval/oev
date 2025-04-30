@@ -13,8 +13,8 @@ import Renderer from '../core/renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../core/event.js';
 import {Mouse} from '../input/input.js';
-import GEO from '../core/geo.js';
-import MATH from '../core/math.js';
+import * as GEO from '../core/geo.js';
+import * as MATH from '../core/math.js';
 import {evt as DataLoaderEvent} from '../tileExtensions/dataLoader.js';
 import * as GlMatrix from "../vendor/gl-matrix/vec3.js";
 

@@ -1,148 +1,143 @@
-const api = {
 
-	random: function(min, max) {
-		const length = max - min;
-		return min + (Math.random() * length);
-	},
-	
-	randomize: function(value, radius) {
-		const amplitude = radius * 2;
-		return value + (Math.random() * amplitude) - radius;
-	},
+export function random(min, max) {
+	const length = max - min;
+	return min + (Math.random() * length);
+}
 
-	lerpPoint: function(pointA, pointB, percent) {
-		return [
-			api.lerpFloat(pointA[0], pointB[0], percent),
-			api.lerpFloat(pointA[1], pointB[1], percent),
-		]
-	},
-	
-	lerpFloat: function(valueA, valueB, percent) {
-		const distance = valueB - valueA;
-		const value = valueA + (distance * percent);
-		return value;
-	},
+export function randomize(value, radius) {
+	const amplitude = radius * 2;
+	return value + (Math.random() * amplitude) - radius;
+}
 
-	radians : function(_degres){
-		return Math.PI * _degres / 180;
-	}, 
+export function lerpPoint(pointA, pointB, percent) {
+	return [
+		api.lerpFloat(pointA[0], pointB[0], percent),
+		api.lerpFloat(pointA[1], pointB[1], percent),
+	]
+}
 
-	degree : function(radians){
-		return 180 * radians / Math.PI;
-	}, 
+export function lerpFloat(valueA, valueB, percent) {
+	const distance = valueB - valueA;
+	const value = valueA + (distance * percent);
+	return value;
+}
 
-	isClosedPath(_polygon) {
-		const first = _polygon[0];
-		const last = _polygon[_polygon.length - 1];
-		if (first[0] != last[0]) return false;
-		if (first[1] != last[1]) return false;
-		return true;
-	}, 
+export function radians (_degres){
+	return Math.PI * _degres / 180;
+}
 
-	fixPolygonDirection : function(_polygon, _counterClockwise = false) {
-		if (!_polygon.length) {
-			return _polygon;
-		}
+export function degree (radians){
+	return 180 * radians / Math.PI;
+}
 
-		let curve = 0;
-		const pointsNb = _polygon.length;
-		for (let p = 1; p < pointsNb; p ++) {
-			const prevPoint = _polygon[p - 1];
-			const curPoint = _polygon[p];
-			curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
-		}
-		const prevPoint = _polygon[pointsNb - 1];
-		const curPoint = _polygon[0];
-		curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
-		
-		if (!_counterClockwise && curve > 0) _polygon.reverse();
-		if (_counterClockwise && curve < 0) _polygon.reverse();
-		
+export function isClosedPath(_polygon) {
+	const first = _polygon[0];
+	const last = _polygon[_polygon.length - 1];
+	if (first[0] != last[0]) return false;
+	if (first[1] != last[1]) return false;
+	return true;
+}
+
+export function fixPolygonDirection (_polygon, _counterClockwise = false) {
+	if (!_polygon.length) {
 		return _polygon;
-	}, 
-		
-	angle2D : function(x1, y1, x2, y2) {
-		var dtheta,theta1,theta2;
-		theta1 = Math.atan2( y1, x1 );
-		theta2 = Math.atan2( y2, x2 );
-		dtheta = theta2 - theta1;
-		while( dtheta > Math.PI ){
-			dtheta -= ( Math.PI * 2 );
-		}
-		while( dtheta < -Math.PI ){
-			dtheta += ( Math.PI * 2 );
-		}
-		return dtheta;
-	}, 
+	}
+
+	let curve = 0;
+	const pointsNb = _polygon.length;
+	for (let p = 1; p < pointsNb; p ++) {
+		const prevPoint = _polygon[p - 1];
+		const curPoint = _polygon[p];
+		curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
+	}
+	const prevPoint = _polygon[pointsNb - 1];
+	const curPoint = _polygon[0];
+	curve += (curPoint[0] - prevPoint[0]) * (curPoint[1] + prevPoint[1]);
 	
-	ptIsInPolygon : function(poly, _lon, _lat) {
-		for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
+	if (!_counterClockwise && curve > 0) _polygon.reverse();
+	if (_counterClockwise && curve < 0) _polygon.reverse();
+	
+	return _polygon;
+}
+	
+export function angle2D (x1, y1, x2, y2) {
+	var dtheta,theta1,theta2;
+	theta1 = Math.atan2( y1, x1 );
+	theta2 = Math.atan2( y2, x2 );
+	dtheta = theta2 - theta1;
+	while( dtheta > Math.PI ){
+		dtheta -= ( Math.PI * 2 );
+	}
+	while( dtheta < -Math.PI ){
+		dtheta += ( Math.PI * 2 );
+	}
+	return dtheta;
+}
+
+export function ptIsInPolygon (poly, _lon, _lat) {
+	for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
 	((poly[i][1] <= _lat && _lat < poly[j][1]) || (poly[j][1] <= _lat && _lat < poly[i][1]))
 	&& (_lon < (poly[j][0] - poly[i][0]) * (_lat - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0])
 	&& (c = !c);
 	return c;
-	}, 
-
-	ptIsInPolygonOk : function(_polygon, _lon, _lat) {
-		var angle = 0;
-		var ptA;
-		var ptB;
-		var segNb = _polygon.length - 1;
-		for( var i = 0; i < segNb; i++ ){
-			ptA = _polygon[i];
-			ptB = _polygon[i+1];
-			angle += api.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
-		}
-		if( Math.abs( angle ) < Math.PI ){
-			return false;
-		}
-		return true;
-	},
-
-	pointIntoPolygon: function(point, polygon) {
-		var x = point[0], y = point[1];
-		var inside = false;
-		for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-			var xi = polygon[i][0], yi = polygon[i][1];
-			var xj = polygon[j][0], yj = polygon[j][1];
-			var intersect = ((yi > y) != (yj > y))
-				&& (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-			if (intersect) inside = !inside;
-		}
-		return inside;
-	},
-	
-	findCentroid : function (pts){
-		var nPts = pts.length;
-		var off = pts[0];
-		var twicearea = 0;
-		var x = 0;
-		var y = 0;
-		var p1,p2;
-		var i;
-		var j;
-		var f;
-		for (i = 0, j = nPts - 1; i < nPts; j = i++) {
-			p1 = pts[i];
-			p2 = pts[j];
-			f = (p1[1] - off[1]) * (p2[0] - off[0]) - (p2[1] - off[1]) * (p1[0] - off[0]);
-			twicearea += f;
-			x += (p1[1] + p2[1] - 2 * off[1]) * f;
-			y += (p1[0] + p2[0] - 2 * off[0]) * f;
-		}
-		f = twicearea * 3;
-		return {
-			lat: x / f + off[1],
-			lon: y / f + off[0]
-		};
-	},
-
-	mapValue : function(_value, _min, _max) {
-		const length = Math.abs(_max - _min);
-		if (length == 0) return _value;
-		return (_value - _min) / length;
-	}, 
-
 }
 
-export {api as default};
+export function ptIsInPolygonOk (_polygon, _lon, _lat) {
+	var angle = 0;
+	var ptA;
+	var ptB;
+	var segNb = _polygon.length - 1;
+	for( var i = 0; i < segNb; i++ ){
+		ptA = _polygon[i];
+		ptB = _polygon[i+1];
+		angle += api.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
+	}
+	if( Math.abs( angle ) < Math.PI ){
+		return false;
+	}
+	return true;
+}
+
+export function pointIntoPolygon(point, polygon) {
+	var x = point[0], y = point[1];
+	var inside = false;
+	for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		var xi = polygon[i][0], yi = polygon[i][1];
+		var xj = polygon[j][0], yj = polygon[j][1];
+		var intersect = ((yi > y) != (yj > y))
+			&& (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+		if (intersect) inside = !inside;
+	}
+	return inside;
+}
+
+export function findCentroid  (pts){
+	var nPts = pts.length;
+	var off = pts[0];
+	var twicearea = 0;
+	var x = 0;
+	var y = 0;
+	var p1,p2;
+	var i;
+	var j;
+	var f;
+	for (i = 0, j = nPts - 1; i < nPts; j = i++) {
+		p1 = pts[i];
+		p2 = pts[j];
+		f = (p1[1] - off[1]) * (p2[0] - off[0]) - (p2[1] - off[1]) * (p1[0] - off[0]);
+		twicearea += f;
+		x += (p1[1] + p2[1] - 2 * off[1]) * f;
+		y += (p1[0] + p2[0] - 2 * off[0]) * f;
+	}
+	f = twicearea * 3;
+	return {
+		lat: x / f + off[1],
+		lon: y / f + off[0]
+	};
+}
+
+export function mapValue (_value, _min, _max) {
+	const length = Math.abs(_max - _min);
+	if (length == 0) return _value;
+	return (_value - _min) / length;
+}

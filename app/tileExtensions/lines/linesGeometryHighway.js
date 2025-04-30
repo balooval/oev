@@ -6,7 +6,7 @@ import {
     BufferGeometry,
 } from '../../vendor/three.module.js';
 import {GLOBE} from '../../core/globe.js';
-import MATH from '../../core/math.js';
+import * as MATH from '../../core/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _tile, _id) {

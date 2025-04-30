@@ -11,8 +11,7 @@ import {
 	Vector2,
 } from '../vendor/three.module.js';
 import Evt from './event.js';
-import GEO from './geo.js';
-import {GLOBE} from './globe.js';
+import * as GEO from './geo.js';
 import Renderer from './renderer.js';
 import * as NET_TEXTURES from '../net/textures.js';
 
@@ -20,7 +19,8 @@ export const mapSize = 256;
 
 export class TileBasic {
 		
-	constructor(_tileX, _tileY, _zoom, parent = null) {
+	constructor(globe, _tileX, _tileY, _zoom, parent = null) {
+		this.globe = globe;
 		this.evt = new Evt();
 		this.isReady = false;
 		this.onStage = true;
@@ -41,7 +41,7 @@ export class TileBasic {
 		this.remoteTex = undefined;
 		this.meshe = undefined;
 		this.key = this.tileX + '_' + this.tileY + '_' + this.zoom;
-		this.verticesNb = (GLOBE.tilesDefinition + 1) * (GLOBE.tilesDefinition + 1);
+		this.verticesNb = (this.globe.tilesDefinition + 1) * (this.globe.tilesDefinition + 1);
 		this.startCoord = GEO.tileToCoordsVect(this.tileX, this.tileY, this.zoom);
 		this.endCoord = GEO.tileToCoordsVect(this.tileX + 1, this.tileY + 1, this.zoom);
 		this.startLargeCoord = GEO.tileToCoordsVect(this.tileX - 1, this.tileY - 1, this.zoom);
@@ -63,7 +63,7 @@ export class TileBasic {
 			[this.middleCoord.x, this.middleCoord.y],
 		];
 
-		this.distToCam = GLOBE.getTileDistance(this);
+		this.distToCam = this.globe.getTileDistance(this);
         
         this.extensionsMaps = new Map();
 		this.composeMap = this.#createCanvas();
@@ -260,9 +260,9 @@ export class TileBasic {
 			return false;
 		}
 
-		const vertBySide = GLOBE.tilesDefinition + 1;
+		const vertBySide = this.globe.tilesDefinition + 1;
 		const bufferUvs = new Float32Array(this.verticesNb * 2);
-		let stepUV = textureDatas.uvReduc / GLOBE.tilesDefinition;
+		let stepUV = textureDatas.uvReduc / this.globe.tilesDefinition;
 		let uvIndex = 0;
 
 		for (let x = 0; x < vertBySide; x ++) {
@@ -280,12 +280,12 @@ export class TileBasic {
 	}
 
 	getVerticesPlaneCoords() {
-		const vertBySide = GLOBE.tilesDefinition + 1;
+		const vertBySide = this.globe.tilesDefinition + 1;
 		const vertNb = vertBySide * vertBySide;
 		const bufferCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
-		const stepCoordX = (this.endCoord.x - this.startCoord.x) / GLOBE.tilesDefinition;
-		const stepCoordY = (this.startCoord.y - this.endCoord.y) / GLOBE.tilesDefinition;
+		const stepCoordX = (this.endCoord.x - this.startCoord.x) / this.globe.tilesDefinition;
+		const stepCoordY = (this.startCoord.y - this.endCoord.y) / this.globe.tilesDefinition;
 
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
@@ -304,7 +304,7 @@ export class TileBasic {
 		const vertCoords = this.getVerticesPlaneCoords();
 		
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
-			const vertPos = GLOBE.coordToXYZ(
+			const vertPos = this.globe.coordToXYZ(
 				vertCoords[i * 2], 
 				vertCoords[i * 2 + 1], 
 				0
@@ -320,7 +320,7 @@ export class TileBasic {
 			curVertId += 3;
 		}
 
-		const def = GLOBE.tilesDefinition;
+		const def = this.globe.tilesDefinition;
 		const vertBySide = def + 1;
 		let faceId = 0;
 		const nbFaces = (def * def) * 2;
@@ -345,14 +345,14 @@ export class TileBasic {
 		geoBuffer.computeVertexNormals();
 
 		if (this.meshe !== undefined) {
-			GLOBE.removeMeshe(this.meshe);
+			this.globe.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 		}
 
 		this.meshe = new Mesh(geoBuffer, this.material);
 
 		if (this.onStage) {
-			GLOBE.addMeshe(this.meshe);
+			this.globe.addMeshe(this.meshe);
 		}
 
 		this.meshe.castShadow = true;
@@ -364,7 +364,7 @@ export class TileBasic {
 	}
 
 	updategeometry() {
-		GLOBE.removeMeshe(this.meshe);
+		this.globe.removeMeshe(this.meshe);
 		this.meshe.geometry.dispose();
 		this.buildGeometry();
 
@@ -432,7 +432,7 @@ export class TileBasic {
 		}
 
 		this.onStage = true;
-		GLOBE.addMeshe(this.meshe);
+		this.globe.addMeshe(this.meshe);
 		this.meshe.material.visible = true;
 		this.evt.fireEvent('SHOW');
 	}
@@ -443,7 +443,7 @@ export class TileBasic {
 		}
 
 		this.onStage = false;
-		GLOBE.removeMeshe(this.meshe);
+		this.globe.removeMeshe(this.meshe);
 		this.meshe.material.visible = false;
 
 		if (!this.textureLoaded) {
@@ -471,6 +471,7 @@ export class TileBasic {
 		
 	#addChild(tileOffsetX, tileOffsetY, uvOffsetX, uvOffsetY) {
 		const newTile = new TileBasic(
+			this.globe,
 			this.tileX * 2 + tileOffsetX,
 			this.tileY * 2 + tileOffsetY,
 			this.zoom + 1,
@@ -518,7 +519,7 @@ export class TileBasic {
 			return;
 		}
 		
-		// if (this.#cameraIsOver(cameraDatas.coordCam, GLOBE.tilesDetailsMarge * 2)) {
+		// if (this.#cameraIsOver(cameraDatas.coordCam, this.globe.tilesDetailsMarge * 2)) {
 		if (this.#cameraIsOver(cameraDatas.coordCam, this.detailMargin)) {
 			addTileToSplit(this, cameraDatas);
 			return;
@@ -569,7 +570,7 @@ export class TileBasic {
 		}
 
 		const childs = this.childTiles
-		.map(t => t.getCurTile(coords))
+		.map(tile => tile.getCurTile(coords))
 		.filter(res => res);
 		return childs.pop();
 	}
@@ -653,6 +654,7 @@ function addTileToSplit(tile, cameraData) {
 
 	tilesToSplit.set(tile, cameraData);
 	tilesToSplit.delete(tile.parentTile);
+
 	if (splitTimeoutId === null) {
 		splitNextTile();
 	}
@@ -687,5 +689,8 @@ function getNextTileToSplit() {
 	const cameraData = tilesToSplit.get(nearest.tile);
 	tilesToSplit.delete(nearest.tile);
 
-	return {tile: nearest.tile, cameraData: cameraData};
+	return {
+		tile: nearest.tile,
+		cameraData: cameraData
+	};
 }

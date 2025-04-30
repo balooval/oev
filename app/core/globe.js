@@ -6,9 +6,9 @@ import {
 import Renderer from './renderer.js';
 import * as TILE from './tile.js';
 import Evt from './event.js';
-import GEO from './geo.js';
+import * as GEO from './geo.js';
 import ENVIRONMENT from '../environment/environment.js';
-import MATH from './math.js';
+import * as MATH from './math.js';
 import * as ElevationStore from '../tileExtensions/elevation/elevationStore.js';
 import CheapRuler from '../vendor/cheap-ruler.js';
 
@@ -88,7 +88,7 @@ class Globe {
 		const nbTiles = Math.pow(2, zoomBase);
 		for (let curTileY = 0; curTileY < nbTiles; curTileY ++) {
 			for (let curTileX = 0; curTileX < nbTiles; curTileX ++) {
-				const tile = new TILE.TileBasic(curTileX, curTileY, zoomBase, null);
+				const tile = new TILE.TileBasic(this, curTileX, curTileY, zoomBase, null);
 				this.#rootTiles.push(tile);
 				tile.buildGeometry();
 			}

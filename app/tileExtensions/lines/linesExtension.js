@@ -7,7 +7,7 @@ import LinesMaterial from './linesMaterial.js';
 import LinesModel from './linesModels.js';
 import LinesStore from './linesStore.js';
 import HighwayDrawer from './highwayDrawer.js';
-import GEO from '../../core/geo.js';
+import * as GEO from '../../core/geo.js';
 
 export {setApiUrl} from './linesLoader.js';
 

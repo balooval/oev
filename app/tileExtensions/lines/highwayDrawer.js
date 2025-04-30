@@ -1,4 +1,4 @@
-import GEO from '../../core/geo.js';
+import * as GEO from '../../core/geo.js';
 import * as TILE from '../../core/tile.js';
 
 const canvasFinal = document.createElement('canvas');

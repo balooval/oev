@@ -1,4 +1,4 @@
-import GEO from '../core/geo.js';
+import * as GEO from '../core/geo.js';
 import PolygonClipping from '../vendor/polygon-clipping.module.js';
 
 const canvasSize = 256;

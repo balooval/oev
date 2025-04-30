@@ -1,4 +1,4 @@
-import GEO from '../core/geo.js';
+import * as GEO from '../core/geo.js';
 import * as NET_TEXTURES from '../net/textures.js'
 import * as TILE from '../core/tile.js'
 import * as LanduseMaterial from '../tileExtensions/landuse/landuseMaterial.js';

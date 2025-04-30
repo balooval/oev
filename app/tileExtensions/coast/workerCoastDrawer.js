@@ -1,4 +1,4 @@
-import MATH from '../../core/math.js';
+import * as MATH from '../../core/math.js';
 
 const canvasSize = 256;
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);

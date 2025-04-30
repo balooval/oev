@@ -4,7 +4,7 @@ import {
 } from '../../vendor/three.module.js';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
-import GEO from '../../core/geo.js';
+import * as GEO from '../../core/geo.js';
 import {GLOBE} from '../../core/globe.js';
 import * as OsmReader from '../../utils/osmReader.js';
 import LinesMaterial from './linesMaterial.js';

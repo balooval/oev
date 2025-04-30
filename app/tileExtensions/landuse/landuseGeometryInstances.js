@@ -9,7 +9,7 @@ import * as LanduseMaterial from './landuseMaterial.js';
 import {GLOBE} from '../../core/globe.js';
 import * as OsmReader from '../../utils/osmReader.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
-import MATH from '../../core/math.js';
+import * as MATH from '../../core/math.js';
 import Renderer from '../../core/renderer.js';
 
 const rejectedIds = [];

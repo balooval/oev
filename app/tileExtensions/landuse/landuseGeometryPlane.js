@@ -9,7 +9,7 @@ import * as Poly2Tri from '../../vendor/poly2tri.module.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
-import MATH from '../../core/math.js';
+import * as MATH from '../../core/math.js';
 
 const rejectedIds = [];
 
