@@ -89,8 +89,8 @@ function buildLanduse(landuse, tile) {
     }
 
     if (landuse.id === 7318583) {
-        console.log(landuse);
-        console.log(multipolygons);
+        // console.log(landuse);
+        // console.log(multipolygons);
         // return false;
     }
 

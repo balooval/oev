@@ -161,6 +161,46 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
+            id: 'voronoi-normal',
+            url: 'voronoi-normal.png',
+        },
+        {
+            id: 'voronoi-0',
+            url: 'voronoi-0.png',
+        },
+        {
+            id: 'voronoi-1',
+            url: 'voronoi-1.png',
+        },
+        {
+            id: 'voronoi-2',
+            url: 'voronoi-2.png',
+        },
+        {
+            id: 'voronoi-3',
+            url: 'voronoi-3.png',
+        },
+        {
+            id: 'shell_tree_normal',
+            url: 'shell_tree_normal.png',
+        },
+        {
+            id: 'shell_tree_1',
+            url: 'shell_tree_1.png',
+        },
+        {
+            id: 'shell_tree_2',
+            url: 'shell_tree_2.png',
+        },
+        {
+            id: 'shell_tree_3',
+            url: 'shell_tree_3.png',
+        },
+        {
+            id: 'shell_tree_4',
+            url: 'shell_tree_4.png',
+        },
+        {
             id: 'tree-forest',
             url: 'tree-forest-flip.png',
         },
