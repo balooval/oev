@@ -161,6 +161,26 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
+            id: 'blender-scrub-normal',
+            url: 'blender-scrub-normal.png',
+        },
+        {
+            id: 'blender-scrub-0',
+            url: 'blender-scrub-0.png',
+        },
+        {
+            id: 'blender-scrub-1',
+            url: 'blender-scrub-1.png',
+        },
+        {
+            id: 'blender-scrub-2',
+            url: 'blender-scrub-2.png',
+        },
+        {
+            id: 'blender-scrub-3',
+            url: 'blender-scrub-3.png',
+        },
+        {
             id: 'voronoi-normal',
             url: 'voronoi-normal.png',
         },

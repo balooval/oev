@@ -111,7 +111,11 @@ function buildShell(landusesDatas, tile) {
 
 function buildShellLayer(landusesDatas, tile, layer) {
     
-    const forests = landusesDatas.filter(landuse => landuse.type === 'forest');
+    const handledTypes = [
+        'forest',
+        'scrub',
+    ]
+    const filteredLandusesDatas = landusesDatas.filter(landuse => handledTypes.includes(landuse.type));
 
     const canvas = new OffscreenCanvas(textureSize, textureSize);
     const context = canvas.getContext('2d', {willReadFrequently: true});
@@ -119,9 +123,9 @@ function buildShellLayer(landusesDatas, tile, layer) {
     const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true});
     
 
-    for (let i = 0; i < forests.length; i ++) {
-        const canvasBorderPositions = GEO.coordToCanvas(tile.bbox, textureSize, forests[i].border);
-        drawShape(context, contextNormal, canvasBorderPositions, [], layer);
+    for (let i = 0; i < filteredLandusesDatas.length; i ++) {
+        const canvasBorderPositions = GEO.coordToCanvas(tile.bbox, textureSize, filteredLandusesDatas[i].border);
+        drawShape(filteredLandusesDatas[i].type, context, contextNormal, canvasBorderPositions, [], layer);
     }
 
     const material = new MeshPhysicalMaterial({color: 0xffffff, roughness: 1, metalness: 0, transparent: true, alphaTest: 0.1});
@@ -204,22 +208,32 @@ function buildShellLayer(landusesDatas, tile, layer) {
     return mesh;
 }
 
-function drawShape(context, contextNormal, border, holesCoords, layer) {
+function drawShape(landuseType, context, contextNormal, border, holesCoords, layer) {
     const scale = 0.5;
     contextTextureShell.clearRect(0, 0, textureSize, textureSize);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-${layer}`).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-${layer}`).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-${layer}`).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-${layer}`).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
+    
+    const textureByType = {
+        forest: `voronoi-${layer}`,
+        scrub: `blender-scrub-${layer}`,
+    }
+    
+    const textureId = textureByType[landuseType];
+
+    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
     // contextTextureShell.drawImage(TextureLoader(`shell_tree_${layer + 1}`).image, 0, 0, 1024, 1024, 0, 0, textureSize, textureSize);
     const pattern = context.createPattern(canvasTextureShell, 'repeat');
     context.fillStyle = pattern;
 
+    // const textureNormalId = `voronoi-normal`;
+    const textureNormalId = `blender-scrub-normal`;
     contextTextureShell.clearRect(0, 0, textureSize, textureSize);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-normal`).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-normal`).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-normal`).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(`voronoi-normal`).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
+    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
     const patternNormal = context.createPattern(canvasTextureShell, 'repeat');
     contextNormal.fillStyle = patternNormal;
 
