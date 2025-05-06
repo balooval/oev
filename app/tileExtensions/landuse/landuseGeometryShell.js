@@ -28,32 +28,19 @@ const material = new MeshPhysicalMaterial({
     vertexColors: false,
 });
 
-const canvasTextureShell = new OffscreenCanvas(textureSize, textureSize);
-const contextTextureShell = canvasTextureShell.getContext('2d', {willReadFrequently: true});
+// const canvasTextureShell = new OffscreenCanvas(textureSize, textureSize);
+// const contextTextureShell = canvasTextureShell.getContext('2d', {willReadFrequently: true});
+
 
 const commonMaterialProps = {color: 0xffffff, side: DoubleSide, roughness: 1, metalness: 0, transparent: true, alphaTest: 0.1};
-const layersMaterials = [
-    new MeshPhysicalMaterial(commonMaterialProps),
-    new MeshPhysicalMaterial(commonMaterialProps),
-    new MeshPhysicalMaterial(commonMaterialProps),
-    new MeshPhysicalMaterial(commonMaterialProps),
-];
+// const layersMaterials = [
+//     new MeshPhysicalMaterial(commonMaterialProps),
+//     new MeshPhysicalMaterial(commonMaterialProps),
+//     new MeshPhysicalMaterial(commonMaterialProps),
+//     new MeshPhysicalMaterial(commonMaterialProps),
+// ];
 
 export function initMaterials() {
-    layersMaterials[0].map = TextureLoader('voronoi-0');
-    layersMaterials[1].map = TextureLoader('voronoi-1');
-    layersMaterials[2].map = TextureLoader('voronoi-2');
-    layersMaterials[3].map = TextureLoader('voronoi-3');
-    
-    // layersMaterials[0].map = TextureLoader('shell_tree_1');
-    // layersMaterials[1].map = TextureLoader('shell_tree_2');
-    // layersMaterials[2].map = TextureLoader('shell_tree_3');
-    // layersMaterials[3].map = TextureLoader('shell_tree_4');
-    
-    // layersMaterials[0].normalMap = TextureLoader('shell_tree_normal');
-    // layersMaterials[1].normalMap = TextureLoader('shell_tree_normal');
-    // layersMaterials[2].normalMap = TextureLoader('shell_tree_normal');
-    // layersMaterials[3].normalMap = TextureLoader('shell_tree_normal');
     
 }
 
@@ -209,32 +196,35 @@ function buildShellLayer(landusesDatas, tile, layer) {
 }
 
 function drawShape(landuseType, context, contextNormal, border, holesCoords, layer) {
-    const scale = 0.5;
-    contextTextureShell.clearRect(0, 0, textureSize, textureSize);
+    // contextTextureShell.clearRect(0, 0, textureSize, textureSize);
     
     const textureByType = {
-        forest: `voronoi-${layer}`,
+        forest: `blender-forest-${layer}`,
         scrub: `blender-scrub-${layer}`,
+    }
+
+    const normalByType = {
+        forest: `blender-forest-normal`,
+        scrub: `blender-scrub-normal`,
     }
     
     const textureId = textureByType[landuseType];
 
-    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
     // contextTextureShell.drawImage(TextureLoader(`shell_tree_${layer + 1}`).image, 0, 0, 1024, 1024, 0, 0, textureSize, textureSize);
-    const pattern = context.createPattern(canvasTextureShell, 'repeat');
+    const pattern = context.createPattern(TextureLoader(textureId).image, 'repeat');
     context.fillStyle = pattern;
 
-    // const textureNormalId = `voronoi-normal`;
-    const textureNormalId = `blender-scrub-normal`;
-    contextTextureShell.clearRect(0, 0, textureSize, textureSize);
-    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
-    const patternNormal = context.createPattern(canvasTextureShell, 'repeat');
+    const textureNormalId = normalByType[landuseType];
+    // contextTextureShell.clearRect(0, 0, textureSize, textureSize);
+    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
+    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
+    const patternNormal = context.createPattern(TextureLoader(textureNormalId).image, 'repeat');
     contextNormal.fillStyle = patternNormal;
 
     contextNormal.beginPath();

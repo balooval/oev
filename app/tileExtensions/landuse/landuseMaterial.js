@@ -181,24 +181,28 @@ function loadTextures() {
             url: 'blender-scrub-3.png',
         },
         {
-            id: 'voronoi-normal',
-            url: 'voronoi-normal.png',
+            id: 'blender-forest-shell-full',
+            url: 'blender-forest-shell-full.png',
         },
         {
-            id: 'voronoi-0',
-            url: 'voronoi-0.png',
+            id: 'blender-forest-normal',
+            url: 'blender-forest-normal.png',
         },
         {
-            id: 'voronoi-1',
-            url: 'voronoi-1.png',
+            id: 'blender-forest-0',
+            url: 'blender-forest-0.png',
         },
         {
-            id: 'voronoi-2',
-            url: 'voronoi-2.png',
+            id: 'blender-forest-1',
+            url: 'blender-forest-1.png',
         },
         {
-            id: 'voronoi-3',
-            url: 'voronoi-3.png',
+            id: 'blender-forest-2',
+            url: 'blender-forest-2.png',
+        },
+        {
+            id: 'blender-forest-3',
+            url: 'blender-forest-3.png',
         },
         {
             id: 'shell_tree_normal',
