@@ -31,7 +31,7 @@ export function getGeometryForType(type) {
 const instanceGeometries = new Map();
 const instanceMaterial = new Map();
 
-const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
+// const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 
 function onActivateExtension() {
     TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
@@ -49,9 +49,9 @@ function onActivateExtension() {
     .then(() => {
         return setModelsToGeometries();
     })
-    .then(() => {
-        return sendTexturesToWorker();
-    })
+    // .then(() => {
+    //     return sendTexturesToWorker();
+    // })
     .then(() => {
         isReady = true;
         evt.fireEvent('READY')
@@ -79,6 +79,8 @@ function sendTexturesToWorker() {
             createImageBitmap(TextureLoader('landuse_roughnessMap_forest').image, 0, 0, 512, 512),
 
         ]).then(imagesDatas => {
+            console.log('THEN');
+            
             workerCanvasComposer.port.postMessage(
                 {
                     command: 'uploadTextures',
@@ -183,6 +185,14 @@ function loadTextures() {
         {
             id: 'blender-forest-shell-full',
             url: 'blender-forest-shell-full.png',
+        },
+        {
+            id: 'blender-forest-shell-full-normal',
+            url: 'blender-forest-shell-full-normal.png',
+        },
+        {
+            id: 'voronoi-normal',
+            url: 'voronoi-normal.png',
         },
         {
             id: 'blender-forest-normal',

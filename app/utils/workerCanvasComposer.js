@@ -9,10 +9,15 @@ const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true});
 
 let texturesImages = {};
 
+console.log('WORKER');
+
+
 onconnect = function (e) {
     const port = e.ports[0];
     
     port.onmessage = function (evt) {
+        console.log('on message');
+        
         
         const command = evt.data.command;
         const response = {

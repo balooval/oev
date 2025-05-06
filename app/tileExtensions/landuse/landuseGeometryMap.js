@@ -19,6 +19,8 @@ const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.j
 const tilesWaitingWorker = new Map();
 
 workerCanvasComposer.port.onmessage = (e) => {
+    console.log('REPONSE');
+    
     if (e.data.command !== 'draw') {
         return;
     }

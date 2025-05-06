@@ -77,6 +77,7 @@ export function tileRemoved(_tileKey, tile) {
         for (const [key, mesh] of instancedTile.entries()) {
             GLOBE.removeMeshe(mesh);
             mesh.geometry.dispose();
+            mesh.material.dispose();
             meshesByTiles.delete(tile);
         }
     }
@@ -89,93 +90,122 @@ export function setLod(tile, lod) {
 function buildShell(landusesDatas, tile) {
     const layerCount = 4;
 
-    for (let i = 0; i < layerCount; i ++) {
-        const mesh = buildShellLayer(landusesDatas, tile, i);
+    // for (let i = 0; i < layerCount; i ++) {
+        const mesh = buildShellLayer(landusesDatas, tile, 'i');
         meshesByTiles.get(tile).push(mesh);
         GLOBE.addMeshe(mesh);
-    }
+    // }
 }
 
-function buildShellLayer(landusesDatas, tile, layer) {
+function buildShellLayer(landusesDatas, tile, layerBck) {
     
     const handledTypes = [
         'forest',
-        'scrub',
+        // 'scrub',
     ]
     const filteredLandusesDatas = landusesDatas.filter(landuse => handledTypes.includes(landuse.type));
 
-    const canvas = new OffscreenCanvas(textureSize, textureSize);
-    const context = canvas.getContext('2d', {willReadFrequently: true});
-    const canvasNormal = new OffscreenCanvas(textureSize, textureSize);
-    const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true});
+    const canvasAlpha = new OffscreenCanvas(textureSize, textureSize);
+    const contextAlpha = canvasAlpha.getContext('2d', {willReadFrequently: true});
+    const canvasDiffuse = new OffscreenCanvas(2048, 512);
+    const contextDiffuse = canvasDiffuse.getContext('2d', {willReadFrequently: true});
+    // const canvasNormal = new OffscreenCanvas(textureSize, textureSize);
+    // const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true});
     
 
     for (let i = 0; i < filteredLandusesDatas.length; i ++) {
         const canvasBorderPositions = GEO.coordToCanvas(tile.bbox, textureSize, filteredLandusesDatas[i].border);
-        drawShape(filteredLandusesDatas[i].type, context, contextNormal, canvasBorderPositions, [], layer);
+        drawShape(filteredLandusesDatas[i].type, contextAlpha, canvasBorderPositions, [], 0);
     }
 
-    const material = new MeshPhysicalMaterial({color: 0xffffff, roughness: 1, metalness: 0, transparent: true, alphaTest: 0.1});
-    material.map = new CanvasTexture(canvas);
-    material.normalMap = new CanvasTexture(canvasNormal);
+    contextDiffuse.drawImage(canvasAlpha, 0, 0, textureSize, textureSize, 0, 0, textureSize, textureSize);
+    contextDiffuse.drawImage(canvasAlpha, 0, 0, textureSize, textureSize, 512, 0, textureSize, textureSize);
+    contextDiffuse.drawImage(canvasAlpha, 0, 0, textureSize, textureSize, 1024, 0, textureSize, textureSize);
+    contextDiffuse.drawImage(canvasAlpha, 0, 0, textureSize, textureSize, 1536, 0, textureSize, textureSize);
+
+    contextDiffuse.globalCompositeOperation = 'source-in';
+    contextDiffuse.drawImage(TextureLoader('blender-forest-shell-full').image, 0, 0);
     
+    const material = new MeshPhysicalMaterial({
+        color: 0xffffff,
+        roughness: 1,
+        metalness: 0,
+        map: new CanvasTexture(canvasDiffuse),
+        transparent: true,
+        alphaTest: 0.1
+    });
+
+    const layerCount = 4;
+
+    // material.map = new CanvasTexture(canvas);
+    material.normalMap = TextureLoader('blender-forest-shell-full-normal');
+
     let curVertId = 0;
-    const bufferVertices = new Float32Array(tile.verticesNb * 3);
-    const bufferNormals = new Float32Array(tile.verticesNb * 3);
+    let faceId = 0;
+
+    const bufferVertices = new Float32Array(tile.verticesNb * 3 * layerCount);
+    const bufferNormals = new Float32Array(tile.verticesNb * 3 * layerCount);
+    const def = GLOBE.tilesDefinition;
+    const nbFacesPerLayer = (def * def) * 2;
+    const bufferFaces = new Uint32Array(nbFacesPerLayer * 3 * layerCount);
+    const bufferUvs = new Float32Array(tile.verticesNb * 2 * layerCount);
+
+    const uvXByLayer = 1 / layerCount;
+    const stepUVX = uvXByLayer / def;
+    const stepUVY = 1 / def;
+
     const vertCoords = tile.getVerticesPlaneCoords();
 
     const layerSpace = 10 - (tile.zoom - 13) * 3;
+
+    for (let layer = 0; layer < layerCount; layer ++) {
     
-    for (let i = 0; i < vertCoords.length / 2; i ++) {
-        const coordA = vertCoords[i * 2];
-        const coordB = vertCoords[i * 2 + 1];
-        const alt = ElevationStore.get(coordA, coordB);
-        const vertPos = GLOBE.coordToXYZ(
-            coordA, 
-            coordB, 
-            // alt + 50
-            alt + 2 + layer * layerSpace
-        );
-        bufferVertices[curVertId + 0] = vertPos[0];
-        bufferVertices[curVertId + 1] = vertPos[1];
-        bufferVertices[curVertId + 2] = vertPos[2];
-        
-        bufferNormals[curVertId + 0] = 0;
-        bufferNormals[curVertId + 1] = 1;
-        bufferNormals[curVertId + 2] = 0;
-
-        curVertId += 3;
-    }
-
-    const def = GLOBE.tilesDefinition;
-    const vertBySide = def + 1;
-    let faceId = 0;
-    const nbFaces = (def * def) * 2;
-    const bufferFaces = new Uint32Array(nbFaces * 3);
-
-    for (let x = 0; x < def; x ++) {
-        for (let y = 0; y < def; y ++) {
-            bufferFaces[faceId + 0] = (x * vertBySide) + y;
-            bufferFaces[faceId + 2] = (x * vertBySide) + y + 1;
-            bufferFaces[faceId + 1] = ((x + 1) * vertBySide) + y + 1;
+        for (let i = 0; i < vertCoords.length / 2; i ++) {
+            const coordA = vertCoords[i * 2];
+            const coordB = vertCoords[i * 2 + 1];
+            const alt = ElevationStore.get(coordA, coordB);
+            const vertPos = GLOBE.coordToXYZ(
+                coordA, 
+                coordB, 
+                alt + 2 + layer * layerSpace * 1
+            );
+            bufferVertices[curVertId + 0] = vertPos[0];
+            bufferVertices[curVertId + 1] = vertPos[1];
+            bufferVertices[curVertId + 2] = vertPos[2];
             
-            bufferFaces[faceId + 3] = ((x + 1) * vertBySide) + y + 1;
-            bufferFaces[faceId + 5] = ((x + 1) * vertBySide) + y;
-            bufferFaces[faceId + 4] = (x * vertBySide) + y;
-            faceId += 6;
+            bufferNormals[curVertId + 0] = 0;
+            bufferNormals[curVertId + 1] = 1;
+            bufferNormals[curVertId + 2] = 0;
+
+            curVertId += 3;
         }
-    }
 
-    const bufferUvs = new Float32Array(tile.verticesNb * 2);
-    const uvRepeat = 1;
-    let stepUV = uvRepeat / def;
-    let uvIndex = 0;
+        const vertBySide = def + 1;
+        
+        for (let x = 0; x < def; x ++) {
+            for (let y = 0; y < def; y ++) {
+                const vertexOffset = (vertBySide * vertBySide) * layer;
+                bufferFaces[faceId + 0] = vertexOffset + (x * vertBySide) + y;
+                bufferFaces[faceId + 2] = vertexOffset + (x * vertBySide) + y + 1;
+                bufferFaces[faceId + 1] = vertexOffset + ((x + 1) * vertBySide) + y + 1;
+                
+                bufferFaces[faceId + 3] = vertexOffset + ((x + 1) * vertBySide) + y + 1;
+                bufferFaces[faceId + 5] = vertexOffset + ((x + 1) * vertBySide) + y;
+                bufferFaces[faceId + 4] = vertexOffset + (x * vertBySide) + y;
+                faceId += 6;
+            }
+        }
 
-    for (let x = 0; x < vertBySide; x ++) {
-        for (let y = 0; y < vertBySide; y ++) {
-            uvIndex = (x * vertBySide) + y;
-            bufferUvs[uvIndex * 2] = stepUV * x;
-            bufferUvs[uvIndex * 2 + 1] = stepUV * y;
+        const uvMinX = uvXByLayer * layer;
+        let uvIndex = 0;
+
+        for (let x = 0; x < vertBySide; x ++) {
+            for (let y = 0; y < vertBySide; y ++) {
+                const vertexOffset = (vertBySide * vertBySide) * layer;
+                uvIndex = vertexOffset + (x * vertBySide) + y;
+                bufferUvs[uvIndex * 2] = uvMinX + (stepUVX * x);
+                bufferUvs[uvIndex * 2 + 1] = stepUVY * y;
+            }
         }
     }
 
@@ -186,8 +216,6 @@ function buildShellLayer(landusesDatas, tile, layer) {
     geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
     geoBuffer.computeVertexNormals();
 
-
-    // const mesh = new Mesh(geoBuffer, layersMaterials[layer]);
     const mesh = new Mesh(geoBuffer, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -195,53 +223,43 @@ function buildShellLayer(landusesDatas, tile, layer) {
     return mesh;
 }
 
-function drawShape(landuseType, context, contextNormal, border, holesCoords, layer) {
-    // contextTextureShell.clearRect(0, 0, textureSize, textureSize);
+function drawShape(landuseType, contextAlpha, border, holesCoords, layer) {
+    // const textureByType = {
+    //     forest: `blender-forest-${layer}`,
+    //     scrub: `blender-scrub-${layer}`,
+    // }
+
+    // const normalByType = {
+    //     forest: `blender-forest-normal`,
+    //     scrub: `blender-scrub-normal`,
+    // }
     
-    const textureByType = {
-        forest: `blender-forest-${layer}`,
-        scrub: `blender-scrub-${layer}`,
-    }
+    // const textureId = textureByType[landuseType];
 
-    const normalByType = {
-        forest: `blender-forest-normal`,
-        scrub: `blender-scrub-normal`,
-    }
-    
-    const textureId = textureByType[landuseType];
+    // const pattern = context.createPattern(TextureLoader(textureId).image, 'repeat');
+    // context.fillStyle = pattern;
 
-    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(`shell_tree_${layer + 1}`).image, 0, 0, 1024, 1024, 0, 0, textureSize, textureSize);
-    const pattern = context.createPattern(TextureLoader(textureId).image, 'repeat');
-    context.fillStyle = pattern;
+    contextAlpha.fillStyle = '0xff0000';
 
-    const textureNormalId = normalByType[landuseType];
-    // contextTextureShell.clearRect(0, 0, textureSize, textureSize);
-    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 0, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 0, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 256, 256, textureSize * scale, textureSize * scale);
-    // contextTextureShell.drawImage(TextureLoader(textureNormalId).image, 0, 0, 1024, 1024, 0, 256, textureSize * scale, textureSize * scale);
-    const patternNormal = context.createPattern(TextureLoader(textureNormalId).image, 'repeat');
-    contextNormal.fillStyle = patternNormal;
+    // const textureNormalId = normalByType[landuseType];
+    // const patternNormal = context.createPattern(TextureLoader(textureNormalId).image, 'repeat');
+    // contextNormal.fillStyle = patternNormal;
 
-    contextNormal.beginPath();
-    drawPolygon(contextNormal, border);
-    contextNormal.closePath();
-    contextNormal.fill();
+    // contextNormal.beginPath();
+    // drawPolygon(contextNormal, border);
+    // contextNormal.closePath();
+    // contextNormal.fill();
 
-    context.beginPath();
+    contextAlpha.beginPath();
 
-    drawPolygon(context, border);
+    drawPolygon(contextAlpha, border);
     
     // for (let h = 0; h < holesCoords.length; h ++) {
     //     drawPolygon(holesCoords[h]);
     // }
     
-    context.closePath();
-    context.fill();
+    contextAlpha.closePath();
+    contextAlpha.fill();
 }
 
 function drawPolygon(context, coords) {
