@@ -1,4 +1,4 @@
-import * as THREE from '../../vendor/three.module.js';
+import * as THREE from 'three';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';

@@ -4,7 +4,7 @@ import Renderer from '../../core/renderer.js';
 import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import * as NET_TEXTURES from '../../net/textures.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
-import * as THREE from '../../vendor/three.module.js';
+import * as THREE from 'three';
 import * as TileExtension from '../tileExtension.js';
 import * as CoastLoader from './coastLoader.js';
 

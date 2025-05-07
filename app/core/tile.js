@@ -9,7 +9,7 @@ import {
 	Texture,
 	MeshPhysicalMaterial,
 	Vector2,
-} from '../vendor/three.module.js';
+} from 'three';
 import Evt from './event.js';
 import * as GEO from './geo.js';
 import Renderer from './renderer.js';

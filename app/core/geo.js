@@ -1,6 +1,6 @@
 import {
 	Vector2,
-} from '../vendor/three.module.js';
+} from 'three';
 import * as MATH from './math.js';
 
 

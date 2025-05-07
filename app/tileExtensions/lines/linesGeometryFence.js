@@ -1,7 +1,7 @@
 import {
     BufferAttribute,
     BufferGeometry,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as GeoBuilder from './linesGeometryBuilder.js';
 
 export function buildGeometry(_line, _tile) {

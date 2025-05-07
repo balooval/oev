@@ -1,6 +1,6 @@
 import {
 	TextureLoader,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as DataLoader from '../dataLoader.js';
 import {GLOBE} from '../../core/globe.js';
 

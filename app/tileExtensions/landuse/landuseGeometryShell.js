@@ -5,7 +5,7 @@ import {
     MeshPhysicalMaterial,
     Mesh,
     CanvasTexture,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
 import {GLOBE} from '../../core/globe.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';

@@ -7,7 +7,7 @@ import {
     LinearFilter,
     RGBAFormat,
     UnsignedByteType,
-} from '../../vendor/three.module.js';
+} from 'three';
 import {GLOBE} from '../../core/globe.js';
 import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import Renderer from '../../core/renderer.js';

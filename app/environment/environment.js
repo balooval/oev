@@ -4,7 +4,7 @@ import {
 	Mesh,
 	MeshBasicMaterial,
 	Vector3,
-} from '../vendor/three.module.js';
+} from 'three';
 import Renderer from '../core/renderer.js';
 import {
 	GLOBE,

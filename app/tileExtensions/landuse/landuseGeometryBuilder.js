@@ -1,4 +1,4 @@
-import * as THREE from '../../vendor/three.module.js';
+import * as THREE from 'three';
 import {GLOBE} from '../../core/globe.js';
 
 export function buildLanduseGeometry(_landuse, _facesIndex, _elevationsDatas, _tile) {

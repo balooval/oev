@@ -4,7 +4,7 @@ import {
     Color,
     DoubleSide,
     MeshPhysicalMaterial,
-} from '../../vendor/three.module.js';
+} from 'three';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';

@@ -4,7 +4,7 @@ import { BufferGeometryUtils } from '../../vendor/BufferGeometryUtils.module.js'
 import {
     BufferAttribute,
     BufferGeometry,
-} from '../../vendor/three.module.js';
+} from 'three';
 import {GLOBE} from '../../core/globe.js';
 import * as MATH from '../../core/math.js';
 import * as GeoBuilder from './linesGeometryBuilder.js';

@@ -12,7 +12,7 @@ import {
     Vector3,
     VSMShadowMap,
     WebGLRenderer,
-} from '../vendor/three.module.js';
+} from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.module.js';
 
 let webGlRenderer = undefined;
