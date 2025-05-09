@@ -15,6 +15,9 @@ import * as GEO from './geo.js';
 import Renderer from './renderer.js';
 
 export const MAP_SIZE = 256;
+export const TILES_DEFINITION = 32;
+export const TILES_VERTICES_COUNT = (TILES_DEFINITION + 1) * (TILES_DEFINITION + 1);
+const tileBaseGeometry = buildTileBaseGeometry();
 
 export class TileBasic {
 		
@@ -40,7 +43,7 @@ export class TileBasic {
 		this.remoteTex = undefined;
 		this.meshe = undefined;
 		this.key = this.tileX + '_' + this.tileY + '_' + this.zoom;
-		this.verticesNb = (this.globe.tilesDefinition + 1) * (this.globe.tilesDefinition + 1);
+		this.verticesNb = (TILES_DEFINITION + 1) * (TILES_DEFINITION + 1);
 		this.startCoord = GEO.tileToCoordsVect(this.tileX, this.tileY, this.zoom);
 		this.endCoord = GEO.tileToCoordsVect(this.tileX + 1, this.tileY + 1, this.zoom);
 		this.startLargeCoord = GEO.tileToCoordsVect(this.tileX - 1, this.tileY - 1, this.zoom);
@@ -77,7 +80,7 @@ export class TileBasic {
 		this.normalTexture = new Texture(this.composeNormalMap);
 		this.normalTexture.needsUpdate = true;
 
-		this.diffuseMap = null;
+		// this.diffuseMap = null;
 
 
 		this.material = new MeshPhysicalMaterial({
@@ -105,39 +108,39 @@ export class TileBasic {
 		this.viewByCameraCoordVector = new Vector2();
 
 
-		const vertBySide = this.globe.tilesDefinition + 1;
+		const vertBySide = TILES_DEFINITION + 1;
 		const vertNb = vertBySide * vertBySide;
 		this.bufferVerticesPlaneCoords = new Float32Array(vertNb * 2);
     }
 
-	drawOnDiffuseMap(drawerId, image) {
-		this.extensionsMaps.set(drawerId, image);
-		this.redrawDiffuse();
-	}
+	// drawOnDiffuseMap(drawerId, image) {
+	// 	this.extensionsMaps.set(drawerId, image);
+	// 	this.redrawDiffuse();
+	// }
 	
-	clearDiffuseLayer(drawerId) {
-		this.extensionsMaps.delete(drawerId);
-		this.redrawDiffuse();
-	}
+	// clearDiffuseLayer(drawerId) {
+	// 	this.extensionsMaps.delete(drawerId);
+	// 	this.redrawDiffuse();
+	// }
 
-	redrawDiffuse() {
-		if (!this.diffuseMap) {
-			return;
-		}
+	// redrawDiffuse() {
+	// 	if (!this.diffuseMap) {
+	// 		return;
+	// 	}
 
-		this.composeContext.fillStyle = "#ffffff";
-		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+	// 	this.composeContext.fillStyle = "#ffffff";
+	// 	this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-		this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, MAP_SIZE, MAP_SIZE);
-        this.extensionsMaps.forEach(map => {
-			this.composeContext.drawImage(map, 0, 0);
-        });
+	// 	this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, MAP_SIZE, MAP_SIZE);
+    //     this.extensionsMaps.forEach(map => {
+	// 		this.composeContext.drawImage(map, 0, 0);
+    //     });
 
-        this.diffuseTexture.needsUpdate = true
-        Renderer.MUST_RENDER = true;
+    //     this.diffuseTexture.needsUpdate = true
+    //     Renderer.MUST_RENDER = true;
 
-		// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
-    }
+	// 	// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
+    // }
 
 	// TODO: gérer ces "calques" dans une classe dédiée qui saur as'occuper de tous les types de map de la même manière (diffuse, normal, ...)
 	drawOnNormalMap(drawerId, image) {
@@ -267,30 +270,28 @@ export class TileBasic {
 			return false;
 		}
 
-		const vertBySide = this.globe.tilesDefinition + 1;
-		const bufferUvs = new Float32Array(this.verticesNb * 2);
-		let stepUV = textureDatas.uvReduc / this.globe.tilesDefinition;
-		let uvIndex = 0;
+        // this.diffuseMap = textureDatas.map.image;
+		
+		this.composeContext.drawImage(
+			textureDatas.map.image,
+			MAP_SIZE * textureDatas.offsetX,
+			MAP_SIZE * textureDatas.offsetY,
+			MAP_SIZE * textureDatas.uvReduc,
+			MAP_SIZE * textureDatas.uvReduc,
+			0,
+			0,
+			MAP_SIZE,
+			MAP_SIZE
+		);
 
-		for (let x = 0; x < vertBySide; x ++) {
-			for (let y = 0; y < vertBySide; y ++) {
-				uvIndex = (x * vertBySide) + y;
-				bufferUvs[uvIndex * 2] = textureDatas.offsetX + (stepUV * x);
-				bufferUvs[uvIndex * 2 + 1] = textureDatas.offsetY + (stepUV * y);
-			}
-		}
-
-		this.meshe.geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
-        this.meshe.geometry.attributes.uv.needsUpdate = true;
-        this.diffuseMap = textureDatas.map.image;
-        this.redrawDiffuse();
+		this.diffuseTexture.needsUpdate = true
 	}
 
 	getVerticesPlaneCoords() {
-		const vertBySide = this.globe.tilesDefinition + 1;
+		const vertBySide = TILES_DEFINITION + 1;
 		let coordId = 0;
-		const stepCoordX = (this.endCoord.x - this.startCoord.x) / this.globe.tilesDefinition;
-		const stepCoordY = (this.startCoord.y - this.endCoord.y) / this.globe.tilesDefinition;
+		const stepCoordX = (this.endCoord.x - this.startCoord.x) / TILES_DEFINITION;
+		const stepCoordY = (this.startCoord.y - this.endCoord.y) / TILES_DEFINITION;
 
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
@@ -303,9 +304,19 @@ export class TileBasic {
 	}
 
 	buildGeometry() {
+
+		// const geoBuffer = tileBaseGeometry.clone();
+
+		// const verticePositions = geoBuffer.getAttribute('position');
+		// verticePositions.needsUpdate = true;
+		// geoBuffer.verticesNeedUpdate = true;
+		// geoBuffer.uvsNeedUpdate = true;
+		// geoBuffer.computeVertexNormals();
+
 		let curVertId = 0;
-		const bufferVertices = new Float32Array(this.verticesNb * 3);
-		const bufferNormals = new Float32Array(this.verticesNb * 3);
+		const bufferVertices = new Float32Array(TILES_VERTICES_COUNT * 3);
+		const bufferNormals = new Float32Array(TILES_VERTICES_COUNT * 3);
+		const bufferUvs = new Float32Array(TILES_VERTICES_COUNT * 2);
 		const vertCoords = this.getVerticesPlaneCoords();
 		
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
@@ -325,12 +336,12 @@ export class TileBasic {
 			curVertId += 3;
 		}
 
-		const def = this.globe.tilesDefinition;
+		const def = TILES_DEFINITION;
 		const vertBySide = def + 1;
 		let faceId = 0;
 		const nbFaces = (def * def) * 2;
 		const bufferFaces = new Uint32Array(nbFaces * 3);
-
+		
 		for (let x = 0; x < def; x ++) {
 			for (let y = 0; y < def; y ++) {
 				bufferFaces[faceId + 0] = (x * vertBySide) + y;
@@ -343,9 +354,22 @@ export class TileBasic {
 				faceId += 6;
 			}
 		}
+		
+		let stepUV = 1 / TILES_DEFINITION;
+		let uvIndex = 0;
+
+		for (let x = 0; x < vertBySide; x ++) {
+			for (let y = 0; y < vertBySide; y ++) {
+				uvIndex = (x * vertBySide) + y;
+				bufferUvs[uvIndex * 2] = stepUV * x;
+				bufferUvs[uvIndex * 2 + 1] = stepUV * y;
+			}
+		}
+
 		const geoBuffer = new BufferGeometry();
 		geoBuffer.setAttribute('position', new BufferAttribute(bufferVertices, 3));
 		geoBuffer.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
+		geoBuffer.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
 		geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
 		geoBuffer.computeVertexNormals();
 
@@ -467,10 +491,10 @@ export class TileBasic {
 			return false;
 		}
 
-		this.#addChild(0, 0, 0, 1);
-		this.#addChild(0, 1, 0, 0);
-		this.#addChild(1, 0, 1, 1);
-        this.#addChild(1, 1, 1, 0);
+		this.#addChild(0, 0, 0, 0);
+		this.#addChild(0, 1, 0, 1);
+		this.#addChild(1, 0, 1, 0);
+        this.#addChild(1, 1, 1, 1);
         this.evt.fireEvent('ADD_CHILDRENS');
 	}
 		
@@ -614,11 +638,11 @@ export class TileBasic {
 	}
 
 	#debug(value) {
-		this.composeContext.fillStyle = "#ffffff";
-		this.composeContext.fillRect(50, 100, 150, 100);
+		// this.composeContext.fillStyle = "#ffffff";
+		// this.composeContext.fillRect(50, 100, 150, 100);
 		this.composeContext.fillStyle = "#000000";
 		this.composeContext.font = "20px serif";
-		this.composeContext.fillText(' ' + value, 50, 130);
+		this.composeContext.fillText(' ' + value, 10, 20);
         this.diffuseTexture.needsUpdate = true
 	}
 
@@ -700,4 +724,64 @@ function getNextTileToSplit() {
 		tile: nearest.tile,
 		cameraData: cameraData
 	};
+}
+
+
+function buildTileBaseGeometry() {
+	const bufferVertices = new Float32Array(TILES_VERTICES_COUNT * 3);
+	const bufferNormals = new Float32Array(TILES_VERTICES_COUNT * 3);
+	const bufferUvs = new Float32Array(TILES_VERTICES_COUNT * 2);
+	
+	const vertBySide = TILES_DEFINITION + 1;
+	const verticesCount = vertBySide * vertBySide;
+	let curVertId = 0;
+	
+	for (let i = 0; i < verticesCount / 2; i ++) {
+		bufferVertices[curVertId + 0] = 0;
+		bufferVertices[curVertId + 1] = 0;
+		bufferVertices[curVertId + 2] = 0;
+		
+		bufferNormals[curVertId + 0] = 0;
+		bufferNormals[curVertId + 1] = 1;
+		bufferNormals[curVertId + 2] = 0;
+
+		curVertId += 3;
+	}
+
+	let faceId = 0;
+	const facesCount = (TILES_DEFINITION * TILES_DEFINITION) * 2;
+	const bufferFaces = new Uint32Array(facesCount * 3);
+	
+	for (let x = 0; x < TILES_DEFINITION; x ++) {
+		for (let y = 0; y < TILES_DEFINITION; y ++) {
+			bufferFaces[faceId + 0] = (x * vertBySide) + y;
+			bufferFaces[faceId + 2] = (x * vertBySide) + y + 1;
+			bufferFaces[faceId + 1] = ((x + 1) * vertBySide) + y + 1;
+			
+			bufferFaces[faceId + 3] = ((x + 1) * vertBySide) + y + 1;
+			bufferFaces[faceId + 5] = ((x + 1) * vertBySide) + y;
+			bufferFaces[faceId + 4] = (x * vertBySide) + y;
+			faceId += 6;
+		}
+	}
+	
+	let stepUV = 1 / TILES_DEFINITION;
+	let uvIndex = 0;
+
+	for (let x = 0; x < vertBySide; x ++) {
+		for (let y = 0; y < vertBySide; y ++) {
+			uvIndex = (x * vertBySide) + y;
+			bufferUvs[uvIndex * 2] = stepUV * x;
+			bufferUvs[uvIndex * 2 + 1] = stepUV * y;
+		}
+	}
+
+	const geometry = new BufferGeometry();
+	geometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+	geometry.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
+	geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+	geometry.setIndex(new BufferAttribute(bufferFaces, 1));
+	geometry.computeVertexNormals();
+
+	return geometry;
 }

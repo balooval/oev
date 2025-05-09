@@ -1,5 +1,5 @@
 import * as DataLoader from '../dataLoader.js';
-import {GLOBE} from '../../core/globe.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
 import {extractElevation} from './elevationDecoder.js';
 
 const PARAMS = {
@@ -17,9 +17,8 @@ export function setApiUrl(_url) {
 class LoaderElevation {
 
 	constructor(_callback) {
-		const bufferSize = Math.pow(GLOBE.tilesDefinition + 1, 2);
+		const bufferSize = Math.pow(TILES_DEFINITION + 1, 2);
 		this.eleBuffer = new Float32Array(bufferSize);
-		this.definition = GLOBE.tilesDefinition;
 		this.isLoading = false;
 		this.callback = _callback;
 		this.params = {};
@@ -41,7 +40,7 @@ class LoaderElevation {
 			baseUrl = IGN_URL;
 		}
 
-		let url = baseUrl + '&def=' + this.definition + '&z=' + params.z + '&x='+params.x+'&y='+params.y;
+		let url = baseUrl + '&def=' + TILES_DEFINITION + '&z=' + params.z + '&x='+params.x+'&y='+params.y;
 		this.imageObj.src = url;
 	}
 	

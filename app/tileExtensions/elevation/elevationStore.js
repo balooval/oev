@@ -1,4 +1,4 @@
-import {GLOBE} from '../../core/globe.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
 
 let store = [{
 	zoom : 1, 
@@ -123,15 +123,15 @@ function slideValue(_min, _max, _prct) {
 }
 
 function interpolate(struct, lon, lat) {
-	const vertBySide = GLOBE.tilesDefinition + 0;
-	const vertBySideMax = GLOBE.tilesDefinition + 1;
+	const vertBySide = TILES_DEFINITION + 0;
+	const vertBySideMax = TILES_DEFINITION + 1;
 
 	const prctFromLon = mapValue(lon, struct.startLon, struct.endLon); // 0 -> 1
 	const prctFromLat = mapValue(lat, struct.endLat, struct.startLat);
 
-	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> GLOBE.tilesDefinition + 1
+	const bufferXMin = Math.floor(prctFromLon * vertBySide); // 0 -> TILES_DEFINITION + 1
 	const bufferYMin = Math.floor(prctFromLat * vertBySide);
-	const bufferXMax = Math.ceil(prctFromLon * vertBySide); // 0 -> GLOBE.tilesDefinition + 1
+	const bufferXMax = Math.ceil(prctFromLon * vertBySide); // 0 -> TILES_DEFINITION + 1
 	const bufferYMax = Math.ceil(prctFromLat * vertBySide);
 	
 	const bufferIndexMinXMinY = (bufferXMin * vertBySideMax) + bufferYMin;
@@ -144,7 +144,7 @@ function interpolate(struct, lon, lat) {
 	const elevationMinXMaxY = struct.datas[bufferIndexMinXMaxY];
 	const elevationMaxXMaxY = struct.datas[bufferIndexMaxXMaxY];
 
-	const prctX = mapValue(prctFromLon * vertBySide, Math.floor(prctFromLon * vertBySide), Math.ceil(prctFromLon * vertBySide)); // 0 -> GLOBE.tilesDefinition
+	const prctX = mapValue(prctFromLon * vertBySide, Math.floor(prctFromLon * vertBySide), Math.ceil(prctFromLon * vertBySide)); // 0 -> TILES_DEFINITION
 	const prctY = mapValue(prctFromLat * vertBySide, Math.floor(prctFromLat * vertBySide), Math.ceil(prctFromLat * vertBySide));
 	
 	const interpolXMin = slideValue(elevationMinXMinY, elevationMaxXMinY, prctX);

@@ -4,7 +4,8 @@ import {
     Mesh,
 } from 'three';
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
-import {GLOBE} from '../../core/globe.js';
+import { GLOBE } from '../../core/globe.js';
+import { TILES_DEFINITION } from '../../core/tile.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
@@ -177,7 +178,7 @@ function calcBbox(_border) {
 
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = GLOBE.tilesDefinition * 4;
+    const def = TILES_DEFINITION * 4;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;

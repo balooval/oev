@@ -14,6 +14,7 @@ import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 import * as MATH from '../../core/math.js';
 import { texture as TextureLoader } from '../../net/textures.js';
+import { TILES_DEFINITION, TILES_VERTICES_COUNT } from '../../core/tile.js';
 import * as GEO from '../../core/geo.js';
 
 const rejectedIds = [];
@@ -143,12 +144,12 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
     let curVertId = 0;
     let faceId = 0;
 
-    const bufferVertices = new Float32Array(tile.verticesNb * 3 * layerCount);
-    const bufferNormals = new Float32Array(tile.verticesNb * 3 * layerCount);
-    const def = GLOBE.tilesDefinition;
+    const bufferVertices = new Float32Array(TILES_VERTICES_COUNT * 3 * layerCount);
+    const bufferNormals = new Float32Array(TILES_VERTICES_COUNT * 3 * layerCount);
+    const def = TILES_DEFINITION;
     const nbFacesPerLayer = (def * def) * 2;
     const bufferFaces = new Uint32Array(nbFacesPerLayer * 3 * layerCount);
-    const bufferUvs = new Float32Array(tile.verticesNb * 2 * layerCount);
+    const bufferUvs = new Float32Array(TILES_VERTICES_COUNT * 2 * layerCount);
 
     const uvXByLayer = 1 / layerCount;
     const stepUVX = uvXByLayer / def;
@@ -386,7 +387,7 @@ function calcBbox(_border) {
 
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = GLOBE.tilesDefinition * 4;
+    const def = TILES_DEFINITION * 4;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;
