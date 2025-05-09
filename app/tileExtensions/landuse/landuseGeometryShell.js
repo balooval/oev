@@ -22,12 +22,15 @@ const rejectedIds = [];
 const meshesByTiles = new Map();
 
 const textureSize = 512;
+const layersCount = 4;
 
 const material = new MeshPhysicalMaterial({
     color: 0x00FF00,
     side: DoubleSide,
     vertexColors: false,
 });
+
+const shellBaseGeometry = buildShellBaseGeometry(layersCount);
 
 // const canvasTextureShell = new OffscreenCanvas(textureSize, textureSize);
 // const contextTextureShell = canvasTextureShell.getContext('2d', {willReadFrequently: true});
@@ -89,7 +92,6 @@ export function setLod(tile, lod) {
 }
 
 function buildShell(landusesDatas, tile) {
-    const layerCount = 4;
 
     // for (let i = 0; i < layerCount; i ++) {
         const mesh = buildShellLayer(landusesDatas, tile, 'i');
@@ -112,7 +114,6 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
     const contextDiffuse = canvasDiffuse.getContext('2d', {willReadFrequently: true});
     // const canvasNormal = new OffscreenCanvas(textureSize, textureSize);
     // const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true});
-    
 
     for (let i = 0; i < filteredLandusesDatas.length; i ++) {
         const canvasBorderPositions = GEO.coordToCanvas(tile.bbox, textureSize, filteredLandusesDatas[i].border);
@@ -136,43 +137,68 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
         alphaTest: 0.1
     });
 
-    const layerCount = 4;
-
-    // material.map = new CanvasTexture(canvas);
     material.normalMap = TextureLoader('blender-forest-shell-full-normal');
 
+    const vertCoords = tile.bufferVerticesPlaneCoords;
+    const layerSpace = 10 - (tile.zoom - 13) * 3;
+    
+    const geoBuffer = shellBaseGeometry.clone();
+    const verticePositions = geoBuffer.getAttribute('position');
+    let curVertId = 0;
+
+    for (let layer = 0; layer < layersCount; layer ++) {
+    
+        for (let i = 0; i < vertCoords.length / 2; i ++) {
+            const coordLon = vertCoords[i * 2];
+            const coordBLat = vertCoords[i * 2 + 1];
+            const alt = ElevationStore.get(coordLon, coordBLat);
+            const vertPos = GLOBE.coordToXYZ(
+                coordLon, 
+                coordBLat, 
+                alt + 2 + layer * layerSpace * 1
+            );
+            verticePositions.array[curVertId + 0] = vertPos[0];
+            verticePositions.array[curVertId + 1] = vertPos[1];
+            verticePositions.array[curVertId + 2] = vertPos[2];
+            
+            curVertId += 3;
+        }
+    }
+
+    verticePositions.needsUpdate = true;
+    geoBuffer.computeVertexNormals();
+
+    const mesh = new Mesh(geoBuffer, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    return mesh;
+}
+
+
+function buildShellBaseGeometry(layerCount) {
     let curVertId = 0;
     let faceId = 0;
 
     const bufferVertices = new Float32Array(TILES_VERTICES_COUNT * 3 * layerCount);
     const bufferNormals = new Float32Array(TILES_VERTICES_COUNT * 3 * layerCount);
-    const def = TILES_DEFINITION;
-    const nbFacesPerLayer = (def * def) * 2;
+    const nbFacesPerLayer = (TILES_DEFINITION * TILES_DEFINITION) * 2;
     const bufferFaces = new Uint32Array(nbFacesPerLayer * 3 * layerCount);
     const bufferUvs = new Float32Array(TILES_VERTICES_COUNT * 2 * layerCount);
 
     const uvXByLayer = 1 / layerCount;
-    const stepUVX = uvXByLayer / def;
-    const stepUVY = 1 / def;
+    const stepUVX = uvXByLayer / TILES_DEFINITION;
+    const stepUVY = 1 / TILES_DEFINITION;
 
-    const vertCoords = tile.bufferVerticesPlaneCoords;
-
-    const layerSpace = 10 - (tile.zoom - 13) * 3;
+    const vertBySide = TILES_DEFINITION + 1;
+    const verticesCount = vertBySide * vertBySide;
 
     for (let layer = 0; layer < layerCount; layer ++) {
     
-        for (let i = 0; i < vertCoords.length / 2; i ++) {
-            const coordA = vertCoords[i * 2];
-            const coordB = vertCoords[i * 2 + 1];
-            const alt = ElevationStore.get(coordA, coordB);
-            const vertPos = GLOBE.coordToXYZ(
-                coordA, 
-                coordB, 
-                alt + 2 + layer * layerSpace * 1
-            );
-            bufferVertices[curVertId + 0] = vertPos[0];
-            bufferVertices[curVertId + 1] = vertPos[1];
-            bufferVertices[curVertId + 2] = vertPos[2];
+        for (let i = 0; i < verticesCount / 2; i ++) {
+            bufferVertices[curVertId + 0] = 0;
+            bufferVertices[curVertId + 1] = 0;
+            bufferVertices[curVertId + 2] = 0;
             
             bufferNormals[curVertId + 0] = 0;
             bufferNormals[curVertId + 1] = 1;
@@ -181,10 +207,8 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
             curVertId += 3;
         }
 
-        const vertBySide = def + 1;
-        
-        for (let x = 0; x < def; x ++) {
-            for (let y = 0; y < def; y ++) {
+        for (let x = 0; x < TILES_DEFINITION; x ++) {
+            for (let y = 0; y < TILES_DEFINITION; y ++) {
                 const vertexOffset = (vertBySide * vertBySide) * layer;
                 bufferFaces[faceId + 0] = vertexOffset + (x * vertBySide) + y;
                 bufferFaces[faceId + 2] = vertexOffset + (x * vertBySide) + y + 1;
@@ -210,18 +234,14 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
         }
     }
 
-    const geoBuffer = new BufferGeometry();
-    geoBuffer.setAttribute('position', new BufferAttribute(bufferVertices, 3));
-    geoBuffer.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
-    geoBuffer.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
-    geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
-    geoBuffer.computeVertexNormals();
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+    geometry.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
+    geometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+    geometry.setIndex(new BufferAttribute(bufferFaces, 1));
+    geometry.computeVertexNormals();
 
-    const mesh = new Mesh(geoBuffer, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-
-    return mesh;
+    return geometry;
 }
 
 function drawShape(landuseType, contextAlpha, border, holesCoords, layer) {
