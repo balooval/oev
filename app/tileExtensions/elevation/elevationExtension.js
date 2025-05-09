@@ -64,7 +64,7 @@ class ElevationExtension {
 	#nearestElevationDatas() {
 		const def = TILES_DEFINITION + 1;
 		const buffer = new Float32Array(def * def);
-		const vertCoords = this.tile.getVerticesPlaneCoords();
+		const vertCoords = this.tile.bufferVerticesPlaneCoords;
 
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
 			buffer[i] = ElevationStore.get(
@@ -95,7 +95,7 @@ class ElevationExtension {
 		
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
-		const vertCoords = this.tile.getVerticesPlaneCoords();
+		const vertCoords = this.tile.bufferVerticesPlaneCoords;
 
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
 			const vertPos = GLOBE.coordToXYZ(

@@ -85,14 +85,10 @@ export class TileBasic {
 
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
-			roughness: 0.7,
+			roughness: 0.8,
 			metalness: 0,
 			map: this.diffuseTexture,
-			// map: dataTexture,
-			// map: TextureLoader('landuse_color'),
-			// roughnessMap: TextureLoader('landuse_roughness'),
 			normalMap: this.normalTexture,
-			// side: DoubleSide,
 		});
 
 		this.extensions = new Map();
@@ -108,9 +104,7 @@ export class TileBasic {
 		this.viewByCameraCoordVector = new Vector2();
 
 
-		const vertBySide = TILES_DEFINITION + 1;
-		const vertNb = vertBySide * vertBySide;
-		this.bufferVerticesPlaneCoords = new Float32Array(vertNb * 2);
+		this.bufferVerticesPlaneCoords = this.#computeVerticesCoords();
     }
 
 	// drawOnDiffuseMap(drawerId, image) {
@@ -287,98 +281,51 @@ export class TileBasic {
 		this.diffuseTexture.needsUpdate = true
 	}
 
-	getVerticesPlaneCoords() {
+	#computeVerticesCoords() {
 		const vertBySide = TILES_DEFINITION + 1;
+		const vertNb = vertBySide * vertBySide;
+		const verticesCoords = new Float32Array(vertNb * 2);
 		let coordId = 0;
 		const stepCoordX = (this.endCoord.x - this.startCoord.x) / TILES_DEFINITION;
 		const stepCoordY = (this.startCoord.y - this.endCoord.y) / TILES_DEFINITION;
 
 		for (let x = 0; x < vertBySide; x ++) {
 			for (let y = 0; y < vertBySide; y ++) {
-				this.bufferVerticesPlaneCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
-				this.bufferVerticesPlaneCoords[coordId + 1] = this.endCoord.y + (stepCoordY * y);
+				verticesCoords[coordId + 0] = this.startCoord.x + (stepCoordX * x);
+				verticesCoords[coordId + 1] = this.endCoord.y + (stepCoordY * y);
 				coordId += 2;
 			}
 		}
-		return this.bufferVerticesPlaneCoords;
+		return verticesCoords;
 	}
 
 	buildGeometry() {
-
-		// const geoBuffer = tileBaseGeometry.clone();
-
-		// const verticePositions = geoBuffer.getAttribute('position');
-		// verticePositions.needsUpdate = true;
-		// geoBuffer.verticesNeedUpdate = true;
-		// geoBuffer.uvsNeedUpdate = true;
-		// geoBuffer.computeVertexNormals();
-
+		const tileGeometry = tileBaseGeometry.clone();
+		const verticePositions = tileGeometry.getAttribute('position');
 		let curVertId = 0;
-		const bufferVertices = new Float32Array(TILES_VERTICES_COUNT * 3);
-		const bufferNormals = new Float32Array(TILES_VERTICES_COUNT * 3);
-		const bufferUvs = new Float32Array(TILES_VERTICES_COUNT * 2);
-		const vertCoords = this.getVerticesPlaneCoords();
 		
-		for (let i = 0; i < vertCoords.length / 2; i ++) {
+		for (let i = 0; i < this.bufferVerticesPlaneCoords.length / 2; i ++) {
 			const vertPos = this.globe.coordToXYZ(
-				vertCoords[i * 2], 
-				vertCoords[i * 2 + 1], 
+				this.bufferVerticesPlaneCoords[i * 2], 
+				this.bufferVerticesPlaneCoords[i * 2 + 1], 
 				0
 			);
-			bufferVertices[curVertId + 0] = vertPos[0];
-			bufferVertices[curVertId + 1] = vertPos[1];
-			bufferVertices[curVertId + 2] = vertPos[2];
+			verticePositions.array[curVertId + 0] = vertPos[0];
+			verticePositions.array[curVertId + 1] = vertPos[1];
+			verticePositions.array[curVertId + 2] = vertPos[2];
 			
-			bufferNormals[curVertId + 0] = 0;
-			bufferNormals[curVertId + 1] = 1;
-			bufferNormals[curVertId + 2] = 0;
-
 			curVertId += 3;
 		}
 
-		const def = TILES_DEFINITION;
-		const vertBySide = def + 1;
-		let faceId = 0;
-		const nbFaces = (def * def) * 2;
-		const bufferFaces = new Uint32Array(nbFaces * 3);
-		
-		for (let x = 0; x < def; x ++) {
-			for (let y = 0; y < def; y ++) {
-				bufferFaces[faceId + 0] = (x * vertBySide) + y;
-				bufferFaces[faceId + 2] = (x * vertBySide) + y + 1;
-				bufferFaces[faceId + 1] = ((x + 1) * vertBySide) + y + 1;
-				
-				bufferFaces[faceId + 3] = ((x + 1) * vertBySide) + y + 1;
-				bufferFaces[faceId + 5] = ((x + 1) * vertBySide) + y;
-				bufferFaces[faceId + 4] = (x * vertBySide) + y;
-				faceId += 6;
-			}
-		}
-		
-		let stepUV = 1 / TILES_DEFINITION;
-		let uvIndex = 0;
-
-		for (let x = 0; x < vertBySide; x ++) {
-			for (let y = 0; y < vertBySide; y ++) {
-				uvIndex = (x * vertBySide) + y;
-				bufferUvs[uvIndex * 2] = stepUV * x;
-				bufferUvs[uvIndex * 2 + 1] = stepUV * y;
-			}
-		}
-
-		const geoBuffer = new BufferGeometry();
-		geoBuffer.setAttribute('position', new BufferAttribute(bufferVertices, 3));
-		geoBuffer.setAttribute('normal', new BufferAttribute(bufferNormals, 3));
-		geoBuffer.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
-		geoBuffer.setIndex(new BufferAttribute(bufferFaces, 1));
-		geoBuffer.computeVertexNormals();
+		verticePositions.needsUpdate = true;
+		tileGeometry.computeVertexNormals();
 
 		if (this.meshe !== undefined) {
 			this.globe.removeMeshe(this.meshe);
 			this.meshe.geometry.dispose();
 		}
 
-		this.meshe = new Mesh(geoBuffer, this.material);
+		this.meshe = new Mesh(tileGeometry, this.material);
 
 		if (this.onStage) {
 			this.globe.addMeshe(this.meshe);
@@ -654,6 +601,7 @@ export class TileBasic {
 		if (this.meshe != undefined) {
 			this.meshe.geometry.dispose();
 			this.material.map.dispose();
+			this.material.normalMap.dispose();
 			this.material.dispose();
 		}
 

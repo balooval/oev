@@ -155,7 +155,7 @@ function buildShellLayer(landusesDatas, tile, layerBck) {
     const stepUVX = uvXByLayer / def;
     const stepUVY = 1 / def;
 
-    const vertCoords = tile.getVerticesPlaneCoords();
+    const vertCoords = tile.bufferVerticesPlaneCoords;
 
     const layerSpace = 10 - (tile.zoom - 13) * 3;
 
