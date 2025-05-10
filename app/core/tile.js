@@ -70,6 +70,8 @@ export class TileBasic {
         this.extensionsMaps = new Map();
 		this.composeMap = this.#createCanvas();
 		this.composeContext = this.composeMap.getContext('2d');
+		this.composeContext.fillStyle = "#ffffff";
+		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 		this.diffuseTexture = new Texture(this.composeMap);
 		this.diffuseTexture.needsUpdate = true;
 		
@@ -81,7 +83,6 @@ export class TileBasic {
 		this.normalTexture.needsUpdate = true;
 
 		// this.diffuseMap = null;
-
 
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
@@ -601,7 +602,9 @@ export class TileBasic {
 		if (this.meshe != undefined) {
 			this.meshe.geometry.dispose();
 			this.material.map.dispose();
-			this.material.normalMap.dispose();
+			if (this.material.normalMap) {
+				this.material.normalMap.dispose();
+			}
 			this.material.dispose();
 		}
 
@@ -622,11 +625,18 @@ export class TileBasic {
 		this.evt.fireEvent('DISPOSE');
 
 		this.evt.clear();
+
+		removeTileToSplit(this);
+
 	}
 }
 
 const tilesToSplit = new Map();
 let splitTimeoutId = null;
+
+function removeTileToSplit(tile) {
+	tilesToSplit.delete(tile);
+}
 
 function addTileToSplit(tile, cameraData) {
 	tile.distToCam = Math.abs(cameraData.coordLookat.x - tile.middleCoord.x) + Math.abs(cameraData.coordLookat.y - tile.middleCoord.y);
@@ -642,7 +652,6 @@ function addTileToSplit(tile, cameraData) {
 function splitNextTile() {
 	if (tilesToSplit.size === 0) {
 		splitTimeoutId = null;
-		// console.log('END');
 		return;
 	}
 

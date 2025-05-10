@@ -61,7 +61,7 @@ export function fixPolygonDirection (_polygon, _counterClockwise = false) {
 }
 	
 export function angle2D (x1, y1, x2, y2) {
-	var dtheta,theta1,theta2;
+	let dtheta,theta1,theta2;
 	theta1 = Math.atan2( y1, x1 );
 	theta2 = Math.atan2( y2, x2 );
 	dtheta = theta2 - theta1;
@@ -75,7 +75,7 @@ export function angle2D (x1, y1, x2, y2) {
 }
 
 export function ptIsInPolygon (poly, _lon, _lat) {
-	for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
+	for(let c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
 	((poly[i][1] <= _lat && _lat < poly[j][1]) || (poly[j][1] <= _lat && _lat < poly[i][1]))
 	&& (_lon < (poly[j][0] - poly[i][0]) * (_lat - poly[i][1]) / (poly[j][1] - poly[i][1]) + poly[i][0])
 	&& (c = !c);
@@ -83,11 +83,11 @@ export function ptIsInPolygon (poly, _lon, _lat) {
 }
 
 export function ptIsInPolygonOk (_polygon, _lon, _lat) {
-	var angle = 0;
-	var ptA;
-	var ptB;
-	var segNb = _polygon.length - 1;
-	for( var i = 0; i < segNb; i++ ){
+	let angle = 0;
+	let ptA;
+	let ptB;
+	const segNb = _polygon.length - 1;
+	for (let i = 0; i < segNb; i++ ){
 		ptA = _polygon[i];
 		ptB = _polygon[i+1];
 		angle += api.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
@@ -99,12 +99,12 @@ export function ptIsInPolygonOk (_polygon, _lon, _lat) {
 }
 
 export function pointIntoPolygon(point, polygon) {
-	var x = point[0], y = point[1];
-	var inside = false;
-	for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-		var xi = polygon[i][0], yi = polygon[i][1];
-		var xj = polygon[j][0], yj = polygon[j][1];
-		var intersect = ((yi > y) != (yj > y))
+	let x = point[0], y = point[1];
+	let inside = false;
+	for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+		const xi = polygon[i][0], yi = polygon[i][1];
+		const xj = polygon[j][0], yj = polygon[j][1];
+		const intersect = ((yi > y) != (yj > y))
 			&& (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
 		if (intersect) inside = !inside;
 	}
@@ -112,15 +112,15 @@ export function pointIntoPolygon(point, polygon) {
 }
 
 export function findCentroid  (pts){
-	var nPts = pts.length;
-	var off = pts[0];
-	var twicearea = 0;
-	var x = 0;
-	var y = 0;
-	var p1,p2;
-	var i;
-	var j;
-	var f;
+	const nPts = pts.length;
+	const off = pts[0];
+	let twicearea = 0;
+	let x = 0;
+	let y = 0;
+	let p1,p2;
+	let i;
+	let j;
+	let f;
 	for (i = 0, j = nPts - 1; i < nPts; j = i++) {
 		p1 = pts[i];
 		p2 = pts[j];
