@@ -1,4 +1,4 @@
-import * as THREE from '../../vendor/three.module.js';
+import * as THREE from 'three';
 import Renderer from '../renderer.js';
 import {GLOBE} from '../core/globe.js';
 import * as Animation from './animation.js';

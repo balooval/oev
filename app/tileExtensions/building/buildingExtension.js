@@ -2,7 +2,7 @@ import {
 	BufferAttribute,
 	DoubleSide,
 	MeshPhysicalMaterial,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
 import Evt from '../../core/event.js';

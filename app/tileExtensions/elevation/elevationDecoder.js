@@ -1,6 +1,6 @@
-import {GLOBE} from '../../core/globe.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
 
-const canvasSize = GLOBE.tilesDefinition + 1;
+const canvasSize = TILES_DEFINITION + 1;
 const canvas = new OffscreenCanvas(canvasSize, canvasSize);
 const context = canvas.getContext('2d', {willReadFrequently: true});
 

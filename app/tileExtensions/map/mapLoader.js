@@ -1,7 +1,7 @@
 import {
 	SRGBColorSpace ,
 	TextureLoader,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as DataLoader from '../dataLoader.js';
 
 const PARAMS = {

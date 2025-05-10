@@ -1,4 +1,4 @@
-import {GLOBE} from '../../core/globe.js';
+import { TILES_DEFINITION } from '../../core/tile.js';
 import * as OsmReader from '../../utils/osmReader.js';
 import * as MATH from '../../core/math.js';
 
@@ -118,7 +118,7 @@ function calcBbox(_border) {
 
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = GLOBE.tilesDefinition * 4;
+    const def = TILES_DEFINITION * 4;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;

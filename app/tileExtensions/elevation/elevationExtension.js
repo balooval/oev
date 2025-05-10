@@ -1,5 +1,6 @@
 import Renderer from '../../core/renderer.js';
 import {GLOBE} from '../../core/globe.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
 import * as ElevationStore from './elevationStore.js';
 import * as LoaderElevation from './elevationLoader.js';
 
@@ -61,9 +62,9 @@ class ElevationExtension {
 	}
 
 	#nearestElevationDatas() {
-		const def = GLOBE.tilesDefinition + 1;
+		const def = TILES_DEFINITION + 1;
 		const buffer = new Float32Array(def * def);
-		const vertCoords = this.tile.getVerticesPlaneCoords();
+		const vertCoords = this.tile.bufferVerticesPlaneCoords;
 
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
 			buffer[i] = ElevationStore.get(
@@ -94,7 +95,7 @@ class ElevationExtension {
 		
 		let curVertId = 0;
 		const verticePositions = this.tile.meshe.geometry.getAttribute('position');
-		const vertCoords = this.tile.getVerticesPlaneCoords();
+		const vertCoords = this.tile.bufferVerticesPlaneCoords;
 
 		for (let i = 0; i < vertCoords.length / 2; i ++) {
 			const vertPos = GLOBE.coordToXYZ(
@@ -117,7 +118,7 @@ class ElevationExtension {
 
 		if (this.dataLoaded) {
 			ElevationStore.clear(this.tile);
-			const def = GLOBE.tilesDefinition + 1;
+			const def = TILES_DEFINITION + 1;
 
 			// Si on désactive l'extension, il faut aplatir la tile :
 			// const buffer = new Float32Array(def * def);

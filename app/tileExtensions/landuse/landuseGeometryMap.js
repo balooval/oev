@@ -7,7 +7,7 @@ import {
     LinearFilter,
     RGBAFormat,
     UnsignedByteType,
-} from '../../vendor/three.module.js';
+} from 'three';
 import {GLOBE} from '../../core/globe.js';
 import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import Renderer from '../../core/renderer.js';
@@ -19,6 +19,8 @@ const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.j
 const tilesWaitingWorker = new Map();
 
 workerCanvasComposer.port.onmessage = (e) => {
+    console.log('REPONSE');
+    
     if (e.data.command !== 'draw') {
         return;
     }

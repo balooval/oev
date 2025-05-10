@@ -2,7 +2,7 @@ import {
 	BufferGeometry,
 	Mesh,
 	Vector2,
-} from '../vendor/three.module.js';
+} from 'three';
 import Renderer from './renderer.js';
 import * as TILE from './tile.js';
 import Evt from './event.js';

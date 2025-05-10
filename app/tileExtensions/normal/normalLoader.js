@@ -1,8 +1,8 @@
 import {
 	TextureLoader,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as DataLoader from '../dataLoader.js';
-import {GLOBE} from '../../core/globe.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
 
 const PARAMS = {
 	nbLoaders : 2,
@@ -26,7 +26,7 @@ class LoaderNormal {
 	load(_params) {
 		this.params = _params;
 		this.isLoading = true;
-		// this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + GLOBE.tilesDefinition, 
+		// this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + TILES_DEFINITION, 
 		this.textureLoader.load(API_URL + '&z=' + this.params.z + '&x=' + this.params.x + '&y=' + this.params.y + '&def=' + 16, 
 			_texture => this.onDataLoadSuccess(_texture), 
 			xhr => {},

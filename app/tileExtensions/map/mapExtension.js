@@ -29,6 +29,10 @@ export class MapExtension {
 	}
 
 	onTileReady() {
+		// if (this.tile.zoom > 13) {
+		// 	return false;
+		// }
+
 		if (this.dataLoaded) {
             this.tile.setTexture(this.texture);
             return true;

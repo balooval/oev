@@ -4,7 +4,7 @@ import {
     Color,
     DoubleSide,
     MeshPhysicalMaterial,
-} from '../../vendor/three.module.js';
+} from 'three';
 import Evt from '../../core/event.js';
 import * as TileExtension from '../tileExtension.js';
 import * as NET_MODELS from '../../net/models.js';
@@ -31,7 +31,7 @@ export function getGeometryForType(type) {
 const instanceGeometries = new Map();
 const instanceMaterial = new Map();
 
-const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
+// const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 
 function onActivateExtension() {
     TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
@@ -49,9 +49,9 @@ function onActivateExtension() {
     .then(() => {
         return setModelsToGeometries();
     })
-    .then(() => {
-        return sendTexturesToWorker();
-    })
+    // .then(() => {
+    //     return sendTexturesToWorker();
+    // })
     .then(() => {
         isReady = true;
         evt.fireEvent('READY')
@@ -79,6 +79,8 @@ function sendTexturesToWorker() {
             createImageBitmap(TextureLoader('landuse_roughnessMap_forest').image, 0, 0, 512, 512),
 
         ]).then(imagesDatas => {
+            console.log('THEN');
+            
             workerCanvasComposer.port.postMessage(
                 {
                     command: 'uploadTextures',
@@ -160,6 +162,78 @@ function createMaterials() {
 
 function loadTextures() {
     const texturesList = [
+        {
+            id: 'blender-scrub-normal',
+            url: 'blender-scrub-normal.png',
+        },
+        {
+            id: 'blender-scrub-0',
+            url: 'blender-scrub-0.png',
+        },
+        {
+            id: 'blender-scrub-1',
+            url: 'blender-scrub-1.png',
+        },
+        {
+            id: 'blender-scrub-2',
+            url: 'blender-scrub-2.png',
+        },
+        {
+            id: 'blender-scrub-3',
+            url: 'blender-scrub-3.png',
+        },
+        {
+            id: 'blender-forest-shell-full',
+            url: 'blender-forest-shell-full.png',
+        },
+        {
+            id: 'blender-forest-shell-full-normal',
+            url: 'blender-forest-shell-full-normal.png',
+        },
+        {
+            id: 'voronoi-normal',
+            url: 'voronoi-normal.png',
+        },
+        {
+            id: 'blender-forest-normal',
+            url: 'blender-forest-normal.png',
+        },
+        {
+            id: 'blender-forest-0',
+            url: 'blender-forest-0.png',
+        },
+        {
+            id: 'blender-forest-1',
+            url: 'blender-forest-1.png',
+        },
+        {
+            id: 'blender-forest-2',
+            url: 'blender-forest-2.png',
+        },
+        {
+            id: 'blender-forest-3',
+            url: 'blender-forest-3.png',
+        },
+        {
+            id: 'shell_tree_normal',
+            url: 'shell_tree_normal.png',
+        },
+        {
+            id: 'shell_tree_1',
+            url: 'shell_tree_1.png',
+        },
+        {
+            id: 'shell_tree_2',
+            url: 'shell_tree_2.png',
+        },
+        {
+            id: 'shell_tree_3',
+            url: 'shell_tree_3.png',
+        },
+        {
+            id: 'shell_tree_4',
+            url: 'shell_tree_4.png',
+        },
         {
             id: 'tree-forest',
             url: 'tree-forest-flip.png',

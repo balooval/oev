@@ -4,7 +4,7 @@ import {
     Matrix4,
     Quaternion,
     Vector3,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as LanduseMaterial from './landuseMaterial.js';
 import {GLOBE} from '../../core/globe.js';
 import * as OsmReader from '../../utils/osmReader.js';

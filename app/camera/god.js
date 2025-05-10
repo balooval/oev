@@ -8,7 +8,7 @@ import {
 	SphereGeometry,
 	Vector2,
 	Vector3,
-} from '../vendor/three.module.js';
+} from 'three';
 import Renderer from '../core/renderer.js';
 import * as Animation from '../utils/animation.js';
 import Evt from '../core/event.js';

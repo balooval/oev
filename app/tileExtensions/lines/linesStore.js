@@ -1,7 +1,7 @@
 import {
     BufferGeometry,
     Mesh,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import Renderer from '../../core/renderer.js';
 import * as GEO from '../../core/geo.js';

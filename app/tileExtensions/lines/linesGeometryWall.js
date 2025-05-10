@@ -3,7 +3,7 @@ import Earcut from '../../vendor/Earcut.module.js';
 import {
     BufferAttribute,
     BufferGeometry,
-} from '../../vendor/three.module.js';
+} from 'three';
 import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.module.js';
 import {GLOBE} from '../../core/globe.js';
 import * as MATH from '../../core/math.js';
