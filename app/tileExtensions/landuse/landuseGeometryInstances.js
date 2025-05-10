@@ -32,10 +32,38 @@ instancePlacement.set('sapin', placeForest);
 instancePlacement.set('scrub', placeScrub);
 instancePlacement.set('vineyard', placeVineyard);
 
+export function initMaterials() {
+    
+}
+
 export function setDatas(landusesDatas, _tile) {
     for (let i = 0; i < landusesDatas.length; i ++) {
         buildLanduse(landusesDatas[i], _tile);
         Renderer.MUST_RENDER = true;
+    }
+}
+
+export function tileShow(tile) {
+    const instancedTile = instanceMeshByTiles.get(tile);
+
+    if (instancedTile === undefined) {
+        return;
+    }
+
+    for (const instanceMesh of instancedTile.values()) {
+        GLOBE.addMeshe(instanceMesh);
+    }
+}
+
+export function tileHide(tile) {
+    const instancedTile = instanceMeshByTiles.get(tile);
+
+    if (instancedTile === undefined) {
+        return;
+    }
+
+    for (const instanceMesh of instancedTile.values()) {
+        GLOBE.removeMeshe(instanceMesh);
     }
 }
 
@@ -128,11 +156,11 @@ function getElevationsDatas(_landuse) {
 }
 
 function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
-
     let instanceIndex = countOffset;
+    const instanceByPoint = 1;
 
     for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
-        for (let j = 0; j < 1; j += 0.5) {
+        for (let j = 0; j < instanceByPoint; j ++) {
             const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
             const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j);
             

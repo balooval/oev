@@ -1,36 +1,35 @@
-import * as THREE from 'three';
+import {
+    BufferAttribute,
+    BufferGeometry,
+} from 'three';
 import {GLOBE} from '../../core/globe.js';
 
 export function buildLanduseGeometry(_landuse, _facesIndex, _elevationsDatas, _tile) {
-    const bufferGeometry = new THREE.BufferGeometry();
+    const bufferGeometry = new BufferGeometry();
 
-    const uvFactor = 1;
-
-    // console.log(_landuse);
-    // console.log(_elevationsDatas);
+    const uvFactor = 2;
 
     const layerGroundElevation = 10;
     let verticesNb = _landuse.border.length + _landuse.fillPoints.length;
     _landuse.holes.forEach(hole => verticesNb += hole.length);
+    
     const bufferVertices = new Float32Array(verticesNb * 3);
-    let verticeId = 0;
-
-    verticeId = addVerticesToBuffer(verticeId, bufferVertices, _landuse.border, _elevationsDatas.border, layerGroundElevation);
-    _landuse.holes.forEach((hole, h) => {
-        verticeId = addVerticesToBuffer(verticeId, bufferVertices, hole, _elevationsDatas.holes[h], layerGroundElevation);
-    });
-    verticeId = addVerticesToBuffer(verticeId, bufferVertices, _landuse.fillPoints, _elevationsDatas.fill, layerGroundElevation);
-
-    // console.log(bufferVertices);
-    // debugger;
+    let verticeOffset = 0;
+    verticeOffset = addVerticesToBuffer(verticeOffset, bufferVertices, _landuse.border, _elevationsDatas.border, layerGroundElevation);
     
     const bufferUvs = new Float32Array(verticesNb * 2);
-    let uvId = 0;
-    uvId = addUvToBuffer(uvId, bufferUvs, _landuse.border, uvFactor, _tile);
-    _landuse.holes.forEach(hole => {
-        uvId = addUvToBuffer(uvId, bufferUvs, hole, uvFactor, _tile);
-    });
-    uvId = addUvToBuffer(uvId, bufferUvs, _landuse.fillPoints, uvFactor, _tile);
+    let uvOffset = 0;
+    uvOffset = addUvToBuffer(uvOffset, bufferUvs, _landuse.border, uvFactor, _tile);
+
+    for (let h = 0; h < _landuse.holes.length; h ++) {
+        verticeOffset = addVerticesToBuffer(verticeOffset, bufferVertices, _landuse.holes[h], _elevationsDatas.holes[h], layerGroundElevation);
+        uvOffset = addUvToBuffer(uvOffset, bufferUvs, _landuse.holes[h], uvFactor, _tile);
+    }
+
+    verticeOffset = addVerticesToBuffer(verticeOffset, bufferVertices, _landuse.fillPoints, _elevationsDatas.fill, layerGroundElevation);
+    uvOffset = addUvToBuffer(uvOffset, bufferUvs, _landuse.fillPoints, uvFactor, _tile);
+
+
     const facesNb = _facesIndex.length;
     const bufferFaces = new Uint32Array(facesNb * 3);
     let facesId = 0;
@@ -44,11 +43,10 @@ export function buildLanduseGeometry(_landuse, _facesIndex, _elevationsDatas, _t
         facesId += 3;
     }
 
-    bufferGeometry.setAttribute('position', new THREE.BufferAttribute(bufferVertices, 3));
-    bufferGeometry.setAttribute('uv', new THREE.BufferAttribute(bufferUvs, 2));
-    bufferGeometry.setIndex(new THREE.BufferAttribute(bufferFaces, 1));
+    bufferGeometry.setAttribute('position', new BufferAttribute(bufferVertices, 3));
+    bufferGeometry.setAttribute('uv', new BufferAttribute(bufferUvs, 2));
+    bufferGeometry.setIndex(new BufferAttribute(bufferFaces, 1));
     bufferGeometry.computeVertexNormals();
-    // console.log(bufferGeometry);
     
     return bufferGeometry;
 }

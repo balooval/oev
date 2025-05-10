@@ -3,10 +3,12 @@ import {
     MeshPhysicalMaterial,
     Mesh,
 } from 'three';
+import * as BufferGeometryUtils from '../../vendor/BufferGeometryUtils.js';
 import * as LanduseGeometryBuilder from './landuseGeometryBuilder.js';
 import { GLOBE } from '../../core/globe.js';
 import { TILES_DEFINITION } from '../../core/tile.js';
 import * as Poly2Tri from '../../vendor/poly2tri.module.js';
+import { texture as TextureLoader } from '../../net/textures.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
 import Renderer from '../../core/renderer.js';
 import PolygonClipping from '../../vendor/polygon-clipping.module.js';
@@ -17,10 +19,18 @@ const rejectedIds = [];
 const meshesByTiles = new Map();
 
 const material = new MeshPhysicalMaterial({
-    color: 0xff0000,
+    // color: 0x7b993d,
+    color: 0xffffff,
     side: DoubleSide,
     vertexColors: false,
 });
+
+
+
+export function initMaterials() {
+    material.map = TextureLoader('blender-forest-0');
+    material.normalMap = TextureLoader('blender-forest-normal');
+}
 
 export function setDatas(landusesDatas, tile) {
     const keysFilter = [
@@ -48,10 +58,36 @@ export function setDatas(landusesDatas, tile) {
     }
 }
 
+export function tileShow(tile) {
+    const tileMeshes = meshesByTiles.get(tile);
+
+    if (tileMeshes === undefined) {
+        return;
+    }
+
+    for (const mesh of tileMeshes.values()) {
+        GLOBE.addMeshe(mesh);
+    }
+}
+
+export function tileHide(tile) {
+    const tileMeshes = meshesByTiles.get(tile);
+
+    if (tileMeshes === undefined) {
+        return;
+    }
+
+    
+
+    for (const mesh of tileMeshes.values()) {
+        GLOBE.removeMeshe(mesh);
+    }
+}
+
 export function tileRemoved(_tileKey, tile) {
-    const instancedTile = meshesByTiles.get(tile);
-    if (instancedTile) {
-        for (const [key, mesh] of instancedTile.entries()) {
+    const tileMeshes = meshesByTiles.get(tile);
+    if (tileMeshes) {
+        for (const mesh of tileMeshes.values()) {
             GLOBE.removeMeshe(mesh);
             mesh.geometry.dispose();
             meshesByTiles.delete(tile);
@@ -75,27 +111,22 @@ function buildLanduse(landuse, tile) {
         [tile.startCoord.x, tile.startCoord.y], 
     ];
 
-    // console.log('tilePolygon', tilePolygon);
-
     const polygon = [
         landuse.border,
         ...landuse.holes
     ];
 
     const multipolygons = PolygonClipping.intersection([tilePolygon], [polygon]);
-    // console.log('results', results);
 
     if (multipolygons.length === 0) {
         return false;
     }
 
     if (landuse.id === 7318583) {
-        // console.log(landuse);
-        // console.log(multipolygons);
         // return false;
     }
 
-    // console.log('landuse', landuse);
+    const geometries = [];
 
     for (let i = 0; i < multipolygons.length; i ++) {
         const polygon = multipolygons[i];
@@ -110,11 +141,9 @@ function buildLanduse(landuse, tile) {
 
         clippedLanduse.border = polygon.pop().slice(1);
         clippedLanduse.holes = polygon.map(hole => hole.slice(1));
-        // TODO: à remettre
-        // const bbox = calcBbox(clippedLanduse.border);
-        // const grid = coordGrid(tile, bbox, clippedLanduse.border);
-        // clippedLanduse.fillPoints = grid;
-
+        const bbox = calcBbox(clippedLanduse.border);
+        const grid = coordGrid(tile, bbox, clippedLanduse.border);
+        clippedLanduse.fillPoints = grid;
 
         const trianglesResult = triangulate(clippedLanduse);
 
@@ -123,13 +152,15 @@ function buildLanduse(landuse, tile) {
         }
 
         const elevationsDatas = getElevationsDatas(clippedLanduse);
-        const geometry = LanduseGeometryBuilder.buildLanduseGeometry(clippedLanduse, trianglesResult, elevationsDatas, tile)
-        const mesh = new Mesh(geometry, material);
-        mesh.receiveShadow = true;
-        GLOBE.addMeshe(mesh);
-
-        meshesByTiles.get(tile).push(mesh);
+        const geometry = LanduseGeometryBuilder.buildLanduseGeometry(clippedLanduse, trianglesResult, elevationsDatas, tile);
+        geometries.push(geometry);
     }
+    
+    const mergedGeometry = BufferGeometryUtils.mergeGeometries(geometries);
+    const mesh = new Mesh(mergedGeometry, material);
+    meshesByTiles.get(tile).push(mesh);
+    mesh.receiveShadow = true;
+    GLOBE.addMeshe(mesh);
 
     return true;
 }
@@ -143,16 +174,17 @@ function triangulate(landuse) {
     try {
         const swctx = new Poly2Tri.SweepContext(border);
         nbPoints += landuse.border.length;
-        landuse.holes.forEach(hole => {
-            const swcHole = hole.map((p, i) => new Poly2Tri.Point(p[0], p[1], i + nbPoints));
+
+        for (let h = 0; h < landuse.holes.length; h ++) {
+            const swcHole = landuse.holes[h].map((p, i) => new Poly2Tri.Point(p[0], p[1], i + nbPoints));
             swctx.addHole(swcHole);
-            nbPoints += hole.length;
-        });
-        // TODO: à remettre
-        // for (let i = 0; i < landuse.fillPoints.length; i ++) {
-        //     const point = landuse.fillPoints[i];
-        //     swctx.addPoint(new Poly2Tri.Point(point[0], point[1], i + nbPoints));
-        // }
+            nbPoints += landuse.holes[h].length;
+        }
+
+        for (let i = 0; i < landuse.fillPoints.length; i ++) {
+            const point = landuse.fillPoints[i];
+            swctx.addPoint(new Poly2Tri.Point(point[0], point[1], i + nbPoints));
+        }
 
         nbPoints += landuse.fillPoints.length;
         swctx.triangulate();
@@ -178,7 +210,7 @@ function calcBbox(_border) {
 
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = TILES_DEFINITION * 4;
+    const def = TILES_DEFINITION * 1;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;

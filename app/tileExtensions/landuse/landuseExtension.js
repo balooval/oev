@@ -1,9 +1,9 @@
 import Renderer from '../../core/renderer.js';
 import * as LanduseDataParser from './landuseDataParser.js';
 // import * as LanduseGeometry from './landuseGeometryMap.js';
-// import * as LanduseGeometry from './landuseGeometryPlane.js';
-import * as LanduseGeometry from './landuseGeometryShell.js';
-// import * as LanduseGeometry from './landuseGeometryInstances.js';
+import * as LanduseGeometryPlane from './landuseGeometryPlane.js';
+import * as LanduseGeometryShell from './landuseGeometryShell.js';
+import * as LanduseGeometryInstances from './landuseGeometryInstances.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
 
@@ -12,6 +12,12 @@ export {setApiUrl} from './landuseLoader.js';
 export function extensionClass() {
 	return LanduseExtension;
 }
+
+const moduleByZoom = {
+    13: LanduseGeometryPlane,
+    14: LanduseGeometryShell,
+    15: LanduseGeometryInstances,
+};
 
 class LanduseExtension {
 	constructor(_tile) {
@@ -22,7 +28,10 @@ class LanduseExtension {
         this.lod = 1;
 
         // this.isActive = this.tile.zoom >= 13;
-        this.isActive = this.tile.zoom == 13;
+        // this.isActive = this.tile.zoom == 13;
+
+        this.landuseModule = moduleByZoom[this.tile.zoom];
+        this.isActive = this.landuseModule !== undefined;
 
         if (LanduseMaterial.isReady) {
             this.#onRessourcesReady();
@@ -32,12 +41,14 @@ class LanduseExtension {
     }
 
     #onRessourcesReady() {
-        LanduseMaterial.evt.removeEventListener('READY', this, this.#onRessourcesReady);
-        LanduseGeometry.initMaterials();
-        this.tile.evt.addEventListener('SHOW', this, this.#onTileReady);
-        this.tile.evt.addEventListener('DISPOSE', this, this.#onTileDispose);
-        // this.tile.evt.addEventListener('HIDE', this, this.#onTileDispose);
-        this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
+        if (this.landuseModule) {
+            this.landuseModule.initMaterials();
+            LanduseMaterial.evt.removeEventListener('READY', this, this.#onRessourcesReady);
+            this.tile.evt.addEventListener('SHOW', this, this.#onTileShow);
+            this.tile.evt.addEventListener('DISPOSE', this, this.#onTileDispose);
+            this.tile.evt.addEventListener('HIDE', this, this.#onTileHide);
+            this.tile.evt.addEventListener('TILE_READY', this, this.#onTileReady);
+        }
 
         if (this.tile.isReady) {
             this.#onTileReady();
@@ -64,6 +75,14 @@ class LanduseExtension {
 		);
     }
 
+    #onTileShow() {
+        this.landuseModule.tileShow(this.tile);
+    }
+
+    #onTileHide() {
+        this.landuseModule.tileHide(this.tile);
+    }
+
     #onLanduseLoaded(datas) {
         if (!this.tile) {
             return false;
@@ -77,7 +96,7 @@ class LanduseExtension {
         }
 
         const landusesDatas = LanduseDataParser.parseDatas(datas, this.tile);
-        LanduseGeometry.setDatas(landusesDatas, this.tile);
+        this.landuseModule.setDatas(landusesDatas, this.tile);
     }
 
     #getLod(cameraDatas) {
@@ -111,12 +130,15 @@ class LanduseExtension {
 	
 	dispose() {
         if (this.tile) {
-            this.tile.evt.removeEventListener('SHOW', this, this.#onTileReady);
-            this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
-            this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
-            // this.tile.evt.removeEventListener('HIDE', this, this.#onTileDispose);
+            
+            if (this.isActive === true) {
+                this.tile.evt.removeEventListener('SHOW', this, this.#onTileShow);
+                this.tile.evt.removeEventListener('TILE_READY', this, this.#onTileReady);
+                this.tile.evt.removeEventListener('DISPOSE', this, this.#onTileDispose);
+                this.tile.evt.removeEventListener('HIDE', this, this.#onTileHide);
 
-            LanduseGeometry.tileRemoved(this.tile.key, this.tile);
+                this.landuseModule.tileRemoved(this.tile.key, this.tile);
+            }
 
             LanduseLoader.loader.abort({
                 z : this.tile.zoom, 

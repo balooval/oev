@@ -6,14 +6,21 @@ const rejectedIds = [];
 
 export function parseDatas(_json, _tile) {
     let res = [];
-    const parsedJson = JSON.parse(_json);
-    const nodesList = OsmReader.extractNodes(parsedJson);
-    const waysList = OsmReader.extractWays(parsedJson);
-    const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
-    const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
-    res = prepareLanduse(res, _tile, extractedRelations, buildRelation, nodesList, waysList);
-    res = prepareLanduse(res, _tile, extractedWays, buildWay, nodesList, waysList);
-    return res;
+    try {
+        const parsedJson = JSON.parse(_json);
+        const nodesList = OsmReader.extractNodes(parsedJson);
+        const waysList = OsmReader.extractWays(parsedJson);
+        const extractedRelations = extractElements(parsedJson, 'relation', _tile.zoom);
+        const extractedWays = extractElements(parsedJson, 'way', _tile.zoom);
+        res = prepareLanduse(res, _tile, extractedRelations, buildRelation, nodesList, waysList);
+        res = prepareLanduse(res, _tile, extractedWays, buildWay, nodesList, waysList);
+        return res;
+
+    } catch (error) {
+        console.warn('JSON invalide');
+        
+        return res;
+    }
 }
 
 function prepareLanduse(res, _tile, _extractedDatas, _buildFunction, _nodesList, _waysList) {

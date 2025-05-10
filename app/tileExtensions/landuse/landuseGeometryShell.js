@@ -75,15 +75,41 @@ export function setDatas(landusesDatas, tile) {
     // }
 }
 
+export function tileShow(tile) {
+    const tileMeshes = meshesByTiles.get(tile);
+
+    if (tileMeshes === undefined) {
+        return;
+    }
+
+    for (const mesh of tileMeshes.values()) {
+        GLOBE.addMeshe(mesh);
+    }
+}
+
+export function tileHide(tile) {
+    const tileMeshes = meshesByTiles.get(tile);
+
+    if (tileMeshes === undefined) {
+        return;
+    }
+
+    for (const mesh of tileMeshes.values()) {
+        GLOBE.removeMeshe(mesh);
+    }
+}
+
 export function tileRemoved(_tileKey, tile) {
-    const instancedTile = meshesByTiles.get(tile);
-    if (instancedTile) {
-        for (const [key, mesh] of instancedTile.entries()) {
-            GLOBE.removeMeshe(mesh);
-            mesh.geometry.dispose();
-            mesh.material.dispose();
-            meshesByTiles.delete(tile);
-        }
+    const tileMeshes = meshesByTiles.get(tile);
+    if (tileMeshes === undefined) {
+        return;
+    }
+    
+    for (const mesh of tileMeshes.values()) {
+        GLOBE.removeMeshe(mesh);
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+        meshesByTiles.delete(tile);
     }
 }
 

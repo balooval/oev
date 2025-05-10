@@ -11,8 +11,8 @@ export function randomize(value, radius) {
 
 export function lerpPoint(pointA, pointB, percent) {
 	return [
-		api.lerpFloat(pointA[0], pointB[0], percent),
-		api.lerpFloat(pointA[1], pointB[1], percent),
+		lerpFloat(pointA[0], pointB[0], percent),
+		lerpFloat(pointA[1], pointB[1], percent),
 	]
 }
 
@@ -90,7 +90,7 @@ export function ptIsInPolygonOk (_polygon, _lon, _lat) {
 	for (let i = 0; i < segNb; i++ ){
 		ptA = _polygon[i];
 		ptB = _polygon[i+1];
-		angle += api.angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
+		angle += angle2D( ptA[0]-_lon, ptA[1]-_lat, ptB[0]-_lon, ptB[1]-_lat );
 	}
 	if( Math.abs( angle ) < Math.PI ){
 		return false;
