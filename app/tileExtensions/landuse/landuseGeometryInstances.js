@@ -44,6 +44,7 @@ export function setDatas(landusesDatas, _tile) {
 }
 
 export function tileShow(tile) {
+    /*
     const instancedTile = instanceMeshByTiles.get(tile);
 
     if (instancedTile === undefined) {
@@ -53,9 +54,11 @@ export function tileShow(tile) {
     for (const instanceMesh of instancedTile.values()) {
         GLOBE.addMeshe(instanceMesh);
     }
+        */
 }
 
 export function tileHide(tile) {
+    /*
     const instancedTile = instanceMeshByTiles.get(tile);
 
     if (instancedTile === undefined) {
@@ -65,6 +68,7 @@ export function tileHide(tile) {
     for (const instanceMesh of instancedTile.values()) {
         GLOBE.removeMeshe(instanceMesh);
     }
+    */
 }
 
 export function tileRemoved(_tileKey, tile) {
@@ -89,6 +93,7 @@ export function setLod(tile, lod) {
         if (lod === 0) {
             typeToAsk = key + '-0';
         }
+        
         instanceMesh.geometry = LanduseMaterial.getGeometryForType(typeToAsk);
     }
 }
@@ -104,7 +109,7 @@ function buildLanduse(_landuse, tile) {
         
     let instancedMesh = getTileMeshForLanduseType(tile, type);
     if (instancedMesh === null) {
-        console.log('unsupported type', type);
+        // console.log('unsupported type', type);
         return;
     }
 
@@ -117,7 +122,7 @@ function buildLanduse(_landuse, tile) {
 }
 
 function getTileMeshForLanduseType(tile, type) {
-    const instanceGeometry = LanduseMaterial.getGeometryForType(type);
+    const instanceGeometry = LanduseMaterial.getGeometryForType(type + '-0');
     if (!instanceGeometry) {
         return null;
     }

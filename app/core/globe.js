@@ -81,6 +81,8 @@ class Globe {
 		for (let i = 0; i < this.#rootTiles.length; i ++) {
 				this.#rootTiles[i].onCameraUpdated(cameraDatas);
 		}
+
+		this.evt.fireEvent('GLOBE_CAMERA_UPDATE', cameraDatas);
 	}
 	
 	start() {

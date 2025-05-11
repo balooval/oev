@@ -32,6 +32,10 @@ export function initMaterials() {
     material.normalMap = TextureLoader('blender-forest-normal');
 }
 
+export function setLod(tile, lod) {
+
+}
+
 export function setDatas(landusesDatas, tile) {
     const keysFilter = [
         '4189_2985_13', // Sommieres
@@ -93,10 +97,6 @@ export function tileRemoved(_tileKey, tile) {
             meshesByTiles.delete(tile);
         }
     }
-}
-
-export function setLod(tile, lod) {
-    
 }
 
 function buildLanduse(landuse, tile) {

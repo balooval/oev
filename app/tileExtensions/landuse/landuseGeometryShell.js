@@ -48,6 +48,10 @@ export function initMaterials() {
     
 }
 
+export function setLod(tile, lod) {
+
+}
+
 export function setDatas(landusesDatas, tile) {
     const keysFilter = [
         // '4189_2985_13', // Sommieres
@@ -111,10 +115,6 @@ export function tileRemoved(_tileKey, tile) {
         mesh.material.dispose();
         meshesByTiles.delete(tile);
     }
-}
-
-export function setLod(tile, lod) {
-    
 }
 
 function buildShell(landusesDatas, tile) {

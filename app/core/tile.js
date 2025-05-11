@@ -280,6 +280,8 @@ export class TileBasic {
 		);
 
 		this.diffuseTexture.needsUpdate = true
+
+		this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
 	}
 
 	#computeVerticesCoords() {
