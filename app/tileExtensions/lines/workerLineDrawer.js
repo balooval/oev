@@ -3,7 +3,7 @@ import * as Perlin from '../../vendor/perlin.module.js';
 const canvasSize = 256;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
-const contextFinal = canvasFinal.getContext('2d');
+const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true});
 
 const canvasCompose = new OffscreenCanvas(canvasSize, canvasSize);
 const contextCompose = canvasCompose.getContext('2d');

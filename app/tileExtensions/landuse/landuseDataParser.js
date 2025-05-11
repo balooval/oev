@@ -185,6 +185,7 @@ const equalsTags = {
     farmland: 'grass',
     grassland: 'grass',
     orchard: 'grass',
+    heath: 'grass',
     meadow: 'grass',
     greenfield: 'grass',
     village_green: 'grass',
@@ -200,9 +201,9 @@ const tagsZoom = {
     scrub: 13,
     rock: 13,
     water: 15,
-    wetland: 15,
-    vineyard: 16,
-    grass: 17,
+    wetland: 13,
+    vineyard: 13,
+    grass: 13,
 };
 
 const supportedTags = [
@@ -214,6 +215,7 @@ const supportedTags = [
             'vineyard', 
             'scrub',
             'residential',
+            'farmland',
             
             // 'basin', 
             
@@ -238,6 +240,7 @@ const supportedTags = [
             // 'water', 
             // 'wetland', 
             
+            'heath', 
             'scree', 
             // 'grass', 
             // 'farmyard', 

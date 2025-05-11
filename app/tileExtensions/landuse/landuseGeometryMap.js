@@ -47,41 +47,6 @@ workerCanvasComposer.onmessage = (e) => {
 };
 
 function createLanduseMesh(tile, textureMaps) {
-    /*
-    const material = new MeshPhysicalMaterial({
-        color: 0xffffff,
-        roughness: 0.7,
-        transparent: true,
-    });
-
-    const geometry = tile.meshe.geometry.clone();
-    geometry.translate(0, 5, 0);
-    const mesh = new Mesh(geometry, material);
-    mesh.receiveShadow = true;
-    GLOBE.addMeshe(mesh);
-    meshesByTiles.set(tile, mesh);
-
-    for (const mapType in textureMaps) {
-        const dataTexture = new DataTexture(
-            textureMaps[mapType],
-            textureSize,
-            textureSize,
-            RGBAFormat,
-            UnsignedByteType,
-            UVMapping,
-            RepeatWrapping,
-            RepeatWrapping,
-            LinearFilter,
-            LinearFilter,
-        );
-        dataTexture.needsUpdate = true;
-        material[mapType] = dataTexture;
-    }
-
-    material.needsUpdate = true;
-    Renderer.MUST_RENDER = true;
-    */
-
     if (tile === undefined) {
         return;
     }

@@ -197,7 +197,8 @@ class LinesExtension {
         if (!this.context) return;
         const imageDatas = new ImageData(_pixelsDatas, 256, 256);
         this.context.putImageData(imageDatas, 0, 0);
-        this.tile.redrawDiffuse();
+        // TODO: à remettre quand les tiles pourront à nouveau composer leur map diffuse depuis plusieurs sources (retiré pour économiser la mémoire)
+        // this.tile.redrawDiffuse();
     }
     
 

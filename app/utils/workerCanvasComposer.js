@@ -40,32 +40,42 @@ onmessage = function (evt) {
 
 
 function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
-    const res = {};
-    
-    const textureMaps = {
-        'map': '#7b993d',
-        // 'normalMap',
-        // 'roughnessMap',
+    const res = {
+        'map': null,
     };
 
-    for (const mapType in textureMaps) {
-        // fillWithEmptyTexture(mapType); // Attention, remplit aussi les mers !
-        for (let i = 0; i < landusesDatas.length; i ++) {
-            // const textureImage = texturesImages[`${mapType}_${landusesDatas[i].type}`];
-            // if (!textureImage) {
-            //     console.warn(`Aucune texture pour ${mapType} et ${landusesDatas[i].type}`);
-            // }
-            buildLanduse(landusesDatas[i], tilePolygon, tileBbox, textureMaps[mapType]);
-        }
-
-        res[mapType] = contextFinal.getImageData(0, 0, textureSize, textureSize);
-        contextFinal.clearRect(0, 0, textureSize, textureSize);
+    contextFinal.fillStyle = '#b2b195';
+    contextFinal.fillRect(0, 0, textureSize, textureSize);
+    
+    for (let i = 0; i < landusesDatas.length; i ++) {
+        buildLanduse(landusesDatas[i], tilePolygon, tileBbox);
     }
+
+    res.map = contextFinal.getImageData(0, 0, textureSize, textureSize);
+    contextFinal.clearRect(0, 0, textureSize, textureSize);
 
     return res;
 }
 
-function buildLanduse(landuse, tilePolygon, tileBbox, color) {
+function buildLanduse(landuse, tilePolygon, tileBbox) {
+    // console.log(landuse);
+
+    const typesColors = {
+        forest: '#7b993d',
+        scrub: '#95ad34',
+        residential: '#b3b5ab',
+        rock: '#9fa9ad',
+        vineyard: '#706629',
+        grass: '#a2c168',
+    };
+
+    if (!typesColors[landuse.type]) {
+        console.log(landuse.type);
+        
+    }
+
+    const color = typesColors[landuse.type] ?? '#ff0000';
+    
     const polygon = [
         landuse.border,
         ...landuse.holes
