@@ -15,6 +15,8 @@ TileExtension.evt.addEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onAc
 export const evt = new Evt();
 export let isReady = false;
 
+let workerImagesDatas = [];
+
 export function material(_type) {
     return materials[_type];
 }
@@ -27,11 +29,14 @@ export function getGeometryForType(type) {
     return instanceGeometries.get(type);
 }
 
+export function getImagesDatasForWorker() {
+    return workerImagesDatas;
+}
 
 const instanceGeometries = new Map();
 const instanceMaterial = new Map();
 
-// const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
+// const workerCanvasComposer = new Worker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 
 function onActivateExtension() {
     TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
@@ -80,8 +85,11 @@ function sendTexturesToWorker() {
 
         ]).then(imagesDatas => {
             console.log('THEN');
+
+            workerImagesDatas = imagesDatas;
             
-            workerCanvasComposer.port.postMessage(
+            /*
+            workerCanvasComposer.postMessage(
                 {
                     command: 'uploadTextures',
                     textures: {
@@ -113,6 +121,7 @@ function sendTexturesToWorker() {
                     imagesDatas[2],
                 ]
             );
+            */
         
             resolve()
         });

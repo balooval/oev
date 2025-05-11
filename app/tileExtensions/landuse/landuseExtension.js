@@ -1,6 +1,6 @@
 import Renderer from '../../core/renderer.js';
 import * as LanduseDataParser from './landuseDataParser.js';
-// import * as LanduseGeometry from './landuseGeometryMap.js';
+import * as LanduseGeometryMap from './landuseGeometryMap.js';
 import * as LanduseGeometryPlane from './landuseGeometryPlane.js';
 import * as LanduseGeometryShell from './landuseGeometryShell.js';
 import * as LanduseGeometryInstances from './landuseGeometryInstances.js';
@@ -15,9 +15,10 @@ export function extensionClass() {
 }
 
 const moduleByZoom = {
-    13: LanduseGeometryPlane,
-    14: LanduseGeometryShell,
-    15: LanduseGeometryInstances,
+    13: LanduseGeometryMap,
+    14: LanduseGeometryPlane,
+    15: LanduseGeometryShell,
+    16: LanduseGeometryInstances,
 };
 
 class LanduseExtension {
@@ -45,7 +46,7 @@ class LanduseExtension {
             // '4192_2986_13', // Nages
         ];
         
-        this.isActive = this.tile.zoom == 15;
+        // this.isActive = this.tile.zoom == 13;
         // if (keysFilter.includes(this.tile.key) === false) {
         //     this.isActive = false;
         // }

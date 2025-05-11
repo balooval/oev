@@ -11,16 +11,32 @@ import {
 import {GLOBE} from '../../core/globe.js';
 import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
 import Renderer from '../../core/renderer.js';
+import * as LanduseMaterial from './landuseMaterial.js';
 
 const meshesByTiles = new Map();
 const textureSize = TILE_MAP_SIZE * 2;
 
-const workerCanvasComposer = new SharedWorker('/app/utils/workerCanvasComposer.js', {type: 'module'});
+const workerCanvasComposer = new Worker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 const tilesWaitingWorker = new Map();
 
-workerCanvasComposer.port.onmessage = (e) => {
-    console.log('REPONSE');
+export function initMaterials() {
+
+}
+
+export function tileShow(tile) {
     
+}
+
+export function tileHide(tile) {
+
+}
+
+workerCanvasComposer.onerror = (e) => {
+    console.log('WORKER ERROR', e);
+    
+}
+
+workerCanvasComposer.onmessage = (e) => {
     if (e.data.command !== 'draw') {
         return;
     }
@@ -66,15 +82,23 @@ function createLanduseMesh(tile, textureMaps) {
     Renderer.MUST_RENDER = true;
     */
 
+    if (tile === undefined) {
+        return;
+    }
+    
+    if (tile.isReady === false) {
+        return;
+    }
+
     createImageBitmap(textureMaps.map, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
     .then(image => {
         tile.drawOnDiffuseMap('landuse_' + tile.key, image);
     });
 
-    createImageBitmap(textureMaps.normalMap, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
-   .then(image => {
-       tile.drawOnNormalMap('landuse_' + tile.key, image);
-   });
+//     createImageBitmap(textureMaps.normalMap, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
+//    .then(image => {
+//        tile.drawOnNormalMap('landuse_' + tile.key, image);
+//    });
 
     // for (const mapType in textureMaps) {
     //     createImageBitmap(textureMaps[mapType], 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
@@ -95,7 +119,7 @@ export function setDatas(landusesDatas, tile) {
     const tileBbox = tile.bbox;
 
     tilesWaitingWorker.set(tile.key, tile);
-    workerCanvasComposer.port.postMessage({
+    workerCanvasComposer.postMessage({
         command: 'draw',
         tileKey: tile.key,
         landusesDatas: landusesDatas,
@@ -107,8 +131,8 @@ export function setDatas(landusesDatas, tile) {
 export function tileRemoved(tileKey, tile) {
     
     tilesWaitingWorker.delete(tileKey);
-    tile.clearDiffuseLayer('landuse_' + tileKey);
-    tile.clearNormalLayer('landuse_' + tileKey);
+    // tile.clearDiffuseLayer('landuse_' + tileKey);
+    // tile.clearNormalLayer('landuse_' + tileKey);
     
     const tileMesh = meshesByTiles.get(tile);
     if (!tileMesh) {

@@ -7,6 +7,7 @@ import {
 	Color,
 	Mesh,
 	Texture,
+	MeshNormalMaterial,
 	MeshPhysicalMaterial,
 	Vector2,
 } from 'three';
@@ -86,7 +87,7 @@ export class TileBasic {
 
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
-			roughness: 0.8,
+			roughness: 1,
 			metalness: 0,
 			map: this.diffuseTexture,
 			normalMap: this.normalTexture,
@@ -108,10 +109,22 @@ export class TileBasic {
 		this.bufferVerticesPlaneCoords = this.#computeVerticesCoords();
     }
 
-	// drawOnDiffuseMap(drawerId, image) {
-	// 	this.extensionsMaps.set(drawerId, image);
-	// 	this.redrawDiffuse();
-	// }
+	drawOnDiffuseMap(drawerId, image) {
+		this.composeContext.drawImage(
+			image,
+			0,
+			0,
+			MAP_SIZE,
+			MAP_SIZE,
+			0,
+			0,
+			MAP_SIZE,
+			MAP_SIZE
+		);
+
+		this.diffuseTexture.needsUpdate = true;
+		Renderer.MUST_RENDER = true;
+	}
 	
 	// clearDiffuseLayer(drawerId) {
 	// 	this.extensionsMaps.delete(drawerId);
@@ -321,7 +334,7 @@ export class TileBasic {
 		}
 
 		verticePositions.needsUpdate = true;
-		tileGeometry.computeVertexNormals();
+		// tileGeometry.computeVertexNormals();
 
 		if (this.meshe !== undefined) {
 			this.globe.removeMeshe(this.meshe);

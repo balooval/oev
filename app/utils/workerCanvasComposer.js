@@ -1,5 +1,6 @@
-import * as GEO from '../core/geo.js';
+
 import PolygonClipping from '../vendor/polygon-clipping.module.js';
+import * as MATH from '../core/math.js';
 
 const canvasSize = 256;
 const textureSize = 256;
@@ -11,58 +12,50 @@ let texturesImages = {};
 
 console.log('WORKER');
 
-
-onconnect = function (e) {
-    const port = e.ports[0];
-    
-    port.onmessage = function (evt) {
-        console.log('on message');
-        
-        
-        const command = evt.data.command;
-        const response = {
-            command: command,
-        };
-
-        if (command === 'test') {
-            response.message = 'OK test, ' + evt.data.datas;
-
-        } else if (command === 'uploadTextures') {
-            texturesImages = evt.data.textures;
-            response.message = 'OK uploadTextures';
-
-        } else if (command === 'draw') {
-            response.message = 'OK draw';
-            response.tileKey = evt.data.tileKey;
-            
-            response.imagesDatas = createMaterialTexture(evt.data.landusesDatas, evt.data.tileBbox, evt.data.tilePolygon);
-            
-        } else {
-            response.message = 'Commande ' + command + ' inconnue';
-        }
-
-        port.postMessage(response);
+onmessage = function (evt) {
+    const command = evt.data.command;
+    const response = {
+        command: command,
     };
+
+    if (command === 'test') {
+        response.message = 'OK test, ' + evt.data.datas;
+
+    } else if (command === 'uploadTextures') {
+        texturesImages = evt.data.textures;
+        response.message = 'OK uploadTextures';
+
+    } else if (command === 'draw') {
+        response.message = 'OK draw';
+        response.tileKey = evt.data.tileKey;
+        
+        response.imagesDatas = createMaterialTexture(evt.data.landusesDatas, evt.data.tileBbox, evt.data.tilePolygon);
+        
+    } else {
+        response.message = 'Commande ' + command + ' inconnue';
+    }
+
+    postMessage(response);
 };
-  
+
 
 function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
     const res = {};
     
-    const textureMaps = [
-        'map',
-        'normalMap',
+    const textureMaps = {
+        'map': '#7b993d',
+        // 'normalMap',
         // 'roughnessMap',
-    ];
+    };
 
-    for (const mapType of textureMaps) {
-        fillWithEmptyTexture(mapType); // Attention, remplit aussi les mers !
+    for (const mapType in textureMaps) {
+        // fillWithEmptyTexture(mapType); // Attention, remplit aussi les mers !
         for (let i = 0; i < landusesDatas.length; i ++) {
-            const textureImage = texturesImages[`${mapType}_${landusesDatas[i].type}`];
-            if (!textureImage) {
-                console.warn(`Aucune texture pour ${mapType} et ${landusesDatas[i].type}`);
-            }
-            buildLanduse(landusesDatas[i], tilePolygon, tileBbox, textureImage);
+            // const textureImage = texturesImages[`${mapType}_${landusesDatas[i].type}`];
+            // if (!textureImage) {
+            //     console.warn(`Aucune texture pour ${mapType} et ${landusesDatas[i].type}`);
+            // }
+            buildLanduse(landusesDatas[i], tilePolygon, tileBbox, textureMaps[mapType]);
         }
 
         res[mapType] = contextFinal.getImageData(0, 0, textureSize, textureSize);
@@ -72,7 +65,7 @@ function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
     return res;
 }
 
-function buildLanduse(landuse, tilePolygon, tileBbox, map) {
+function buildLanduse(landuse, tilePolygon, tileBbox, color) {
     const polygon = [
         landuse.border,
         ...landuse.holes
@@ -96,7 +89,7 @@ function buildLanduse(landuse, tilePolygon, tileBbox, map) {
         drawCanvasShape(
             canvasBorderPositions[0],
             canvasHolesPositions,
-            map,
+            color,
         );
     }
     
@@ -108,7 +101,7 @@ function convertCoordToCanvasPositions(coords, tileBox) {
     const res = [];
 
     for (let i = 0; i < coords.length; i ++) {
-        const positions = GEO.coordToCanvas(tileBox, textureSize, coords[i]);
+        const positions = coordToCanvas(tileBox, textureSize, coords[i]);
         res.push(positions);
     }
 
@@ -116,9 +109,9 @@ function convertCoordToCanvasPositions(coords, tileBox) {
 }
 
 
-function drawCanvasShape(coords, holesCoords, map) {
-    const pattern = contextFinal.createPattern(map, 'repeat');
-    contextFinal.fillStyle = pattern;
+function drawCanvasShape(coords, holesCoords, color) {
+    // const pattern = contextFinal.createPattern(map, 'repeat');
+    contextFinal.fillStyle = color;
     contextFinal.beginPath();
     
     drawPolygon(coords);
@@ -146,4 +139,17 @@ function fillWithEmptyTexture(mapType) {
     contextFinal.beginPath();
     contextFinal.fillRect(0, 0, textureSize, textureSize);
     contextFinal.closePath();
+}
+
+function coordToCanvas(box, canvasSize, coords) {
+    const points = new Array(coords.length);
+    for (let i = 0; i < coords.length; i ++) {
+        const coord = coords[i];
+        const point = [
+            MATH.mapValue(coord[0], box[0], box[1]) * canvasSize,
+            canvasSize - (MATH.mapValue(coord[1], box[2], box[3]) * canvasSize),
+        ];
+        points[i] = point;
+    }
+    return points;
 }
