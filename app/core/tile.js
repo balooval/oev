@@ -40,8 +40,7 @@ export class TileBasic {
 		this.tileY = _tileY;
 		this.zoom = _zoom;
 		this.childTiles = [];
-		this.textureLoaded = false;
-		this.remoteTex = undefined;
+		// this.remoteTex = undefined;
 		this.meshe = undefined;
 		this.key = this.tileX + '_' + this.tileY + '_' + this.zoom;
 		this.verticesNb = (TILES_DEFINITION + 1) * (TILES_DEFINITION + 1);
@@ -83,8 +82,6 @@ export class TileBasic {
 		this.normalTexture = new Texture(this.composeNormalMap);
 		this.normalTexture.needsUpdate = true;
 
-		// this.diffuseMap = null;
-
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
 			roughness: 1,
@@ -109,46 +106,40 @@ export class TileBasic {
 		this.bufferVerticesPlaneCoords = this.#computeVerticesCoords();
     }
 
-	drawOnDiffuseMap(drawerId, image) {
-		this.composeContext.drawImage(
-			image,
-			0,
-			0,
-			MAP_SIZE,
-			MAP_SIZE,
-			0,
-			0,
-			MAP_SIZE,
-			MAP_SIZE
-		);
-
-		this.diffuseTexture.needsUpdate = true;
-		Renderer.MUST_RENDER = true;
+	baseMapIsLoaded() {
+		if (this.extensionsMaps.has('TILE2D')) {
+			return true;
+		}
+		return this.extensionsMaps.has('SATELLITE');
 	}
-	
-	// clearDiffuseLayer(drawerId) {
-	// 	this.extensionsMaps.delete(drawerId);
-	// 	this.redrawDiffuse();
-	// }
 
-	// redrawDiffuse() {
-	// 	if (!this.diffuseMap) {
-	// 		return;
-	// 	}
+	addExtensionDiffuse(extensionId, image) {
+		this.extensionsMaps.set(extensionId, image);
+		this.#redrawDiffuse();
+	}
 
-	// 	this.composeContext.fillStyle = "#ffffff";
-	// 	this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+	removeExtensionDiffuse(extensionId) {
+		this.extensionsMaps.delete(extensionId);
+		this.#redrawDiffuse();
+	}
 
-	// 	this.composeContext.drawImage(this.diffuseMap, 0, 0, 256, 256, 0, 0, MAP_SIZE, MAP_SIZE);
-    //     this.extensionsMaps.forEach(map => {
-	// 		this.composeContext.drawImage(map, 0, 0);
-    //     });
+	#redrawDiffuse() {
+		if (this.isReady === false) {
+			return;
+		}
 
-    //     this.diffuseTexture.needsUpdate = true
-    //     Renderer.MUST_RENDER = true;
+		this.composeContext.fillStyle = "#ffffff";
+		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 
-	// 	// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
-    // }
+        this.extensionsMaps.forEach(map => {
+			this.composeContext.drawImage(map, 0, 0);
+        });
+
+        this.diffuseTexture.needsUpdate = true
+        Renderer.MUST_RENDER = true;
+
+		// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
+    }
 
 	// TODO: gérer ces "calques" dans une classe dédiée qui saur as'occuper de tous les types de map de la même manière (diffuse, normal, ...)
 	drawOnNormalMap(drawerId, image) {
@@ -229,7 +220,7 @@ export class TileBasic {
 	}
 
 	#nearestTextures() {
-		if (this.textureLoaded) {
+		if (this.baseMapIsLoaded() === true) {
 			return null;
 		}
 
@@ -250,7 +241,7 @@ export class TileBasic {
 		let curOffsetX = this.uvOffset.x * 0.5;
 		let curOffsetY = this.uvOffset.y * 0.5;
 
-		while (curParent && !curParent.textureLoaded) {
+		while (curParent && curParent.baseMapIsLoaded() === false) {
 			uvReduc *= 0.5;
 			curOffsetX = curParent.uvOffset.x * 0.5 + (curOffsetX * 0.5);
 			curOffsetY = curParent.uvOffset.y * 0.5 + (curOffsetY * 0.5);
@@ -269,7 +260,7 @@ export class TileBasic {
 		};
 	}
 
-	#applyTexture(textureDatas) {
+	#applyParentTexture(textureDatas) {
 		if (textureDatas === null) {
 			return false;
 		}
@@ -278,8 +269,6 @@ export class TileBasic {
 			return false;
 		}
 
-        // this.diffuseMap = textureDatas.map.image;
-		
 		this.composeContext.drawImage(
 			textureDatas.map.image,
 			MAP_SIZE * textureDatas.offsetX,
@@ -350,7 +339,7 @@ export class TileBasic {
 		this.meshe.castShadow = true;
 		this.meshe.receiveShadow = true;
 		const parentTexture = this.#nearestTextures();
-		this.#applyTexture(parentTexture);
+		this.#applyParentTexture(parentTexture);
 		this.isReady = true;
 		this.evt.fireEvent('TILE_READY');
 	}
@@ -437,14 +426,6 @@ export class TileBasic {
 		this.onStage = false;
 		this.globe.removeMeshe(this.meshe);
 		this.meshe.material.visible = false;
-
-		if (!this.textureLoaded) {
-			MapLoader.abort({
-				z : this.zoom, 
-				x : this.tileX, 
-				y : this.tileY
-			});
-		}
 
 		this.evt.fireEvent('HIDE');
 	}
@@ -581,25 +562,6 @@ export class TileBasic {
 		return true;
 	}
 
-	setTexture(_texture) {
-		this.textureLoaded = true;
-		this.remoteTex = _texture;
-		this.#applyTexture({
-			map : this.remoteTex, 
-			uvReduc : 1, 
-			offsetX : 0, 
-			offsetY : 0, 
-		});
-        Renderer.MUST_RENDER = true;
-        this.evt.fireEvent('TEXTURE_LOADED');
-	}
-
-	unsetTexture() {
-		this.textureLoaded = false;
-		this.remoteTex = undefined;
-		this.material.map = TextureLoader('checker');
-	}
-
 	#debug(value) {
 		// this.composeContext.fillStyle = "#ffffff";
 		// this.composeContext.fillRect(50, 100, 150, 100);
@@ -623,10 +585,6 @@ export class TileBasic {
 			this.material.dispose();
 		}
 
-		if (this.textureLoaded) {
-			this.remoteTex.dispose();
-		}
-
 		this.composeMap = null;
 		this.normalTexture.dispose();
 		this.normalTexture = null;
@@ -642,7 +600,6 @@ export class TileBasic {
 		this.evt.clear();
 
 		removeTileToSplit(this);
-
 	}
 }
 

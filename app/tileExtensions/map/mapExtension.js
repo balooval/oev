@@ -34,7 +34,8 @@ export class MapExtension {
 		// }
 
 		if (this.dataLoaded) {
-            this.tile.setTexture(this.texture);
+            // this.tile.setTexture(this.texture);
+			this.tile.addExtensionDiffuse(this.id, this.texture.image);
             return true;
         }
 
@@ -67,7 +68,8 @@ export class MapExtension {
 			return false;
 		}
 		
-		this.tile.setTexture(this.texture);
+		// this.tile.setTexture(this.texture);
+		this.tile.addExtensionDiffuse(this.id, this.texture.image);
 	}
 	
 	onTileDispose() {
@@ -101,7 +103,7 @@ export class MapExtension {
         this.texture = null;
 		this.dataLoaded = false;
 		this.dataLoading = false;
-		this.tile.unsetTexture();
+		this.tile.removeExtensionDiffuse(this.id);
 		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}

@@ -1,7 +1,4 @@
 import {
-    BufferAttribute,
-    BufferGeometry,
-    Color,
     DoubleSide,
     MeshPhysicalMaterial,
 } from 'three';
@@ -36,8 +33,6 @@ export function getImagesDatasForWorker() {
 const instanceGeometries = new Map();
 const instanceMaterial = new Map();
 
-// const workerCanvasComposer = new Worker('/app/utils/workerCanvasComposer.js', {type: 'module'});
-
 function onActivateExtension() {
     TileExtension.evt.removeEventListener('TILE_EXTENSION_ACTIVATE_LANDUSE', null, onActivateExtension);
 
@@ -65,7 +60,6 @@ function onActivateExtension() {
 
 function sendTexturesToWorker() {
     return new Promise((resolve) => {
-
         Promise.all([
             createImageBitmap(TextureLoader('landuse_map_empty').image, 0, 0, 512, 512),
             createImageBitmap(TextureLoader('landuse_normalMap_empty').image, 0, 0, 512, 512),
@@ -85,51 +79,11 @@ function sendTexturesToWorker() {
 
         ]).then(imagesDatas => {
             console.log('THEN');
-
             workerImagesDatas = imagesDatas;
-            
-            /*
-            workerCanvasComposer.postMessage(
-                {
-                    command: 'uploadTextures',
-                    textures: {
-                        'map_empty': imagesDatas[0],
-                        'normalMap_empty': imagesDatas[1],
-                        'roughnessMap_empty': imagesDatas[2],
-
-                        'map_scrub': imagesDatas[3],
-                        'normalMap_scrub': imagesDatas[4],
-                        'roughnessMap_scrub': imagesDatas[5],
-
-                        'map_rock': imagesDatas[6],
-                        'normalMap_rock': imagesDatas[7],
-                        'roughnessMap_rock': imagesDatas[8],
-
-                        'map_residential': imagesDatas[9],
-                        'normalMap_residential': imagesDatas[10],
-                        'roughnessMap_residential': imagesDatas[11],
-
-                        'map_forest': imagesDatas[12],
-                        'normalMap_forest': imagesDatas[13],
-                        'roughnessMap_forest': imagesDatas[14],
-                        
-                    },
-                },
-                [
-                    imagesDatas[0],
-                    imagesDatas[1],
-                    imagesDatas[2],
-                ]
-            );
-            */
-        
             resolve()
         });
         
     });
-
-
-    
 }
 
 function createMaterials() {
@@ -259,37 +213,6 @@ function loadTextures() {
             id: 'forest-top',
             url: 'forest-top.png',
         },
-
-        {id: 'landuse_map_empty', url: '/landuse/worn_rock_natural_01_diff_4k.png'},
-        {id: 'landuse_normalMap_empty', url: '/landuse/worn_rock_natural_01_nor_gl_4k.png'},
-        {id: 'landuse_roughnessMap_empty', url: '/landuse/worn_rock_natural_01_rough_4k.png'},
-
-        // {id: 'landuse_map_forest', url: '/landuse/Hedge_001_BaseColor.jpg'},
-        // {id: 'landuse_normalMap_forest', url: '/landuse/Hedge_001_Normal.jpg'},
-        // {id: 'landuse_roughnessMap_forest', url: '/landuse/Hedge_001_Roughness.jpg'},
-        {id: 'landuse_map_forest', url: '/landuse/aerial_grass_rock_diff_4k.png'},
-        {id: 'landuse_normalMap_forest', url: '/landuse/aerial_grass_rock_nor_gl_4k.png'},
-        {id: 'landuse_roughnessMap_forest', url: '/landuse/aerial_grass_rock_rough_4k.png'},
-        
-        {id: 'landuse_map_scrub', url: '/landuse/coast_sand_rocks_02_diff_4k.png'},
-        {id: 'landuse_normalMap_scrub', url: '/landuse/coast_sand_rocks_02_nor_gl_4k.png'},
-        {id: 'landuse_roughnessMap_scrub', url: '/landuse/coast_sand_rocks_02_rough_4k.png'},
-        // {id: 'landuse_map_scrub', url: '/landuse/Pebbles_007_COLOR.jpg'},
-        // {id: 'landuse_normalMap_scrub', url: '/landuse/Pebbles_007_NORM.jpg'},
-        // {id: 'landuse_roughnessMap_scrub', url: '/landuse/Pebbles_007_ROUGH.jpg'},
-
-        // {id: 'landuse_map_rock', url: '/landuse/Ground_Dirt_009_baseColor.jpg'},
-        // {id: 'landuse_normalMap_rock', url: '/landuse/Ground_Dirt_009_normal.jpg'},
-        // {id: 'landuse_roughnessMap_rock', url: '/landuse/Ground_Dirt_009_roughness.jpg'},
-        {id: 'landuse_map_rock', url: '/landuse/aerial_rocks_04_diff_4k.png'},
-        {id: 'landuse_normalMap_rock', url: '/landuse/aerial_rocks_04_nor_gl_4k.png'},
-        {id: 'landuse_roughnessMap_rock', url: '/landuse/aerial_rocks_04_rough_4k.png'},
-
-        {id: 'landuse_map_residential', url: '/landuse/ground_grey_diff_4k.png'},
-        {id: 'landuse_normalMap_residential', url: '/landuse/ground_grey_nor_gl_4k.png'},
-        {id: 'landuse_roughnessMap_residential', url: '/landuse/ground_grey_rough_4k.png'},
-        
-        
     ];
     
     return new Promise((resolve) => {
@@ -367,7 +290,6 @@ function createInstanceGeometryTree(lod) {
     const geometry = NET_MODELS.get('tree-forest-lod' + lod).clone();
     const scale = 2;
     geometry.scale(scale, scale, scale);
-    // geometry.rotateX(Math.PI);
     geometry.translate(0, 6, 0);
     return geometry;
 }
@@ -376,7 +298,6 @@ function createInstanceGeometryForestSapin(lod) {
     const geometry = NET_MODELS.get('tree-sapin-lod' + lod).clone();
     const scale = 2;
     geometry.scale(scale, scale, scale);
-    // geometry.rotateX(Math.PI);
     geometry.translate(0, 5, 0);
     return geometry;
 }
@@ -385,7 +306,6 @@ function createInstanceGeometryScrub(lod) {
     const geometry = NET_MODELS.get('scrub-lod' + lod).clone();
     const scale = 2;
     geometry.scale(scale, scale, scale);
-    // geometry.rotateX(Math.PI);
     geometry.translate(0, 5, 0);
     return geometry;
 }

@@ -109,7 +109,7 @@ class LinesExtension {
         this.tile.evt.removeEventListener('DISPOSE', this, this.onTileDispose);
         this.tile.evt.removeEventListener('ADD_CHILDRENS', this, this.onTileSplit);
         if (this.canvas) {
-            this.tile.extensionsMaps.delete(this.id);
+            this.tile.removeExtensionDiffuse(this.id);
             this.drawCanvas();
             this.context = null;
             this.canvas = null;
@@ -131,7 +131,6 @@ class LinesExtension {
         this.context = this.canvas.getContext('2d');
 		this.canvas.width = TILE_MAP_SIZE;
 		this.canvas.height = TILE_MAP_SIZE;
-        this.tile.extensionsMaps.set(this.id, this.canvas);
         workerEvt.addEventListener('LINE_DRAW_' + this.tile.key, this, this.onWorkerFinished);
     }
 
@@ -197,8 +196,7 @@ class LinesExtension {
         if (!this.context) return;
         const imageDatas = new ImageData(_pixelsDatas, 256, 256);
         this.context.putImageData(imageDatas, 0, 0);
-        // TODO: à remettre quand les tiles pourront à nouveau composer leur map diffuse depuis plusieurs sources (retiré pour économiser la mémoire)
-        // this.tile.redrawDiffuse();
+        this.tile.addExtensionDiffuse(this.id, this.canvas);
     }
     
 

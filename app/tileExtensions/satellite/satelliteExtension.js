@@ -30,7 +30,7 @@ export class SatelliteExtension {
 
 	onTileReady() {
 		if (this.dataLoaded) {
-            this.tile.setTexture(this.texture);
+			this.tile.addExtensionDiffuse(this.id, this.texture.image);
             return true;
         }
 		if (this.dataLoading) return false;
@@ -52,7 +52,7 @@ export class SatelliteExtension {
         this.dataLoaded = true;
         if (!this.tile) return false;
 		if (!this.tile.isReady) return false;
-		this.tile.setTexture(this.texture);
+		this.tile.addExtensionDiffuse(this.id, this.texture.image);
 	}
 	
 	onTileDispose() {
@@ -82,7 +82,7 @@ export class SatelliteExtension {
         this.texture = null;
 		this.dataLoaded = false;
         this.dataLoading = false;
-        this.tile.unsetTexture();
+        this.tile.removeExtensionDiffuse(this.id);
 		this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}
