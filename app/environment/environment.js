@@ -20,7 +20,8 @@ const api = {
 	
 	init : function() {
 		if (fogActive) {
-			Renderer.scene.fog = new FogExp2(0x91b8fb, 0.00001);
+			// Renderer.scene.fog = new FogExp2(0x91b8fb, 0.00001);
+			Renderer.scene.fog = new FogExp2(0x426093, 0.00001);
 		}
 		GLOBE.evt.addEventListener('TIME_CHANGED', api, api.onTimeChanged);
 		GLOBE.evt.addEventListener('PROJECTION_CHANGE', api, api.onProjectionChanged);
@@ -97,7 +98,7 @@ const api = {
 			if (projection === PROJECTION_SPHERE) {
 				Renderer.scene.fog.density = 0.00002;
 			} else {
-				Renderer.scene.fog.density = 0.00001;
+				Renderer.scene.fog.density = 0.000015;
 			}
 		}
 
