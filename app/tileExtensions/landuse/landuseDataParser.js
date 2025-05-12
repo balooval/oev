@@ -47,6 +47,7 @@ function prepareLanduse(res, _tile, _extractedDatas, _buildFunction, _nodesList,
     return res;
 }
 
+// TODO: grosse conso CPU, à optimiser !!
 function buildRelation(tile, _relation, _nodesList, _waysList) {
     // TODO : ne gère pas les relations avec plusieurs outer séparés (par exemple la forêt du Mont Aigoual)
     const innersCoords = [];

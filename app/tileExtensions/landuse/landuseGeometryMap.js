@@ -43,7 +43,7 @@ export function setDatas(landusesDatas, tile) {
 }
 
 export function tileRemoved(tileKey, tile) {
-    tile.removeExtensionDiffuse('landuseMap');
+    tile.removeExtensionDiffuse('LANDUSE_MAP');
     tilesWaitingWorker.delete(tileKey);
 }
 
@@ -70,6 +70,6 @@ function createLanduseMap(tile, textureMaps) {
 
     createImageBitmap(textureMaps.map, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
     .then(image => {
-        tile.addExtensionDiffuse('landuseMap', image);
+        tile.addExtensionDiffuse('LANDUSE_MAP', image);
     });
 }

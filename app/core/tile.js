@@ -20,6 +20,13 @@ export const TILES_DEFINITION = 32;
 export const TILES_VERTICES_COUNT = (TILES_DEFINITION + 1) * (TILES_DEFINITION + 1);
 const tileBaseGeometry = buildTileBaseGeometry();
 
+const DIFFUSE_MAP_ORDER = {
+	TILE2D: 0,
+	SATELLITE: 0,
+	LINES: 10,
+	LANDUSE_MAP: 20,
+};
+
 export class TileBasic {
 		
 	constructor(globe, _tileX, _tileY, _zoom, parent = null) {
@@ -106,6 +113,10 @@ export class TileBasic {
 		this.bufferVerticesPlaneCoords = this.#computeVerticesCoords();
     }
 
+	getExtension(extensionId) {
+		return this.extensions.get(extensionId);
+	}
+
 	baseMapIsLoaded() {
 		if (this.extensionsMaps.has('TILE2D')) {
 			return true;
@@ -115,25 +126,32 @@ export class TileBasic {
 
 	addExtensionDiffuse(extensionId, image) {
 		this.extensionsMaps.set(extensionId, image);
+		
+		// Gérer l'ordre pour ne pas afficher le landuse avant la map par exemple
+		const orderedMaps = [...this.extensionsMaps.entries()].sort((pairA, pairB) => {
+			return Math.sign(DIFFUSE_MAP_ORDER[pairA[0]] - DIFFUSE_MAP_ORDER[pairB[0]]);
+		});
+
+		this.extensionsMaps = new Map(orderedMaps);
 		this.#redrawDiffuse();
 	}
-
+	
 	removeExtensionDiffuse(extensionId) {
 		this.extensionsMaps.delete(extensionId);
 		this.#redrawDiffuse();
 	}
-
+	
 	#redrawDiffuse() {
 		if (this.isReady === false) {
 			return;
 		}
-
+		
 		this.composeContext.fillStyle = "#ffffff";
 		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-        this.extensionsMaps.forEach(map => {
+		
+		for (const map of this.extensionsMaps.values()) {
 			this.composeContext.drawImage(map, 0, 0);
-        });
+		}
 
         this.diffuseTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
@@ -141,7 +159,7 @@ export class TileBasic {
 		// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
     }
 
-	// TODO: gérer ces "calques" dans une classe dédiée qui saur as'occuper de tous les types de map de la même manière (diffuse, normal, ...)
+	// TODO: gérer ces "calques" dans une classe dédiée qui saura s'occuper de tous les types de map de la même manière (diffuse, normal, ...)
 	drawOnNormalMap(drawerId, image) {
 		this.extensionsNormalsMaps.set(drawerId, image);
 		this.redrawNormalMap();
