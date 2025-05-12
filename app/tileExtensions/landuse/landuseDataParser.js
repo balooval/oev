@@ -124,9 +124,10 @@ function calcBbox(_border) {
     }
 }
 
+// TODO: grosse conso CPU, à optimiser !!
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = TILES_DEFINITION * 4;
+    const def = TILES_DEFINITION * 1;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;

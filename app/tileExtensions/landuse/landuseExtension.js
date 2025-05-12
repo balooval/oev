@@ -19,11 +19,11 @@ const ZOOM_LEVEL_LOADING = 13;
 const moduleByZoom = {
     13: LanduseGeometryMap,
     14: LanduseGeometryMap,
-    15: LanduseGeometryMap,
-    16: LanduseGeometryMap,
+    // 15: LanduseGeometryMap,
+    // 16: LanduseGeometryMap,
     // 14: LanduseGeometryPlane,
-    // 15: LanduseGeometryShell,
-    // 16: LanduseGeometryInstances,
+    15: LanduseGeometryShell,
+    16: LanduseGeometryInstances,
 };
 
 class LanduseExtension {

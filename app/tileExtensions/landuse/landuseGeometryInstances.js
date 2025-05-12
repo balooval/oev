@@ -161,12 +161,14 @@ function getElevationsDatas(_landuse) {
 
 function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
     let instanceIndex = countOffset;
-    const instanceByPoint = 1;
+    const instanceByPoint = 5;
+    const lerpStep = 1 / instanceByPoint;
 
+    // TODO: mauvais placement, à revoir
     for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
         for (let j = 0; j < instanceByPoint; j ++) {
-            const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
-            const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j);
+            const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j * lerpStep);
+            const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j * lerpStep);
             
             const vertPos = GLOBE.coordToXYZ(
                 point[0] + Math.random() * 0.0003,
