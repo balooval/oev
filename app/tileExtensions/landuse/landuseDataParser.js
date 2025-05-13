@@ -77,15 +77,15 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
     }
     const border = wayNodes.slice(1);
 
-    const bbox = calcBbox(border);
-    const grid = coordGrid(tile, bbox, border);
+    // const bbox = calcBbox(border);
+    // const grid = coordGrid(tile, bbox, border);
 
     const res = {
         id : _relation.id, 
         type : extractType(_relation), 
         tags : _relation.tags, 
         border : border, 
-        fillPoints : grid, 
+        // fillPoints : grid, 
         holes : innersCoords, 
     };
     
@@ -95,14 +95,14 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
 function buildWay(tile, _way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
     const border = wayNodes.slice(1);
-    const bbox = calcBbox(border);
-    const grid = coordGrid(tile, bbox, border);
+    // const bbox = calcBbox(border);
+    // const grid = coordGrid(tile, bbox, border);
     return {
         id : _way.id, 
         type : extractType(_way), 
         tags : _way.tags, 
         border : border, 
-        fillPoints : grid, 
+        // fillPoints : grid, 
         holes : [], 
     };
 }

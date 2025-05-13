@@ -112,6 +112,20 @@ function buildLanduse(_landuse, tile) {
         return;
     }
 
+    // TODO: couper le landuse dans les limites de la tile
+    // const filteredFillPoints = [];
+    // for (let i = 0; i < _landuse.fillPoints.length; i ++) {
+    //     const point = _landuse.fillPoints[i];
+
+    //     if (point[0] < tile.startCoord.x) continue;
+    //     if (point[0] > tile.endCoord.x) continue;
+    //     if (point[1] < tile.startCoord.y) continue;
+    //     if (point[1] > tile.endCoord.y) continue;
+
+    //     filteredFillPoints.push(point);
+    // }
+    // _landuse.fillPoints = filteredFillPoints;
+
     const countOffset = instancedMesh.count;
     const elevationsDatas = getElevationsDatas(_landuse);
     const placementFunction = instancePlacement.get(type);
@@ -161,7 +175,7 @@ function getElevationsDatas(_landuse) {
 
 function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
     let instanceIndex = countOffset;
-    const instanceByPoint = 5;
+    const instanceByPoint = 1;
     const lerpStep = 1 / instanceByPoint;
 
     // TODO: mauvais placement, à revoir

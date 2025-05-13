@@ -6,11 +6,9 @@ const canvasSize = 256;
 const textureSize = 256;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
-const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true});
+const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true, alpha: false});
 
 let texturesImages = {};
-
-console.log('WORKER');
 
 onmessage = function (evt) {
     const command = evt.data.command;
@@ -46,7 +44,7 @@ function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
 
     contextFinal.fillStyle = '#b2b195';
     contextFinal.fillRect(0, 0, textureSize, textureSize);
-    
+
     for (let i = 0; i < landusesDatas.length; i ++) {
         buildLanduse(landusesDatas[i], tilePolygon, tileBbox);
     }
@@ -58,24 +56,35 @@ function createMaterialTexture(landusesDatas, tileBbox, tilePolygon) {
 }
 
 function buildLanduse(landuse, tilePolygon, tileBbox) {
-    // console.log(landuse);
-
     const typesColors = {
-        forest: '#7b993d',
-        scrub: '#95ad34',
-        residential: '#b3b5ab',
-        rock: '#9fa9ad',
-        vineyard: '#706629',
-        grass: '#a2c168',
+        forest: 'rgb(123, 153, 61)',
+        scrub: 'rgb(149, 173, 52)',
+        residential: 'rgb(179, 181, 171)',
+        rock: 'rgb(159, 169, 173)',
+        vineyard: 'rgb(112, 102, 41)',
+        grass: 'rgb(162, 193, 104)',
     };
 
     if (!typesColors[landuse.type]) {
         console.log(landuse.type);
-        
     }
 
     const color = typesColors[landuse.type] ?? '#ff0000';
+
+    if (landuse.border.length === 0) {
+        return false;
+    }
+
+    const canvasBorderPositions = convertCoordToCanvasPositions([landuse.border], tileBbox);
+    const canvasHolesPositions = convertCoordToCanvasPositions(landuse.holes, tileBbox);
+
+    drawCanvasShape(
+        canvasBorderPositions[0],
+        canvasHolesPositions,
+        color
+    );
     
+    /*
     const polygon = [
         landuse.border,
         ...landuse.holes
@@ -102,6 +111,7 @@ function buildLanduse(landuse, tilePolygon, tileBbox) {
             color,
         );
     }
+    */
     
     return true;
 }
@@ -120,7 +130,6 @@ function convertCoordToCanvasPositions(coords, tileBox) {
 
 
 function drawCanvasShape(coords, holesCoords, color) {
-    // const pattern = contextFinal.createPattern(map, 'repeat');
     contextFinal.fillStyle = color;
     contextFinal.beginPath();
     
@@ -132,10 +141,13 @@ function drawCanvasShape(coords, holesCoords, color) {
     
     contextFinal.closePath();
     contextFinal.fill('evenodd');
+    // contextFinal.fill();
 }
 
 function drawPolygon(coords) {
+    
     const start = coords[0];
+    
     contextFinal.moveTo(start[0], start[1]);
     for (let i = 1; i < coords.length; i ++) {
         contextFinal.lineTo(coords[i][0], coords[i][1]);
@@ -156,8 +168,8 @@ function coordToCanvas(box, canvasSize, coords) {
     for (let i = 0; i < coords.length; i ++) {
         const coord = coords[i];
         const point = [
-            MATH.mapValue(coord[0], box[0], box[1]) * canvasSize,
-            canvasSize - (MATH.mapValue(coord[1], box[2], box[3]) * canvasSize),
+            Math.round(MATH.mapValue(coord[0], box[0], box[1]) * canvasSize),
+            Math.round(canvasSize - (MATH.mapValue(coord[1], box[2], box[3]) * canvasSize)),
         ];
         points[i] = point;
     }

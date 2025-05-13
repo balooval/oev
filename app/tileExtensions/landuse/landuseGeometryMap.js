@@ -23,6 +23,21 @@ export function initMaterials() {
 }
 
 export function setDatas(landusesDatas, tile) {
+
+    const keysFilter = [
+        '4184_2986_13',
+        '8368_5972_14',
+    ];
+    
+    // this.isActive = this.tile.zoom == 13;
+    // if (keysFilter.includes(tile.key) === false) {
+    //     return;
+    // }
+
+    // console.log(landusesDatas);
+    
+
+
     const tilePolygon = [
         [tile.startCoord.x, tile.endCoord.y], 
         [tile.endCoord.x, tile.endCoord.y], 
