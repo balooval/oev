@@ -126,6 +126,10 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
+            id: 'noise',
+            url: 'noise.png',
+        },
+        {
             id: 'blender-scrub-normal',
             url: 'blender-scrub-normal.png',
         },

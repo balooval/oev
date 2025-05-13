@@ -37,14 +37,6 @@ export function setDatas(landusesDatas, tile) {
     // console.log(landusesDatas);
     
 
-
-    const tilePolygon = [
-        [tile.startCoord.x, tile.endCoord.y], 
-        [tile.endCoord.x, tile.endCoord.y], 
-        [tile.endCoord.x, tile.startCoord.y], 
-        [tile.startCoord.x, tile.startCoord.y], 
-    ];
-
     const tileBbox = tile.bbox;
 
     tilesWaitingWorker.set(tile.key, tile);
@@ -53,7 +45,6 @@ export function setDatas(landusesDatas, tile) {
         tileKey: tile.key,
         landusesDatas: landusesDatas,
         tileBbox: tileBbox,
-        tilePolygon: tilePolygon,
     });
 }
 
