@@ -126,6 +126,10 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
+            id: 'test-normal',
+            url: 'landuse/test-normal.jpg',
+        },
+        {
             id: 'road',
             url: 'landuse/road.png',
         },
@@ -134,20 +138,40 @@ function loadTextures() {
             url: 'landuse/grass.png',
         },
         {
+            id: 'grass-normal',
+            url: 'landuse/grass-normal.png',
+        },
+        {
             id: 'ground',
             url: 'landuse/ground.png',
+        },
+        {
+            id: 'ground-normal',
+            url: 'landuse/ground-normal.png',
         },
         {
             id: 'forest',
             url: 'landuse/forest.png',
         },
         {
+            id: 'forest-normal',
+            url: 'landuse/forest-normal.png',
+        },
+        {
             id: 'scrub',
             url: 'landuse/scrub.png',
         },
         {
+            id: 'scrub-normal',
+            url: 'landuse/scrub-normal.png',
+        },
+        {
             id: 'rock',
             url: 'landuse/rock.png',
+        },
+        {
+            id: 'rock-normal',
+            url: 'landuse/rock-normal.png',
         },
         {
             id: 'sapin-meshy',
