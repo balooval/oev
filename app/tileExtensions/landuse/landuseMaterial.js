@@ -126,6 +126,30 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
+            id: 'road',
+            url: 'landuse/road.png',
+        },
+        {
+            id: 'grass',
+            url: 'landuse/grass.png',
+        },
+        {
+            id: 'ground',
+            url: 'landuse/ground.png',
+        },
+        {
+            id: 'forest',
+            url: 'landuse/forest.png',
+        },
+        {
+            id: 'scrub',
+            url: 'landuse/scrub.png',
+        },
+        {
+            id: 'rock',
+            url: 'landuse/rock.png',
+        },
+        {
             id: 'sapin-meshy',
             url: 'sapin-meshy.png',
         },

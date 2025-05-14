@@ -1,11 +1,12 @@
 import {MAP_SIZE as TILE_MAP_SIZE} from '../../core/tile.js';
+import { texture as TextureLoader } from '../../net/textures.js';
+import * as LanduseMaterial from './landuseMaterial.js';
 
 const tilesWaitingWorker = new Map();
 const workerCanvasComposer = new Worker('/app/utils/workerCanvasComposer.js', {type: 'module'});
 
 workerCanvasComposer.onerror = (e) => {
     console.log('WORKER ERROR', e);
-    
 }
 
 workerCanvasComposer.onmessage = (e) => {
@@ -18,8 +19,33 @@ workerCanvasComposer.onmessage = (e) => {
     tilesWaitingWorker.delete(e.data.tileKey);
 };
 
-export function initMaterials() {
+LanduseMaterial.evt.addEventListener('READY', null, () => {
+    Promise.all([
+        createImageBitmap(TextureLoader('forest').image).then(bitmapData => ['forest', bitmapData]),
+        createImageBitmap(TextureLoader('scrub').image).then(bitmapData => ['scrub', bitmapData]),
+        createImageBitmap(TextureLoader('ground').image).then(bitmapData => ['ground', bitmapData]),
+        createImageBitmap(TextureLoader('grass').image).then(bitmapData => ['grass', bitmapData]),
+        createImageBitmap(TextureLoader('road').image).then(bitmapData => ['road', bitmapData]),
+        createImageBitmap(TextureLoader('rock').image).then(bitmapData => ['rock', bitmapData]),
+    ]).then(result => {
+        
+        const patterns = result.map(res => {return {type: res[0], image: res[1]}});
+        const transferables = result.map(res => res[1]);
 
+        workerCanvasComposer.postMessage(
+            {
+                command: 'uploadTextures',
+                patterns: patterns,
+            },
+            transferables
+        );
+        
+    });
+
+});
+
+export function initMaterials() {
+    
 }
 
 export function setDatas(landusesDatas, tile) {

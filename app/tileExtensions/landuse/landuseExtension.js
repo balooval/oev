@@ -23,7 +23,8 @@ const moduleByZoom = {
     // 15: LanduseGeometryMap,
     // 16: LanduseGeometryMap,
     // 14: LanduseGeometryPlane,
-    15: [LanduseGeometryMap, LanduseGeometryShell],
+    // 15: [LanduseGeometryMap, LanduseGeometryShell],
+    15: [LanduseGeometryMap],
     16: [LanduseGeometryMap, LanduseGeometryInstances],
     17: [LanduseGeometryMap],
 };

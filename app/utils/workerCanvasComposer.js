@@ -1,5 +1,4 @@
 
-import PolygonClipping from '../vendor/polygon-clipping.module.js';
 import * as MATH from '../core/math.js';
 
 const canvasSize = 256;
@@ -19,6 +18,7 @@ const contextNoiseResult = canvasNoiseResult.getContext('2d', {willReadFrequentl
 const noisePattern = initNoisePattern();
 
 let texturesImages = {};
+let patterns = new Map();
 
 onmessage = function (evt) {
     const command = evt.data.command;
@@ -30,8 +30,13 @@ onmessage = function (evt) {
         response.message = 'OK test, ' + evt.data.datas;
 
     } else if (command === 'uploadTextures') {
-        texturesImages = evt.data.textures;
-        response.message = 'OK uploadTextures';
+        // texturesImages = evt.data.textures;
+        // response.message = 'OK uploadTextures';
+        // testPattern = contextFinal.createPattern(evt.data.map, 'repeat');
+        evt.data.patterns.forEach(pattern => {
+            patterns.set(pattern.type, contextFinal.createPattern(pattern.image, 'repeat'));
+        });
+        
 
     } else if (command === 'noise') {
         response.tileKey = evt.data.tileKey;
@@ -92,7 +97,7 @@ function createMaterialTexture(landusesDatas, tileBbox) {
         'map': null,
     };
 
-    contextFinal.fillStyle = '#b2b195';
+    contextFinal.fillStyle = patterns.get('ground') ??'#b2b195';
     contextFinal.fillRect(0, 0, textureSize, textureSize);
 
     for (let i = 0; i < landusesDatas.length; i ++) {
@@ -108,12 +113,12 @@ function createMaterialTexture(landusesDatas, tileBbox) {
 function buildLanduse(landuse, tileBbox) {
     const typesColors = {
         // forest: 'rgb(123, 153, 61)',
-        forest: 'rgb(81, 122, 46)',
-        scrub: 'rgb(149, 173, 52)',
-        residential: 'rgb(179, 181, 171)',
-        rock: 'rgb(159, 169, 173)',
+        forest: patterns.get('forest') ?? 'rgb(81, 122, 46)',
+        scrub: patterns.get('scrub') ?? 'rgb(149, 173, 52)',
+        residential: patterns.get('road') ?? 'rgb(179, 181, 171)',
+        rock: patterns.get('rock') ?? 'rgb(159, 169, 173)',
         vineyard: 'rgb(112, 102, 41)',
-        grass: 'rgb(162, 193, 104)',
+        grass: patterns.get('grass') ?? 'rgb(162, 193, 104)',
     };
 
     if (!typesColors[landuse.type]) {
