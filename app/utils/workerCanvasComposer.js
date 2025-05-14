@@ -5,7 +5,7 @@ import * as MATH from '../core/math.js';
 const canvasSize = 256;
 const textureSize = 256;
 
-const noiseSize = 64;
+const noiseSize = 50;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
 const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true, alpha: false});

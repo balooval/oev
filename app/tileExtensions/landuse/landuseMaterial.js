@@ -126,8 +126,12 @@ function createMaterials() {
 function loadTextures() {
     const texturesList = [
         {
-            id: 'noise',
-            url: 'noise.png',
+            id: 'sapin-meshy',
+            url: 'sapin-meshy.png',
+        },
+        {
+            id: 'tree-meshy',
+            url: 'tree-meshy-fade.png',
         },
         {
             id: 'blender-scrub-normal',
@@ -225,8 +229,13 @@ function loadTextures() {
 }
 
 function setMapToMaterials() {
-    instanceMaterial.get('forest').map = TextureLoader('tree-forest');
-    instanceMaterial.get('sapin').map = TextureLoader('tree-forest-sapin');
+    // instanceMaterial.get('forest').map = TextureLoader('tree-forest-lod5');
+    instanceMaterial.get('forest').map = TextureLoader('tree-meshy');
+    instanceMaterial.get('forest').map.flipY = false;
+    // instanceMaterial.get('forest').map = TextureLoader('tree-forest');
+    // instanceMaterial.get('sapin').map = TextureLoader('tree-forest-sapin');
+    instanceMaterial.get('sapin').map = TextureLoader('sapin-meshy');
+    instanceMaterial.get('sapin').map.flipY = false;
     instanceMaterial.get('vineyard').map = TextureLoader('vigne');
 
     return new Promise((resolve) => {
@@ -237,6 +246,14 @@ function setMapToMaterials() {
 function loadModels() {
     const modelsList = [
         {
+            id: 'tree-forest-lod5',
+            url: 'tree-forest-meshy-lod3.glb',
+        },
+        {
+            id: 'tree-forest-lod0',
+            url: 'tree-forest-meshy-lod0.glb',
+        },
+        {
             id: 'vigne-lod5',
             url: 'vigne-lod5.glb',
         },
@@ -244,22 +261,30 @@ function loadModels() {
             id: 'vigne-lod0',
             url: 'vigne-lod0.glb',
         },
-        {
-            id: 'tree-forest-lod0',
-            url: 'tree-forest-lod0.glb',
-        },
-        {
-            id: 'tree-forest-lod5',
-            url: 'tree-forest-test.glb',
-        },
+        // {
+        //     id: 'tree-forest-lod0',
+        //     url: 'tree-forest-lod0.glb',
+        // },
+        // {
+        //     id: 'tree-forest-lod5',
+        //     url: 'tree-forest-test.glb',
+        // },
         {
             id: 'tree-sapin-lod0',
-            url: 'tree-sapin-lod0.glb',
+            url: 'tree-sapin-meshy-lod0.glb',
         },
+        // {
+        //     id: 'tree-sapin-lod0',
+        //     url: 'tree-sapin-lod0.glb',
+        // },
         {
             id: 'tree-sapin-lod5',
-            url: 'tree-sapin-test.glb',
+            url: 'tree-sapin-meshy-lod5.glb',
         },
+        // {
+        //     id: 'tree-sapin-lod5',
+        //     url: 'tree-sapin-test.glb',
+        // },
         {
             id: 'scrub-lod5',
             url: 'scrub-lod5.glb',
@@ -302,7 +327,7 @@ function createInstanceGeometryForestSapin(lod) {
     const geometry = NET_MODELS.get('tree-sapin-lod' + lod).clone();
     const scale = 2;
     geometry.scale(scale, scale, scale);
-    geometry.translate(0, 5, 0);
+    geometry.translate(0, 6, 0);
     return geometry;
 }
 

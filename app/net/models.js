@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {GLTFLoader} from '../vendor/GLTFLoader.js';
+import { setTexture as SetTexture } from './textures.js';
 
 
 const batchs = [];
@@ -59,6 +60,13 @@ function loadGlb(_nextModel) {
 		'assets/models/' + _nextModel.url, 
 		gltf => {
 			modelsLoaded[_nextModel.id] = gltf.scene.children[0].geometry;
+			
+			const modelDiffuse = gltf.scene.children[0].material.map;
+			if (modelDiffuse) {
+				// console.log(gltf.scene.children[0]);
+				SetTexture(_nextModel.id, modelDiffuse);
+				modelDiffuse.flipY = false;
+			}
 			if (curBatch.list.length == 0) {
 				curBatch.callback();
 				loadNextBatch();

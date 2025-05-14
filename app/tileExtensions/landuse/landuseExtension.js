@@ -25,6 +25,7 @@ const moduleByZoom = {
     // 14: LanduseGeometryPlane,
     15: [LanduseGeometryMap, LanduseGeometryShell],
     16: [LanduseGeometryMap, LanduseGeometryInstances],
+    17: [LanduseGeometryMap],
 };
 
 class LanduseExtension {

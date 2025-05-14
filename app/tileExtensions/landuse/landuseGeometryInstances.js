@@ -50,7 +50,6 @@ workerCanvasComposer.onmessage = (e) => {
     const tile = tilesWaitingWorker.get(e.data.tileKey);
     buildLanduse(e.data.landuseData, tile, e.data.type, e.data.imagesDatas)
     tilesWaitingWorker.delete(e.data.tileKey);
-        
 };
 
 export function initMaterials() {
@@ -196,7 +195,7 @@ function getTileMeshForLanduseType(tile, type) {
 
 function getElevationsDatasFromNoise(tile, imagesDatas) {
     const res = [];
-    const imageSize = 64;
+    const imageSize = 50;
 
     const lonStep = Math.abs(tile.endCoord.x - tile.startCoord.x) / imageSize;
     const latStep = Math.abs(tile.endCoord.y - tile.startCoord.y) / imageSize;
