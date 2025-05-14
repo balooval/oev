@@ -27,6 +27,12 @@ LanduseMaterial.evt.addEventListener('READY', null, () => {
         createImageBitmap(TextureLoader('grass').image).then(bitmapData => ['grass', bitmapData]),
         createImageBitmap(TextureLoader('road').image).then(bitmapData => ['road', bitmapData]),
         createImageBitmap(TextureLoader('rock').image).then(bitmapData => ['rock', bitmapData]),
+        createImageBitmap(TextureLoader('neutralNormal').image).then(bitmapData => ['neutralNormal', bitmapData]),
+        createImageBitmap(TextureLoader('rock-normal').image).then(bitmapData => ['rock-normal', bitmapData]),
+        createImageBitmap(TextureLoader('forest-normal').image).then(bitmapData => ['forest-normal', bitmapData]),
+        createImageBitmap(TextureLoader('scrub-normal').image).then(bitmapData => ['scrub-normal', bitmapData]),
+        createImageBitmap(TextureLoader('ground-normal').image).then(bitmapData => ['ground-normal', bitmapData]),
+        createImageBitmap(TextureLoader('grass-normal').image).then(bitmapData => ['grass-normal', bitmapData]),
     ]).then(result => {
         
         const patterns = result.map(res => {return {type: res[0], image: res[1]}});
@@ -76,6 +82,7 @@ export function setDatas(landusesDatas, tile) {
 
 export function tileRemoved(tileKey, tile) {
     tile.removeExtensionDiffuse('LANDUSE_MAP');
+    tile.removeExtensionNormal('LANDUSE_MAP');
     tilesWaitingWorker.delete(tileKey);
 }
 
@@ -103,5 +110,10 @@ function createLanduseMap(tile, textureMaps) {
     createImageBitmap(textureMaps.map, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
     .then(image => {
         tile.addExtensionDiffuse('LANDUSE_MAP', image);
+    });
+
+    createImageBitmap(textureMaps.normal, 0, 0, TILE_MAP_SIZE, TILE_MAP_SIZE)
+    .then(image => {
+        tile.addExtensionNormal('LANDUSE_MAP', image);
     });
 }

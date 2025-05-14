@@ -8,6 +8,8 @@ const noiseSize = 50;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
 const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true, alpha: false});
+const canvasNormal = new OffscreenCanvas(canvasSize, canvasSize);
+const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true, alpha: true});
 
 const canvasNoisePattern = new OffscreenCanvas(noiseSize, noiseSize);
 const contextNoisePattern = canvasNoisePattern.getContext('2d', {willReadFrequently: true, alpha: false});
@@ -105,7 +107,9 @@ function createMaterialTexture(landusesDatas, tileBbox) {
     }
 
     res.map = contextFinal.getImageData(0, 0, textureSize, textureSize);
+    res.normal = contextNormal.getImageData(0, 0, textureSize, textureSize);
     contextFinal.clearRect(0, 0, textureSize, textureSize);
+    contextNormal.clearRect(0, 0, textureSize, textureSize);
 
     return res;
 }
@@ -137,7 +141,23 @@ function buildLanduse(landuse, tileBbox) {
     drawCanvasShape(
         canvasBorderPositions[0],
         canvasHolesPositions,
+        contextFinal,
         color
+    );
+
+    const typesNormal = {
+        forest: patterns.get('forest-normal'),
+        rock: patterns.get('rock-normal'),
+        scrub: patterns.get('scrub-normal'),
+        grass: patterns.get('grass-normal'),
+    };
+    const normalPattern = typesNormal[landuse.type] ?? patterns.get('ground-normal');
+
+    drawCanvasShape(
+        canvasBorderPositions[0],
+        canvasHolesPositions,
+        contextNormal,
+        normalPattern
     );
     
     return true;
@@ -156,18 +176,18 @@ function convertCoordToCanvasPositions(coords, tileBox, size) {
 }
 
 
-function drawCanvasShape(coords, holesCoords, color) {
-    contextFinal.fillStyle = color;
-    contextFinal.beginPath();
+function drawCanvasShape(coords, holesCoords, context, color) {
+    context.fillStyle = color;
+    context.beginPath();
     
-    drawPolygon(coords, contextFinal);
+    drawPolygon(coords, context);
     
     for (let h = 0; h < holesCoords.length; h ++) {
-        drawPolygon(holesCoords[h], contextFinal);
+        drawPolygon(holesCoords[h], context);
     }
     
-    contextFinal.closePath();
-    contextFinal.fill('evenodd');
+    context.closePath();
+    context.fill('evenodd');
 }
 
 function drawPolygon(coords, context) {

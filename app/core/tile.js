@@ -24,7 +24,8 @@ const DIFFUSE_MAP_ORDER = {
 	TILE2D: 0,
 	SATELLITE: 0,
 	LINES: 10,
-	LANDUSE_MAP: 20,
+	NORMAL: 20,
+	LANDUSE_MAP: 30,
 };
 
 export class TileBasic {
@@ -91,7 +92,7 @@ export class TileBasic {
 
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
-			roughness: 1,
+			roughness: 0.9,
 			metalness: 0,
 			map: this.diffuseTexture,
 			normalMap: this.normalTexture,
@@ -126,8 +127,6 @@ export class TileBasic {
 
 	addExtensionDiffuse(extensionId, image) {
 		this.extensionsMaps.set(extensionId, image);
-		
-		// Gérer l'ordre pour ne pas afficher le landuse avant la map par exemple
 		const orderedMaps = [...this.extensionsMaps.entries()].sort((pairA, pairB) => {
 			return Math.sign(DIFFUSE_MAP_ORDER[pairA[0]] - DIFFUSE_MAP_ORDER[pairB[0]]);
 		});
@@ -160,22 +159,31 @@ export class TileBasic {
     }
 
 	// TODO: gérer ces "calques" dans une classe dédiée qui saura s'occuper de tous les types de map de la même manière (diffuse, normal, ...)
-	drawOnNormalMap(drawerId, image) {
-		this.extensionsNormalsMaps.set(drawerId, image);
+
+	addExtensionNormal(extensionId, image) {
+		this.extensionsNormalsMaps.set(extensionId, image);
+		const orderedMaps = [...this.extensionsNormalsMaps.entries()].sort((pairA, pairB) => {
+			return Math.sign(DIFFUSE_MAP_ORDER[pairA[0]] - DIFFUSE_MAP_ORDER[pairB[0]]);
+		});
+
+		this.extensionsNormalsMaps = new Map(orderedMaps);
 		this.redrawNormalMap();
 	}
-	
-	clearNormalLayer(drawerId) {
-		this.extensionsNormalsMaps.delete(drawerId);
+
+	removeExtensionNormal(extensionId) {
+		this.extensionsNormalsMaps.delete(extensionId);
 		this.redrawNormalMap();
 	}
 
 	redrawNormalMap() {
+		if (!this.normalTexture) {
+			return;
+		}
 		this.composeNormalContext.drawImage(TextureLoader('neutralNormal').image, 0, 0, MAP_SIZE, MAP_SIZE);
 
-        this.extensionsNormalsMaps.forEach(map => {
+		for (const map of this.extensionsNormalsMaps.values()) {
 			this.composeNormalContext.drawImage(map, 0, 0);
-        });
+		}
 
         this.normalTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
