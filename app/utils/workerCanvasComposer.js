@@ -8,6 +8,10 @@ const noiseSize = 50;
 
 const canvasFinal = new OffscreenCanvas(canvasSize, canvasSize);
 const contextFinal = canvasFinal.getContext('2d', {willReadFrequently: true, alpha: false});
+
+const canvasMask = new OffscreenCanvas(canvasSize, canvasSize);
+const contextMask = canvasMask.getContext('2d', {willReadFrequently: true});
+
 const canvasNormal = new OffscreenCanvas(canvasSize, canvasSize);
 const contextNormal = canvasNormal.getContext('2d', {willReadFrequently: true, alpha: true});
 
@@ -163,19 +167,6 @@ function buildLanduse(landuse, tileBbox) {
     return true;
 }
 
-
-function convertCoordToCanvasPositions(coords, tileBox, size) {
-    const res = [];
-
-    for (let i = 0; i < coords.length; i ++) {
-        const positions = coordToCanvas(tileBox, size, coords[i]);
-        res.push(positions);
-    }
-
-    return res;
-}
-
-
 function drawCanvasShape(coords, holesCoords, context, color) {
     context.fillStyle = color;
     context.beginPath();
@@ -190,6 +181,30 @@ function drawCanvasShape(coords, holesCoords, context, color) {
     context.fill('evenodd');
 }
 
+function drawCanvasShapeBlured(coords, holesCoords, context, color) {
+    contextMask.clearRect(0, 0, canvasSize, canvasSize);
+    contextMask.fillStyle = '#ff0000';
+
+    contextMask.filter = 'blur(2px)';
+    contextMask.beginPath();
+    
+    drawPolygon(coords, contextMask);
+    for (let h = 0; h < holesCoords.length; h ++) {
+        drawPolygon(holesCoords[h], contextMask);
+    }
+    
+    contextMask.closePath();
+    contextMask.fill('evenodd');
+
+    contextMask.filter = 'none';
+    contextMask.globalCompositeOperation = 'source-in';
+    contextMask.fillStyle = color;
+    contextMask.fillRect(0, 0, canvasSize, canvasSize);
+    contextMask.globalCompositeOperation = 'source-over';
+
+    context.drawImage(canvasMask, 0, 0);
+}
+
 function drawPolygon(coords, context) {
     
     const start = coords[0];
@@ -198,6 +213,17 @@ function drawPolygon(coords, context) {
     for (let i = 1; i < coords.length; i ++) {
         context.lineTo(coords[i][0], coords[i][1]);
     }
+}
+
+function convertCoordToCanvasPositions(coords, tileBox, size) {
+    const res = [];
+
+    for (let i = 0; i < coords.length; i ++) {
+        const positions = coordToCanvas(tileBox, size, coords[i]);
+        res.push(positions);
+    }
+
+    return res;
 }
 
 function fillWithEmptyTexture(mapType) {
