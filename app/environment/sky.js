@@ -15,6 +15,7 @@ import {
 } from '../core/globe.js';
 import {get as Shader} from '../net/shader.js';
 import { texture as TextureLoader } from '../net/textures.js';
+import * as Clouds from './clouds.js';
 
 let meshSky = null;
 let skyMaterialSphere = null;
@@ -33,6 +34,7 @@ const skyParams = {
 
 export function init() {
 	colorsGradient = getImageData(TextureLoader('sky_gradient').image);
+	Clouds.init();
 }
 
 export function activate(state) {
