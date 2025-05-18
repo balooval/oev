@@ -66,12 +66,19 @@ export function setTime(time, sunParams) {
 	const rampColor = getPixel(colorsGradient, 5, gradientValue);
 	skyColor.setRGB(rampColor.r / 255, rampColor.g / 255, rampColor.b / 255);
 	skyMaterialPlane.color = skyColor;
-
+	
 	skyMaterialSphere.uniforms.diffuse.value = new Vector3(
 		rampColor.r / 255,
 		rampColor.g / 255,
 		rampColor.b / 255,
 	);
+	
+	const cloudColor = getPixel(colorsGradient, 50, gradientValue);
+	Clouds.setColor(new Vector3(
+		cloudColor.r / 255,
+		cloudColor.g / 255,
+		cloudColor.b / 255,
+	));
 }
 
 export function setProjection(projection) {
@@ -116,6 +123,7 @@ function updatePositionPlane(cameraLookAtPosition, cameraOrientation) {
 	meshSky.position.x = cameraLookAtPosition.x;
 	meshSky.position.y = cameraLookAtPosition.y - 500;
 	meshSky.position.z = cameraLookAtPosition.z;
+	Clouds.updatePosition(cameraLookAtPosition);
 }
 
 function updatePositionSphere(cameraLookAtPosition, cameraOrientation) {

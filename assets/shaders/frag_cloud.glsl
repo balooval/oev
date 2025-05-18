@@ -3,6 +3,15 @@ varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vRayOrigin;
 varying vec3 vRayDirection;
+uniform float cutValue;
+uniform float f2Factor;
+uniform float f3Factor;
+uniform float f2Scale;
+uniform float f3Scale;
+uniform int octavesCount;
+uniform float persistence;
+uniform float perlinScale;
+uniform vec3 skyColor;
 
 #define MAX_STEPS 100
 const float MARCH_SIZE = 1000.0;
@@ -85,33 +94,39 @@ float Perlin3D( vec3 P )
 
 
 float sdSphere(vec3 p) {
-	float scale = 0.05;
+	float scale = perlinScale;
+	p.y *= 5.0;
+
+	float octaveScale = 1.0;
+	float octaveAmplitude = 1.0;
+	float res = 0.0;
+
+	for (int o = 0; o < octavesCount; o ++) {
+		res += Perlin3D(p * (0.0005 * octaveScale) * scale) * octaveAmplitude;
+		octaveScale *= 2.0;
+		octaveAmplitude *= persistence;
+	}
+
+	if (res < cutValue) {
+		return 0.0;
+	}
+
+	return res;
+
+
 
   	float f1 = Perlin3D(p * 0.0005 * scale);
-  	float f2 = Perlin3D(p * 0.001 * scale);
-  	float f3 = Perlin3D(p * 0.002 * scale);
+  	float f2 = Perlin3D(p * f2Scale * scale);
+  	float f3 = Perlin3D(p * f3Scale * scale);
 	float noise = f1;
-	noise += f2 * 0.5;
-	noise += f3 * 0.2;
+	noise *= f2 * f2Factor;
+	// noise += f3 * f3Factor;
 
-	// if (noise < 0.1) {
-	// 	return 0.0;
-	// }
+	if (f1 < cutValue) {
+		return 0.0;
+	}
+
 	return noise;
-
-	float radius = 0.5;
-	vec3 pos = vec3(0.0, 0.0, 0.3);
-    float distA = length(p - pos) - radius;
-	distA = distA + noise;
-	// return distA;
-
-	float radiusB = 0.6;
-	vec3 posB = vec3(0.5, -0.3, -0.5);
-    float distB = length(p - posB) - radiusB;
-	distB = distB + noise;
-	// return distB;
-
-	return min(distA, distB);
 }
 
 float scene(vec3 p) {
@@ -121,33 +136,31 @@ float scene(vec3 p) {
 float raymarch(vec3 rayOrigin, vec3 rayDirection) {
   float depth = 0.0;
   vec3 p = rayOrigin + depth * rayDirection;
-  float toto = 0.0;
-  vec4 res = vec4(0.0);
+  float totalDensity = 0.0;
 
   for (int i = 0; i < MAX_STEPS; i++) {
     float density = scene(p);
 
+	float attenuation = 1.0 - (float(i) / float(MAX_STEPS));
+
+	// density = density * attenuation;
+
     if (density > 0.0) {
-		toto += density * 0.04;
-      vec4 color = vec4(mix(vec3(1.0,1.0,1.0), vec3(0.0, 0.0, 0.0), density), density);
-      color.rgb *= color.a;
-      res += color*(1.0 - res.a);
+		totalDensity += density * 0.04;
     }
 
     depth += MARCH_SIZE;
     p = rayOrigin + depth * rayDirection;
   }
 
-	return toto;
-  return res.x;
+	return totalDensity;
 }
 
 void main() {
 
 	float alpha = raymarch(vRayOrigin, vRayDirection);
 
-	// gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
-	gl_FragColor = vec4(alpha, alpha, alpha, 1.0);
-	// gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+	// gl_FragColor = vec4(alpha, alpha, alpha, 1.0);
+	gl_FragColor = vec4(skyColor, alpha);
 
 }
