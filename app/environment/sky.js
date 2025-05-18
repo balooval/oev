@@ -123,7 +123,7 @@ function updatePositionPlane(cameraLookAtPosition, cameraOrientation) {
 	meshSky.position.x = cameraLookAtPosition.x;
 	meshSky.position.y = cameraLookAtPosition.y - 500;
 	meshSky.position.z = cameraLookAtPosition.z;
-	Clouds.updatePosition(cameraLookAtPosition);
+	// Clouds.updatePosition(cameraLookAtPosition);
 }
 
 function updatePositionSphere(cameraLookAtPosition, cameraOrientation) {

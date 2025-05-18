@@ -4,18 +4,16 @@ varying vec2 vUv;
 varying vec3 vRayOrigin;
 varying vec3 vRayDirection;
 uniform float cutValue;
-uniform float f2Factor;
-uniform float f3Factor;
-uniform float f2Scale;
-uniform float f3Scale;
 uniform int octavesCount;
 uniform float persistence;
 uniform float perlinScale;
 uniform vec3 skyColor;
+varying vec3 vSunPosition;
+varying vec3 vSunDirection;
+uniform vec3 sunPosition;
 
 #define MAX_STEPS 100
-const float MARCH_SIZE = 1000.0;
-
+const float MARCH_SIZE = 2000.0;
 
 
 
@@ -112,21 +110,6 @@ float sdSphere(vec3 p) {
 	}
 
 	return res;
-
-
-
-  	float f1 = Perlin3D(p * 0.0005 * scale);
-  	float f2 = Perlin3D(p * f2Scale * scale);
-  	float f3 = Perlin3D(p * f3Scale * scale);
-	float noise = f1;
-	noise *= f2 * f2Factor;
-	// noise += f3 * f3Factor;
-
-	if (f1 < cutValue) {
-		return 0.0;
-	}
-
-	return noise;
 }
 
 float scene(vec3 p) {
@@ -137,18 +120,18 @@ float raymarch(vec3 rayOrigin, vec3 rayDirection) {
   float depth = 0.0;
   vec3 p = rayOrigin + depth * rayDirection;
   float totalDensity = 0.0;
+  float densityFactorByDistance = 0.04;
 
   for (int i = 0; i < MAX_STEPS; i++) {
     float density = scene(p);
 
-	float attenuation = 1.0 - (float(i) / float(MAX_STEPS));
-
-	// density = density * attenuation;
+	float groundAttenuation = smoothstep(1000.0, 10000.0, p.y);
 
     if (density > 0.0) {
-		totalDensity += density * 0.04;
+		totalDensity += density * densityFactorByDistance * groundAttenuation;
     }
 
+	// densityFactorByDistance *= 0.99;
     depth += MARCH_SIZE;
     p = rayOrigin + depth * rayDirection;
   }
@@ -156,11 +139,21 @@ float raymarch(vec3 rayOrigin, vec3 rayDirection) {
 	return totalDensity;
 }
 
+
+float raymarchSun(vec3 rayOrigin, vec3 rayDirection) {
+	// Ca c'est joli
+	// return 0.5 + smoothstep(-1.0, 1.0, dot(vRayDirection * -1.0, vSunDirection) * -1.0) * 2.0;
+	
+	return 0.5 + (dot(vRayDirection * -1.0, vSunDirection * -1.0) + 1.0) * 0.5;
+}
+
 void main() {
 
 	float alpha = raymarch(vRayOrigin, vRayDirection);
+	float luminosity = raymarchSun(vRayOrigin, vSunDirection);
 
 	// gl_FragColor = vec4(alpha, alpha, alpha, 1.0);
-	gl_FragColor = vec4(skyColor, alpha);
-
+	// gl_FragColor = vec4(skyColor, alpha);
+	gl_FragColor = vec4(skyColor * luminosity, alpha);
+	// gl_FragColor = vec4(vSunDirection, alpha);
 }

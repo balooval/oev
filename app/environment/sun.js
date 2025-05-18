@@ -17,6 +17,7 @@ import {
 } from '../core/globe.js';
 import { texture as TextureLoader } from '../net/textures.js';
 import {get as Shader} from '../net/shader.js';
+import * as Clouds from './clouds.js';
 
 let cameraHelper;
 let lightAmbiant = undefined;
@@ -196,6 +197,12 @@ function updatePositionPlane() {
 	meshSun.position.x = (xSin * (sunMeshDistance * xCos)) + posCenter.x;
 	meshSun.position.y = (ySin * sunMeshDistance) + posCenter.y;
 	meshSun.position.z = (zCos1 * (sunMeshDistance * zCos2)) + posCenter.z;
+
+	Clouds.updateSunPosition(
+		xSin * xCos,
+		ySin,
+		zCos1 * zCos2,
+	);
 
 	return [
 		sunParams.position.x + posCenter.x,
