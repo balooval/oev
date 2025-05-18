@@ -21,7 +21,7 @@ let material;
 export function init() {
 	// const geometry = new PlaneGeometry(10000, 10000, 10, 10);
 	// const geometry = new CylinderGeometry(10000, 10000, 10000, 32);
-	const geometry = new SphereGeometry(10000, 32, 16);
+	const geometry = new SphereGeometry(100000, 32, 16);
 	
 	const parametersSky = {
 		vertexShader: Shader.get('vert_cloud'),

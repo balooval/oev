@@ -5,7 +5,7 @@ varying vec3 vRayOrigin;
 varying vec3 vRayDirection;
 
 #define MAX_STEPS 100
-const float MARCH_SIZE = 0.08;
+const float MARCH_SIZE = 1000.0;
 
 
 
@@ -85,14 +85,19 @@ float Perlin3D( vec3 P )
 
 
 float sdSphere(vec3 p) {
+	float scale = 0.05;
 
-  	float f1 = Perlin3D(p * 0.4) + 0.4;
-  	float f2 = Perlin3D(p * 1.0);
-  	float f3 = Perlin3D(p * 3.0);
+  	float f1 = Perlin3D(p * 0.0005 * scale);
+  	float f2 = Perlin3D(p * 0.001 * scale);
+  	float f3 = Perlin3D(p * 0.002 * scale);
 	float noise = f1;
-	noise += f2 * 0.2;
-	noise += f3 * 0.1;
-	return noise * 1.0;
+	noise += f2 * 0.5;
+	noise += f3 * 0.2;
+
+	// if (noise < 0.1) {
+	// 	return 0.0;
+	// }
+	return noise;
 
 	float radius = 0.5;
 	vec3 pos = vec3(0.0, 0.0, 0.3);
@@ -110,28 +115,30 @@ float sdSphere(vec3 p) {
 }
 
 float scene(vec3 p) {
-  float distance = sdSphere(p);
-  return -distance;
+  return sdSphere(p);
 }
 
 float raymarch(vec3 rayOrigin, vec3 rayDirection) {
   float depth = 0.0;
   vec3 p = rayOrigin + depth * rayDirection;
+  float toto = 0.0;
   vec4 res = vec4(0.0);
 
   for (int i = 0; i < MAX_STEPS; i++) {
     float density = scene(p);
 
     if (density > 0.0) {
+		toto += density * 0.04;
       vec4 color = vec4(mix(vec3(1.0,1.0,1.0), vec3(0.0, 0.0, 0.0), density), density);
       color.rgb *= color.a;
-      res += color*(1.0-res.a);
+      res += color*(1.0 - res.a);
     }
 
     depth += MARCH_SIZE;
     p = rayOrigin + depth * rayDirection;
   }
 
+	return toto;
   return res.x;
 }
 
@@ -140,7 +147,7 @@ void main() {
 	float alpha = raymarch(vRayOrigin, vRayDirection);
 
 	// gl_FragColor = vec4(vUv.x, vUv.y, 0.0, 1.0);
-	// gl_FragColor = vec4(alpha, alpha, alpha, 1.0);
-	gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
+	gl_FragColor = vec4(alpha, alpha, alpha, 1.0);
+	// gl_FragColor = vec4(1.0, 1.0, 1.0, alpha);
 
 }

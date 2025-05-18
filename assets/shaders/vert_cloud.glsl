@@ -19,7 +19,8 @@ void main() {
 	vRayOrigin = vec3((cameraPosition.x - startY) / sizeX, (cameraPosition.y - startY) / sizeY, cameraPosition.z / 5000.0);
 
 	// vRayOrigin = vec3(0.0, 0.0, 5.0);
-	vRayOrigin = vec3(uv.x, uv.y, cameraPosition.z / 5000.0);
+	// vRayOrigin = vec3(uv.x, uv.y, cameraPosition.z / 5000.0);
+	vRayOrigin = position;
 
 	vRayDirection = normalize(position - cameraPosition);
 
