@@ -21,6 +21,7 @@ let meshSky = null;
 let skyMaterialSphere = null;
 let skyMaterialPlane = null;
 let colorsGradient;
+let skySphereRadius;
 const skyColor = new Color();
 const planeSize = 300000;
 const sphereSize = 20000;
@@ -63,10 +64,16 @@ export function setTime(time, sunParams) {
 	// meshSky.material.uniforms.sunLuminosity.value = sunParams.luminosity;
 
 	const gradientValue = Math.round((Math.min(Math.max(time, 0), 1)) * 127);
-	const rampColor = getPixel(colorsGradient, 5, gradientValue);
+	const rampColor = getPixel(colorsGradient, 4, gradientValue);
 	skyColor.setRGB(rampColor.r / 255, rampColor.g / 255, rampColor.b / 255);
 	skyMaterialPlane.color = skyColor;
 	
+	skyMaterialPlane.uniforms.diffuse.value = new Vector3(
+		rampColor.r / 255,
+		rampColor.g / 255,
+		rampColor.b / 255,
+	);
+
 	skyMaterialSphere.uniforms.diffuse.value = new Vector3(
 		rampColor.r / 255,
 		rampColor.g / 255,
@@ -79,6 +86,17 @@ export function setTime(time, sunParams) {
 		cloudColor.g / 255,
 		cloudColor.b / 255,
 	));
+}
+
+export function updateSunPosition(sunInclinaison, x, y, z) {
+	if (!skyMaterialPlane) {
+		return;
+	}
+	skyMaterialPlane.uniforms.sunPosition.value.x = x * skySphereRadius;
+	skyMaterialPlane.uniforms.sunPosition.value.y = y * skySphereRadius;
+	skyMaterialPlane.uniforms.sunPosition.value.z = z * skySphereRadius;
+	skyMaterialPlane.uniforms.sunInclinaison.value = sunInclinaison;
+	Renderer.MUST_RENDER = true;
 }
 
 export function setProjection(projection) {
@@ -106,8 +124,6 @@ export function setProjection(projection) {
 		// meshSky.scale.z = planeSize * 2;
 		updatePositionFunction = updatePositionSphere;
 	}
-
-	// updateSunPosition();
 }
 
 export function setPosition(cameraLookAtPosition, cameraOrientation) {
@@ -123,7 +139,6 @@ function updatePositionPlane(cameraLookAtPosition, cameraOrientation) {
 	meshSky.position.x = cameraLookAtPosition.x;
 	meshSky.position.y = cameraLookAtPosition.y - 500;
 	meshSky.position.z = cameraLookAtPosition.z;
-	// Clouds.updatePosition(cameraLookAtPosition);
 }
 
 function updatePositionSphere(cameraLookAtPosition, cameraOrientation) {
@@ -138,6 +153,7 @@ function createSky(skyRadius) {
 	if (meshSky !== null) {
 		return false;
 	}
+	skySphereRadius = skyRadius;
 
 	const uniformsSky = {
 		cameraOrientation : {value : new Vector3(0, 0, 1)}, 
@@ -152,15 +168,29 @@ function createSky(skyRadius) {
 		transparent: true,
 		// side: DoubleSide,
 	};
+
+	const parametersSkyPlane = {
+		vertexShader: Shader('vert_skyBis'),
+		fragmentShader: Shader('frag_skyBis'),
+		uniforms: {
+			diffuse: {value: new Vector3(0, 0, 1)},
+			sunPosition: {value: new Vector3(0, 1, 0)},
+			skySphereRadius: {value: skySphereRadius},
+			sunInclinaison: {value: 1},
+		},
+		side: BackSide,
+		transparent: false,
+	};
 	
 	
 	skyMaterialSphere = new ShaderMaterial(parametersSky);
-	skyMaterialPlane = new MeshBasicMaterial({color:0xff0000, side: BackSide, fog: false});
+	skyMaterialPlane = new ShaderMaterial(parametersSkyPlane);
+	// skyMaterialPlane = new MeshBasicMaterial({color:0xff0000, side: BackSide, fog: false});
 	
 	meshSky = new Mesh(new SphereGeometry(1, 64, 32), skyMaterialPlane);
-	meshSky.scale.x = skyRadius;
-	meshSky.scale.y = skyRadius;
-	meshSky.scale.z = skyRadius;
+	meshSky.scale.x = skySphereRadius;
+	meshSky.scale.y = skySphereRadius;
+	meshSky.scale.z = skySphereRadius;
 	Renderer.scene.add(meshSky);
 }
 

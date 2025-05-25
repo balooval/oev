@@ -149,7 +149,7 @@ export class TileBasic {
 		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
 		
 		for (const map of this.extensionsMaps.values()) {
-			this.composeContext.drawImage(map, 0, 0);
+			this.composeContext.drawImage(map, 0, 0, map.width, map.height, 0, 0, MAP_SIZE, MAP_SIZE);
 		}
 
         this.diffuseTexture.needsUpdate = true
@@ -182,7 +182,7 @@ export class TileBasic {
 		this.composeNormalContext.drawImage(TextureLoader('neutralNormal').image, 0, 0, MAP_SIZE, MAP_SIZE);
 
 		for (const map of this.extensionsNormalsMaps.values()) {
-			this.composeNormalContext.drawImage(map, 0, 0);
+			this.composeNormalContext.drawImage(map, 0, 0, map.width, map.height, 0, 0, MAP_SIZE, MAP_SIZE);
 		}
 
         this.normalTexture.needsUpdate = true

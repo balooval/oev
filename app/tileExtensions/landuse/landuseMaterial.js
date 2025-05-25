@@ -101,9 +101,9 @@ function createMaterials() {
     
     const materialForest = new MeshPhysicalMaterial({
         color: 0xffffff,
-        side: DoubleSide,
+        // side: DoubleSide,
         vertexColors: false,
-        roughness: 0.5,
+        roughness: 0.4,
     });
     const materialSapin = new MeshPhysicalMaterial({
         color: 0xffffff,
@@ -151,7 +151,8 @@ function loadTextures() {
         },
         {
             id: 'forest',
-            url: 'landuse/forest.png',
+            // url: 'landuse/forest.png',
+            url: 'landuse/forest-b.png',
         },
         {
             id: 'forest-normal',
@@ -180,6 +181,7 @@ function loadTextures() {
         {
             id: 'tree-meshy',
             url: 'tree-meshy-fade.png',
+            // url: 'tree-forest-meshy-C.png',
         },
         {
             id: 'blender-scrub-normal',
@@ -295,11 +297,21 @@ function loadModels() {
     const modelsList = [
         {
             id: 'tree-forest-lod5',
+            url: 'tree-forest-meshy-lod5.glb',
+            url: 'tree-forest-meshy-lod5-under.glb',
+            // url: 'tree-forest-meshy-C-lod5.glb',
+        },
+        {
+            id: 'tree-forest-lod3',
             url: 'tree-forest-meshy-lod3.glb',
         },
         {
             id: 'tree-forest-lod0',
             url: 'tree-forest-meshy-lod0.glb',
+        },
+        {
+            id: 'tree-forest-lod1',
+            url: 'tree-forest-meshy-lod1.glb',
         },
         {
             id: 'vigne-lod5',
@@ -309,30 +321,18 @@ function loadModels() {
             id: 'vigne-lod0',
             url: 'vigne-lod0.glb',
         },
-        // {
-        //     id: 'tree-forest-lod0',
-        //     url: 'tree-forest-lod0.glb',
-        // },
-        // {
-        //     id: 'tree-forest-lod5',
-        //     url: 'tree-forest-test.glb',
-        // },
         {
             id: 'tree-sapin-lod0',
             url: 'tree-sapin-meshy-lod0.glb',
         },
-        // {
-        //     id: 'tree-sapin-lod0',
-        //     url: 'tree-sapin-lod0.glb',
-        // },
+        {
+            id: 'tree-sapin-lod3',
+            url: 'tree-sapin-meshy-lod3.glb',
+        },
         {
             id: 'tree-sapin-lod5',
             url: 'tree-sapin-meshy-lod5.glb',
         },
-        // {
-        //     id: 'tree-sapin-lod5',
-        //     url: 'tree-sapin-test.glb',
-        // },
         {
             id: 'scrub-lod5',
             url: 'scrub-lod5.glb',
@@ -350,8 +350,12 @@ function loadModels() {
 
 function setModelsToGeometries() {
     instanceGeometries.set('forest', createInstanceGeometryTree(5));
+    instanceGeometries.set('forest-3', createInstanceGeometryTree(3));
+    instanceGeometries.set('forest-1', createInstanceGeometryTree(1));
     instanceGeometries.set('forest-0', createInstanceGeometryTree(0));
     instanceGeometries.set('sapin', createInstanceGeometryForestSapin(5));
+    instanceGeometries.set('sapin-3', createInstanceGeometryForestSapin(3));
+    instanceGeometries.set('sapin-1', createInstanceGeometryForestSapin(0));
     instanceGeometries.set('sapin-0', createInstanceGeometryForestSapin(0));
     instanceGeometries.set('scrub', createInstanceGeometryScrub(5));
     instanceGeometries.set('scrub-0', createInstanceGeometryScrub(0));
@@ -365,9 +369,9 @@ function setModelsToGeometries() {
 
 function createInstanceGeometryTree(lod) {
     const geometry = NET_MODELS.get('tree-forest-lod' + lod).clone();
-    const scale = 2;
+    const scale = 1.6;
     geometry.scale(scale, scale, scale);
-    geometry.translate(0, 6, 0);
+    geometry.translate(0, -1, 0);
     return geometry;
 }
 

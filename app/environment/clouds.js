@@ -32,6 +32,7 @@ export function init() {
 		perlinScale : {value : 0.016},
 		skyColor : {value : new Vector3(1, 1, 1)},
 		sunPosition : {value : new Vector3(0, 0, 0)},
+		sunInclinaison : {value : 1},
 	};
 	
 	const parametersSky = {
@@ -45,15 +46,14 @@ export function init() {
 		
 	material = new ShaderMaterial(parametersSky);
 	mesh = new Mesh(geometry, material);
-	// mesh.position.z = 5000;
-	// mesh.position.y = 5000;
-	Renderer.scene.add(mesh);
+	// Renderer.scene.add(mesh);
 }
 
-export function updateSunPosition(x, y, z) {
+export function updateSunPosition(sunInclinaison, x, y, z) {
 	material.uniforms.sunPosition.value.x = x * 110000;
 	material.uniforms.sunPosition.value.y = y * 110000;
 	material.uniforms.sunPosition.value.z = z * 110000;
+	material.uniforms.sunInclinaison.value = sunInclinaison;
 	Renderer.MUST_RENDER = true;
 }
 

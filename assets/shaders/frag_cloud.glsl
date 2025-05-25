@@ -11,6 +11,7 @@ uniform vec3 skyColor;
 varying vec3 vSunPosition;
 varying vec3 vSunDirection;
 uniform vec3 sunPosition;
+uniform float sunInclinaison;
 
 #define MAX_STEPS 100
 const float MARCH_SIZE = 2000.0;
@@ -144,7 +145,7 @@ float raymarchSun(vec3 rayOrigin, vec3 rayDirection) {
 	// Ca c'est joli
 	// return 0.5 + smoothstep(-1.0, 1.0, dot(vRayDirection * -1.0, vSunDirection) * -1.0) * 2.0;
 	
-	return 0.5 + (dot(vRayDirection * -1.0, vSunDirection * -1.0) + 1.0) * 0.5;
+	return mix(0.5, 1.0, sunInclinaison) + (dot(vRayDirection * -1.0, vSunDirection * -1.0) + 1.0) * 0.5;
 }
 
 void main() {
