@@ -169,7 +169,7 @@ const OEV = {
 	
 	loadShaders : function() {
 		return new Promise((resolve) => {
-			Shader.loadList(['cloud', 'sky', 'sun'], resolve);
+			Shader.loadList(['cloud', 'sky', 'sun', 'skyBis'], resolve);
 		});
 	},
 

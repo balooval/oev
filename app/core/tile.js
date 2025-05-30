@@ -20,6 +20,14 @@ export const TILES_DEFINITION = 32;
 export const TILES_VERTICES_COUNT = (TILES_DEFINITION + 1) * (TILES_DEFINITION + 1);
 const tileBaseGeometry = buildTileBaseGeometry();
 
+const DIFFUSE_MAP_ORDER = {
+	TILE2D: 0,
+	SATELLITE: 0,
+	LINES: 10,
+	NORMAL: 20,
+	LANDUSE_MAP: 30,
+};
+
 export class TileBasic {
 		
 	constructor(globe, _tileX, _tileY, _zoom, parent = null) {
@@ -84,7 +92,7 @@ export class TileBasic {
 
 		this.material = new MeshPhysicalMaterial({
 			color: 0xffffff,
-			roughness: 1,
+			roughness: 0.9,
 			metalness: 0,
 			map: this.diffuseTexture,
 			normalMap: this.normalTexture,
@@ -106,6 +114,10 @@ export class TileBasic {
 		this.bufferVerticesPlaneCoords = this.#computeVerticesCoords();
     }
 
+	getExtension(extensionId) {
+		return this.extensions.get(extensionId);
+	}
+
 	baseMapIsLoaded() {
 		if (this.extensionsMaps.has('TILE2D')) {
 			return true;
@@ -115,25 +127,30 @@ export class TileBasic {
 
 	addExtensionDiffuse(extensionId, image) {
 		this.extensionsMaps.set(extensionId, image);
+		const orderedMaps = [...this.extensionsMaps.entries()].sort((pairA, pairB) => {
+			return Math.sign(DIFFUSE_MAP_ORDER[pairA[0]] - DIFFUSE_MAP_ORDER[pairB[0]]);
+		});
+
+		this.extensionsMaps = new Map(orderedMaps);
 		this.#redrawDiffuse();
 	}
-
+	
 	removeExtensionDiffuse(extensionId) {
 		this.extensionsMaps.delete(extensionId);
 		this.#redrawDiffuse();
 	}
-
+	
 	#redrawDiffuse() {
 		if (this.isReady === false) {
 			return;
 		}
-
+		
 		this.composeContext.fillStyle = "#ffffff";
 		this.composeContext.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-        this.extensionsMaps.forEach(map => {
-			this.composeContext.drawImage(map, 0, 0);
-        });
+		
+		for (const map of this.extensionsMaps.values()) {
+			this.composeContext.drawImage(map, 0, 0, map.width, map.height, 0, 0, MAP_SIZE, MAP_SIZE);
+		}
 
         this.diffuseTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;
@@ -141,23 +158,32 @@ export class TileBasic {
 		// this.#debug('x:' + this.tileX + ' y:' + this.tileY + ' z:' + this.zoom);
     }
 
-	// TODO: gérer ces "calques" dans une classe dédiée qui saur as'occuper de tous les types de map de la même manière (diffuse, normal, ...)
-	drawOnNormalMap(drawerId, image) {
-		this.extensionsNormalsMaps.set(drawerId, image);
+	// TODO: gérer ces "calques" dans une classe dédiée qui saura s'occuper de tous les types de map de la même manière (diffuse, normal, ...)
+
+	addExtensionNormal(extensionId, image) {
+		this.extensionsNormalsMaps.set(extensionId, image);
+		const orderedMaps = [...this.extensionsNormalsMaps.entries()].sort((pairA, pairB) => {
+			return Math.sign(DIFFUSE_MAP_ORDER[pairA[0]] - DIFFUSE_MAP_ORDER[pairB[0]]);
+		});
+
+		this.extensionsNormalsMaps = new Map(orderedMaps);
 		this.redrawNormalMap();
 	}
-	
-	clearNormalLayer(drawerId) {
-		this.extensionsNormalsMaps.delete(drawerId);
+
+	removeExtensionNormal(extensionId) {
+		this.extensionsNormalsMaps.delete(extensionId);
 		this.redrawNormalMap();
 	}
 
 	redrawNormalMap() {
+		if (!this.normalTexture) {
+			return;
+		}
 		this.composeNormalContext.drawImage(TextureLoader('neutralNormal').image, 0, 0, MAP_SIZE, MAP_SIZE);
 
-        this.extensionsNormalsMaps.forEach(map => {
-			this.composeNormalContext.drawImage(map, 0, 0);
-        });
+		for (const map of this.extensionsNormalsMaps.values()) {
+			this.composeNormalContext.drawImage(map, 0, 0, map.width, map.height, 0, 0, MAP_SIZE, MAP_SIZE);
+		}
 
         this.normalTexture.needsUpdate = true
         Renderer.MUST_RENDER = true;

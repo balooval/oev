@@ -41,6 +41,26 @@ const apiUi = {
 			document.getElementById('overlayExtensions').remove();
 			document.getElementById('overlayUICoords').remove();
 		}
+
+		document.getElementById('cutValue').onchange = (evt) => {
+			console.log('cutValue:', evt.target.value);
+			setCutValue(evt.target.value);
+		}
+			
+		document.getElementById('perlinScale').onchange = (evt) => {
+			console.log('perlinScale:', evt.target.value);
+			setPerlinScale(evt.target.value);
+		}
+		document.getElementById('octavesCount').onchange = (evt) => {
+			console.log('octavesCount', evt.target.value);
+			
+			setOctavesCount(evt.target.value);
+		}
+		document.getElementById('persistence').onchange = (evt) => {
+			console.log('persistence', evt.target.value);
+			
+			setPersistence(evt.target.value);
+		}
 	}, 
 
 	start : function() {

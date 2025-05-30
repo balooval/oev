@@ -135,7 +135,7 @@ function buildLanduse(landuse, tile) {
             id: landuse.id,
             type: landuse.type,
             tags: landuse.tags,
-            fillPoints: landuse.fillPoints,
+            fillPoints: landuse.fillPoints, // TODO: virer un des deux
             fillPoints: [],
         };
 

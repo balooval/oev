@@ -47,6 +47,7 @@ function prepareLanduse(res, _tile, _extractedDatas, _buildFunction, _nodesList,
     return res;
 }
 
+// TODO: grosse conso CPU, à optimiser !!
 function buildRelation(tile, _relation, _nodesList, _waysList) {
     // TODO : ne gère pas les relations avec plusieurs outer séparés (par exemple la forêt du Mont Aigoual)
     const innersCoords = [];
@@ -76,15 +77,15 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
     }
     const border = wayNodes.slice(1);
 
-    const bbox = calcBbox(border);
-    const grid = coordGrid(tile, bbox, border);
+    // const bbox = calcBbox(border);
+    // const grid = coordGrid(tile, bbox, border);
 
     const res = {
         id : _relation.id, 
         type : extractType(_relation), 
         tags : _relation.tags, 
         border : border, 
-        fillPoints : grid, 
+        // fillPoints : grid, 
         holes : innersCoords, 
     };
     
@@ -94,14 +95,14 @@ function buildRelation(tile, _relation, _nodesList, _waysList) {
 function buildWay(tile, _way, _nodesList) {
     let wayNodes = _way.nodes.map(nodeId => _nodesList.get('NODE_' + nodeId));
     const border = wayNodes.slice(1);
-    const bbox = calcBbox(border);
-    const grid = coordGrid(tile, bbox, border);
+    // const bbox = calcBbox(border);
+    // const grid = coordGrid(tile, bbox, border);
     return {
         id : _way.id, 
         type : extractType(_way), 
         tags : _way.tags, 
         border : border, 
-        fillPoints : grid, 
+        // fillPoints : grid, 
         holes : [], 
     };
 }
@@ -123,9 +124,10 @@ function calcBbox(_border) {
     }
 }
 
+// TODO: grosse conso CPU, à optimiser !!
 function coordGrid(tile, _bbox, _border) {
     const grid = [];
-    const def = TILES_DEFINITION * 4;
+    const def = TILES_DEFINITION * 1;
 
     const startCoord = tile.startCoord;
     const endCoord = tile.endCoord;

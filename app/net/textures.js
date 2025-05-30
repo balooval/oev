@@ -33,6 +33,10 @@ export function loadBatch(_list, _callback) {
 	if (curBatch === null) loadNextBatch();
 }
 
+export function setTexture(id, texture) {
+	textLoaded[id] = texture;
+}
+
 function loadNextBatch() {
 	if (batchs.length == 0) {
 		curBatch = null;
@@ -47,8 +51,8 @@ function loadNextTexture() {
 	textureLoader.load(
 		serveurUrl + '/' + nextText.url, 
 		t => {
-			textLoaded[nextText.id] = t;
-			textLoaded[nextText.id].wrapS = textLoaded[nextText.id].wrapT = THREE.RepeatWrapping;
+			setTexture(nextText.id, t);
+			t.wrapS = t.wrapT = THREE.RepeatWrapping;
 			if (curBatch.list.length == 0) {
 				curBatch.callback();
 				loadNextBatch();

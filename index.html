@@ -7,7 +7,9 @@
 		<script type="importmap">
 			{
 				"imports": {
-					"three": "./app/vendor/three.module.js"
+					"three": "./app/vendor/three.webgl.js",
+					"bvh.js": "./app/vendor/bvh.js",
+					"three/addons/utils/SortUtils.js": "./app/vendor/SortUtils.js"
 				}
 			}
 		</script>
@@ -34,6 +36,11 @@
 		<div id="main">
 			
 			<div id="threeContainer">
+				Scale : <input id="perlinScale" type="range" value="0.016" step="0.001" min="0.001" max="0.1">
+				OctavesCount : <input id="octavesCount" type="range" value="4" step="1" min="1" max="5">
+				Persistence : <input id="persistence" type="range" value="0.79" step="0.01" min="0.0" max="1.0">
+				CutValue : <input id="cutValue" type="range" value="0.2" step="0.01" min="0.0" max="1.0">
+
 				<div class="overlayUI" id="overlayUICoords">
 				</div>
 				<div class="overlayUI" id="overlayCurtile">
@@ -49,6 +56,7 @@
 					<div id="waypointsInfos"></div>
 				</div>
 			</div>
+
 		</div>
 
 		<script>

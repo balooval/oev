@@ -1,106 +1,91 @@
-import * as THREE from 'three';
+import {
+	CylinderGeometry,
+	Mesh,
+	MeshPhysicalMaterial,
+	PlaneGeometry,
+	ShaderMaterial,
+	SphereGeometry,
+	BackSide,
+	Vector3
+} from 'three';
+import {
+	GLOBE
+} from '../core/globe.js';
+import * as BufferGeometryUtils from '../vendor/BufferGeometryUtils.js';
 import Renderer from '../core/renderer.js';
 import * as Shader from '../net/shader.js';
 import * as NET_TEXTURES from '../net/textures.js';
+import * as MATH from '../core/math.js';
 
-let meshClouds = null;
-let materialClouds = null;
+let material;
+let mesh;
 
-const api = {
-	create : function() {
-		NET_TEXTURES.loadFile('cloud', 'cloud.png', createMesh);
-	}, 
+export function init() {
+	// const geometry = new PlaneGeometry(10000, 10000, 10, 10);
+	// const geometry = new CylinderGeometry(10000, 10000, 10000, 32);
+	const geometry = new SphereGeometry(100000, 32, 16, 0, Math.PI * 2, 0, 1.6);
 
-	setTime : function(_time) {
-		if (!materialClouds) return false;
-		materialClouds.uniforms.normalizedTime.value = _time;
-	}
-};
-
-function createMesh() {
-	const shaderParams = {
-		vertexShader: Shader.get('vert_cloud'), 
-		fragmentShader: Shader.get('frag_cloud'),
-		uniforms: {
-			map : {type: "t", value: NET_TEXTURES.texture('cloud')}, 
-			normalizedTime : {value : 0.5}, 
-		}, 
-		side: THREE.DoubleSide, 
-		transparent: true, 
-		depthWrite: false, 
+	const uniformsValues = {
+		cutValue : {value : 0.2},
+		octavesCount : {value : 4},
+		persistence : {value : 0.79},
+		perlinScale : {value : 0.016},
+		skyColor : {value : new Vector3(1, 1, 1)},
+		sunPosition : {value : new Vector3(0, 0, 0)},
+		sunInclinaison : {value : 1},
 	};
-	materialClouds = new THREE.ShaderMaterial(shaderParams);
-	meshClouds = new THREE.Mesh(new THREE.BufferGeometry(), materialClouds);
-	const groupPos = new THREE.Vector3();
-	const groupsDispertion = 5000;
-	const doublePi = Math.PI * 2;
-	for (let c = 0; c < 30; c ++) {
-		if (c % 5 == 0) {
-			groupPos.x = Math.random() * groupsDispertion - groupsDispertion / 2;
-			groupPos.y = (Math.random() * groupsDispertion / 10 + groupsDispertion / 20) * -1;
-			groupPos.z = Math.random() * groupsDispertion - groupsDispertion / 2;
-		}
-		const faceWidth = 10;
-		const faceHeight = 10;
-		const geoFinal = new THREE.BufferGeometry();
-		for (let i = 0; i < 8; i ++) {
-			const geo = new THREE.BufferGeometry();
-			const tileOffset = Math.random() > 0.5 ? 0.5 : 0;
-			const faceRotX = (Math.random() * doublePi) - Math.PI;
-			const faceRotY = (Math.random() * doublePi) - Math.PI;
-			geo.vertices.push(new THREE.Vector3(
-				-1 * faceWidth, 
-				1 * faceHeight,  
-				0
-			));
-			geo.vertices.push(new THREE.Vector3(
-				-1 * faceWidth, 
-				-1 * faceHeight, 
-				0
-			));
-			geo.vertices.push(new THREE.Vector3(
-				1 * faceWidth, 
-				-1 * faceHeight,  
-				0
-			));
-			geo.vertices.push(new THREE.Vector3(
-				1 * faceWidth, 
-				1 * faceHeight,  
-				0
-			));
-			geo.faces.push(new THREE.Face3(0, 2, 1));
-			geo.faces.push(new THREE.Face3(0, 3, 2));
-			geo.faceVertexUvs[0][0] = [
-				new THREE.Vector2(tileOffset, 0),
-				new THREE.Vector2(tileOffset + 0.5, 1),
-				new THREE.Vector2(tileOffset, 1)
-			];
-			geo.faceVertexUvs[0][1] = [
-				new THREE.Vector2(tileOffset, 0),
-				new THREE.Vector2(tileOffset + 0.5, 0),
-				new THREE.Vector2(tileOffset + 0.5, 1)
-			];
-			const tmpMesh = new THREE.Mesh(geo);
-			tmpMesh.rotation.x = faceRotX;
-			tmpMesh.rotation.y = faceRotY;
-			geoFinal.mergeMesh(tmpMesh);
-		}
-		geoFinal.computeFaceNormals();
-		geoFinal.computeVertexNormals();
-		geoFinal.uvsNeedUpdate = true;
-		geoFinal.verticesNeedUpdate = true;
-		const curCloudMesh = new THREE.Mesh(geoFinal);
-		const dispertion = 500;
-		curCloudMesh.position.x = groupPos.x + (Math.random() * dispertion - dispertion / 2);
-		curCloudMesh.position.y = groupPos.y + ((Math.random() * dispertion / 10 + dispertion / 20) * -1);
-		curCloudMesh.position.z = groupPos.z + (Math.random() * dispertion - dispertion / 2);
-		const curScale = 4 + (Math.random() * 40);
-		curCloudMesh.scale.x = curScale * 2;
-		curCloudMesh.scale.y = curScale;
-		curCloudMesh.scale.z = curScale;
-		meshClouds.geometry.mergeMesh(curCloudMesh);
-	}
-	Renderer.scene.add(meshClouds);
+	
+	const parametersSky = {
+		vertexShader: Shader.get('vert_cloud'),
+		fragmentShader: Shader.get('frag_cloud'),
+		transparent: true,
+		side: BackSide,
+		uniforms: uniformsValues,
+	};
+		
+		
+	material = new ShaderMaterial(parametersSky);
+	mesh = new Mesh(geometry, material);
+	// Renderer.scene.add(mesh);
 }
 
-export {api as default};
+export function updateSunPosition(sunInclinaison, x, y, z) {
+	material.uniforms.sunPosition.value.x = x * 110000;
+	material.uniforms.sunPosition.value.y = y * 110000;
+	material.uniforms.sunPosition.value.z = z * 110000;
+	material.uniforms.sunInclinaison.value = sunInclinaison;
+	Renderer.MUST_RENDER = true;
+}
+
+export function updatePosition(cameraLookAtPosition) {
+	// mesh.position.x = cameraLookAtPosition.x;
+	// mesh.position.z = cameraLookAtPosition.z;
+}
+
+export function setColor(color) {
+	material.uniforms.skyColor.value = color;
+	Renderer.MUST_RENDER = true;
+}
+
+export function setCutValue(value) {
+	material.uniforms.cutValue.value = value;
+	Renderer.MUST_RENDER = true;
+}
+
+export function setOctavesCount(value) {
+	material.uniforms.octavesCount.value = value;
+	Renderer.MUST_RENDER = true;
+}
+export function setPersistence(value) {
+	material.uniforms.persistence.value = value;
+	Renderer.MUST_RENDER = true;
+}
+export function setPerlinScale(value) {
+	material.uniforms.perlinScale.value = value;
+	Renderer.MUST_RENDER = true;
+}
+
+window.setCutValue = setCutValue;
+window.setOctavesCount = setOctavesCount;
+window.setPersistence = setPersistence;
+window.setPerlinScale = setPerlinScale;

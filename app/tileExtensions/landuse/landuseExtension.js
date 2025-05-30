@@ -7,6 +7,7 @@ import * as LanduseGeometryInstances from './landuseGeometryInstances.js';
 import * as LanduseMaterial from './landuseMaterial.js';
 import * as LanduseLoader from './landuseLoader.js';
 import { GLOBE } from '../../core/globe.js';
+import PolygonClipping from '../../vendor/polygon-clipping.module.js';
 
 export {setApiUrl} from './landuseLoader.js';
 
@@ -14,14 +15,18 @@ export function extensionClass() {
 	return LanduseExtension;
 }
 
+const ZOOM_LEVEL_LOADING = 13;
+
 const moduleByZoom = {
-    13: LanduseGeometryMap,
-    14: LanduseGeometryMap,
-    15: LanduseGeometryMap,
-    16: LanduseGeometryMap,
+    13: [LanduseGeometryMap],
+    14: [LanduseGeometryMap],
+    // 15: LanduseGeometryMap,
+    // 16: LanduseGeometryMap,
     // 14: LanduseGeometryPlane,
-    // 15: LanduseGeometryShell,
-    // 16: LanduseGeometryInstances,
+    // 15: [LanduseGeometryMap, LanduseGeometryShell],
+    15: [LanduseGeometryMap],
+    16: [LanduseGeometryMap, LanduseGeometryInstances],
+    17: [LanduseGeometryMap],
 };
 
 class LanduseExtension {
@@ -31,11 +36,13 @@ class LanduseExtension {
         this.dataLoaded = false;
         this.tile = _tile;
         this.lod = 0;
+        this.datas = null;
+        this.waitingChilds = new Set();
 
-        this.landuseModule = moduleByZoom[this.tile.zoom];
+        this.landuseModules = moduleByZoom[this.tile.zoom];
         // this.isActive = this.tile.zoom >= 13;
         // this.isActive = this.tile.zoom == 13;
-        this.isActive = this.landuseModule !== undefined;
+        this.isActive = this.landuseModules !== undefined;
         
         
         const keysFilter = [
@@ -43,16 +50,22 @@ class LanduseExtension {
             // '4190_2985_13', // Nages
             // '4191_2985_13', // Nages
             // '4192_2985_13', // Nages
-            '16768_11940_15', // Nages
+            // '16768_11940_15', // Nages
             // '16768_11941_15', // Nages
             // '4182_2985_13', // Pic saint loup
             // '4192_2986_13', // Nages
+            '4184_2986_13',
+            '8368_5972_14',
         ];
         
         // this.isActive = this.tile.zoom == 13;
         // if (keysFilter.includes(this.tile.key) === false) {
         //     this.isActive = false;
         // }
+
+        if (this.isActive !== true) {
+            return;
+        }
 
         if (LanduseMaterial.isReady) {
             this.#onRessourcesReady();
@@ -63,7 +76,7 @@ class LanduseExtension {
 
     #onRessourcesReady() {
         if (this.isActive) {
-            this.landuseModule.initMaterials();
+            this.landuseModules.forEach(module => module.initMaterials());
             LanduseMaterial.evt.removeEventListener('READY', this, this.#onRessourcesReady);
             this.tile.evt.addEventListener('SHOW', this, this.#onTileShow);
             this.tile.evt.addEventListener('DISPOSE', this, this.#onTileDispose);
@@ -82,7 +95,7 @@ class LanduseExtension {
         let nextLod = this.#getLod(cameraDatas);
         
         if (currentLod !== nextLod) {
-            this.landuseModule.setLod(this.tile, nextLod);
+            this.landuseModules.forEach(module => module.setLod(this.tile, nextLod));
         }
 
         this.lod = nextLod;
@@ -95,25 +108,50 @@ class LanduseExtension {
         if (this.dataLoading) {
             return false;
         }
-        if (!this.isActive) {
-            return false;
-        }
+
 		this.dataLoading = true;
-		LanduseLoader.loader.getData({
-                z : this.tile.zoom, 
-                x : this.tile.tileX, 
-                y : this.tile.tileY, 
-                priority : this.tile.distToCam
-            }, datas => this.#onLanduseLoaded(datas)
-		);
+
+        if (this.tile.zoom === ZOOM_LEVEL_LOADING) {
+            LanduseLoader.loader.getData({
+                    z : this.tile.zoom, 
+                    x : this.tile.tileX, 
+                    y : this.tile.tileY, 
+                    priority : this.tile.distToCam
+                }, datas => this.#onLanduseLoaded(datas)
+            );
+            return;
+        }
+
+        const parentExtension = this.#getParentExtension();
+        parentExtension.addWaitingChild(this);
+    }
+    
+    addWaitingChild(childExtension) {
+        if (this.dataLoaded === false) {
+            this.waitingChilds.add(childExtension);
+            return;
+        }
+        
+        childExtension.setParsedDatas(this.datas);
+    }
+
+    #getParentExtension() {
+        let tileParent = this.tile.parentTile;
+        while (tileParent.zoom !== ZOOM_LEVEL_LOADING) {
+            tileParent = tileParent.parentTile;
+            if (tileParent.zoom < ZOOM_LEVEL_LOADING) {
+                console.warn('Raté le parent !', tileParent);
+            }
+        }
+        return tileParent.getExtension(this.id);
     }
 
     #onTileShow() {
-        this.landuseModule.tileShow(this.tile);
+        this.landuseModules.forEach(module => module.tileShow(this.tile));
     }
 
     #onTileHide() {
-        this.landuseModule.tileHide(this.tile);
+        this.landuseModules.forEach(module => module.tileHide(this.tile));
     }
 
     #onLanduseLoaded(datas) {
@@ -128,8 +166,27 @@ class LanduseExtension {
             return false;
         }
 
-        const landusesDatas = LanduseDataParser.parseDatas(datas, this.tile);
-        this.landuseModule.setDatas(landusesDatas, this.tile);
+        this.setParsedDatas(LanduseDataParser.parseDatas(datas, this.tile));
+    }
+
+    setParsedDatas(parsedDatas) {
+        if (!this.tile) {
+            return;
+        }
+
+        // console.log(parsedDatas[87]);
+        
+        this.datas = this.cropLandusesToTile(parsedDatas);
+        
+        // console.log(this.datas[88]);
+
+        this.landuseModules.forEach(module => module.setDatas(this.datas, this.tile));
+
+        for (let childExtension of this.waitingChilds) {
+            childExtension.setParsedDatas(this.datas);
+        }
+
+        this.waitingChilds.clear();
     }
 
     #getLod(cameraDatas) {
@@ -161,7 +218,7 @@ class LanduseExtension {
 
                 GLOBE.evt.removeEventListener('GLOBE_CAMERA_UPDATE', this, this.onCameraUpdated);
 
-                this.landuseModule.tileRemoved(this.tile.key, this.tile);
+                this.landuseModules.forEach(module => module.tileRemoved(this.tile.key, this.tile));
             }
 
             LanduseLoader.loader.abort({
@@ -172,9 +229,65 @@ class LanduseExtension {
 
         }
 
+        this.waitingChilds.clear();
 		this.dataLoaded = false;
         this.dataLoading = false;
+        this.datas = null;
         this.tile = null;
 		Renderer.MUST_RENDER = true;
+    }
+
+    cropLandusesToTile(landusesDatas) {
+        let croppedLanduses = [];
+        const tilePolygon = [
+            [this.tile.startCoord.x, this.tile.endCoord.y], 
+            [this.tile.endCoord.x, this.tile.endCoord.y], 
+            [this.tile.endCoord.x, this.tile.startCoord.y], 
+            [this.tile.startCoord.x, this.tile.startCoord.y], 
+        ];
+
+        for (let i = 0; i < landusesDatas.length; i ++) {
+            croppedLanduses = this.cropLanduse(landusesDatas[i], tilePolygon, croppedLanduses);
+        }
+
+        return croppedLanduses;
+    }
+
+    cropLanduse(landuse, tilePolygon, res) {
+        const polygon = [
+            landuse.border,
+            ...landuse.holes
+        ];
+
+        let multipolygons;
+        try {
+            multipolygons = PolygonClipping.intersection([tilePolygon], [polygon]);
+        } catch (error) {
+            console.warn('PolygonClipping error for', landuse.id, error.message);
+            return res;
+        }
+
+        if (multipolygons.length === 0) {
+            return res;
+        }
+
+        for (let i = 0; i < multipolygons.length; i ++) {
+            const polygon = multipolygons[i];
+
+            const clippedLanduse = {
+                id: landuse.id,
+                type: landuse.type,
+                tags: landuse.tags,
+                border: [],
+                holes: [],
+            };
+
+            clippedLanduse.border = polygon.shift().slice(1);
+            clippedLanduse.holes = polygon.map(hole => hole.slice(1));
+
+            res.push(clippedLanduse);
+        }
+
+        return res;
     }
 }

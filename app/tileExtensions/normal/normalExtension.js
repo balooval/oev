@@ -28,9 +28,8 @@ class NormalExtension {
         this.tile.evt.removeEventListener('TILE_READY', this, this.onTileReady);
 
 		if (this.dataLoaded) {
-            this.tile.material.normalMap = this.texture;
-            this.tile.material.normalScale.x = this.tile.material.normalScale.y = this.normalScale;
-            this.tile.material.needsUpdate = true;
+            this.tile.addExtensionNormal(this.id, this.texture.image);
+            // this.tile.material.normalScale.x = this.tile.material.normalScale.y = this.normalScale;
             return true;
         }
 
@@ -79,10 +78,11 @@ class NormalExtension {
             return false;
         }
 
-        this.tile.material.normalMap = this.texture;
-        this.tile.material.needsUpdate = true;
+        this.tile.addExtensionNormal(this.id, this.texture.image);
+        // this.tile.material.normalMap = this.texture;
+        // this.tile.material.needsUpdate = true;
         this.tile.material.normalScale.x = this.tile.material.normalScale.y = this.normalScale;
-        Renderer.MUST_RENDER = true;
+        // Renderer.MUST_RENDER = true;
     }
     
     onTileDispose() {
@@ -111,8 +111,9 @@ class NormalExtension {
         this.texture = null;
 		this.dataLoaded = false;
         this.dataLoading = false;
-        this.tile.material.normalMap = null;
-        this.tile.material.needsUpdate = true;
+        this.tile.removeExtensionNormal(this.id);
+        // this.tile.material.normalMap = null;
+        // this.tile.material.needsUpdate = true;
         this.tile = null;
 		Renderer.MUST_RENDER = true;
 	}

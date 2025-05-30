@@ -1,15 +1,24 @@
 import {
+    BatchedMesh,
     Color,
     InstancedMesh,
+    InstancedBufferAttribute,
     Matrix4,
+    MeshStandardMaterial,
     Quaternion,
+    TorusKnotGeometry,
     Vector3,
+    WebGLCoordinateSystem,
+    MeshBasicMaterial
 } from 'three';
 import * as LanduseMaterial from './landuseMaterial.js';
 import {GLOBE} from '../../core/globe.js';
 import * as ElevationStore from '../elevation/elevationStore.js';
 import * as MATH from '../../core/math.js';
 import Renderer from '../../core/renderer.js';
+import {TILES_DEFINITION} from '../../core/tile.js';
+import { InstancedMesh2, createRadixSort } from '../../vendor/instanced-mesh.js';
+
 
 const rejectedIds = [];
 const MAX_COUNT_BY_INSTANCE = 43000;
@@ -24,20 +33,46 @@ const instanceColor = new Color(1, 1, 1);
 
 const rotationVector = new Vector3(0, 1, 0);
 const instanceMeshByTiles = new Map();
+const tilesWaitingWorker = new Map();
 
 const instancePlacement = new Map();
 instancePlacement.set('forest', placeForest);
 instancePlacement.set('sapin', placeForest);
-instancePlacement.set('scrub', placeScrub);
-instancePlacement.set('vineyard', placeVineyard);
+instancePlacement.set('scrub', placeForest);
+// instancePlacement.set('scrub', placeScrub);
+instancePlacement.set('vineyard', placeForest);
+// instancePlacement.set('vineyard', placeVineyard);
 
-export function initMaterials() {
+
+const workerCanvasComposer = new Worker('/app/utils/workerCanvasComposer.js', {type: 'module'});
+
+workerCanvasComposer.onerror = (e) => {
+    console.log('WORKER ERROR', e);
     
 }
 
+workerCanvasComposer.onmessage = (e) => {
+    if (e.data.command !== 'noise') {
+        return;
+    }
+
+    const tile = tilesWaitingWorker.get(e.data.tileKey);
+    buildLanduse(e.data.landuseData, tile, e.data.type, e.data.imagesDatas)
+    tilesWaitingWorker.delete(e.data.tileKey);
+};
+
+export function initMaterials() {
+    // test();
+}
+
 export function setDatas(landusesDatas, _tile) {
+    // return;
+    // if (_tile.key !== '33517_23880_16') {
+    //     return;
+    // }
+
     for (let i = 0; i < landusesDatas.length; i ++) {
-        buildLanduse(landusesDatas[i], _tile);
+        sendNoiseCommand(landusesDatas[i], _tile, i);
         Renderer.MUST_RENDER = true;
     }
 }
@@ -75,6 +110,7 @@ export function tileRemoved(_tileKey, tile) {
     if (instancedTile) {
         for (const [key, instanceMesh] of instancedTile.entries()) {
             GLOBE.removeMeshe(instanceMesh);
+            instanceMesh.clearInstances();
             instanceMesh.geometry.dispose();
             instanceMeshByTiles.delete(tile);
         }
@@ -82,6 +118,7 @@ export function tileRemoved(_tileKey, tile) {
 }
 
 export function setLod(tile, lod) {
+    return;
     const instancedTile = instanceMeshByTiles.get(tile);
     if (!instancedTile) {
         return;
@@ -92,20 +129,37 @@ export function setLod(tile, lod) {
         if (lod === 0) {
             typeToAsk = key + '-0';
         }
-        
+
         instanceMesh.geometry = LanduseMaterial.getGeometryForType(typeToAsk);
     }
 }
 
-function buildLanduse(_landuse, tile) {
-    let type = _landuse.type;
+function sendNoiseCommand(landuse, tile, index) {
+    let type = landuse.type;
     
+    if (type !== 'forest') {
+        return;
+    }
+
     if (type === 'forest') {
-        if (_landuse.tags.leaf_type === 'needleleaved') {
+        if (landuse.tags.leaf_type === 'needleleaved') {
             type = 'sapin';
         }
     }
-        
+
+    const tileKey = tile.key + '_' + index;
+    tilesWaitingWorker.set(tileKey, tile);
+    workerCanvasComposer.postMessage({
+        command: 'noise',
+        tileKey: tileKey,
+        landuseData: landuse,
+        tileBbox: tile.bbox,
+        type: type,
+    });
+}
+
+
+function buildLanduse(landuse, tile, type, imagesDatas) {
     let instancedMesh = getTileMeshForLanduseType(tile, type);
     if (instancedMesh === null) {
         // console.log('unsupported type', type);
@@ -113,15 +167,18 @@ function buildLanduse(_landuse, tile) {
     }
 
     const countOffset = instancedMesh.count;
-    const elevationsDatas = getElevationsDatas(_landuse);
+    const pointsDatas = getElevationsDatasFromNoise(tile, imagesDatas);
+    
     const placementFunction = instancePlacement.get(type);
-    placementFunction(instancedMesh, countOffset, _landuse, elevationsDatas);
+    placementFunction(instancedMesh, countOffset, landuse, pointsDatas);
+
+    instancedMesh.computeBVH();
 
     return true;
 }
 
 function getTileMeshForLanduseType(tile, type) {
-    const instanceGeometry = LanduseMaterial.getGeometryForType(type + '-0');
+    const instanceGeometry = LanduseMaterial.getGeometryForType(type);
     if (!instanceGeometry) {
         return null;
     }
@@ -133,20 +190,85 @@ function getTileMeshForLanduseType(tile, type) {
     }
     
     let instancedTileMeshes = instanceMeshByTiles.get(tile);
+    // let instancedMesh = instancedTileMeshes.get(type);
+    
     let instancedMesh = instancedTileMeshes.get(type);
-
+    
     if (instancedMesh === undefined) {
-        instancedMesh = new InstancedMesh(instanceGeometry, LanduseMaterial.getMaterialForType(type), MAX_COUNT_BY_INSTANCE);
-        instancedMesh.receiveShadow = true;
-		instancedMesh.castShadow = true;
-        instancedMesh.count = 0;
-        instancedMesh.matrixAutoUpdate = false;
-        GLOBE.addMeshe(instancedMesh);
+        // instancedMesh = new InstancedMesh(instanceGeometry, LanduseMaterial.getMaterialForType(type), MAX_COUNT_BY_INSTANCE);
+        // instancedMesh.receiveShadow = true;
+		// instancedMesh.castShadow = true;
+        // instancedMesh.count = 0;
+        // instancedMesh.matrixAutoUpdate = false;
+        // GLOBE.addMeshe(instancedMesh);
+        
+        // instancedTileMeshes.set(type, instancedMesh);
+        
+
+        const material = LanduseMaterial.getMaterialForType(type);
+        let matLod0 = material.clone();
+        let matLod1 = material.clone();
+        let matLod3 = material.clone();
+
+        const geometryBase = instanceGeometry.clone()
+        
+        instancedMesh = new InstancedMesh2(
+            geometryBase,
+            material,
+            { capacity: MAX_COUNT_BY_INSTANCE }
+        );
+        instancedMesh.castShadow = true;
+        instancedMesh.computeBVH();
+
+        // instancedMesh.sortObjects = true;
+        // instancedMesh.customSort = createRadixSort(instancedMesh);
 
         instancedTileMeshes.set(type, instancedMesh);
+        
+        const lodGeometry0 = LanduseMaterial.getGeometryForType(type + '-0').clone();
+        const lodGeometry1 = LanduseMaterial.getGeometryForType(type + '-1').clone();
+        const lodGeometry3 = LanduseMaterial.getGeometryForType(type + '-3').clone();
+
+
+        // matLod0 = new MeshBasicMaterial({color: '#23890c'});
+        // matLod3 = new MeshBasicMaterial({color: '#6fc11d'});
+        
+        instancedMesh.addLOD(lodGeometry0, matLod0, 800);
+        instancedMesh.addLOD(lodGeometry1, matLod1, 450);
+        instancedMesh.addLOD(lodGeometry3, matLod3, 250);
+        instancedMesh.addShadowLOD(lodGeometry0.clone());
+        
+        GLOBE.addMeshe(instancedMesh);
     }
 
     return instancedMesh;
+}
+
+function getElevationsDatasFromNoise(tile, imagesDatas) {
+    const res = [];
+    const imageSize = 50;
+
+    const lonStep = Math.abs(tile.endCoord.x - tile.startCoord.x) / imageSize;
+    const latStep = Math.abs(tile.endCoord.y - tile.startCoord.y) / imageSize;
+
+    for (let x = 0; x < imageSize; ++x) {
+        for (let y = imageSize - 1; y >= 0; y --) {
+            let index = (y * imageSize + x) * 4;
+            const red = imagesDatas.data[index];
+
+            if (red > 200) {
+                const lon = tile.startCoord.x + lonStep * x;
+                const lat = tile.startCoord.y - latStep * y;
+                res.push({
+                    lon: lon,
+                    lat: lat,
+                    alt: ElevationStore.get(lon, lat),
+                })
+            }
+        }
+    }
+    
+    return res;
 }
 
 function getElevationsDatas(_landuse) {
@@ -159,41 +281,51 @@ function getElevationsDatas(_landuse) {
     return elevationsFill;
 }
 
-function placeForest(instancedMesh, countOffset, landuseData, elevationsDatas) {
+function placeForest(instancedMesh, countOffset, landuseData, pointsDatas) {
     let instanceIndex = countOffset;
     const instanceByPoint = 1;
 
-    for (let i = 0; i < landuseData.fillPoints.length - 1; i++) {
-        for (let j = 0; j < instanceByPoint; j ++) {
-            const point = MATH.lerpPoint(landuseData.fillPoints[i], landuseData.fillPoints[i + 1], j);
-            const elevation = MATH.lerpFloat(elevationsDatas[i], elevationsDatas[i + 1], j);
-            
-            const vertPos = GLOBE.coordToXYZ(
-                point[0] + Math.random() * 0.0003,
-                point[1] + Math.random() * 0.0002,
-                elevation,
-            );
+    for (let i = 0; i < pointsDatas.length; i++) {
+        const point = pointsDatas[i];
+        const vertPos = GLOBE.coordToXYZ(
+            point.lon + MATH.random(-0.00015, 0.00015),
+            point.lat + MATH.random(-0.00015, 0.00015),
+            point.alt,
+        );
 
-            instancePosition.set(vertPos[0], vertPos[1], vertPos[2]);
+        instancePosition.set(vertPos[0], vertPos[1], vertPos[2]);
 
-            const scaleValue = 0.7 + Math.random() * 0.2;
-            instanceScale.set(scaleValue, scaleValue, scaleValue);
-            
-            const angle = Math.random() * 6;
-            instanceQuaternion.setFromAxisAngle(rotationVector, angle);
+        const scaleValue = 0.6 + Math.random() * 0.3;
+        instanceScale.set(scaleValue, scaleValue, scaleValue);
+        
+        const angle = Math.random() * 6;
+        instanceQuaternion.setFromAxisAngle(rotationVector, angle);
 
-            instanceMatrix.compose(instancePosition, instanceQuaternion, instanceScale);
-            instancedMesh.setMatrixAt(instanceIndex, instanceMatrix);
+        // instanceMatrix.compose(instancePosition, instanceQuaternion, instanceScale);
+        // instancedMesh.setMatrixAt(instanceIndex, instanceMatrix);
 
-            instanceColor.setHSL(0.2, MATH.random(0.5, 0.8), MATH.random(0.3, 0.7));
-            instancedMesh.setColorAt(instanceIndex, instanceColor);
-            instanceIndex ++;
-        }
+        instanceColor.setHSL(0.15, MATH.random(0.2, 0.4), MATH.random(0.3, 0.5));
+        // instancedMesh.setColorAt(instanceIndex, instanceColor);
+        // instanceIndex ++;
+        
+        
+        instancedMesh.addInstances(1, (obj, index) => {
+            obj.color = instanceColor.clone();
+            obj.position
+            .setX(instancePosition.x)
+            .setY(instancePosition.y)
+            .setZ(instancePosition.z);
+            obj.scale
+            .setX(instanceScale.x)
+            .setY(instanceScale.y)
+            .setZ(instanceScale.z);
+            obj.quaternion = instanceQuaternion.clone();
+        });
     }
 
-    instancedMesh.count += landuseData.fillPoints.length * 2;
+    // instancedMesh.count += pointsDatas.length * 2;
 
-    maxInstancedMeshCount = Math.max(maxInstancedMeshCount, instancedMesh.count);
+    // maxInstancedMeshCount = Math.max(maxInstancedMeshCount, instancedMesh.count);
 }
 
 function placeScrub(instancedMesh, countOffset, landuseData, elevationsDatas) {
